@@ -1,0 +1,11 @@
+fortran:
+	gfortran -c srevtrans.f90
+C_code:
+	gcc -c relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c
+
+run: clean fortran C_code clean
+	gfortran -L/Data/adamingram/heasoft/heasoft-6.23/x86_64-apple-darwin17.4.0/lib \
+	-lXSFunctions -lXSModel -lXSUtil -lXS -lCCfits_2.5 -lcfitsio.5 -o exe *.o
+
+clean:
+	rm -f *.o

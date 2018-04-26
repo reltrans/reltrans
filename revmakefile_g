@@ -1,0 +1,12 @@
+fortran:
+	gfortran -c srevtrans.f90
+C_code:
+	gcc -c relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c
+
+compile: fortran C_code 
+	 gfortran -O *.o -L/usr/local/opt/cfitsio/ -lcfitsio -o exe  
+
+run: compile clean 
+
+clean:
+	rm -f *.o *~ *.mod
