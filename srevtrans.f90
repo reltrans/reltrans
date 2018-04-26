@@ -19,7 +19,10 @@
 ! 2) The adjustment of the continuum flux for g^2
 ! 3) The angular dependence of the reflection spectrum (viewing angle)
 ! 4) If possible, the dependence on incident angle (how well can this be mimicked by tweaking the ionization?)
-      PROGRAM  MAIN
+
+include 'subroutines/header.h'
+
+PROGRAM  MAIN
 ! Settings:
 ! nro,nphi  The observer's camera has nro*nphi pixels: nro radial and nphi azimuthal
 ! nr        The transfer function is calculated for nr radial binsfrom rmin to emax.

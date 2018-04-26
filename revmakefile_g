@@ -1,5 +1,5 @@
 fortran:
-	gfortran -c amodules.f90 subroutines/*.f90 srevtrans.f90
+	gfortran -c amodules.f90 srevtrans.f90
 C_code:
 	gcc -c relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c
 

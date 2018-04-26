@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "initpackage crossen lmodel.dat ." | xspec
+echo "initpackage reltrans lmodel_relxill.dat ." | xspec
 
 rm -f *~ *.o
 rm -f *FunctionMap.* lpack_* 
