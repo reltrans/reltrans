@@ -1,6 +1,6 @@
 !-----------------------------------------------------------------------
-      subroutine strans(spin,h,mu0,Gamma,rin,rout,honr,zcos,nro,nphi,ndelta,ne,dloge,&
-           ear,nf,fhi,flo,mex,gex,xex,me,ge,xe,rlxi,sdmin,sdmax,ximin,ximax,transe,frobs,frrel,xbinhi)
+      subroutine strans(spin,h,mu0,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,ne,dloge,&
+           nf,fhi,flo,mex,gex,xex,me,ge,xe,rlxi,sdmin,sdmax,ximin,ximax,transe,frobs,frrel,xbinhi)
 ! Code to calculate the transfer function for an accretion disk.
 ! This code first does full GR ray tracing for a camera with impact parameters < bmax
 ! It then also does straight line ray tracing for impact parameters >bmax
@@ -25,12 +25,13 @@
 ! frobs                 Observer's reflection fraction
 ! frrel                 Reflection fraction defined by relxilllp
 ! xbinhi                Highest xi bin that has an entry 
-      use blcoordinate
+        use dyn_gr
+        use blcoordinate
       implicit none
       integer nro,nphi,ndelta,ne,nf,mex,gex,sdbin,xex,me,ge,xe
       double precision spin,h,mu0,Gamma,rin,rout,zcos,fhi,flo,honr,cosdout
       real rlxi,ximin,ximax
-      real ear(0:ne),dloge,sdmin,sdmax
+      real dloge,sdmin,sdmax
       complex cexp,transe(ne,mex,gex,xex)
       integer i,npts,j,k,l,odisc,jj,nmax,n,xbin
       parameter (nmax=1000)
@@ -45,14 +46,14 @@
       double precision pem,mudisk,mucros,sigmacros
       double precision rnmax,rnmin,rn(nro),phin,mueff
       double precision fi(nf),dgsofac,sindisk,mue,demang,frobs,cosdin,frrel
-      double precision pem1(nmax,nmax),re1(nmax,nmax),taudo1(nmax,nmax)
+!      double precision pem1(nmax,nmax),re1(nmax,nmax),taudo1(nmax,nmax)
       integer nron,nphin,nrosav,nphisav,mubin,xbinhi,adensity
       double precision spinsav,musav,routsav,mudsav,t1,t0,rnn(nro),domegan(nro)
       double precision mus,mui,dinang,xir,logxieff,logxir,xinorm,logxip,logxihi
       logical dotrace
       character (len=1) A_DENSITY
       data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
-      save nrosav,nphisav,spinsav,musav,routsav,mudsav,pem1,taudo1,re1
+      save nrosav,nphisav,spinsav,musav,routsav,mudsav
       
 ! Settings 
       nron     = 100
@@ -68,7 +69,7 @@
 ! to do full GR ray tracing with      
       mueff  = max( mu0 , 0.3d0 )
       rnmin  = rfunc(spin,mu0)
-      rnmax  = 300d0
+!      rnmax  = 300d0
       !Grid to do in full GR
       call getrgrid(rnmin,rnmax,mueff,nro,nphi,rn,domega)
       !Grid for Newtonian approximation
@@ -80,8 +81,6 @@
       end do
       if( fhi .lt. 1d-10 ) fi(1) = 0.0d0
       
-! Set sensible distance for observer from the BH
-      d = max( 1.0d4 , 2.0d2 * rnmax**2 )
 
 ! Set up g_{sd} array
       sdmax = real( dglpfac(rin ,spin,h) )
@@ -117,27 +116,36 @@
       sin0  = sqrt(1.0-cos0**2)
       transe  = 0.0 !Initialised transfer function
       frobs   = 0.0
+
+      write(*,*) 'status', status_re_tau
       
+!Check if we need to calculate re and tau and pem or we took them from a grid      
+      if (status_re_tau) then 
+      write(*,*) 'GRtrace in'
+         
 ! Trace rays in full GR for the small camera
 ! to convert alpha and beta to r and tau_do (don't care about phi)
 ! First work out if we even need to call this
-      dotrace = .false.
-      if( nro .ne. nrosav ) dotrace = .true.
-      if( nphi .ne. nphisav ) dotrace = .true.
-      if( abs(spinsav-spin) .gt. 1d-6 ) dotrace = .true.
-      if( abs(musav-mu0) .gt. 1d-6 ) dotrace = .true.
-      if( abs(routsav-rout) .gt. 1d-6 ) dotrace = .true.
-      if( abs(mudsav-mudisk) .gt. 1d-6 ) dotrace = .true.
-      if( dotrace )then
-        call GRtrace(nmax,nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d,pem1,taudo1,re1)
-        nrosav  = nro
-        nphisav = nphi
-        spinsav = spin
-        musav   = mu0
-        routsav = rout
-        mudsav  = mudisk
-      end if
-      !Could replace this with reading in from a grid   ***Could paralellize the GRtrace subroutine***
+         dotrace = .false.
+         if( nro .ne. nrosav ) dotrace = .true.
+         if( nphi .ne. nphisav ) dotrace = .true.
+         if( abs(spinsav-spin) .gt. 1d-6 ) dotrace = .true.
+         if( abs(musav-mu0) .gt. 1d-6 ) dotrace = .true.
+         if( abs(routsav-rout) .gt. 1d-6 ) dotrace = .true.
+         if( abs(mudsav-mudisk) .gt. 1d-6 ) dotrace = .true.
+         if( dotrace )then
+!            call GRtrace(nmax,nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d,pem1,taudo1,re1)
+            call GRtrace(nmax,nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
+            nrosav  = nro
+            nphisav = nphi
+            spinsav = spin
+            musav   = mu0
+            routsav = rout
+            mudsav  = mudisk
+         end if
+
+      endif
+      
 
 ! Decide on zone a density profile or constant density profile
       adensity = myenv("A_DENSITY",1)

@@ -1,3 +1,20 @@
+
+MODULE dyn_gr
+!---------------------------------------------------------------------
+!  Module containing definitions needed to dynamically allocate 
+!  the values of an array 
+!---------------------------------------------------------------------
+    implicit none
+
+! int_len_dim: length of the interval (in units of element) -> this is decided by the user (must be a power of 2)
+! int_number: number of interval in the light curve -> this is calculated automatically
+    logical :: status_re_tau = .true. 
+    double precision,dimension(:,:),allocatable :: re1,taudo1,pem1
+!    save re,tau,pem
+END MODULE dyn_gr
+
+
+
 !***********************************************************************
 !This is code of YNOGK used for ray-traycing with General Relativity  
 !***********************************************************************

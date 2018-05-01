@@ -22,6 +22,8 @@
 
 include 'subroutines/header.h'
 
+
+
 PROGRAM  MAIN
 ! Settings:
 ! nro,nphi  The observer's camera has nro*nphi pixels: nro radial and nphi azimuthal
@@ -109,8 +111,8 @@ PROGRAM  MAIN
         write(*,*)"Total CPU time=",t1-t0
 
 
-        ! name = '../sim_data/'
-        ! open(99,file=name)
+        name = '../sim_data/spectrum_grid.dat'
+        open(99,file=name)
         
         write(99,*)"skip on"
         if( param(17) .lt. 4 )then
@@ -129,6 +131,7 @@ PROGRAM  MAIN
           
         write(99,*)"no no"
 
+        
         ! call CPU_TIME(t0)
         ! call tdreltransCp(ear,ne,param,ifl,photar)
         ! call CPU_TIME(t1)
@@ -182,13 +185,14 @@ PROGRAM  MAIN
 
 !-----------------------------------------------------------------------
       subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
+      use dyn_gr
       implicit none
       integer nro,nphi,ndelta,nex,i,nf,ifl,ne,nmax,ReIm,nfsave
       integer nrosave,nphisave,verbose,mubin,mex,gex,sdbin,xex
       integer me,ge,xe,Cp
-      parameter (nmax=1000,ndelta=1000,nex=2**12,mex=10,gex=10,xex=100)
+      parameter (nmax=1000,ndelta=1000,nex=2**12,mex=1,gex=1,xex=100)
       double precision a,h,Gamma,inc,pi,rout,rmin,disco,muobs,rin
-      double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr
+      double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,rnmax,d
       double precision fhisave,flosave,rh,hsave,rinsave,frrel
       real afac,fc,param(17),ear(0:ne),gso,direct
       real Afe,Ecut_s,Ecut_obs,logxi,xillpar(7),E,dE,earx(0:nex),Emax,Emin,dloge
@@ -201,6 +205,26 @@ PROGRAM  MAIN
       logical firstcall,needtrans,needconv,needresp
       integer xbin,xbinhi,myenv,Cpsave
       real logxir
+
+!variable for the grid reading
+      integer :: lrec,irec,nphi_grid,nro_grid,spin_dim,mu_dim,check
+      integer :: s_lo,s_hi,m_lo,m_hi,xbinhi_sl_ml,xbinhi_sl_mh,xbinhi_sh_ml,xbinhi_sh_mh
+      double precision :: honr_grid,spin_lo,spin_hi,mu_lo,mu_hi,spin_start,spin_end,mu_start,mu_end,ave_weight2D
+      real :: ximin_sl_ml,ximax_sl_ml,ximin_sl_mh,ximax_sl_mh,ximin_sh_ml,ximax_sh_ml&
+           ,ximin_sh_mh,ximax_sh_mh
+      real :: sdmin_sl_ml,sdmax_sl_ml,sdmin_sl_mh,sdmax_sl_mh,sdmin_sh_ml,sdmax_sh_ml&
+           ,sdmin_sh_mh,sdmax_sh_mh
+      double precision :: frobs_sl_ml,frrel_sl_ml,frobs_sl_mh,frrel_sl_mh&
+           ,frobs_sh_ml,frrel_sh_ml,frobs_sh_mh,frrel_sh_mh
+      complex :: transe_11(nex,mex,gex,xex),transe_12(nex,mex,gex,xex),transe_21(nex,mex,gex,xex)&
+           ,transe_22(nex,mex,gex,xex),transe_1(nex),transe_2(nex),transe_(nex)
+
+!variable for non linear effects
+      complex :: transe_11a(nex,mex,gex,xex),transe_12a(nex,mex,gex,xex),transe_21a(nex,mex,gex,xex)&
+           ,transe_22a(nex,mex,gex,xex),transe_1a(nex),transe_2a(nex),transe_a(nex)
+
+
+      
       data firstcall /.true./
       data nrosave,nphisave /0,0/
       data needresp/.true./
@@ -212,8 +236,8 @@ PROGRAM  MAIN
       ifl = 1
       
 ! Settings
-      nro   = 400    !resolution variables - these could be made parameters
-      nphi  = 400    !  "
+      nro   = 300    !resolution variables - these could be made parameters
+      nphi  = 300    !  "
       if( nro .gt. nmax ) nro = nmax
       if( nphi .gt. nmax ) nphi = nmax
       dlogf = 0.0073  !This is a resolution parameter (base 10)
@@ -222,7 +246,7 @@ PROGRAM  MAIN
       verbose = myenv("REV_VERB",0)     !Set verbose level
       me      = myenv("MU_ZONES",1)     !Set number of mu_e zones used
       ge      = myenv("ECUT_ZONES",1)   !Set number of Ecut zones used
-      xe      = myenv("ION_ZONES",100)  !Set number of ionisation zones used
+      xe      = myenv("ION_ZONES",1)  !Set number of ionisation zones used
       
 ! Make sure they haven't exceeded their maximum allowed values
       call sizecheck(me,mex)
@@ -230,8 +254,23 @@ PROGRAM  MAIN
       call sizecheck(xe,xex)
 
 ! Initialise
-      call initialiser(firstcall,Emin,Emax,nex,dloge,earx,needtrans)
-     
+      call initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,check&
+     ,nphi,nro,honr_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim)
+
+!check if the grid values are the same one of the model
+         if (honr_grid .ne. honr ) then
+            write(*,*) 'grid has a different honr!'
+            write(*,*) 'honr of the grid is ', honr_grid
+            stop
+         endif
+
+      !gridname = "/Users/Gullik/Dropbox/work/reflection_lag/Model_crossen/grid/grid_300_30x30_pem.dat"
+
+
+         if (.not. allocated(re1)) allocate(re1(nphi,nro))
+         if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
+         if (.not. allocated(pem1)) allocate(pem1(nphi,nro))
+      
 ! Parameters
       h        = dble( param(1) )
       a        = dble( param(2) )
@@ -250,8 +289,11 @@ PROGRAM  MAIN
       flo      = dble( param(15) )
       fhi      = dble( param(16) )
       ReIm     = int( param(17) )
-        
-      !Work out how many frequencies to average over
+      
+      muobs = cos( inc * pi / 180.d0 )
+
+      
+!Work out how many frequencies to average over
       fc = 0.5 * ( flo + fhi )
       nf = ceiling( log10(fhi/flo) / dlogf )
       if( fhi .lt. 1d-10 .or. flo .lt. 1d-10 )then
@@ -260,11 +302,11 @@ PROGRAM  MAIN
         nf  = 1
       end if
 
-      !Convert frequency bounds from Hz to c/Rg
+!Convert frequency bounds from Hz to c/Rg
       fhi = fhi * 4.916d-6 * Mass
       flo = flo * 4.916d-6 * Mass
       
-      !Set minimum r (ISCO) and convert rin and h to rg
+!Set minimum r (ISCO) and convert rin and h to rg
       rmin   = disco( a )
       if( rin .lt. 0.d0 ) rin = abs(rin) * rmin
       rh     = 1.d0+sqrt(1.d0-a**2)
@@ -281,7 +323,7 @@ PROGRAM  MAIN
         h = 1.5d0 * rh
       end if
 
-      !Calculate source to observer g-factor and source frame Ecut
+!Calculate source to observer g-factor and source frame Ecut
       gso    = real( dgsofac(a,h) )
       Ecut_s = (1.0+zcos) * Ecut_obs / gso
       if( verbose .gt. 0 )then
@@ -292,7 +334,7 @@ PROGRAM  MAIN
         end if
       end if
       
-      !Determine if I need to calculate the kernel
+!Determine if I need to calculate the kernel
       if( .not. needtrans )then
         do i = 1,8
           if( abs( param(i) - paramsave(i) ) .gt. 1e-7 ) needtrans = .true.
@@ -308,10 +350,73 @@ PROGRAM  MAIN
       end if
 
       if( needtrans )then
-        !Calculate the Kernel for the given parameters
-        muobs = cos( inc * pi / 180.d0 )         
-        call strans(a,h,muobs,Gamma,rin,rout,honr,zcos,nro,nphi,ndelta,nex,dloge,&
-             earx,nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin,sdmax,ximin,ximax,transe,frobs,frrel,xbinhi)
+
+         if (check .ne. 0) then
+         call chclose(a,spin_start,spin_end,spin_dim,s_lo,s_hi)
+         call chclose(muobs,mu_start,mu_end,mu_dim,m_lo,m_hi)
+         call ch_ind_val(spin_start,spin_end,spin_dim,s_lo,spin_lo)
+         call ch_ind_val(spin_start,spin_end,spin_dim,s_hi,spin_hi)
+         call ch_ind_val(mu_start,mu_end,mu_dim,m_lo,mu_lo)
+         call ch_ind_val(mu_start,mu_end,mu_dim,m_hi,mu_hi)
+
+
+         ! write(*,*) 'index',s_lo,s_hi,m_lo,m_hi
+         ! write(*,*) 'values',spin_lo,spin_hi,mu_lo,mu_hi
+
+         
+            irec = 3*mu_dim*(s_lo-1) + 3*m_lo - 1 
+            read(98,rec=irec) re1
+            read(98,rec=irec+1) taudo1
+            read(98,rec=irec+2) pem1
+            status_re_tau = .false.
+            call strans(spin_lo,h,mu_lo,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
+                 nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin_sl_ml,sdmax_sl_ml,ximin_sl_ml,ximax_sl_ml&
+                 ,transe_11,frobs_sl_ml,frrel_sl_ml,xbinhi_sl_ml)
+
+            irec = 3*mu_dim*(s_lo-1) + 3*m_hi - 1
+            read(98,rec=irec) re1
+            read(98,rec=irec+1) taudo1
+            read(98,rec=irec+2) pem1
+            call strans(spin_lo,h,mu_hi,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
+                 nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin_sl_mh,sdmax_sl_mh,ximin_sl_mh,ximax_sl_mh&
+                 ,transe_21,frobs_sl_mh,frrel_sl_mh,xbinhi_sl_mh)
+
+            irec = 3*mu_dim*(s_hi-1) + 3*m_lo - 1
+            read(98,rec=irec) re1
+            read(98,rec=irec+1) taudo1
+            read(98,rec=irec+2) pem1
+            call strans(spin_hi,h,mu_lo,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
+                 nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin_sh_ml,sdmax_sh_ml,ximin_sh_ml,ximax_sh_ml&
+                 ,transe_12,frobs_sh_ml,frrel_sh_ml,xbinhi_sh_ml)
+
+            
+            irec = 3*mu_dim*(s_hi-1) + 3*m_hi - 1
+            read(98,rec=irec) re1
+            read(98,rec=irec+1) taudo1
+            read(98,rec=irec+2) pem1
+            call strans(spin_hi,h,mu_hi,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
+                 nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin_sh_mh,sdmax_sh_mh,ximin_sh_mh,ximax_sh_mh&
+                 ,transe_22,frobs_sh_mh,frrel_sh_mh,xbinhi_sh_mh)
+
+   
+            ! write(*,*)spin_lo,h,mu_hi,gamma,rin,rout,honr,zcos,nro,nphi,ndelta,nex,dloge &
+            !      ,nf,fhi,flo,nmu,refl_sh_ml
+
+
+            frobs = ave_weight2D(a,spin_lo,spin_hi,muobs,mu_lo,mu_hi,frobs_sl_ml,frobs_sl_mh,frobs_sh_ml,frobs_sh_mh)
+            xbinhi = max(xbinhi_sl_ml,xbinhi_sl_mh,xbinhi_sh_ml,xbinhi_sh_mh)
+
+         else 
+
+
+         !Calculate the Kernel for the given parameters
+
+            status_re_tau = .true.
+        call strans(a,h,muobs,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
+             nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin,sdmax,ximin,ximax,transe,frobs,frrel,xbinhi)
+
+        endif
+        
       end if
       if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",afac*frobs
       if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
@@ -325,25 +430,25 @@ PROGRAM  MAIN
       if( Cp .ne. Cpsave ) needconv = .true.
 
       if( needconv )then
-        !Get continuum spectrum
+!Get continuum spectrum
         call getcont(nex,earx,Gamma,Afe,Ecut_obs,logxi,Cp,contx,xillpar)
         if( verbose .gt. 0 ) call sourcelum(nex,earx,contx,real(mass))
-        !Now reflection
+!Now reflection
         xillpar(7) = -1.0       !reflection fraction of 1        
         reconv = 0.0
         imconv = 0.0
-        !Loop over ionisatrion, emission angle and Ecut zones
+!Loop over ionisatrion, emission angle and Ecut zones
         do xbin = 1,xbinhi   !loop over ionisation zones
           logxir = ximin + (xbin-0.5)*(ximax-ximin)/float(xe)
           xillpar(4) = logxir
           if( xe .eq. 1 ) xillpar(4) = logxi
           do sdbin = 1,ge      !loop over Ecut zones
-            !Calculate blueshift factor
+!Calculate blueshift factor
             gsd = sdmin + (sdbin-0.5) * (sdmax-sdmin)/float(ge)
             !Set local high energy cut-off
             xillpar(3) = gsd * Ecut_s
             if( ge .eq. 1 ) xillpar(3) = Ecut_s
-            !Loop through emission angles
+!Loop through emission angles
             do mubin = 1,me      !loop over emission angle zones
               !Calculate input inclination angle
               mue = ( real(mubin) - 0.5 ) / real(me)
@@ -351,11 +456,27 @@ PROGRAM  MAIN
               if( me .eq. 1 ) xillpar(6) = real( inc )
               !Call xillver
               call myxill(earx,nex,xillpar,ifl,Cp,photarx)
-              !Convolve with line profile
-              do i = 1,nex
-                reline(i) = real(  transe(i,mubin,sdbin,xbin) )
-                imline(i) = aimag( transe(i,mubin,sdbin,xbin) )
-              end do
+
+              if (check .ne. 0) then 
+!interpolation of the transfer functions extracted from the grid
+                 call myinterp_complex2(a,spin_lo,spin_hi,nex,transe_11(:,mubin,sdbin,xbin),transe_12(:,mubin,sdbin,xbin)&
+                      ,transe_11a(:,mubin,sdbin,xbin),transe_12a(:,mubin,sdbin,xbin),transe_1,transe_1a)
+                 call myinterp_complex2(a,spin_lo,spin_hi,nex,transe_21(:,mubin,sdbin,xbin),transe_22(:,mubin,sdbin,xbin)&
+                      ,transe_21a(:,mubin,sdbin,xbin),transe_22a(:,mubin,sdbin,xbin),transe_2,transe_2a)
+                 call myinterp_complex2(muobs,mu_lo,mu_hi,nex,transe_1,transe_2,transe_1a,transe_2a,transe_,transe_a)
+
+                 reline = real(  transe_ ) 
+                 imline = aimag( transe_ )
+                
+              else 
+                 do i = 1,nex
+                    reline(i) = real(  transe(i,mubin,sdbin,xbin) )
+                    imline(i) = aimag( transe(i,mubin,sdbin,xbin) )
+                 end do
+                 
+              endif
+          
+!Convolve with line profile
               call padcnv(1e-7,nex,reline,photarx,reconvmu)
               call padcnv(1e-7,nex,imline,photarx,imconvmu)
               !Add to running sum
