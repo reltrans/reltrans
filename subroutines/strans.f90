@@ -1,6 +1,6 @@
 !-----------------------------------------------------------------------
       subroutine strans(spin,h,mu0,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,ne,dloge,&
-           nf,fhi,flo,mex,gex,xex,me,ge,xe,rlxi,sdmin,sdmax,ximin,ximax,transe,frobs,frrel,xbinhi)
+           nf,fhi,flo,mex,gex,xex,me,ge,xe,rlxi,sdmin,sdmax,ximin,ximax,transe,transe_a,frobs,frrel,xbinhi)
 ! Code to calculate the transfer function for an accretion disk.
 ! This code first does full GR ray tracing for a camera with impact parameters < bmax
 ! It then also does straight line ray tracing for impact parameters >bmax
@@ -32,7 +32,7 @@
       double precision spin,h,mu0,Gamma,rin,rout,zcos,fhi,flo,honr,cosdout
       real rlxi,ximin,ximax
       real dloge,sdmin,sdmax
-      complex cexp,transe(ne,mex,gex,xex)
+      complex cexp,transe(ne,mex,gex,xex),transe_a(ne,mex,gex,xex)
       integer i,npts,j,k,l,odisc,jj,nmax,n,xbin
       parameter (nmax=1000)
       double precision domega(nro),d
@@ -245,8 +245,9 @@
               !write(124,*)re,mue
               !Sum up over frequency range (if flo=fhi=0, this is DC component)
               do fbin = 1,nf
-                cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
-                transe(gbin,mubin,sdbin,xbin) = transe(gbin,mubin,sdbin,xbin) + real(dFe) * cexp
+                 cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
+                 transe(gbin,mubin,sdbin,xbin) = transe(gbin,mubin,sdbin,xbin) + real(dFe) * cexp
+                 transe_a(gbin,mubin,sdbin,xbin) = transe_a(gbin,mubin,sdbin,xbin) + real(log(g)) * real(dFe) * cexp
               end do
             end if
           end if
@@ -318,8 +319,9 @@
             !write(124,*)re,mue
             !Sum up over frequency range (if flo=fhi=0, this is DC component)
             do fbin = 1,nf
-              cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
-              transe(gbin,mubin,sdbin,xbin) = transe(gbin,mubin,sdbin,xbin) + real(dFe) * cexp
+               cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
+               transe(gbin,mubin,sdbin,xbin) = transe(gbin,mubin,sdbin,xbin) + real(dFe) * cexp
+               transe_a(gbin,mubin,sdbin,xbin) = transe_a(gbin,mubin,sdbin,xbin) + real(log(g)) * real(dFe) * cexp
             end do
           end if
         end do
