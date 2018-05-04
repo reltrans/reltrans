@@ -23,7 +23,6 @@
 #include "common.h"
 
 
-/***** #include "/Data/adamingram/heasoft/heasoft-6.23/heacore/cfitsio/fitsio.h" ****/
 /* #include "/Data/adamingram/heasoft/heasoft-6.22.1/heacore/cfitsio/fitsio.h" */
 #include "fitsio.h"
 

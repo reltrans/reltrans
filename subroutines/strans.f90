@@ -1,6 +1,6 @@
 !-----------------------------------------------------------------------
       subroutine strans(spin,h,mu0,Gamma,rin,rout,honr,zcos,nro,nphi,ndelta,ne,dloge,&
-           ear,nf,fhi,flo,mex,gex,xex,me,ge,xe,rlxi,sdmin,sdmax,ximin,ximax,transe,frobs,frrel,xbinhi)
+           ear,nf,fhi,flo,mex,gex,xex,me,ge,xe,rlxi,sdmin,sdmax,ximin,ximax,transe,frobs,frrel,xbinhi,lens)
 ! Code to calculate the transfer function for an accretion disk.
 ! This code first does full GR ray tracing for a camera with impact parameters < bmax
 ! It then also does straight line ray tracing for impact parameters >bmax
@@ -25,7 +25,8 @@
 ! frobs                 Observer's reflection fraction
 ! frrel                 Reflection fraction defined by relxilllp
 ! xbinhi                Highest xi bin that has an entry 
-      use blcoordinate
+! lens                  Lensing factor for direct emission
+        use blcoordinate
       implicit none
       integer nro,nphi,ndelta,ne,nf,mex,gex,sdbin,xex,me,ge,xe
       double precision spin,h,mu0,Gamma,rin,rout,zcos,fhi,flo,honr,cosdout
@@ -35,9 +36,9 @@
       integer i,npts,j,k,l,odisc,jj,nmax,n,xbin
       parameter (nmax=1000)
       double precision domega(nro),d
-      double precision deltso,tauso,rlp(ndelta),dcosdr(ndelta),tlp(ndelta),cosd(ndelta)
+      double precision tauso,rlp(ndelta),dcosdr(ndelta),tlp(ndelta),cosd(ndelta)
       double precision alpha,beta,cos0,sin0,phi0,phie,re,gsd
-      double precision taudo,dtaudo,g,dlgfac,dFe
+      double precision taudo,dtaudo,g,dlgfac,dFe,lens
       double precision tau,tausd,emissivity,cosfac,dglpfac,dareafac,line
       integer gbin,kk,fbin,ebin,ifl,stat,myenv
       double precision f,rmin,disco,rfunc
@@ -86,10 +87,9 @@
 ! Set up g_{sd} array
       sdmax = real( dglpfac(rin ,spin,h) )
       sdmin = real( dglpfac(rout,spin,h) )
-      
-! Calculate travel time from the source to the observer
-      call sourcelag(spin,h,mu0,deltso)
-      tauso = deltso    !time lag from source to observer (in Rg/c) = tauso + d
+
+! Calculate lensing factor "lens" and source to observer time lag "tauso"
+      call getlens(spin,h,mu0,lens,tauso)
       if( tauso .ne. tauso ) stop "tauso is NaN"
       
 ! Calculate dcos/dr and time lags vs r for the lamppost model
@@ -330,7 +330,7 @@
       transe = transe / real(nf)
 
       !Finish calculation of the reflection fraction
-      frobs = frobs / (dgsofac(spin,h))**3
+      frobs = frobs / (dgsofac(spin,h))**3 / lens
         
       return
     end subroutine strans

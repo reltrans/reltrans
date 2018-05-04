@@ -45,7 +45,7 @@ PROGRAM  MAIN
       param(2)  = 0.9     !a     !BH spin
       param(3)  = 30.0    !inc   !Inclination angle in degrees
       param(4)  = -1.0    !rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
-      param(5)  = 20000.0 !rout  !Disk outer radius in Rg - will probably hardwire this
+      param(5)  = 1000.0  !rout  !Disk outer radius in Rg - will probably hardwire this
       param(6)  = 0.0     !zcos  !Cosmological redshift
       param(7)  = 2.0     !Gamma !Photon index
       param(8)  = 3.0     !logxi !log10xi - ionisation parameter
@@ -189,7 +189,7 @@ PROGRAM  MAIN
       parameter (nmax=1000,ndelta=1000,nex=2**12,mex=10,gex=10,xex=100)
       double precision a,h,Gamma,inc,pi,rout,rmin,disco,muobs,rin
       double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr
-      double precision fhisave,flosave,rh,hsave,rinsave,frrel
+      double precision fhisave,flosave,rh,hsave,rinsave,frrel,lens
       real afac,fc,param(17),ear(0:ne),gso,direct
       real Afe,Ecut_s,Ecut_obs,logxi,xillpar(7),E,dE,earx(0:nex),Emax,Emin,dloge
       real reline(nex),imline(nex),photarx(nex),reconv(nex),imconv(nex)
@@ -220,9 +220,9 @@ PROGRAM  MAIN
 
 ! Call environment variables
       verbose = myenv("REV_VERB",0)     !Set verbose level
-      me      = myenv("MU_ZONES",1)     !Set number of mu_e zones used
-      ge      = myenv("ECUT_ZONES",1)   !Set number of Ecut zones used
-      xe      = myenv("ION_ZONES",100)  !Set number of ionisation zones used
+      me      = myenv("MU_ZONES",5)     !Set number of mu_e zones used
+      ge      = myenv("ECUT_ZONES",5)   !Set number of Ecut zones used
+      xe      = myenv("ION_ZONES",10)   !Set number of ionisation zones used
       
 ! Make sure they haven't exceeded their maximum allowed values
       call sizecheck(me,mex)
@@ -311,10 +311,10 @@ PROGRAM  MAIN
         !Calculate the Kernel for the given parameters
         muobs = cos( inc * pi / 180.d0 )         
         call strans(a,h,muobs,Gamma,rin,rout,honr,zcos,nro,nphi,ndelta,nex,dloge,&
-             earx,nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin,sdmax,ximin,ximax,transe,frobs,frrel,xbinhi)
+             earx,nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin,sdmax,ximin,ximax,transe,frobs,frrel,xbinhi,lens)
       end if
-      if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",afac*frobs
-      if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
+      if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",frobs
+      if( verbose .gt. 0 ) write(*,*)"System reflection fraction=",frrel
       
       !Determine if I need to convolve with the restframe reflection spectrum
       needconv = .false.
@@ -374,14 +374,14 @@ PROGRAM  MAIN
       do i = 1,nex
         E = 0.5 * ( earx(i) + earx(i-1) )
         dE = earx(i) - earx(i-1)
-        direct  = contx(i) / dE * ( gso / (1.0+zcos) )**(2+Gamma)
+        direct  = contx(i) / dE * lens * ( gso / (1.0+zcos) )**(2+Gamma)
         ReSx(i) = direct + afac * reconv(i) / dE
         ImSx(i) = afac * imconv(i) / dE
         ReGx(i) = cos(phiA) * ReSx(i) - sin(phiA) * ImSx(i)
         ImGx(i) = sin(phiA) * ReSx(i) + cos(phiA) * ImSx(i)
-!        write(300,*)E,dE,E**2*ReSx(i),E**2*direct,E**2*afac*reconv(i)/dE
+        write(300,*)E,dE,E**2*ReSx(i),E**2*direct,E**2*afac*reconv(i)/dE
       end do
-!      write(300,*)"no no"
+      write(300,*)"no no"
 
       !Re-bin onto input grid
       call rebinE(earx,ReGx,nex,ear,ReS,ne)
