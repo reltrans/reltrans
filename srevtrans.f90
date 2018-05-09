@@ -45,7 +45,7 @@ PROGRAM  MAIN
       param(2)  = 0.9     !a     !BH spin
       param(3)  = 30.0    !inc   !Inclination angle in degrees
       param(4)  = -1.0    !rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
-      param(5)  = 1000.0  !rout  !Disk outer radius in Rg - will probably hardwire this
+      param(5)  = 20000.0 !rout  !Disk outer radius in Rg - will probably hardwire this
       param(6)  = 0.0     !zcos  !Cosmological redshift
       param(7)  = 2.0     !Gamma !Photon index
       param(8)  = 3.0     !logxi !log10xi - ionisation parameter
@@ -55,9 +55,9 @@ PROGRAM  MAIN
       param(12) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
       param(13) = 4.6e7   !M     !BH mass in solar masses
       param(14) = 0.0     !phiA  !Frequency-dependent phase normalisation (radians) - calculate self-consistently in full version of the model
-      param(15) = 0.0!1e-5     !flo   !Lowest frequency in band (Hz)
-      param(16) = 0.0!2e-5     !fhi   !Highest frequency in band (Hz)
-      param(17) = 1      !ReIm  !1=Re, 2=Im, 3=Modulus, 4=phase lag (cycles), 5=time lag (s)
+      param(15) = 1e-5     !flo   !Lowest frequency in band (Hz)
+      param(16) = 2e-5     !fhi   !Highest frequency in band (Hz)
+      param(17) = 5      !ReIm  !1=Re, 2=Im, 3=Modulus, 4=phase lag (cycles), 5=time lag (s)
       !---------------------------------
       
       Emax  = 500.0 !300.0
