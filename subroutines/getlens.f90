@@ -88,7 +88,7 @@
       !and extrapolate down to cosi=-0.5
       cosi = -0.5
       cosdelta = (cosi-1.d0)*(cosdelta0+1.d0)/(mua-1.d0) - 1.0
-      cosdelta = min( cosdelta , -muobs )  !-muobs is the Newtonian limit
+      cosdelta = min( cosdelta , -muobs )  !-muobs is the Newtonian limit 
       !Use for limits
       x1 = -1.d0
       x2 = cosdelta
