@@ -1,10 +1,10 @@
 !-----------------------------------------------------------------------
-      subroutine phaseA(nex,earx,contx,reconv,imconv,gso,zcos,Gamma,afac,phiA)
+      subroutine phaseA(nex,earx,contx,reconv,imconv,gso,zcos,Gamma,afac,lens,phiA)
 ! Self-consistently calculates the parameter phiA if phiset=1
       implicit none
       integer nex,phiset,myenv
       real earx(0:nex),contx(nex),reconv(nex),imconv(nex),afac,phiA,gso
-      double precision zcos,Gamma
+      double precision zcos,Gamma,lens
       logical needresp
       integer NENMAX,CHNMAX,NENERG,NUMCHN,Ilo,Ihi,I
       parameter (NENMAX=5000,CHNMAX=5000)
@@ -38,7 +38,7 @@
         Re = 0.0
         do I = Ilo,Ihi
           Im = Im - ImWI(I)
-          Re = Re + ( gso / (1.0+zcos) )**(2+Gamma) * fI(I)
+          Re = Re + lens * ( gso / (1.0+zcos) )**(2+Gamma) * fI(I)
           Re = Re + afac * ReWI(I)
         end do
         Im   = afac * Im

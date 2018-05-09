@@ -1,24 +1,10 @@
-! gfortran -L/usr/local/opt/cfitsio/ -lcfitsio srevtrans.f90 /Users/adamingram/Dropbox/relxill/relbase.f90 /Users/adamingram/Dropbox/relxill/relxill.f90
-! gfortran -L/usr/local/opt/cfitsio/ -lcfitsio srevtrans.f90 relbase.f90 relxill.f90
-!
-! gfortran -L/Data/adamingram/heasoft/heasoft-6.22.1/heacore/cfitsio/ -lcfitsio srevtrans.f90 relbase.f90 relxill.f90
-!
-! make -f revmakefile run   or make -f desktop_revmakefile run
-! ./exe
-!
-! To do:
-! x Bring includes into main body of code
-! x Create lmodel.dat & make into xspec code
-! x Do firstcalls in the main body of the code
-! x Do firstcalls in the kernal calculation
-! x Put in environment variables: verbose and resolution - just verbose, resolution is hardwired
-!
 ! This calculates a relativistic transfer function for an on-axis lamppost source
 ! including as many effects as possible:
 ! 1) The shifting of cut-off energy for different radii and for the observer
 ! 2) The adjustment of the continuum flux for g^2
 ! 3) The angular dependence of the reflection spectrum (viewing angle)
-! 4) If possible, the dependence on incident angle (how well can this be mimicked by tweaking the ionization?)
+! 4) Ionisation profile
+! 5) The dependence on incident angle (mimicked by tweaking the ionization)
 
 include 'subroutines/header.h'
 
@@ -199,15 +185,17 @@ PROGRAM  MAIN
       real ReGx(nex),ImGx(nex),sum
       complex transe(nex,mex,gex,xex)
       logical firstcall,needtrans,needconv,needresp
-      integer xbin,xbinhi,myenv,Cpsave
+      integer xbin,xbinhi,myenv,Cpsave,mesave,gesave,xesave
       real logxir
       data firstcall /.true./
       data nrosave,nphisave /0,0/
       data needresp/.true./
       data Cpsave/2/
+      data mesave,gesave,xesave/-1,-1,-1/
       save firstcall,Emax,Emin,dloge,earx
       save paramsave,transe,fhisave,flosave,nfsave,nrosave,nphisave
       save reconv,imconv,frobs,hsave,rinsave,sdmin,sdmax,frrel,Cpsave
+      save mesave,gesave,xesave,lens,xbinhi,ximin,ximax
       pi = acos(-1.d0)
       ifl = 1
       
@@ -305,6 +293,9 @@ PROGRAM  MAIN
         if( nf .ne. nfsave ) needtrans = .true.
         if( abs( fhi - fhisave ) .gt. 1e-7 ) needtrans = .true.
         if( abs( flo - flosave ) .gt. 1e-7 ) needtrans = .true.
+        if( me .ne. mesave ) needtrans = .true.
+        if( ge .ne. gesave ) needtrans = .true.
+        if( xe .ne. xesave ) needtrans = .true.
       end if
 
       if( needtrans )then
@@ -323,7 +314,7 @@ PROGRAM  MAIN
         if( abs( param(i) - paramsave(i) ) .gt. 1e-7 ) needconv = .true.
       end do
       if( Cp .ne. Cpsave ) needconv = .true.
-
+      
       if( needconv )then
         !Get continuum spectrum
         call getcont(nex,earx,Gamma,Afe,Ecut_obs,logxi,Cp,contx,xillpar)
@@ -368,8 +359,9 @@ PROGRAM  MAIN
      
       
 ! Calculate phiA from instrument response - if this option is set to on      
-      call phaseA(nex,earx,contx,reconv,imconv,gso,zcos,Gamma,afac,phiA)
-              
+      call phaseA(nex,earx,contx,reconv,imconv,gso,zcos,Gamma,afac,lens,phiA)
+      write(*,*)"phiA=",phiA
+      
       !Add on continuum (and include boosting fudge factor)
       do i = 1,nex
         E = 0.5 * ( earx(i) + earx(i-1) )
@@ -379,9 +371,9 @@ PROGRAM  MAIN
         ImSx(i) = afac * imconv(i) / dE
         ReGx(i) = cos(phiA) * ReSx(i) - sin(phiA) * ImSx(i)
         ImGx(i) = sin(phiA) * ReSx(i) + cos(phiA) * ImSx(i)
-        write(300,*)E,dE,E**2*ReSx(i),E**2*direct,E**2*afac*reconv(i)/dE
+        !write(300,*)E,dE,E**2*ReSx(i),E**2*direct,E**2*afac*reconv(i)/dE
       end do
-      write(300,*)"no no"
+      !write(300,*)"no no"
 
       !Re-bin onto input grid
       call rebinE(earx,ReGx,nex,ear,ReS,ne)
@@ -434,25 +426,12 @@ PROGRAM  MAIN
       hsave     = h
       paramsave = param
       Cpsave    = Cp
+      mesave    = me
+      gesave    = ge
+      xesave    = xe
       
       end subroutine genreltrans
 !-----------------------------------------------------------------------
 
 
-
-
-      
-
-
-! !-----------------------------------------------------------------------
-!       function na(r,rin)
-! ! Number density for zone a of a Shakura & Sunyaev disk (eqn 2.11 in SS73)
-!       implicit none
-!       double precision na,r,rin,x,f
-!       x = r / rin
-!       f = 1.0 - x**(-0.5)
-!       na = r**1.5 / f**2
-!       return
-!       end function na
-! !-----------------------------------------------------------------------
 
