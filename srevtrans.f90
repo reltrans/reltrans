@@ -41,9 +41,9 @@ PROGRAM  MAIN
       param(12) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
       param(13) = 4.6e7   !M     !BH mass in solar masses
       param(14) = 0.0     !phiA  !Frequency-dependent phase normalisation (radians) - calculate self-consistently in full version of the model
-      param(15) = 1e-5     !flo   !Lowest frequency in band (Hz)
-      param(16) = 2e-5     !fhi   !Highest frequency in band (Hz)
-      param(17) = 5      !ReIm  !1=Re, 2=Im, 3=Modulus, 4=phase lag (cycles), 5=time lag (s)
+      param(15) = 0.0!1e-5     !flo   !Lowest frequency in band (Hz)
+      param(16) = 0.0!2e-5     !fhi   !Highest frequency in band (Hz)
+      param(17) = 1      !ReIm  !1=Re, 2=Im, 3=Modulus, 4=phase lag (cycles), 5=time lag (s)
       !---------------------------------
       
       Emax  = 500.0 !300.0
@@ -57,7 +57,7 @@ PROGRAM  MAIN
       numax = 1e-4
       kmax  = 100
       
-      do k = 1,1!5!kmax   !2!8
+      do k = 1,2!5!kmax   !2!8
 
         ! if( k .eq. 1 )then
         !   param(8) = 3.0
@@ -89,37 +89,16 @@ PROGRAM  MAIN
 
 !        param(1) = 3.0 + 58.5 * float(k-1)/float(kmax)
          
-        call CPU_TIME(t0)
-        call tdreltrans(ear,ne,param,ifl,photar)
-        call CPU_TIME(t1)
-        write(*,*)"Total CPU time=",t1-t0
-
-
-        ! name = '../sim_data/'
-        ! open(99,file=name)
-        
-        write(99,*)"skip on"
-        if( param(17) .lt. 4 )then
-          do i = 1,ne
-            E  = 0.5 * ( ear(i) + ear(i-1) )
-            dE =         ear(i) - ear(i-1)
-            write(99,*)E,E**2*photar(i)/dE
-          end do
-        else
-          do i = 1,ne
-            E  = 0.5 * ( ear(i) + ear(i-1) )
-            dE =         ear(i) - ear(i-1)
-            write(99,*)E,photar(i)/dE
-          end do
-        end if
-          
-        write(99,*)"no no"
-
         ! call CPU_TIME(t0)
-        ! call tdreltransCp(ear,ne,param,ifl,photar)
+        ! call tdreltrans(ear,ne,param,ifl,photar)
         ! call CPU_TIME(t1)
         ! write(*,*)"Total CPU time=",t1-t0
 
+
+        ! ! name = '../sim_data/'
+        ! ! open(99,file=name)
+        
+        ! write(99,*)"skip on"
         ! if( param(17) .lt. 4 )then
         !   do i = 1,ne
         !     E  = 0.5 * ( ear(i) + ear(i-1) )
@@ -134,7 +113,28 @@ PROGRAM  MAIN
         !   end do
         ! end if
           
-        ! write(99,*)"no no" 
+        ! write(99,*)"no no"
+
+        call CPU_TIME(t0)
+        call tdreltransCp(ear,ne,param,ifl,photar)
+        call CPU_TIME(t1)
+        write(*,*)"Total CPU time=",t1-t0
+
+        if( param(17) .lt. 4 )then
+          do i = 1,ne
+            E  = 0.5 * ( ear(i) + ear(i-1) )
+            dE =         ear(i) - ear(i-1)
+            write(99,*)E,E**2*photar(i)/dE
+          end do
+        else
+          do i = 1,ne
+            E  = 0.5 * ( ear(i) + ear(i-1) )
+            dE =         ear(i) - ear(i-1)
+            write(99,*)E,photar(i)/dE
+          end do
+        end if
+          
+        write(99,*)"no no" 
 
       end do
 
@@ -195,7 +195,7 @@ PROGRAM  MAIN
       save firstcall,Emax,Emin,dloge,earx
       save paramsave,transe,fhisave,flosave,nfsave,nrosave,nphisave
       save reconv,imconv,frobs,hsave,rinsave,sdmin,sdmax,frrel,Cpsave
-      save mesave,gesave,xesave,lens,xbinhi,ximin,ximax
+      save mesave,gesave,xesave,lens,xbinhi,ximin,ximax,contx
       pi = acos(-1.d0)
       ifl = 1
       
@@ -356,11 +356,9 @@ PROGRAM  MAIN
           end do
         end do
       end if
-     
       
 ! Calculate phiA from instrument response - if this option is set to on      
       call phaseA(nex,earx,contx,reconv,imconv,gso,zcos,Gamma,afac,lens,phiA)
-      write(*,*)"phiA=",phiA
       
       !Add on continuum (and include boosting fudge factor)
       do i = 1,nex
@@ -371,9 +369,9 @@ PROGRAM  MAIN
         ImSx(i) = afac * imconv(i) / dE
         ReGx(i) = cos(phiA) * ReSx(i) - sin(phiA) * ImSx(i)
         ImGx(i) = sin(phiA) * ReSx(i) + cos(phiA) * ImSx(i)
-        !write(300,*)E,dE,E**2*ReSx(i),E**2*direct,E**2*afac*reconv(i)/dE
+        write(300,*)E,dE,E**2*ReSx(i),E**2*direct,E**2*afac*reconv(i)/dE
       end do
-      !write(300,*)"no no"
+      write(300,*)"no no"
 
       !Re-bin onto input grid
       call rebinE(earx,ReGx,nex,ear,ReS,ne)
