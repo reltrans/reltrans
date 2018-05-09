@@ -29,7 +29,7 @@
       sins      = 0.d0   !sin of same angle
       velocity  = 0.0D0  !3-velocity of source
       dcosdelta = 1d-2   !Step in cosdelta used for differentiation
-      xacc      = 1d-4   !Accuracy of minimisation routine
+      xacc      = 1d-6   !Accuracy of minimisation routine
 
       !First calculate the cosdelta corresponding to the input muobs
       
