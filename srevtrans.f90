@@ -268,7 +268,7 @@ PROGRAM  MAIN
         write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
         h = 1.5d0 * rh
       end if
-
+      
       !Calculate source to observer g-factor and source frame Ecut
       gso    = real( dgsofac(a,h) )
       Ecut_s = (1.0+zcos) * Ecut_obs / gso
