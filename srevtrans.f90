@@ -43,7 +43,7 @@ PROGRAM  MAIN
       param(14) = 0.0     !phiA  !Frequency-dependent phase normalisation (radians) - calculate self-consistently in full version of the model
       param(15) = 0.0!1e-5     !flo   !Lowest frequency in band (Hz)
       param(16) = 0.0!2e-5     !fhi   !Highest frequency in band (Hz)
-      param(17) = 1      !ReIm  !1=Re, 2=Im, 3=Modulus, 4=phase lag (cycles), 5=time lag (s)
+      param(17) = 6      !ReIm  !1=Re, 2=Im, 3=Modulus, 4=phase lag (cycles), 5=time lag (s)
       !---------------------------------
       
       Emax  = 500.0 !300.0
@@ -182,7 +182,7 @@ PROGRAM  MAIN
       real reconvmu(nex),imconvmu(nex),mue,sdmin,sdmax,gsd,ximin,ximax
       real phase,t0,t1,ReSx(nex),ImSx(nex),ReS(ne),ImS(ne),photar(ne)
       real paramsave(17),contx(nex),frac,g,phiA
-      real ReGx(nex),ImGx(nex),sum
+      real ReGx(nex),ImGx(nex),sum,ReG(ne),ImG(ne)
       complex transe(nex,mex,gex,xex)
       logical firstcall,needtrans,needconv,needresp
       integer xbin,xbinhi,myenv,Cpsave,mesave,gesave,xesave
@@ -195,7 +195,7 @@ PROGRAM  MAIN
       save firstcall,Emax,Emin,dloge,earx
       save paramsave,transe,fhisave,flosave,nfsave,nrosave,nphisave
       save reconv,imconv,frobs,hsave,rinsave,sdmin,sdmax,frrel,Cpsave
-      save mesave,gesave,xesave,lens,xbinhi,ximin,ximax,contx
+      save mesave,gesave,xesave,lens,xbinhi,ximin,ximax,contx,needresp
       pi = acos(-1.d0)
       ifl = 1
       
@@ -369,9 +369,9 @@ PROGRAM  MAIN
         ImSx(i) = afac * imconv(i) / dE
         ReGx(i) = cos(phiA) * ReSx(i) - sin(phiA) * ImSx(i)
         ImGx(i) = sin(phiA) * ReSx(i) + cos(phiA) * ImSx(i)
-        write(300,*)E,dE,E**2*ReSx(i),E**2*direct,E**2*afac*reconv(i)/dE
+!        write(300,*)E,dE,E**2*ReSx(i),E**2*direct,E**2*afac*reconv(i)/dE
       end do
-      write(300,*)"no no"
+!      write(300,*)"no no"
 
       !Re-bin onto input grid
       call rebinE(earx,ReGx,nex,ear,ReS,ne)
@@ -414,7 +414,7 @@ PROGRAM  MAIN
         end do
         write(*,*)"Warning, only fit to data with ReIm=1 & 2"
       end if
-
+      
       nrosave   = nro
       nphisave  = nphi
       fhisave   = fhi
