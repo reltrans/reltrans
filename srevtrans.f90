@@ -1,7 +1,7 @@
 ! This calculates a relativistic transfer function for an on-axis lamppost source
 ! including as many effects as possible:
 ! 1) The shifting of cut-off energy for different radii and for the observer
-! 2) The adjustment of the continuum flux for g^2
+! 2) The adjustment of the continuum flux for \ell * g^{2+Gamma}
 ! 3) The angular dependence of the reflection spectrum (viewing angle)
 ! 4) Ionisation profile
 ! 5) The dependence on incident angle (mimicked by tweaking the ionization)
@@ -37,13 +37,13 @@ PROGRAM  MAIN
       param(8)  = 3.0     !logxi !log10xi - ionisation parameter
       param(9)  = 1.0     !Afe   !Iron abundance      
       param(10) = 300.0   !Ecut  !High energy exponential cut off ***IN OBSERVER'S RESTFRAME***
-      param(11) = 0.0     !h/r   !Disk scaleheight - not yet fully implemented
+      param(11) = 0.0     !Nh    !Hydrogen absorption column (using tbabs)
       param(12) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
       param(13) = 4.6e7   !M     !BH mass in solar masses
       param(14) = 0.0     !phiA  !Frequency-dependent phase normalisation (radians) - calculate self-consistently in full version of the model
-      param(15) = 0.0!1e-5     !flo   !Lowest frequency in band (Hz)
-      param(16) = 0.0!2e-5     !fhi   !Highest frequency in band (Hz)
-      param(17) = 6      !ReIm  !1=Re, 2=Im, 3=Modulus, 4=phase lag (cycles), 5=time lag (s)
+      param(15) = 1e-5    !flo   !Lowest frequency in band (Hz)
+      param(16) = 2e-5    !fhi   !Highest frequency in band (Hz)
+      param(17) = 6       !ReIm  !1=Re, 2=Im, 3=Modulus, 4=time lag (s), 5=Modulus (with response), 6=time lag (with response)
       !---------------------------------
       
       Emax  = 500.0 !300.0
@@ -57,46 +57,12 @@ PROGRAM  MAIN
       numax = 1e-4
       kmax  = 100
       
-      do k = 1,2!5!kmax   !2!8
-
-        ! if( k .eq. 1 )then
-        !   param(8) = 3.0
-        ! else if( k .eq. 2 )then
-        !   param(8) = 3.5
-        ! else if( k .eq. 3 )then
-        !   param(8) = 3.75
-        ! else if( k .eq. 4 )then
-        !    param(8) = 4.0
-        ! else if( k .eq. 5 )then
-        !   param(8) = 4.5
-        ! end if
-          
-!         if( k .eq. 1 )then
-!           param(14) = 0.0
-! !          param(15) = 1e-5
-! !          param(16) = 2e-5
-!         else
-!           param(14) = 0.3
-! !          param(15) = 2e-5
-! !          param(16) = 5e-5
-!         end if
-
-!        param(16) = numin * (numax/numin)**( float(k)/float(kmax) )
-!        param(15) = numin * (numax/numin)**( float(k-1)/float(kmax) )
-!        write(*,*)"freq=",param(15),param(16)
-!        write(283,*)param(15),param(16)
-
-
-!        param(1) = 3.0 + 58.5 * float(k-1)/float(kmax)
+      do k = 1,4,3
          
         ! call CPU_TIME(t0)
         ! call tdreltrans(ear,ne,param,ifl,photar)
         ! call CPU_TIME(t1)
         ! write(*,*)"Total CPU time=",t1-t0
-
-
-        ! ! name = '../sim_data/'
-        ! ! open(99,file=name)
         
         ! write(99,*)"skip on"
         ! if( param(17) .lt. 4 )then
@@ -115,6 +81,20 @@ PROGRAM  MAIN
           
         ! write(99,*)"no no"
 
+        !Loop through different code outputs
+        if( k .eq. 1 .or. k .eq. 4 )then
+          !Theory time lag spectrum spectrum, Nh doesn't matter
+          param(17) = 4.0
+        else if( k .eq. 2 .or. k .eq. 5 )then
+          !Instrument Time Lag spectrum, Nh = 0.0
+          param(17) = 6.0
+          param(11) = 0.0
+        else if( k .eq. 3  .or. k .eq. 6 )then
+          !Instrument Time Lag spectrum, Nh = 1.0
+          param(17) = 6.0
+          param(11) = 1.0
+        end if
+          
         call CPU_TIME(t0)
         call tdreltransCp(ear,ne,param,ifl,photar)
         call CPU_TIME(t1)
@@ -181,12 +161,14 @@ PROGRAM  MAIN
       real reline(nex),imline(nex),photarx(nex),reconv(nex),imconv(nex)
       real reconvmu(nex),imconvmu(nex),mue,sdmin,sdmax,gsd,ximin,ximax
       real phase,t0,t1,ReSx(nex),ImSx(nex),ReS(ne),ImS(ne),photar(ne)
-      real paramsave(17),contx(nex),frac,g,phiA
-      real ReGx(nex),ImGx(nex),sum,ReG(ne),ImG(ne)
+      real paramsave(17),contx(nex),frac,g,phiA,absorbx(nex),photerx(nex)
+      real ReGx(nex),ImGx(nex),sum,ReG(ne),ImG(ne),Nh
+      real contxabs(nex),reconvabs(nex),imconvabs(nex)
       complex transe(nex,mex,gex,xex)
       logical firstcall,needtrans,needconv,needresp
       integer xbin,xbinhi,myenv,Cpsave,mesave,gesave,xesave
       real logxir
+      character (len=200) path
       data firstcall /.true./
       data nrosave,nphisave /0,0/
       data needresp/.true./
@@ -218,6 +200,7 @@ PROGRAM  MAIN
       call sizecheck(xe,xex)
 
 ! Initialise
+      if( firstcall ) call FNINIT
       call initialiser(firstcall,Emin,Emax,nex,dloge,earx,needtrans)
      
 ! Parameters
@@ -231,14 +214,16 @@ PROGRAM  MAIN
       logxi    = param(8)
       Afe      = param(9)
       Ecut_obs = param(10)
-      honr     = dble( param(11) )
+      Nh       = param(11)
       afac     = param(12)
       Mass     = dble( param(13) )
       phiA     = param(14)
       flo      = dble( param(15) )
       fhi      = dble( param(16) )
       ReIm     = int( param(17) )
-        
+
+      honr = 0.d0
+      
       !Work out how many frequencies to average over
       fc = 0.5 * ( flo + fhi )
       nf = ceiling( log10(fhi/flo) / dlogf )
@@ -356,17 +341,25 @@ PROGRAM  MAIN
           end do
         end do
       end if
+
+! Calculate absorption
+      call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
+
+! Include absorption in the model
+      contxabs  = contx  * absorbx
+      reconvabs = reconv * absorbx
+      imconvabs = imconv * absorbx
       
 ! Calculate phiA from instrument response - if this option is set to on      
-      call phaseA(nex,earx,contx,reconv,imconv,gso,zcos,Gamma,afac,lens,phiA)
+      call phaseA(nex,earx,contxabs,reconvabs,imconvabs,gso,zcos,Gamma,afac,lens,phiA)
       
       !Add on continuum (and include boosting fudge factor)
       do i = 1,nex
         E = 0.5 * ( earx(i) + earx(i-1) )
         dE = earx(i) - earx(i-1)
-        direct  = contx(i) / dE * lens * ( gso / (1.0+zcos) )**(2+Gamma)
-        ReSx(i) = direct + afac * reconv(i) / dE
-        ImSx(i) = afac * imconv(i) / dE
+        direct  = contxabs(i) / dE * lens * ( gso / (1.0+zcos) )**(2+Gamma)
+        ReSx(i) = direct + afac * reconvabs(i) / dE
+        ImSx(i) = afac * imconvabs(i) / dE
         ReGx(i) = cos(phiA) * ReSx(i) - sin(phiA) * ImSx(i)
         ImGx(i) = sin(phiA) * ReSx(i) + cos(phiA) * ImSx(i)
 !        write(300,*)E,dE,E**2*ReSx(i),E**2*direct,E**2*afac*reconv(i)/dE
@@ -396,23 +389,35 @@ PROGRAM  MAIN
           dE = ear(i) - ear(i-1)
           photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) * dE
         end do
-        write(*,*)"Warning, only fit to data with ReIm=1 & 2"
-      else if( ReIm .eq. 4 )then   !Phase lag (cycles)
-        do i = 1,ne
-          E = 0.5 * ( ear(i) + ear(i-1) )
-          dE = ear(i) - ear(i-1)
-          phase = atan2( ImS(i) , ReS(i) )
-          photar(i) = phase / (2.0*pi) * dE
-        end do
-        write(*,*)"Warning, only fit to data with ReIm=1 & 2"
-      else                         !Time lag (seconds)
+        write(*,*)"Warning ReIm=3 should not be used for fitting!"
+      else if( ReIm .eq. 4 )then   !Time lag (seconds)
         do i = 1,ne
           E = 0.5 * ( ear(i) + ear(i-1) )
           dE = ear(i) - ear(i-1)
           phase = atan2( ImS(i) , ReS(i) )
           photar(i) = phase / (2.0*pi*fc) * dE
         end do
-        write(*,*)"Warning, only fit to data with ReIm=1 & 2"
+        write(*,*)"Warning ReIm=4 should not be used for fitting!"
+      end if
+
+      !Write out options to fit for lags and amplitude
+      if( ReIm .gt. 4 )then
+        !Fold real and imaginary parts around the telescope response
+        call folder(nex,earx,ReGx,ImGx,ne,ear,ReS,ImS)
+        if( ReIm .eq. 5 )then   !Modulus
+          do i = 1,ne
+            E = 0.5 * ( ear(i) + ear(i-1) )
+            dE = ear(i) - ear(i-1)
+            photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) * dE
+          end do
+        else if( ReIm .eq. 6 )then   !Time lag (seconds)
+          do i = 1,ne
+            E = 0.5 * ( ear(i) + ear(i-1) )
+            dE = ear(i) - ear(i-1)
+            phase = atan2( ImS(i) , ReS(i) )
+            photar(i) = phase / (2.0*pi*fc) * dE
+          end do
+        end if
       end if
       
       nrosave   = nro
