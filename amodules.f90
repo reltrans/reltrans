@@ -5,12 +5,9 @@ MODULE dyn_gr
 !  the values of an array 
 !---------------------------------------------------------------------
     implicit none
-
-! int_len_dim: length of the interval (in units of element) -> this is decided by the user (must be a power of 2)
-! int_number: number of interval in the light curve -> this is calculated automatically
-    logical :: status_re_tau = .true. 
+    logical :: status_re_tau  
     double precision,dimension(:,:),allocatable :: re1,taudo1,pem1
-!    save re,tau,pem
+    save status_re_tau
 END MODULE dyn_gr
 
 

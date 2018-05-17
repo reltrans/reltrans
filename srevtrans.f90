@@ -22,145 +22,6 @@
 
 include 'subroutines/header.h'
 
-
-
-PROGRAM  MAIN
-! Settings:
-! nro,nphi  The observer's camera has nro*nphi pixels: nro radial and nphi azimuthal
-! nr        The transfer function is calculated for nr radial binsfrom rmin to emax.
-!           Transfer functions for different rin can then be calculated by interpolation
-! nex       The number of (logarithmic) energy bins used for the transfer function
-! nt        The number of (logarithmic) time bins used for the transfer function
-! ndelta    The number of geodisics used for the emissivity calculation
-! nup       The number of points along each geodesic used for ray tracing from observer to disk
-! nup_lp    The number of points along each geodesic used for the emissivity calculation
-! rinmax    The maximum value of rin considered. This is typically a lot smaller than rout.
-      IMPLICIT NONE
-      real param(19),numin,numax
-      integer k,ne,i,ifl,kmax
-      parameter (ne=1000)
-      real ear(0:ne),emin,emax,t0,t1,photar(ne),E,dE
-      character (len=200) name
-      
-      !----Parameters-------------------
-      param(1)  = 6.0     !h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
-      param(2)  = 0.9     !a     !BH spin
-      param(3)  = 30.0    !inc   !Inclination angle in degrees
-      param(4)  = -1.0    !rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
-      param(5)  = 20000.0 !rout  !Disk outer radius in Rg - will probably hardwire this
-      param(6)  = 0.0     !zcos  !Cosmological redshift
-      param(7)  = 2.0     !Gamma !Photon index
-      param(8)  = 3.0     !logxi !log10xi - ionisation parameter
-      param(9)  = 1.0     !Afe   !Iron abundance      
-      param(10) = 300.0   !Ecut  !High energy exponential cut off ***IN OBSERVER'S RESTFRAME***
-      param(11) = 0.0     !h/r   !Disk scaleheight - not yet fully implemented
-      param(12) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
-      param(13) = 4.6e7   !M     !BH mass in solar masses
-      param(14) = 0.0!1e-5     !flo   !Lowest frequency in band (Hz)
-      param(15) = 0.0!2e-5     !fhi   !Highest frequency in band (Hz)
-      param(16) = 1      !ReIm  !1=Re, 2=Im, 3=Modulus, 4=phase lag (cycles), 5=time lag (s)
-      param(17) = 0.0     !phiA  !Frequency-dependent phase normalisation (radians) - calculate self-consistently in full version of the model
-      param(18) = 0.0     !phiB  !Frequency-dependent phase of the power-law index oscillation 
-      param(19) = 0.0     !g     !Ratio of the two phases amplitude 
-      !---------------------------------
-      
-      Emax  = 500.0 !300.0
-      Emin  = 0.1   !1.0
-      do i = 0,ne
-        ear(i) = Emin * (Emax/Emin)**(real(i)/real(ne))
-      end do
-
-
-      numin = 1e-8
-      numax = 1e-4
-      kmax  = 100
-      
-      do k = 1,1!5!kmax   !2!8
-
-        ! if( k .eq. 1 )then
-        !   param(8) = 3.0
-        ! else if( k .eq. 2 )then
-        !   param(8) = 3.5
-        ! else if( k .eq. 3 )then
-        !   param(8) = 3.75
-        ! else if( k .eq. 4 )then
-        !    param(8) = 4.0
-        ! else if( k .eq. 5 )then
-        !   param(8) = 4.5
-        ! end if
-          
-!         if( k .eq. 1 )then
-!           param(14) = 0.0
-! !          param(15) = 1e-5
-! !          param(16) = 2e-5
-!         else
-!           param(14) = 0.3
-! !          param(15) = 2e-5
-! !          param(16) = 5e-5
-!         end if
-
-!        param(16) = numin * (numax/numin)**( float(k)/float(kmax) )
-!        param(15) = numin * (numax/numin)**( float(k-1)/float(kmax) )
-!        write(*,*)"freq=",param(15),param(16)
-!        write(283,*)param(15),param(16)
-
-
-!        param(1) = 3.0 + 58.5 * float(k-1)/float(kmax)
-         
-        call CPU_TIME(t0)
-        call tdreltrans(ear,ne,param,ifl,photar)
-        call CPU_TIME(t1)
-        write(*,*)"Total CPU time=",t1-t0
-
-
-        name = '../sim_data/spectrum_grid.dat'
-        open(99,file=name)
-        
-        write(99,*)"skip on"
-        if( param(17) .lt. 4 )then
-          do i = 1,ne
-            E  = 0.5 * ( ear(i) + ear(i-1) )
-            dE =         ear(i) - ear(i-1)
-            write(99,*)E,E**2*photar(i)/dE
-          end do
-        else
-          do i = 1,ne
-            E  = 0.5 * ( ear(i) + ear(i-1) )
-            dE =         ear(i) - ear(i-1)
-            write(99,*)E,photar(i)/dE
-          end do
-        end if
-          
-        write(99,*)"no no"
-
-        
-        ! call CPU_TIME(t0)
-        ! call tdreltransCp(ear,ne,param,ifl,photar)
-        ! call CPU_TIME(t1)
-        ! write(*,*)"Total CPU time=",t1-t0
-
-        ! if( param(17) .lt. 4 )then
-        !   do i = 1,ne
-        !     E  = 0.5 * ( ear(i) + ear(i-1) )
-        !     dE =         ear(i) - ear(i-1)
-        !     write(99,*)E,E**2*photar(i)/dE
-        !   end do
-        ! else
-        !   do i = 1,ne
-        !     E  = 0.5 * ( ear(i) + ear(i-1) )
-        !     dE =         ear(i) - ear(i-1)
-        !     write(99,*)E,photar(i)/dE
-        !   end do
-        ! end if
-          
-        ! write(99,*)"no no" 
-
-      end do
-
-      end program main
-!-----------------------------------------------------------------------
-
-
 !-----------------------------------------------------------------------
       subroutine tdreltrans(ear,ne,param,ifl,photar)
       implicit none
@@ -189,10 +50,11 @@ PROGRAM  MAIN
       subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
       use dyn_gr
       implicit none
-      integer nro,nphi,ndelta,nex,i,nf,ifl,ne,nmax,ReIm,nfsave
-      integer nrosave,nphisave,verbose,mubin,mex,gex,sdbin,xex
+      integer nro,nphi,ndelta,nex,i,nf,ifl,ne,ReIm,nfsave
+      integer nrosave,nphisave,verbose,mubin,sdbin
       integer me,ge,xe,Cp
-      parameter (nmax=1000,ndelta=1000,nex=2**12,mex=1,gex=1,xex=100)
+!      parameter (ndelta=1000,nex=2**12,mex=1,gex=1,xex=1)
+      parameter (ndelta=1000,nex=2**12)
       double precision a,h,Gamma,inc,pi,rout,rmin,disco,muobs,rin
       double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,rnmax,d
       double precision fhisave,flosave,rh,hsave,rinsave,frrel
@@ -203,7 +65,7 @@ PROGRAM  MAIN
       real phase,t0,t1,ReSx(nex),ImSx(nex),ReS(ne),ImS(ne),photar(ne)
       real paramsave(19),contx(nex),frac,phiA
       real ReGx(nex),ImGx(nex),sum
-      complex transe(nex,mex,gex,xex),transea(nex,mex,gex,xex)
+      complex,dimension(:,:,:,:),allocatable :: transe,transea
       logical firstcall,needtrans,needconv,needresp
       integer xbin,xbinhi,myenv,Cpsave
       real logxir
@@ -218,50 +80,54 @@ PROGRAM  MAIN
            ,sdmin_sh_mh,sdmax_sh_mh
       double precision :: frobs_sl_ml,frrel_sl_ml,frobs_sl_mh,frrel_sl_mh&
            ,frobs_sh_ml,frrel_sh_ml,frobs_sh_mh,frrel_sh_mh
-      complex :: transe_11(nex,mex,gex,xex),transe_12(nex,mex,gex,xex),transe_21(nex,mex,gex,xex)&
-           ,transe_22(nex,mex,gex,xex),transe_1(nex),transe_2(nex),transe_(nex)
-
+      complex :: transe_1(nex),transe_2(nex),transe_(nex)
+      complex,dimension(:,:,:,:),allocatable :: transe_11,transe_12,transe_21,transe_22
+      
 !variable for non linear effects
-      complex :: transe_11a(nex,mex,gex,xex),transe_12a(nex,mex,gex,xex),transe_21a(nex,mex,gex,xex)&
-           ,transe_22a(nex,mex,gex,xex),transe_1a(nex),transe_2a(nex),transe_a(nex)
+      complex :: transe_1a(nex),transe_2a(nex),transe_a(nex)
+      complex,dimension(:,:,:,:),allocatable :: transe_11a,transe_12a,transe_21a,transe_22a
       real :: photarx_1(nex),photarx_2(nex),photarx_delta(nex),Gamma1,Gamma2,DeltaGamma,phiB,g
       real :: reline_a(nex),imline_a(nex),reconvW1(nex),imconvW1(nex),reconvW1a(nex),imconvW1a(nex)
-      
+
+      real :: reline_reb(ne)
       
       data firstcall /.true./
       data nrosave,nphisave /0,0/
       data needresp/.true./
       data Cpsave/2/
       save firstcall,Emax,Emin,dloge,earx
-      save paramsave,transe,fhisave,flosave,nfsave,nrosave,nphisave
-      save reconv,imconv,frobs,hsave,rinsave,sdmin,sdmax,frrel,Cpsave
+      save paramsave,fhisave,flosave,nfsave,nrosave,nphisave
+      save frobs,hsave,rinsave,sdmin,sdmax,frrel,Cpsave
+      save transe,transea,transe_11,transe_12,transe_21,transe_22,transe_11a,transe_12a,transe_21a,transe_22a
+      save reconv,imconv,reconvW1,imconvW1,reconvW1a,imconvW1a,check
       pi = acos(-1.d0)
       ifl = 1
       
 ! Settings
       nro   = 300    !resolution variables - these could be made parameters
       nphi  = 300    !  "
-      if( nro .gt. nmax ) nro = nmax
-      if( nphi .gt. nmax ) nphi = nmax
+      ! if( nro .gt. nmax ) nro = nmax
+      ! if( nphi .gt. nmax ) nphi = nmax
       dlogf = 0.0073  !This is a resolution parameter (base 10)
 
 ! Call environment variables
       verbose = myenv("REV_VERB",0)     !Set verbose level
       me      = myenv("MU_ZONES",1)     !Set number of mu_e zones used
       ge      = myenv("ECUT_ZONES",1)   !Set number of Ecut zones used
-      xe      = myenv("ION_ZONES",1)  !Set number of ionisation zones used
+      xe      = myenv("ION_ZONES",100)    !Set number of ionisation zones used
       
-! Make sure they haven't exceeded their maximum allowed values
-      call sizecheck(me,mex)
-      call sizecheck(ge,gex)
-      call sizecheck(xe,xex)
-
+! ! Make sure they haven't exceeded their maximum allowed values
+      ! call sizecheck(me,mex)
+      ! call sizecheck(ge,gex)
+      ! call sizecheck(xe,xex)
+      
 ! Initialise
       call initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,check&
      ,nphi,nro,honr_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim)
 
 !check if the grid values are the same one of the model
-         if (honr_grid .ne. honr ) then
+      
+         if ( check .ne. 0 .and. honr_grid .ne. honr ) then
             write(*,*) 'grid has a different honr!'
             write(*,*) 'honr of the grid is ', honr_grid
             stop
@@ -270,6 +136,7 @@ PROGRAM  MAIN
       !gridname = "/Users/Gullik/Dropbox/work/reflection_lag/Model_crossen/grid/grid_300_30x30_pem.dat"
 
 
+!Allocate dynamically the array to calculate the trasfer function          
          if (.not. allocated(re1)) allocate(re1(nphi,nro))
          if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
          if (.not. allocated(pem1)) allocate(pem1(nphi,nro))
@@ -354,36 +221,48 @@ PROGRAM  MAIN
         if( abs( flo - flosave ) .gt. 1e-7 ) needtrans = .true.
       end if
 
+      needtrans = .true.
+      
       if( needtrans )then
-
          if (check .ne. 0) then
-         call chclose(a,spin_start,spin_end,spin_dim,s_lo,s_hi)
-         call chclose(muobs,mu_start,mu_end,mu_dim,m_lo,m_hi)
-         call ch_ind_val(spin_start,spin_end,spin_dim,s_lo,spin_lo)
-         call ch_ind_val(spin_start,spin_end,spin_dim,s_hi,spin_hi)
-         call ch_ind_val(mu_start,mu_end,mu_dim,m_lo,mu_lo)
-         call ch_ind_val(mu_start,mu_end,mu_dim,m_hi,mu_hi)
 
+!Allocate dinamically the transfer functions
+            if(.not. allocated(transe_11) ) allocate(transe_11(nex,me,ge,xe))
+            if(.not. allocated(transe_12) ) allocate(transe_12(nex,me,ge,xe))
+            if(.not. allocated(transe_21) ) allocate(transe_21(nex,me,ge,xe))
+            if(.not. allocated(transe_22) ) allocate(transe_22(nex,me,ge,xe))
+            if(.not. allocated(transe_11a) ) allocate(transe_11a(nex,me,ge,xe))
+            if(.not. allocated(transe_12a) ) allocate(transe_12a(nex,me,ge,xe))
+            if(.not. allocated(transe_21a) ) allocate(transe_21a(nex,me,ge,xe))
+            if(.not. allocated(transe_22a) ) allocate(transe_22a(nex,me,ge,xe))
+            
+!            write(*,*) 'GRID extraction'
+!Choose the index of spin and inclination to extract from the grid            
+            call chclose(a,spin_start,spin_end,spin_dim,s_lo,s_hi)
+            call chclose(muobs,mu_start,mu_end,mu_dim,m_lo,m_hi)
+            call ch_ind_val(spin_start,spin_end,spin_dim,s_lo,spin_lo)
+            call ch_ind_val(spin_start,spin_end,spin_dim,s_hi,spin_hi)
+            call ch_ind_val(mu_start,mu_end,mu_dim,m_lo,mu_lo)
+            call ch_ind_val(mu_start,mu_end,mu_dim,m_hi,mu_hi)
 
-         ! write(*,*) 'index',s_lo,s_hi,m_lo,m_hi
-         ! write(*,*) 'values',spin_lo,spin_hi,mu_lo,mu_hi
-
-         
+!Extraction from the binary grid according to the index and how they have been saved in the grid         
             irec = 3*mu_dim*(s_lo-1) + 3*m_lo - 1 
             read(98,rec=irec) re1
             read(98,rec=irec+1) taudo1
             read(98,rec=irec+2) pem1
             status_re_tau = .false.
+!Calculate the Kernel for the given parameters
             call strans(spin_lo,h,mu_lo,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
-                 nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin_sl_ml,sdmax_sl_ml,ximin_sl_ml,ximax_sl_ml&
+                 nf,fhi,flo,me,ge,xe,logxi,sdmin_sl_ml,sdmax_sl_ml,ximin_sl_ml,ximax_sl_ml&
                  ,transe_11,transe_11a,frobs_sl_ml,frrel_sl_ml,xbinhi_sl_ml)
 
+!Repeat this for all nthe combinations of spin and inclination (4 times)
             irec = 3*mu_dim*(s_lo-1) + 3*m_hi - 1
             read(98,rec=irec) re1
             read(98,rec=irec+1) taudo1
             read(98,rec=irec+2) pem1
             call strans(spin_lo,h,mu_hi,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
-                 nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin_sl_mh,sdmax_sl_mh,ximin_sl_mh,ximax_sl_mh&
+                 nf,fhi,flo,me,ge,xe,logxi,sdmin_sl_mh,sdmax_sl_mh,ximin_sl_mh,ximax_sl_mh&
                  ,transe_21,transe_21a,frobs_sl_mh,frrel_sl_mh,xbinhi_sl_mh)
 
             irec = 3*mu_dim*(s_hi-1) + 3*m_lo - 1
@@ -391,43 +270,41 @@ PROGRAM  MAIN
             read(98,rec=irec+1) taudo1
             read(98,rec=irec+2) pem1
             call strans(spin_hi,h,mu_lo,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
-                 nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin_sh_ml,sdmax_sh_ml,ximin_sh_ml,ximax_sh_ml&
+                 nf,fhi,flo,me,ge,xe,logxi,sdmin_sh_ml,sdmax_sh_ml,ximin_sh_ml,ximax_sh_ml&
                  ,transe_12,transe_12a,frobs_sh_ml,frrel_sh_ml,xbinhi_sh_ml)
-
             
             irec = 3*mu_dim*(s_hi-1) + 3*m_hi - 1
             read(98,rec=irec) re1
             read(98,rec=irec+1) taudo1
             read(98,rec=irec+2) pem1
             call strans(spin_hi,h,mu_hi,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
-                 nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin_sh_mh,sdmax_sh_mh,ximin_sh_mh,ximax_sh_mh&
+                 nf,fhi,flo,me,ge,xe,logxi,sdmin_sh_mh,sdmax_sh_mh,ximin_sh_mh,ximax_sh_mh&
                  ,transe_22,transe_22a,frobs_sh_mh,frrel_sh_mh,xbinhi_sh_mh)
-
    
             ! write(*,*)spin_lo,h,mu_hi,gamma,rin,rout,honr,zcos,nro,nphi,ndelta,nex,dloge &
             !      ,nf,fhi,flo,nmu,refl_sh_ml
 
-
+!Weighted average of the reflection fraction 
             frobs = ave_weight2D(a,spin_lo,spin_hi,muobs,mu_lo,mu_hi,frobs_sl_ml,frobs_sl_mh,frobs_sh_ml,frobs_sh_mh)
+!Determin the maximum value of the inonisation binning 
             xbinhi = max(xbinhi_sl_ml,xbinhi_sl_mh,xbinhi_sh_ml,xbinhi_sh_mh)
 
          else 
+!            write(*,*) 'transfer calculation'
+            if(.not. allocated(transe) ) allocate(transe(nex,me,ge,xe))
+            if(.not. allocated(transea) ) allocate(transea(nex,me,ge,xe))
 
-
-         !Calculate the Kernel for the given parameters
-
+!Calculate the Kernel for the given parameters
             status_re_tau = .true.
-        call strans(a,h,muobs,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
-             nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin,sdmax,ximin,ximax,transe,transea,frobs,frrel,xbinhi)
-        
-
-        endif
-        
+            call strans(a,h,muobs,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
+                 nf,fhi,flo,me,ge,xe,logxi,sdmin,sdmax,ximin,ximax,transe,transea,frobs,frrel,xbinhi)
+         endif         
       end if
-      if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",afac*frobs
-      if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
       
-      !Determine if I need to convolve with the restframe reflection spectrum
+      if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",afac*frobs
+!      if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
+      
+!Determine if I need to convolve with the restframe reflection spectrum
       needconv = .false.
       if( needtrans ) needconv = .true.
       do i = 8,10
@@ -463,7 +340,7 @@ PROGRAM  MAIN
 
 !Call xillver
               call myxill(earx,nex,xillpar,ifl,Cp,photarx)
-
+              
 
 !non linear effects
                  DeltaGamma = 0.01
@@ -478,8 +355,8 @@ PROGRAM  MAIN
 
 
               if (check .ne. 0) then
-
-!interpolation of the transfer functions extracted from the grid
+                 ! write(*,*) 'interpolation for the GRID'
+!interpolation of the calculated transfer functions 
                  call myinterp_complex2(a,spin_lo,spin_hi,nex,transe_11(:,mubin,sdbin,xbin),transe_12(:,mubin,sdbin,xbin)&
                       ,transe_11a(:,mubin,sdbin,xbin),transe_12a(:,mubin,sdbin,xbin),transe_1,transe_1a)
                  call myinterp_complex2(a,spin_lo,spin_hi,nex,transe_21(:,mubin,sdbin,xbin),transe_22(:,mubin,sdbin,xbin)&
@@ -493,14 +370,14 @@ PROGRAM  MAIN
                     imline_a(i) = aimag( transe_a(i) )
                  enddo
 
-              else 
+              else
+                 
                  do i = 1,nex
                     reline(i) = real(  transe(i,mubin,sdbin,xbin) )
                     imline(i) = aimag( transe(i,mubin,sdbin,xbin) )
                     reline_a(i) = real(  transea(i,mubin,sdbin,xbin) )
                     imline_a(i) = aimag( transea(i,mubin,sdbin,xbin) )
                  end do
-                 
               endif
           
 !Convolve with line profile
@@ -525,13 +402,15 @@ PROGRAM  MAIN
         end do
       end if
      
+      !Re-bin onto input grid
+      call rebinE(earx,reline,nex,ear,reline_reb,ne)
       
 ! Calculate phiA from instrument response - if this option is set to on      
       call phaseA(nex,earx,contx,reconv,imconv,gso,zcos,Gamma,afac,phiA)
               
       !Add on continuum (and include boosting fudge factor)
 !       do i = 1,nex
-!         E = 0.5 * ( earx(i) + earx(i-1) )
+      !         E = 0.5 * ( earx(i) + earx(i-1) )
 !         dE = earx(i) - earx(i-1)
 !         direct  = contx(i) / dE * ( gso / (1.0+zcos) )**(2+Gamma)
 !         ReSx(i) = direct + afac * reconv(i) / dE
@@ -546,17 +425,15 @@ PROGRAM  MAIN
         E = 0.5 * ( earx(i) + earx(i-1) )
         dE = earx(i) - earx(i-1)
         direct  = contx(i) / dE * ( gso / (1.0+zcos) )**(2+Gamma)
-        
+
         ReGx(i) = cos(phiA) * (direct + afac*reconv(i)/dE) - sin(phiA)*afac*imconv(i)/dE + &
         g * (cos(phiB) * ( log(E*(1+zcos)/gso)*direct - afac*reconvW1a(i)/dE - afac*reconvW1(i)/dE)+&
         sin(phiB)* (imconvW1a(i)/dE + imconvW1(i)/dE) )
-
-        ImGx(i) = sin(phiA) * (direct + afac*reconv(i)/de) + cos(phiA)*afac*imconv(i)/dE + &
+        ImGx(i) = sin(phiA) * (direct + afac*reconv(i)/dE) + cos(phiA)*afac*imconv(i)/dE + &
         g * (sin(phiB) * ( log(E*(1+zcos)/gso)*direct - afac*reconvW1a(i)/dE - afac*reconvW1(i)/dE)-&
         cos(phiB) * (afac*imconvW1a(i)/dE + afac*imconvW1(i)/dE) )
         
      end do
-
       
       !Re-bin onto input grid
       call rebinE(earx,ReGx,nex,ear,ReS,ne)
@@ -591,12 +468,12 @@ PROGRAM  MAIN
         end do
         write(*,*)"Warning, only fit to data with ReIm=1 & 2"
       else                         !Time lag (seconds)
-        do i = 1,ne
+         do i = 1,ne
           E = 0.5 * ( ear(i) + ear(i-1) )
           dE = ear(i) - ear(i-1)
           phase = atan2( ImS(i) , ReS(i) )
           photar(i) = phase / (2.0*pi*fc) * dE
-        end do
+       end do
         write(*,*)"Warning, only fit to data with ReIm=1 & 2"
       end if
 
@@ -609,7 +486,7 @@ PROGRAM  MAIN
       hsave     = h
       paramsave = param
       Cpsave    = Cp
-      
+
       end subroutine genreltrans
 !-----------------------------------------------------------------------
 

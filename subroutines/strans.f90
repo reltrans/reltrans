@@ -1,6 +1,6 @@
 !-----------------------------------------------------------------------
       subroutine strans(spin,h,mu0,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,ne,dloge,&
-           nf,fhi,flo,mex,gex,xex,me,ge,xe,rlxi,sdmin,sdmax,ximin,ximax,transe,transe_a,frobs,frrel,xbinhi)
+           nf,fhi,flo,me,ge,xe,rlxi,sdmin,sdmax,ximin,ximax,transe,transe_a,frobs,frrel,xbinhi)
 ! Code to calculate the transfer function for an accretion disk.
 ! This code first does full GR ray tracing for a camera with impact parameters < bmax
 ! It then also does straight line ray tracing for impact parameters >bmax
@@ -8,31 +8,35 @@
 ! INPUT
 ! spin,h,mu0,Gamma      Physical parameters (spin, source height, cos(inclination), photon index)
 ! rin,rout,honr         Physical parameters (disk inner radius, outer radius & scaleheight)
+! d,rnmax               Physical parameters (distance of the source, )
 ! zcos                  Cosmological redshift
 ! nro,nphi              Number of pixels on the observer's camera (b and phib)
 ! ndelta                Number of \delta values considered
 ! ne, dloge             Number of energy bins and maximum energy (compatible with FFT convolution)
 ! ear(0:ne)             Energy grid
 ! nf,fhi,flo            nf = Number of logarithmic frequency bins averaged over, range= flo to fhi
-! mex
-! gex
-! xex
+! me
+! ge
+! xe
 ! rlxi
 ! OUTPUT
 ! sdmin,sdmax
 ! ximin ximax           Minimum and maximum values of logxi_eff (depends on emissivity, density and incidence angle)
 ! transe(ne,mex,gex,xex)    Transfer function as a function of energy and emission angle for the given frequency range
+! transe_a(ne,mex,gex,xex)  Second transfer function as a function of energy and emission angle for the given frequency range
+!                            This is for the non-linear effects
 ! frobs                 Observer's reflection fraction
 ! frrel                 Reflection fraction defined by relxilllp
-! xbinhi                Highest xi bin that has an entry 
+! xbinhi                Highest xi bin that has an entry
+        
         use dyn_gr
         use blcoordinate
       implicit none
-      integer nro,nphi,ndelta,ne,nf,mex,gex,sdbin,xex,me,ge,xe
+      integer nro,nphi,ndelta,ne,nf,sdbin,me,ge,xe
       double precision spin,h,mu0,Gamma,rin,rout,zcos,fhi,flo,honr,cosdout
       real rlxi,ximin,ximax
       real dloge,sdmin,sdmax
-      complex cexp,transe(ne,mex,gex,xex),transe_a(ne,mex,gex,xex)
+      complex cexp,transe(ne,me,ge,xe),transe_a(ne,me,ge,xe)
       integer i,npts,j,k,l,odisc,jj,nmax,n,xbin
       parameter (nmax=1000)
       double precision domega(nro),d
@@ -117,11 +121,9 @@
       transe  = 0.0 !Initialised transfer function
       frobs   = 0.0
 
-      write(*,*) 'status', status_re_tau
       
 !Check if we need to calculate re and tau and pem or we took them from a grid      
       if (status_re_tau) then 
-      write(*,*) 'GRtrace in'
          
 ! Trace rays in full GR for the small camera
 ! to convert alpha and beta to r and tau_do (don't care about phi)
@@ -133,6 +135,9 @@
          if( abs(musav-mu0) .gt. 1d-6 ) dotrace = .true.
          if( abs(routsav-rout) .gt. 1d-6 ) dotrace = .true.
          if( abs(mudsav-mudisk) .gt. 1d-6 ) dotrace = .true.
+
+         dotrace = .true.
+         
          if( dotrace )then
 !            call GRtrace(nmax,nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d,pem1,taudo1,re1)
             call GRtrace(nmax,nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)

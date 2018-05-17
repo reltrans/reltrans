@@ -10,6 +10,8 @@ subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,chec
       double precision :: d,rnmax,spin_start,spin_end,mu_start,mu_end
       character (len=500) gridname
       needtrans = .false.
+      call get_environment_variable("GRID",gridname,check)
+
       if( firstcall )then
         needtrans = .true.
         write(*,*)"----------------------------------------------------"
@@ -20,17 +22,15 @@ subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,chec
         !Create *logarithmic* working energy grid
         !Will need to evaluate xillver on this grid to use the FT convolution code 
         Emax  = 1e3
-        Emin  = 1e-3
+        Emin  = 1e-1
         dloge = log10( Emax / Emin ) / float(nex)
         do i = 0,nex
           earx(i) = Emin * (Emax/Emin)**(float(i)/float(nex))
         end do
 
-        call get_environment_variable("GRID",gridname,check)
 
-        
         if (check .ne. 0) then 
-           write(*,*) 'This code is using the grid:', gridname 
+           write(*,*) 'This code uses a grid to compute the kernel trasfer funcion' 
       
 !open the grid 
            lrec = 8*nphi*nro         
@@ -39,13 +39,16 @@ subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,chec
            read(98,rec=1) rnmax,nphi_grid,nro_grid,honr_grid,rout_grid,d_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim
 !remember that rout_grid is the rout used to make the grid. It is not the same as param 5
 !         write(*,*) 'rout of the grid', rout_grid
-         
+
+
+           
 !check if the grid has the correct values 
            if (nphi_grid .ne. nphi .or. nro_grid .ne. nro) then
               write(*,*) 'Not compatible grid dimentions'
               stop
            endif
 
+           
 ! Set sensible distance for observer from the BH now that we took rnmax from the grid 
            d = max( 1.0d4 , 2.0d2 * rnmax**2 )
          
@@ -61,10 +64,8 @@ subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,chec
            
         endif
 
-
-
         firstcall = .false.
-      end if
-      return
+     end if
+     return
     end subroutine initialiser
 !-----------------------------------------------------------------------
