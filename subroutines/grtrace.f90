@@ -1,12 +1,12 @@
 !-----------------------------------------------------------------------
-      subroutine GRtrace(nmax,nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d,pem1,taudo1,re1)
+      subroutine GRtrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
 ! Traces rays in full GR for the camera defined by rn(nro), nro, nphi
 ! to convert alpha and beta to r and tau_do (don't care about phi)
-      use blcoordinate
+        use dyn_gr
+        use blcoordinate
       implicit none
       integer nmax,nro,nphi,i,j
       double precision rn(nro),mueff,mu0,spin,rmin,rout,mudisk,d
-      double precision pem1(nmax,nmax),taudo1(nmax,nmax),re1(nmax,nmax)
       double precision phin,alpha,beta,cos0,sin0,scal,velocity(3),f1234(4),lambda,q
       double precision pem,re,mucros,phie,taudo,sigmacros
       cos0  = mu0

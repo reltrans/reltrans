@@ -1,10 +1,11 @@
 fortran:
-	gfortran -c amodules.f90 srevtrans.f90
+	gfortran -c amodules.f90 main.f90 srevtrans.f90
 C_code:
 	gcc -c relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c
 
 compile: fortran C_code 
-	 gfortran -O *.o -L/usr/local/opt/cfitsio/ -lcfitsio -o exe  
+	 gfortran -O *.o -L/usr/local/opt/cfitsio/  -L/Users/Gullik/Software/heasoft-6.23/x86_64-apple-darwin17.4.0/lib \
+	 -lcfitsio -lXSFunctions -lXSModel -lXSUtil -lXS -lCCfits_2.5 -o exe  
 
 run: compile clean 
 

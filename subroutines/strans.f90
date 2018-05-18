@@ -1,6 +1,13 @@
 !-----------------------------------------------------------------------
-      subroutine strans(spin,h,mu0,Gamma,rin,rout,honr,zcos,nro,nphi,ndelta,ne,dloge,&
-           ear,nf,fhi,flo,mex,gex,xex,me,ge,xe,rlxi,sdmin,sdmax,ximin,ximax,transe,frobs,frrel,xbinhi,lens)
+! <<<<<<< HEAD
+!       subroutine strans(spin,h,mu0,Gamma,rin,rout,honr,zcos,nro,nphi,ndelta,ne,dloge,&
+!            ear,nf,fhi,flo,mex,gex,xex,me,ge,xe,rlxi,sdmin,sdmax,ximin,ximax,transe,frobs,frrel,xbinhi,lens)
+! =======
+!       subroutine strans(spin,h,mu0,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,ne,dloge,&
+!            nf,fhi,flo,me,ge,xe,rlxi,sdmin,sdmax,ximin,ximax,transe,transe_a,frobs,frrel,xbinhi)
+! >>>>>>> non_lin
+      subroutine strans(spin,h,mu0,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ne,dloge,&
+           nf,fhi,flo,ximin,ximax,me,ge,xe,rlxi,sdmin,sdmax,transe,transe_a,frobs,frrel,xbinhi,lens)
 ! Code to calculate the transfer function for an accretion disk.
 ! This code first does full GR ray tracing for a camera with impact parameters < bmax
 ! It then also does straight line ray tracing for impact parameters >bmax
@@ -8,33 +15,37 @@
 ! INPUT
 ! spin,h,mu0,Gamma      Physical parameters (spin, source height, cos(inclination), photon index)
 ! rin,rout,honr         Physical parameters (disk inner radius, outer radius & scaleheight)
+! d,rnmax               Physical parameters (distance of the source, )
 ! zcos                  Cosmological redshift
 ! nro,nphi              Number of pixels on the observer's camera (b and phib)
 ! ndelta                Number of \delta values considered
 ! ne, dloge             Number of energy bins and maximum energy (compatible with FFT convolution)
 ! ear(0:ne)             Energy grid
 ! nf,fhi,flo            nf = Number of logarithmic frequency bins averaged over, range= flo to fhi
-! mex
-! gex
-! xex
+! ximin ximax           Minimum and maximum values of logxi_eff (depends on emissivity, density and incidence angle)
+! me
+! ge
+! xe
 ! rlxi
 ! OUTPUT
 ! sdmin,sdmax
-! ximin ximax           Minimum and maximum values of logxi_eff (depends on emissivity, density and incidence angle)
 ! transe(ne,mex,gex,xex)    Transfer function as a function of energy and emission angle for the given frequency range
+! transe_a(ne,mex,gex,xex)  Second transfer function as a function of energy and emission angle for the given frequency range
+!                            This is for the non-linear effects
 ! frobs                 Observer's reflection fraction
 ! frrel                 Reflection fraction defined by relxilllp
 ! xbinhi                Highest xi bin that has an entry 
 ! lens                  Lensing factor for direct emission
+        use dyn_gr
         use blcoordinate
       implicit none
-      integer nro,nphi,ndelta,ne,nf,mex,gex,sdbin,xex,me,ge,xe
+      integer nro,nphi,ndelta,ne,nf,sdbin,me,ge,xe
       double precision spin,h,mu0,Gamma,rin,rout,zcos,fhi,flo,honr,cosdout
       real rlxi,ximin,ximax
-      real ear(0:ne),dloge,sdmin,sdmax
-      complex cexp,transe(ne,mex,gex,xex)
-      integer i,npts,j,k,l,odisc,jj,nmax,n,xbin
-      parameter (nmax=1000)
+      real dloge,sdmin,sdmax
+      complex cexp,transe(ne,me,ge,xe),transe_a(ne,me,ge,xe)
+      integer i,npts,j,k,l,odisc,jj,n,xbin
+      parameter (ndelta=1000)
       double precision domega(nro),d
       double precision tauso,rlp(ndelta),dcosdr(ndelta),tlp(ndelta),cosd(ndelta)
       double precision alpha,beta,cos0,sin0,phi0,phie,re,gsd
@@ -46,14 +57,13 @@
       double precision pem,mudisk,mucros,sigmacros
       double precision rnmax,rnmin,rn(nro),phin,mueff
       double precision fi(nf),dgsofac,sindisk,mue,demang,frobs,cosdin,frrel
-      double precision pem1(nmax,nmax),re1(nmax,nmax),taudo1(nmax,nmax)
       integer nron,nphin,nrosav,nphisav,mubin,xbinhi,adensity
       double precision spinsav,musav,routsav,mudsav,t1,t0,rnn(nro),domegan(nro)
       double precision mus,mui,dinang,xir,logxieff,logxir,xinorm,logxip,logxihi
       logical dotrace
       character (len=1) A_DENSITY
       data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
-      save nrosav,nphisav,spinsav,musav,routsav,mudsav,pem1,taudo1,re1
+      save nrosav,nphisav,spinsav,musav,routsav,mudsav
       
 ! Settings 
       nron     = 100
@@ -69,7 +79,7 @@
 ! to do full GR ray tracing with      
       mueff  = max( mu0 , 0.3d0 )
       rnmin  = rfunc(spin,mu0)
-      rnmax  = 300d0
+!      rnmax  = 300d0
       !Grid to do in full GR
       call getrgrid(rnmin,rnmax,mueff,nro,nphi,rn,domega)
       !Grid for Newtonian approximation
@@ -81,8 +91,6 @@
       end do
       if( fhi .lt. 1d-10 ) fi(1) = 0.0d0
       
-! Set sensible distance for observer from the BH
-      d = max( 1.0d4 , 2.0d2 * rnmax**2 )
 
 ! Set up g_{sd} array
       sdmax = real( dglpfac(rin ,spin,h) )
@@ -117,27 +125,37 @@
       sin0  = sqrt(1.0-cos0**2)
       transe  = 0.0 !Initialised transfer function
       frobs   = 0.0
+
       
+!Check if we need to calculate re and tau and pem or we took them from a grid      
+      if (status_re_tau) then 
+         
 ! Trace rays in full GR for the small camera
 ! to convert alpha and beta to r and tau_do (don't care about phi)
 ! First work out if we even need to call this
-      dotrace = .false.
-      if( nro .ne. nrosav ) dotrace = .true.
-      if( nphi .ne. nphisav ) dotrace = .true.
-      if( abs(spinsav-spin) .gt. 1d-6 ) dotrace = .true.
-      if( abs(musav-mu0) .gt. 1d-6 ) dotrace = .true.
-      if( abs(routsav-rout) .gt. 1d-6 ) dotrace = .true.
-      if( abs(mudsav-mudisk) .gt. 1d-6 ) dotrace = .true.
-      if( dotrace )then
-        call GRtrace(nmax,nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d,pem1,taudo1,re1)
-        nrosav  = nro
-        nphisav = nphi
-        spinsav = spin
-        musav   = mu0
-        routsav = rout
-        mudsav  = mudisk
-      end if
-      !Could replace this with reading in from a grid   ***Could paralellize the GRtrace subroutine***
+         dotrace = .false.
+         if( nro .ne. nrosav ) dotrace = .true.
+         if( nphi .ne. nphisav ) dotrace = .true.
+         if( abs(spinsav-spin) .gt. 1d-6 ) dotrace = .true.
+         if( abs(musav-mu0) .gt. 1d-6 ) dotrace = .true.
+         if( abs(routsav-rout) .gt. 1d-6 ) dotrace = .true.
+         if( abs(mudsav-mudisk) .gt. 1d-6 ) dotrace = .true.
+
+         dotrace = .true.
+         
+         if( dotrace )then
+!            call GRtrace(nmax,nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d,pem1,taudo1,re1)
+            call GRtrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
+            nrosav  = nro
+            nphisav = nphi
+            spinsav = spin
+            musav   = mu0
+            routsav = rout
+            mudsav  = mudisk
+         end if
+
+      endif
+      
 
 ! Decide on zone a density profile or constant density profile
       adensity = myenv("A_DENSITY",1)
@@ -145,8 +163,6 @@
 ! Set up logxi part of the calculation
       
       logxip = dble(rlxi)
-      ximin   = 0.0
-      ximax   = 4.7
       if( adensity .eq. 1 )then
         re      = (11.d0/9.d0)**2 * rin  !Max \xi for Fx~r^{-3} and n=zone a SS73 (eqn 2.11)
       else
@@ -237,8 +253,9 @@
               !write(124,*)re,mue
               !Sum up over frequency range (if flo=fhi=0, this is DC component)
               do fbin = 1,nf
-                cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
-                transe(gbin,mubin,sdbin,xbin) = transe(gbin,mubin,sdbin,xbin) + real(dFe) * cexp
+                 cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
+                 transe(gbin,mubin,sdbin,xbin) = transe(gbin,mubin,sdbin,xbin) + real(dFe) * cexp
+                 transe_a(gbin,mubin,sdbin,xbin) = transe_a(gbin,mubin,sdbin,xbin) + real(log(g)) * real(dFe) * cexp
               end do
             end if
           end if
@@ -310,8 +327,9 @@
             !write(124,*)re,mue
             !Sum up over frequency range (if flo=fhi=0, this is DC component)
             do fbin = 1,nf
-              cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
-              transe(gbin,mubin,sdbin,xbin) = transe(gbin,mubin,sdbin,xbin) + real(dFe) * cexp
+               cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
+               transe(gbin,mubin,sdbin,xbin) = transe(gbin,mubin,sdbin,xbin) + real(dFe) * cexp
+               transe_a(gbin,mubin,sdbin,xbin) = transe_a(gbin,mubin,sdbin,xbin) + real(log(g)) * real(dFe) * cexp
             end do
           end if
         end do
@@ -322,13 +340,16 @@
         do sdbin = 1,ge
           do mubin = 1,me
             transe(1,mubin,sdbin,xbin)  = 0.0
-            transe(1,mubin,sdbin,xbin) = 0.0
+            transe(ne,mubin,sdbin,xbin) = 0.0
+            transe_a(1,mubin,sdbin,xbin)  = 0.0
+            transe_a(ne,mubin,sdbin,xbin) = 0.0
           end do
         end do
       end do
       !Normalise
       transe = transe / real(nf)
-
+      transe_a = transe_a / real(nf)
+      
       !Finish calculation of the reflection fraction
       frobs = frobs / (dgsofac(spin,h))**3 / lens
         

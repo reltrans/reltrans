@@ -1,3 +1,17 @@
+
+MODULE dyn_gr
+!---------------------------------------------------------------------
+!  Module containing definitions needed to dynamically allocate 
+!  the values of an array 
+!---------------------------------------------------------------------
+    implicit none
+    logical :: status_re_tau  
+    double precision,dimension(:,:),allocatable :: re1,taudo1,pem1
+    save status_re_tau
+END MODULE dyn_gr
+
+
+
 !***********************************************************************
 !This is code of YNOGK used for ray-traycing with General Relativity  
 !***********************************************************************

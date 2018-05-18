@@ -1,0 +1,113 @@
+PROGRAM  MAIN
+! Settings:
+! nro,nphi  The observer's camera has nro*nphi pixels: nro radial and nphi azimuthal
+! nr        The transfer function is calculated for nr radial binsfrom rmin to emax.
+!           Transfer functions for different rin can then be calculated by interpolation
+! nex       The number of (logarithmic) energy bins used for the transfer function
+! nt        The number of (logarithmic) time bins used for the transfer function
+! ndelta    The number of geodisics used for the emissivity calculation
+! nup       The number of points along each geodesic used for ray tracing from observer to disk
+! nup_lp    The number of points along each geodesic used for the emissivity calculation
+! rinmax    The maximum value of rin considered. This is typically a lot smaller than rout.
+      IMPLICIT NONE
+      real param(19),numin,numax
+      integer k,ne,i,ifl,kmax
+      parameter (ne=1000)
+      real ear(0:ne),emin,emax,t0,t1,photar(ne),E,dE
+      character (len=200) name
+      
+      !----Parameters-------------------
+      param(1)  = 6.0     !h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
+      param(2)  = 0.9     !a     !BH spin
+      param(3)  = 30.0    !inc   !Inclination angle in degrees
+      param(4)  = -1.0    !rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
+      param(5)  = 20000.0 !rout  !Disk outer radius in Rg - will probably hardwire this
+      param(6)  = 0.0     !zcos  !Cosmological redshift
+      param(7)  = 2.0     !Gamma !Photon index
+      param(8)  = 3.0     !logxi !log10xi - ionisation parameter
+      param(9)  = 1.0     !Afe   !Iron abundance      
+      param(10) = 300.0   !Ecut  !High energy exponential cut off ***IN OBSERVER'S RESTFRAME***
+      param(11) = 0.0     !Nh    !Hydrogen absorption column (using tbabs)
+      param(12) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
+      param(13) = 4.6e7   !M     !BH mass in solar masses
+      param(14) = 1e-5    !flo   !Lowest frequency in band (Hz)
+      param(15) = 2e-5    !fhi   !Highest frequency in band (Hz)
+      param(16) = 6       !ReIm  !1=Re, 2=Im, 3=Modulus, 4=time lag (s), 5=Modulus (with response), 6=time lag (with response)
+      param(17) = 0.0     !phiA  !Frequency-dependent phase normalisation (radians) - calculate self-consistently in full version of the model
+      param(18) = 0.0     !phiB  !Frequency-dependent phase of the power-law index oscillation 
+      param(19) = 0.0     !g     !Ratio of the two phases amplitude 
+      !---------------------------------
+      
+      Emax  = 500.0 !300.0
+      Emin  = 0.1   !1.0
+      do i = 0,ne
+        ear(i) = Emin * (Emax/Emin)**(real(i)/real(ne))
+      end do
+
+
+      numin = 1e-8
+      numax = 1e-4
+      kmax  = 100
+      
+      do k = 1,4,3
+         
+        ! call CPU_TIME(t0)
+        ! call tdreltrans(ear,ne,param,ifl,photar)
+        ! call CPU_TIME(t1)
+        ! write(*,*)"Total CPU time=",t1-t0
+        
+        ! write(99,*)"skip on"
+        ! if( param(16) .lt. 4 )then
+        !   do i = 1,ne
+        !     E  = 0.5 * ( ear(i) + ear(i-1) )
+        !     dE =         ear(i) - ear(i-1)
+        !     write(99,*)E,E**2*photar(i)/dE
+        !   end do
+        ! else
+        !   do i = 1,ne
+        !     E  = 0.5 * ( ear(i) + ear(i-1) )
+        !     dE =         ear(i) - ear(i-1)
+        !     write(99,*)E,photar(i)/dE
+        !   end do
+        ! end if
+          
+        ! write(99,*)"no no"
+
+        !Loop through different code outputs
+        if( k .eq. 1 .or. k .eq. 4 )then
+          !Theory time lag spectrum spectrum, Nh doesn't matter
+          param(16) = 4.0
+        else if( k .eq. 2 .or. k .eq. 5 )then
+          !Instrument Time Lag spectrum, Nh = 0.0
+          param(16) = 6.0
+          param(11) = 0.0
+        else if( k .eq. 3  .or. k .eq. 6 )then
+          !Instrument Time Lag spectrum, Nh = 1.0
+          param(16) = 6.0
+          param(11) = 1.0
+        end if
+          
+        call CPU_TIME(t0)
+        call tdreltransCp(ear,ne,param,ifl,photar)
+        call CPU_TIME(t1)
+        write(*,*)"Total CPU time=",t1-t0
+
+        if( param(16) .lt. 4 )then
+          do i = 1,ne
+            E  = 0.5 * ( ear(i) + ear(i-1) )
+            dE =         ear(i) - ear(i-1)
+            write(99,*)E,E**2*photar(i)/dE
+          end do
+        else
+          do i = 1,ne
+            E  = 0.5 * ( ear(i) + ear(i-1) )
+            dE =         ear(i) - ear(i-1)
+            write(99,*)E,photar(i)/dE
+          end do
+        end if
+          
+        write(99,*)"no no" 
+
+      end do
+
+      end program main
