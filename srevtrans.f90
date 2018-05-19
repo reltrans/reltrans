@@ -610,7 +610,9 @@ include 'subroutines/header.h'
 !       !Re-bin onto input grid
 !       call rebinE(earx,reline,nex,ear,reline_reb,ne)
 ! >>>>>>> non_lin
+
 ! Calculate absorption
+!      absorbx= 1.0 
       call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
 
 ! Include absorption in the model
