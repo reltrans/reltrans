@@ -40,18 +40,8 @@ include 'subroutines/header.h'
       integer nro,nphi,nex,i,nf,ifl,ne,ReIm,nfsave
       integer verbose,mubin,sdbin
       integer me,ge,xe,Cp
-!      parameter (ndelta=1000,nex=2**12,mex=1,gex=1,xex=1)
       parameter (nex=2**12)
       double precision a,h,Gamma,inc,pi,rout,rmin,disco,muobs,rin
-! <<<<<<< HEAD
-!       double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr
-!       double precision fhisave,flosave,rh,hsave,rinsave,frrel,lens
-!       real afac,fc,param(17),ear(0:ne),gso,direct
-! =======
-!       double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,rnmax,d
-!       double precision fhisave,flosave,rh,hsave,rinsave,frrel
-!       real afac,fc,param(19),ear(0:ne),gso,direct
-! >>>>>>> non_lin
       double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,rnmax,d
       double precision fhisave,flosave,rh,frrel,lens
       real afac,fc,param(19),ear(0:ne),gso,direct,ximin,ximax
@@ -60,52 +50,14 @@ include 'subroutines/header.h'
       real reline(nex),imline(nex),photarx(nex),reconv(nex),imconv(nex)
       real reconvmu(nex),imconvmu(nex),mue,sdmin,sdmax,gsd
       real phase,t0,t1,ReSx(nex),ImSx(nex),ReS(ne),ImS(ne),photar(ne)
-
-! <<<<<<< HEAD
-!       real paramsave(17),contx(nex),frac,g,phiA,absorbx(nex),photerx(nex)
-!       real ReGx(nex),ImGx(nex),sum,ReG(ne),ImG(ne),Nh
-!       real contxabs(nex),reconvabs(nex),imconvabs(nex)
-!       complex transe(nex,mex,gex,xex)
-! =======
-!       real paramsave(19),contx(nex),frac,phiA
-!       real ReGx(nex),ImGx(nex),sum
-!       complex,dimension(:,:,:,:),allocatable :: transe,transea
-! >>>>>>> non_lin
       real paramsave(19),contx(nex),frac,phiA,absorbx(nex),photerx(nex)
       real ReGx(nex),ImGx(nex),sum,ReG(ne),ImG(ne),Nh
       real contxabs(nex),reconvabs(nex),imconvabs(nex)
       complex,dimension(:,:,:,:),allocatable :: transe,transea
-
-
       logical firstcall,needtrans,needconv,needresp
       integer xbin,xbinhi,myenv,Cpsave,mesave,gesave,xesave
       real logxir
-! <<<<<<< HEAD
-!       character (len=200) path
-! =======
 
-! !variable for the grid reading
-!       integer :: lrec,irec,nphi_grid,nro_grid,spin_dim,mu_dim,check
-!       integer :: s_lo,s_hi,m_lo,m_hi,xbinhi_sl_ml,xbinhi_sl_mh,xbinhi_sh_ml,xbinhi_sh_mh
-!       double precision :: honr_grid,spin_lo,spin_hi,mu_lo,mu_hi,spin_start,spin_end,mu_start,mu_end,ave_weight2D
-!       real :: ximin_sl_ml,ximax_sl_ml,ximin_sl_mh,ximax_sl_mh,ximin_sh_ml,ximax_sh_ml&
-!            ,ximin_sh_mh,ximax_sh_mh
-!       real :: sdmin_sl_ml,sdmax_sl_ml,sdmin_sl_mh,sdmax_sl_mh,sdmin_sh_ml,sdmax_sh_ml&
-!            ,sdmin_sh_mh,sdmax_sh_mh
-!       double precision :: frobs_sl_ml,frrel_sl_ml,frobs_sl_mh,frrel_sl_mh&
-!            ,frobs_sh_ml,frrel_sh_ml,frobs_sh_mh,frrel_sh_mh
-!       complex :: transe_1(nex),transe_2(nex),transe_(nex)
-!       complex,dimension(:,:,:,:),allocatable :: transe_11,transe_12,transe_21,transe_22
-      
-! !variable for non linear effects
-!       complex :: transe_1a(nex),transe_2a(nex),transe_a(nex)
-!       complex,dimension(:,:,:,:),allocatable :: transe_11a,transe_12a,transe_21a,transe_22a
-!       real :: photarx_1(nex),photarx_2(nex),photarx_delta(nex),Gamma1,Gamma2,DeltaGamma,phiB,g
-!       real :: reline_a(nex),imline_a(nex),reconvW1(nex),imconvW1(nex),reconvW1a(nex),imconvW1a(nex)
-
-!       real :: reline_reb(ne)
-      
-! >>>>>>> non_lin
 !variable for the grid reading
       integer :: lrec,irec,nphi_grid,nro_grid,spin_dim,mu_dim,check
       integer :: s_lo,s_hi,m_lo,m_hi,xbinhi_sl_ml,xbinhi_sl_mh,xbinhi_sh_ml,xbinhi_sh_mh
@@ -128,18 +80,7 @@ include 'subroutines/header.h'
       data firstcall /.true./
       data needresp/.true./
       data Cpsave/2/
-      ! data mesave,gesave,xesave/-1,-1,-1/
       save firstcall,Emax,Emin,dloge,earx
-! <<<<<<< HEAD
-!       save paramsave,transe,fhisave,flosave,nfsave,nrosave,nphisave
-!       save reconv,imconv,frobs,hsave,rinsave,sdmin,sdmax,frrel,Cpsave
-!       save mesave,gesave,xesave,lens,xbinhi,ximin,ximax,contx,needresp
-! =======
-!       save paramsave,fhisave,flosave,nfsave,nrosave,nphisave
-!       save frobs,hsave,rinsave,sdmin,sdmax,frrel,Cpsave
-!       save transe,transea,transe_11,transe_12,transe_21,transe_22,transe_11a,transe_12a,transe_21a,transe_22a
-!       save reconv,imconv,reconvW1,imconvW1,reconvW1a,imconvW1a,check
-! >>>>>>> non_lin
       save lens,xbinhi,contx,needresp,me,ge,xe !,mesave,gesave,xesave
       save paramsave,fhisave,flosave,nfsave,nro,nphi
       save frobs,sdmin,sdmax,frrel,Cpsave !,hsave,rinsave
@@ -155,47 +96,8 @@ include 'subroutines/header.h'
 
 ! Call environment variables
       verbose = myenv("REV_VERB",0)     !Set verbose level
-! <<<<<<< HEAD
-!       me      = myenv("MU_ZONES",5)     !Set number of mu_e zones used
-!       ge      = myenv("ECUT_ZONES",5)   !Set number of Ecut zones used
-!       xe      = myenv("ION_ZONES",10)   !Set number of ionisation zones used
-! =======
-!       me      = myenv("MU_ZONES",1)     !Set number of mu_e zones used
-!       ge      = myenv("ECUT_ZONES",1)   !Set number of Ecut zones used
-!       xe      = myenv("ION_ZONES",100)    !Set number of ionisation zones used
-      
-! ! ! Make sure they haven't exceeded their maximum allowed values
-!       ! call sizecheck(me,mex)
-!       ! call sizecheck(ge,gex)
-!       ! call sizecheck(xe,xex)
-! >>>>>>> non_lin
       
 ! Initialise
-! <<<<<<< HEAD
-!       if( firstcall ) call FNINIT
-!       call initialiser(firstcall,Emin,Emax,nex,dloge,earx,needtrans)
-     
-! =======
-!       call initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,check&
-!      ,nphi,nro,honr_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim)
-
-! !check if the grid values are the same one of the model
-      
-!          if ( check .ne. 0 .and. honr_grid .ne. honr ) then
-!             write(*,*) 'grid has a different honr!'
-!             write(*,*) 'honr of the grid is ', honr_grid
-!             stop
-!          endif
-
-!       !gridname = "/Users/Gullik/Dropbox/work/reflection_lag/Model_crossen/grid/grid_300_30x30_pem.dat"
-
-
-! !Allocate dynamically the array to calculate the trasfer function          
-!          if (.not. allocated(re1)) allocate(re1(nphi,nro))
-!          if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
-!          if (.not. allocated(pem1)) allocate(pem1(nphi,nro))
-      
-! >>>>>>> non_lin
       if( firstcall ) call FNINIT
       call initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,check&
      ,nphi,nro,honr_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim,me,ge,xe)
@@ -208,13 +110,12 @@ include 'subroutines/header.h'
             stop
          endif
 
-      !gridname = "/Users/Gullik/Dropbox/work/reflection_lag/Model_crossen/grid/grid_300_30x30_pem.dat"
+!gridname = "/Users/Gullik/Dropbox/work/reflection_lag/Model_crossen/grid/grid_300_30x30_pem.dat"
 
 !Allocate dynamically the array to calculate the trasfer function          
          if (.not. allocated(re1)) allocate(re1(nphi,nro))
          if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
          if (.not. allocated(pem1)) allocate(pem1(nphi,nro))
-      
 
 ! Parameters
       h        = dble( param(1) )
@@ -230,28 +131,6 @@ include 'subroutines/header.h'
       Nh       = param(11)
       afac     = param(12)
       Mass     = dble( param(13) )
-! <<<<<<< HEAD
-!       phiA     = param(14)
-!       flo      = dble( param(15) )
-!       fhi      = dble( param(16) )
-!       ReIm     = int( param(17) )
-
-!       honr = 0.d0
-      
-!       !Work out how many frequencies to average over
-! =======
-!       flo      = dble( param(14) )
-!       fhi      = dble( param(15) )
-!       ReIm     = int( param(16) )
-!       phiA     = param(17)
-!       phiB     = param(18)
-!       g        = param(19)
-      
-!       muobs = cos( inc * pi / 180.d0 )
-
-      
-! !Work out how many frequencies to average over
-! >>>>>>> non_lin
       flo      = dble( param(14) )
       fhi      = dble( param(15) )
       ReIm     = int( param(16) )
@@ -309,13 +188,13 @@ include 'subroutines/header.h'
           if( abs( param(i) - paramsave(i) ) .gt. 1e-7 ) needtrans = .true.
         end do
         if( abs( param(11) - paramsave(11) ) .gt. 1e-7 ) needtrans = .true.
+        if( nf .ne. nfsave ) needtrans = .true.
+        if( abs( fhi - fhisave ) .gt. 1e-7 ) needtrans = .true.
+        if( abs( flo - flosave ) .gt. 1e-7 ) needtrans = .true.
         ! if( abs( h - hsave ) .gt. 1e-7 ) needtrans = .true.
         ! if( abs( rin - rinsave ) .gt. 1e-7 ) needtrans = .true.
         ! if( nro .ne. nrosave ) needtrans = .true.
         ! if( nphi .ne. nphisave ) needtrans = .true.
-        if( nf .ne. nfsave ) needtrans = .true.
-        if( abs( fhi - fhisave ) .gt. 1e-7 ) needtrans = .true.
-        if( abs( flo - flosave ) .gt. 1e-7 ) needtrans = .true.
         ! if( me .ne. mesave ) needtrans = .true.
         ! if( ge .ne. gesave ) needtrans = .true.
         ! if( xe .ne. xesave ) needtrans = .true.
@@ -325,95 +204,6 @@ include 'subroutines/header.h'
       ximax   = 4.7
       
       if( needtrans )then
-! <<<<<<< HEAD
-!         !Calculate the Kernel for the given parameters
-!         muobs = cos( inc * pi / 180.d0 )         
-!         call strans(a,h,muobs,Gamma,rin,rout,honr,zcos,nro,nphi,ndelta,nex,dloge,&
-!              earx,nf,fhi,flo,mex,gex,xex,me,ge,xe,logxi,sdmin,sdmax,ximin,ximax,transe,frobs,frrel,xbinhi,lens)
-!       end if
-!       if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",frobs
-!       if( verbose .gt. 0 ) write(*,*)"System reflection fraction=",frrel
-! =======
-!          if (check .ne. 0) then
-
-! !Allocate dinamically the transfer functions
-!             if(.not. allocated(transe_11) ) allocate(transe_11(nex,me,ge,xe))
-!             if(.not. allocated(transe_12) ) allocate(transe_12(nex,me,ge,xe))
-!             if(.not. allocated(transe_21) ) allocate(transe_21(nex,me,ge,xe))
-!             if(.not. allocated(transe_22) ) allocate(transe_22(nex,me,ge,xe))
-!             if(.not. allocated(transe_11a) ) allocate(transe_11a(nex,me,ge,xe))
-!             if(.not. allocated(transe_12a) ) allocate(transe_12a(nex,me,ge,xe))
-!             if(.not. allocated(transe_21a) ) allocate(transe_21a(nex,me,ge,xe))
-!             if(.not. allocated(transe_22a) ) allocate(transe_22a(nex,me,ge,xe))
-            
-! !            write(*,*) 'GRID extraction'
-! !Choose the index of spin and inclination to extract from the grid            
-!             call chclose(a,spin_start,spin_end,spin_dim,s_lo,s_hi)
-!             call chclose(muobs,mu_start,mu_end,mu_dim,m_lo,m_hi)
-!             call ch_ind_val(spin_start,spin_end,spin_dim,s_lo,spin_lo)
-!             call ch_ind_val(spin_start,spin_end,spin_dim,s_hi,spin_hi)
-!             call ch_ind_val(mu_start,mu_end,mu_dim,m_lo,mu_lo)
-!             call ch_ind_val(mu_start,mu_end,mu_dim,m_hi,mu_hi)
-
-! !Extraction from the binary grid according to the index and how they have been saved in the grid         
-!             irec = 3*mu_dim*(s_lo-1) + 3*m_lo - 1 
-!             read(98,rec=irec) re1
-!             read(98,rec=irec+1) taudo1
-!             read(98,rec=irec+2) pem1
-!             status_re_tau = .false.
-! !Calculate the Kernel for the given parameters
-!             call strans(spin_lo,h,mu_lo,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
-!                  nf,fhi,flo,me,ge,xe,logxi,sdmin_sl_ml,sdmax_sl_ml,ximin_sl_ml,ximax_sl_ml&
-!                  ,transe_11,transe_11a,frobs_sl_ml,frrel_sl_ml,xbinhi_sl_ml)
-
-! !Repeat this for all nthe combinations of spin and inclination (4 times)
-!             irec = 3*mu_dim*(s_lo-1) + 3*m_hi - 1
-!             read(98,rec=irec) re1
-!             read(98,rec=irec+1) taudo1
-!             read(98,rec=irec+2) pem1
-!             call strans(spin_lo,h,mu_hi,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
-!                  nf,fhi,flo,me,ge,xe,logxi,sdmin_sl_mh,sdmax_sl_mh,ximin_sl_mh,ximax_sl_mh&
-!                  ,transe_21,transe_21a,frobs_sl_mh,frrel_sl_mh,xbinhi_sl_mh)
-
-!             irec = 3*mu_dim*(s_hi-1) + 3*m_lo - 1
-!             read(98,rec=irec) re1
-!             read(98,rec=irec+1) taudo1
-!             read(98,rec=irec+2) pem1
-!             call strans(spin_hi,h,mu_lo,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
-!                  nf,fhi,flo,me,ge,xe,logxi,sdmin_sh_ml,sdmax_sh_ml,ximin_sh_ml,ximax_sh_ml&
-!                  ,transe_12,transe_12a,frobs_sh_ml,frrel_sh_ml,xbinhi_sh_ml)
-            
-!             irec = 3*mu_dim*(s_hi-1) + 3*m_hi - 1
-!             read(98,rec=irec) re1
-!             read(98,rec=irec+1) taudo1
-!             read(98,rec=irec+2) pem1
-!             call strans(spin_hi,h,mu_hi,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
-!                  nf,fhi,flo,me,ge,xe,logxi,sdmin_sh_mh,sdmax_sh_mh,ximin_sh_mh,ximax_sh_mh&
-!                  ,transe_22,transe_22a,frobs_sh_mh,frrel_sh_mh,xbinhi_sh_mh)
-   
-!             ! write(*,*)spin_lo,h,mu_hi,gamma,rin,rout,honr,zcos,nro,nphi,ndelta,nex,dloge &
-!             !      ,nf,fhi,flo,nmu,refl_sh_ml
-
-! !Weighted average of the reflection fraction 
-!             frobs = ave_weight2D(a,spin_lo,spin_hi,muobs,mu_lo,mu_hi,frobs_sl_ml,frobs_sl_mh,frobs_sh_ml,frobs_sh_mh)
-! !Determin the maximum value of the inonisation binning 
-!             xbinhi = max(xbinhi_sl_ml,xbinhi_sl_mh,xbinhi_sh_ml,xbinhi_sh_mh)
-
-!          else 
-! !            write(*,*) 'transfer calculation'
-!             if(.not. allocated(transe) ) allocate(transe(nex,me,ge,xe))
-!             if(.not. allocated(transea) ) allocate(transea(nex,me,ge,xe))
-
-! !Calculate the Kernel for the given parameters
-!             status_re_tau = .true.
-!             call strans(a,h,muobs,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,nex,dloge,&
-!                  nf,fhi,flo,me,ge,xe,logxi,sdmin,sdmax,ximin,ximax,transe,transea,frobs,frrel,xbinhi)
-!          endif         
-!       end if
-      
-!       if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",afac*frobs
-!       if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
-! >>>>>>> non_lin
          if (check .ne. 0) then
 
 !Allocate dinamically the transfer functions
@@ -426,7 +216,6 @@ include 'subroutines/header.h'
             if(.not. allocated(transe_21a) ) allocate(transe_21a(nex,me,ge,xe))
             if(.not. allocated(transe_22a) ) allocate(transe_22a(nex,me,ge,xe))
             
-!            write(*,*) 'GRID extraction'
 !Choose the index of spin and inclination to extract from the grid            
             call chclose(a,spin_start,spin_end,spin_dim,s_lo,s_hi)
             call chclose(muobs,mu_start,mu_end,mu_dim,m_lo,m_hi)
@@ -471,8 +260,6 @@ include 'subroutines/header.h'
                  nf,fhi,flo,ximin,ximax,me,ge,xe,logxi,sdmin_sh_mh,sdmax_sh_mh&
                  ,transe_22,transe_22a,frobs_sh_mh,frrel_sh_mh,xbinhi_sh_mh,lens)
    
-            ! write(*,*)spin_lo,h,mu_hi,gamma,rin,rout,honr,zcos,nro,nphi,ndelta,nex,dloge &
-            !      ,nf,fhi,flo,nmu,refl_sh_ml
 
 !Weighted average of the reflection fraction 
             frobs = ave_weight2D(a,spin_lo,spin_hi,muobs,mu_lo,mu_hi,frobs_sl_ml,frobs_sl_mh,frobs_sh_ml,frobs_sh_mh)
@@ -550,7 +337,6 @@ include 'subroutines/header.h'
 
 
               if (check .ne. 0) then
-                 ! write(*,*) 'interpolation for the GRID'
 !interpolation of the calculated transfer functions 
                  call myinterp_complex2(a,spin_lo,spin_hi,nex,transe_11(:,mubin,sdbin,xbin),transe_12(:,mubin,sdbin,xbin)&
                       ,transe_11a(:,mubin,sdbin,xbin),transe_12a(:,mubin,sdbin,xbin),transe_1,transe_1a)
@@ -596,23 +382,8 @@ include 'subroutines/header.h'
           end do
         end do
       end if
-! <<<<<<< HEAD
-
-! ! Calculate absorption
-!       call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
-
-! ! Include absorption in the model
-!       contxabs  = contx  * absorbx
-!       reconvabs = reconv * absorbx
-!       imconvabs = imconv * absorbx
-! =======
-     
-!       !Re-bin onto input grid
-!       call rebinE(earx,reline,nex,ear,reline_reb,ne)
-! >>>>>>> non_lin
 
 ! Calculate absorption
-!      absorbx= 1.0 
       call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
 
 ! Include absorption in the model
@@ -634,18 +405,6 @@ include 'subroutines/header.h'
       do i = 1,nex
         E = 0.5 * ( earx(i) + earx(i-1) )
         dE = earx(i) - earx(i-1)
-! <<<<<<< HEAD
-!         direct  = contxabs(i) / dE * lens * ( gso / (1.0+zcos) )**(2+Gamma)
-!         ReSx(i) = direct + afac * reconvabs(i) / dE
-!         ImSx(i) = afac * imconvabs(i) / dE
-!         ReGx(i) = cos(phiA) * ReSx(i) - sin(phiA) * ImSx(i)
-!         ImGx(i) = sin(phiA) * ReSx(i) + cos(phiA) * ImSx(i)
-! !        write(300,*)E,dE,E**2*ReSx(i),E**2*direct,E**2*afac*reconv(i)/dE
-!       end do
-! !      write(300,*)"no no"
-! =======
-!         direct  = contx(i) / dE * ( gso / (1.0+zcos) )**(2+Gamma)
-! >>>>>>> non_lin
 
         direct  = contxabs(i) / dE * lens * ( gso / (1.0+zcos) )**(2+Gamma)
         ReGx(i) = cos(phiA) * (direct + afac*reconv(i)/dE) - sin(phiA)*afac*imconv(i)/dE + &
@@ -680,35 +439,6 @@ include 'subroutines/header.h'
           dE = ear(i) - ear(i-1)
           photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) * dE
         end do
-! <<<<<<< HEAD
-!         write(*,*)"Warning ReIm=3 should not be used for fitting!"
-!       else if( ReIm .eq. 4 )then   !Time lag (seconds)
-!         do i = 1,ne
-! =======
-!         write(*,*)"Warning, only fit to data with ReIm=1 & 2"
-!       else if( ReIm .eq. 4 )then   !Phase lag (cycles)
-!         do i = 1,ne
-!           E = 0.5 * ( ear(i) + ear(i-1) )
-!           dE = ear(i) - ear(i-1)
-!           phase = atan2( ImS(i) , ReS(i) )
-!           photar(i) = phase / (2.0*pi) * dE
-!         end do
-!         write(*,*)"Warning, only fit to data with ReIm=1 & 2"
-!       else                         !Time lag (seconds)
-!          do i = 1,ne
-! >>>>>>> non_lin
-!           E = 0.5 * ( ear(i) + ear(i-1) )
-!           dE = ear(i) - ear(i-1)
-!           phase = atan2( ImS(i) , ReS(i) )
-!           photar(i) = phase / (2.0*pi*fc) * dE
-! <<<<<<< HEAD
-!         end do
-!         write(*,*)"Warning ReIm=4 should not be used for fitting!"
-! =======
-!        end do
-!         write(*,*)"Warning, only fit to data with ReIm=1 & 2"
-! >>>>>>> non_lin
-
         write(*,*)"Warning ReIm=3 should not be used for fitting!"
      else if( ReIm .eq. 4 )then   !Time lag (seconds)
         do i = 1,ne

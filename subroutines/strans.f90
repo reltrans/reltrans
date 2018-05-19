@@ -1,11 +1,4 @@
 !-----------------------------------------------------------------------
-! <<<<<<< HEAD
-!       subroutine strans(spin,h,mu0,Gamma,rin,rout,honr,zcos,nro,nphi,ndelta,ne,dloge,&
-!            ear,nf,fhi,flo,mex,gex,xex,me,ge,xe,rlxi,sdmin,sdmax,ximin,ximax,transe,frobs,frrel,xbinhi,lens)
-! =======
-!       subroutine strans(spin,h,mu0,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ndelta,ne,dloge,&
-!            nf,fhi,flo,me,ge,xe,rlxi,sdmin,sdmax,ximin,ximax,transe,transe_a,frobs,frrel,xbinhi)
-! >>>>>>> non_lin
       subroutine strans(spin,h,mu0,Gamma,rin,rout,rnmax,d,honr,zcos,nro,nphi,ne,dloge,&
            nf,fhi,flo,ximin,ximax,me,ge,xe,rlxi,sdmin,sdmax,transe,transe_a,frobs,frrel,xbinhi,lens)
 ! Code to calculate the transfer function for an accretion disk.
