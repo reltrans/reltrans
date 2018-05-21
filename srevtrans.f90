@@ -309,6 +309,11 @@ include 'subroutines/header.h'
         xillpar(7) = -1.0       !reflection fraction of 1        
         reconv = 0.0
         imconv = 0.0
+        reconvW1 = 0.0
+        imconvW1 = 0.0
+        reconvW1a = 0.0
+        imconvW1a = 0.0
+        
 !Loop over ionisatrion, emission angle and Ecut zones
         do xbin = 1,xbinhi   !loop over ionisation zones
           logxir = ximin + (xbin-0.5)*(ximax-ximin)/float(xe)
@@ -410,6 +415,15 @@ include 'subroutines/header.h'
       imconvabsW1a = imconvW1a * absorbx
 
 
+        ! do i = 1,nex
+        !   E = 0.5 * ( earx(i) + earx(i-1) )
+        !   write(12,*) E, E**2*absorbx/dE
+        ! end do
+        ! do i = 1,nex
+        !   E = 0.5 * ( earx(i) + earx(i-1) )
+        !   write(13,*) E, E**2*contx/dE
+        ! end do
+
       
 ! Calculate phiA from instrument response - if this option is set to on      
       call phaseA(nex,earx,contxabs,reconvabs,imconvabs,gso,zcos,Gamma,afac,lens,phiA)
@@ -445,6 +459,7 @@ include 'subroutines/header.h'
           E = 0.5 * ( ear(i) + ear(i-1) )
           dE = ear(i) - ear(i-1)
           photar(i) = ImS(i) * dE
+!          write(11,*) E, ImS(i)*E**2
         end do
       else if( ReIm .eq. 3 )then   !Modulus
         do i = 1,ne
