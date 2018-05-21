@@ -51,10 +51,11 @@
       double precision rnmax,rnmin,rn(nro),phin,mueff
       double precision fi(nf),dgsofac,sindisk,mue,demang,frobs,cosdin,frrel
       integer nron,nphin,nrosav,nphisav,mubin,xbinhi,adensity
-      double precision spinsav,musav,routsav,mudsav,t1,t0,rnn(nro),domegan(nro)
+      double precision spinsav,musav,routsav,mudsav,rnn(nro),domegan(nro)
       double precision mus,mui,dinang,xir,logxieff,logxir,xinorm,logxip,logxihi
       logical dotrace
       character (len=1) A_DENSITY
+      real :: t0,t1,t2,t3
       data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
       save nrosav,nphisav,spinsav,musav,routsav,mudsav
       
@@ -122,30 +123,31 @@
       
 !Check if we need to calculate re and tau and pem or we took them from a grid      
       if (status_re_tau) then 
+        call CPU_TIME(t0)
          
 ! Trace rays in full GR for the small camera
 ! to convert alpha and beta to r and tau_do (don't care about phi)
 ! First work out if we even need to call this
          dotrace = .false.
-         if( nro .ne. nrosav ) dotrace = .true.
-         if( nphi .ne. nphisav ) dotrace = .true.
+         ! if( nro .ne. nrosav ) dotrace = .true.
+         ! if( nphi .ne. nphisav ) dotrace = .true.
          if( abs(spinsav-spin) .gt. 1d-6 ) dotrace = .true.
          if( abs(musav-mu0) .gt. 1d-6 ) dotrace = .true.
          if( abs(routsav-rout) .gt. 1d-6 ) dotrace = .true.
          if( abs(mudsav-mudisk) .gt. 1d-6 ) dotrace = .true.
 
-         dotrace = .true.
-         
          if( dotrace )then
 !            call GRtrace(nmax,nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d,pem1,taudo1,re1)
             call GRtrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
-            nrosav  = nro
-            nphisav = nphi
+            ! nrosav  = nro
+            ! nphisav = nphi
             spinsav = spin
             musav   = mu0
             routsav = rout
             mudsav  = mudisk
          end if
+        call CPU_TIME(t1)
+!        write(*,*)"GRtrace CPU time=",t1-t0
 
       endif
       
@@ -154,7 +156,6 @@
       adensity = myenv("A_DENSITY",1)
       
 ! Set up logxi part of the calculation
-      
       logxip = dble(rlxi)
       if( adensity .eq. 1 )then
         re      = (11.d0/9.d0)**2 * rin  !Max \xi for Fx~r^{-3} and n=zone a SS73 (eqn 2.11)
@@ -175,7 +176,9 @@
       else
         xinorm = dglpfac(re,spin,h)**4 * cosfac / dareafac(re,spin)
       end if
-      
+
+
+      call CPU_TIME(t0)      
 ! Construct the transfer function by summing over all pixels ***Could paralellize this loop***
       logxihi = 0.0
       odisc = 1
@@ -256,6 +259,9 @@
       end do
       !write(124,*)"no no"
       !write(285,*)"no no"
+
+      call CPU_TIME(t1)
+!      write(*,*)"GR kernel CPU time=",t1-t0
       
       xbinhi = min( xe , ceiling( (logxihi-ximin)/(ximax-ximin) * float(xe) ) )
       if( xe .eq. 1 ) xbinhi = 1
