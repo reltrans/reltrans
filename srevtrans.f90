@@ -49,7 +49,7 @@ include 'subroutines/header.h'
       real Afe,Ecut_s,Ecut_obs,logxi,xillpar(7),E,dE,earx(0:nex),Emax,Emin,dloge
       real reline(nex),imline(nex),photarx(nex),reconv(nex),imconv(nex)
       real reconvmu(nex),imconvmu(nex),mue,sdmin,sdmax,gsd
-      real phase,t0,t1,ReSx(nex),ImSx(nex),ReS(ne),ImS(ne),photar(ne)
+      real phase,ReSx(nex),ImSx(nex),ReS(ne),ImS(ne),photar(ne)
       real paramsave(19),contx(nex),frac,phiA,absorbx(nex),photerx(nex)
       real ReGx(nex),ImGx(nex),sum,ReG(ne),ImG(ne),Nh
       real contxabs(nex),reconvabs(nex),imconvabs(nex)
@@ -76,7 +76,9 @@ include 'subroutines/header.h'
       real :: reline_a(nex),imline_a(nex),reconvW1(nex),imconvW1(nex),reconvW1a(nex),imconvW1a(nex)
       real :: reconvabsW1(nex),imconvabsW1(nex),reconvabsW1a(nex),imconvabsW1a(nex)
       
-
+!time testing 
+      real :: t0,t1,t2,t3
+      
       data firstcall /.true./
       data needresp/.true./
       data Cpsave/2/
@@ -202,6 +204,8 @@ include 'subroutines/header.h'
 
       ximin   = 0.0
       ximax   = 4.7
+
+      call CPU_TIME(t0)
       
       if( needtrans )then
          if (check .ne. 0) then
@@ -284,8 +288,11 @@ include 'subroutines/header.h'
       if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",afac*frobs
       if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
 
+        call CPU_TIME(t1)
+!        write(*,*)"kernels CPU time=",t1-t0
 
-      
+
+        call CPU_TIME(t0)
 !Determine if I need to convolve with the restframe reflection spectrum
       needconv = .false.
       if( needtrans ) needconv = .true.
@@ -383,7 +390,13 @@ include 'subroutines/header.h'
         end do
       end if
 
+        call CPU_TIME(t1)
+!        write(*,*)"convolution CPU time=",t1-t0
+
+        call CPU_TIME(t0)
+      
 ! Calculate absorption
+!        absorbx=1.0
       call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
 
 ! Include absorption in the model
@@ -407,12 +420,12 @@ include 'subroutines/header.h'
         dE = earx(i) - earx(i-1)
 
         direct  = contxabs(i) / dE * lens * ( gso / (1.0+zcos) )**(2+Gamma)
-        ReGx(i) = cos(phiA) * (direct + afac*reconv(i)/dE) - sin(phiA)*afac*imconv(i)/dE + &
-        g * (cos(phiB) * ( log(E*(1+zcos)/gso)*direct - afac*reconvW1a(i)/dE - afac*reconvW1(i)/dE)+&
-        sin(phiB)* (imconvW1a(i)/dE + imconvW1(i)/dE) )
-        ImGx(i) = sin(phiA) * (direct + afac*reconv(i)/dE) + cos(phiA)*afac*imconv(i)/dE + &
-        g * (sin(phiB) * ( log(E*(1+zcos)/gso)*direct - afac*reconvW1a(i)/dE - afac*reconvW1(i)/dE)-&
-        cos(phiB) * (afac*imconvW1a(i)/dE + afac*imconvW1(i)/dE) )
+        ReGx(i) = cos(phiA) * (direct + afac*reconvabs(i)/dE) - sin(phiA)*afac*imconvabs(i)/dE + &
+        g * (cos(phiB) * ( log(E*(1+zcos)/gso)*direct - afac*reconvabsW1a(i)/dE - afac*reconvabsW1(i)/dE)+&
+        sin(phiB)* (imconvabsW1a(i)/dE + imconvabsW1(i)/dE) )
+        ImGx(i) = sin(phiA) * (direct + afac*reconvabs(i)/dE) + cos(phiA)*afac*imconvabs(i)/dE + &
+        g * (sin(phiB) * ( log(E*(1+zcos)/gso)*direct - afac*reconvabsW1a(i)/dE - afac*reconvabsW1(i)/dE)-&
+        cos(phiB) * (afac*imconvabsW1a(i)/dE + afac*imconvabsW1(i)/dE) )
         
      end do
       
@@ -427,7 +440,7 @@ include 'subroutines/header.h'
           dE = ear(i) - ear(i-1)
           photar(i) = ReS(i) * dE
         end do
-      else if( ReIm .eq. 2 )then   !Imaginary part
+     else if( ReIm .eq. 2 )then   !Imaginary part
         do i = 1,ne
           E = 0.5 * ( ear(i) + ear(i-1) )
           dE = ear(i) - ear(i-1)
@@ -480,6 +493,8 @@ include 'subroutines/header.h'
       ! gesave    = ge
       ! xesave    = xe
       
+        call CPU_TIME(t1)
+!        write(*,*)"final CPU time=",t1-t0
 
     end subroutine genreltrans
 !-----------------------------------------------------------------------
