@@ -1,7 +1,7 @@
 fortran:
-	gfortran -c amodules.f90 main_test.f90 srevtrans.f90
+	gfortran -O -c amodules.f90 main_test.f90 srevtrans.f90
 C_code:
-	gcc -c relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c
+	gcc -O -c relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c
 
 compile: fortran C_code 
 	 gfortran -O *.o -L/usr/local/opt/cfitsio/  -L/Users/Gullik/Software/heasoft-6.23/x86_64-apple-darwin17.4.0/lib \

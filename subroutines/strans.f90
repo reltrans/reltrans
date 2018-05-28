@@ -55,7 +55,7 @@
       double precision mus,mui,dinang,xir,logxieff,logxir,xinorm,logxip,logxihi
       logical dotrace
       character (len=1) A_DENSITY
-      real :: t0,t1,t2,t3
+      real :: t0,t1,t2,t3,t4
       data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
       save nrosav,nphisav,spinsav,musav,routsav,mudsav
       
@@ -118,12 +118,13 @@
       cos0  = mu0
       sin0  = sqrt(1.0-cos0**2)
       transe  = 0.0 !Initialised transfer function
+      transe_a  = 0.0 !Initialised transfer function
       frobs   = 0.0
 
       
 !Check if we need to calculate re and tau and pem or we took them from a grid      
       if (status_re_tau) then 
-        call CPU_TIME(t0)
+!        call CPU_TIME(t0)
          
 ! Trace rays in full GR for the small camera
 ! to convert alpha and beta to r and tau_do (don't care about phi)
@@ -146,7 +147,7 @@
             routsav = rout
             mudsav  = mudisk
          end if
-        call CPU_TIME(t1)
+!        call CPU_TIME(t1)
 !        write(*,*)"GRtrace CPU time=",t1-t0
 
       endif
@@ -178,7 +179,10 @@
       end if
 
 
-      call CPU_TIME(t0)      
+      ! call CPU_TIME(t0)
+      ! write(*,*) 'NPHI', NPHI
+      ! write(*,*) 'nf',nf
+      ! t4 = 0.0
 ! Construct the transfer function by summing over all pixels ***Could paralellize this loop***
       logxihi = 0.0
       odisc = 1
@@ -248,11 +252,15 @@
               sdbin = max( 1 , sdbin )
               !write(124,*)re,mue
               !Sum up over frequency range (if flo=fhi=0, this is DC component)
+!              call cpu_time(t2)
               do fbin = 1,nf
                  cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
                  transe(gbin,mubin,sdbin,xbin) = transe(gbin,mubin,sdbin,xbin) + real(dFe) * cexp
                  transe_a(gbin,mubin,sdbin,xbin) = transe_a(gbin,mubin,sdbin,xbin) + real(log(g)) * real(dFe) * cexp
               end do
+!              call cpu_time(t3)
+              t4 = t4 + (t3-t2)
+              
             end if
           end if
         end do
@@ -260,12 +268,14 @@
       !write(124,*)"no no"
       !write(285,*)"no no"
 
-      call CPU_TIME(t1)
-!      write(*,*)"GR kernel CPU time=",t1-t0
+!      call CPU_TIME(t1)
+      ! write(*,*)"GR kernel CPU time=",t1-t0
+      ! write(*,*)"freq CPU time=",t4,t3-t2
       
       xbinhi = min( xe , ceiling( (logxihi-ximin)/(ximax-ximin) * float(xe) ) )
       if( xe .eq. 1 ) xbinhi = 1
       
+!       call CPU_TIME(t0)     
 ! Now trace rays for that bigger camera (obviously a lot easier)
       cos0 = mu0
       sin0 = sqrt( 1.0 - mu0**2 )
@@ -332,7 +342,11 @@
             end do
           end if
         end do
-      end do
+     end do
+
+
+      !      call CPU_TIME(t1)
+      ! write(*,*)"Newton kernel CPU time=",t1-t0
 
       !Deal with edge effects
       do xbin = 1,xe
