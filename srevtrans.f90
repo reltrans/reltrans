@@ -205,7 +205,7 @@ include 'subroutines/header.h'
       ximin   = 0.0
       ximax   = 4.7
 
-      call CPU_TIME(t0)
+!      call CPU_TIME(t0)
       
       if( needtrans )then
          if (check .ne. 0) then
@@ -288,11 +288,11 @@ include 'subroutines/header.h'
       if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",afac*frobs
       if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
 
-        call CPU_TIME(t1)
+!        call CPU_TIME(t1)
 !        write(*,*)"kernels CPU time=",t1-t0
 
 
-        call CPU_TIME(t0)
+!        call CPU_TIME(t0)
 !Determine if I need to convolve with the restframe reflection spectrum
       needconv = .false.
       if( needtrans ) needconv = .true.
@@ -372,7 +372,8 @@ include 'subroutines/header.h'
                     imline_a(i) = aimag( transea(i,mubin,sdbin,xbin) )
                  end do
               endif
-          
+
+              
 !Convolve with line profile
               call padcnv(1e-7,nex,reline,photarx,reconvmu)
               call padcnv(1e-7,nex,imline,photarx,imconvmu)
@@ -395,10 +396,10 @@ include 'subroutines/header.h'
         end do
       end if
 
-        call CPU_TIME(t1)
-!        write(*,*)"convolution CPU time=",t1-t0
+        ! call CPU_TIME(t1)
+        ! write(*,*)"convolution CPU time=",t1-t0
 
-        call CPU_TIME(t0)
+        ! call CPU_TIME(t0)
       
 ! Calculate absorption
 !        absorbx=1.0
@@ -413,16 +414,6 @@ include 'subroutines/header.h'
       imconvabsW1 = imconvW1 * absorbx
       reconvabsW1a = reconvW1a * absorbx
       imconvabsW1a = imconvW1a * absorbx
-
-
-        ! do i = 1,nex
-        !   E = 0.5 * ( earx(i) + earx(i-1) )
-        !   write(12,*) E, E**2*absorbx/dE
-        ! end do
-        ! do i = 1,nex
-        !   E = 0.5 * ( earx(i) + earx(i-1) )
-        !   write(13,*) E, E**2*contx/dE
-        ! end do
 
       
 ! Calculate phiA from instrument response - if this option is set to on      
@@ -459,7 +450,6 @@ include 'subroutines/header.h'
           E = 0.5 * ( ear(i) + ear(i-1) )
           dE = ear(i) - ear(i-1)
           photar(i) = ImS(i) * dE
-!          write(11,*) E, ImS(i)*E**2
         end do
       else if( ReIm .eq. 3 )then   !Modulus
         do i = 1,ne
@@ -508,8 +498,8 @@ include 'subroutines/header.h'
       ! gesave    = ge
       ! xesave    = xe
       
-        call CPU_TIME(t1)
-!        write(*,*)"final CPU time=",t1-t0
+        ! call CPU_TIME(t1)
+        ! write(*,*)"final stuff CPU time=",t1-t0
 
     end subroutine genreltrans
 !-----------------------------------------------------------------------
