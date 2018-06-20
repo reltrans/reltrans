@@ -6,10 +6,10 @@
       real earx(0:nex),contx(nex),reconv(nex),imconv(nex),afac,phiA,gso
       double precision zcos,Gamma,lens
       character (len=500) strenv,respname,arfname
-      character (len=3) exten
+!      character (len=3) exten
 !      character (len=7) name
       logical needresp,needchans
-      integer NENMAX,CHNMAX,NENERG,NUMCHN,Ilo,Ihi,I,lresp
+      integer NENMAX,CHNMAX,NENERG,NUMCHN,Ilo,Ihi,I 
       parameter (NENMAX=5000,CHNMAX=5000)
       real EN(0:NENMAX),RESP(CHNMAX,NENMAX),ECHN(0:CHNMAX),E
       integer NGRP(NENMAX),FCHAN(NENMAX,CHNMAX),LCHAN(NENMAX,CHNMAX)
@@ -66,9 +66,9 @@
           call rebinE(earx,reconv,nex,En,Rei,nenerg)
           call rebinE(earx,imconv,nex,En,Imi,nenerg)
           !Then fold around instrument response
-          call fold(NENMAX,CHNMAX,NENERG,conti,En,RESP,NGRP,FCHAN,LCHAN,fI)
-          call fold(NENMAX,CHNMAX,NENERG,Rei,En,RESP,NGRP,FCHAN,LCHAN,ReWI)
-          call fold(NENMAX,CHNMAX,NENERG,Imi,En,RESP,NGRP,FCHAN,LCHAN,ImWI)
+          call fold(NENMAX,CHNMAX,NENERG,conti,RESP,NGRP,FCHAN,LCHAN,fI)
+          call fold(NENMAX,CHNMAX,NENERG,Rei,RESP,NGRP,FCHAN,LCHAN,ReWI)
+          call fold(NENMAX,CHNMAX,NENERG,Imi,RESP,NGRP,FCHAN,LCHAN,ImWI)
           !Sum up
           Im = 0.0
           Re = 0.0
@@ -151,17 +151,18 @@
 ! Folds real and imaginary parts of the cross-spectrum around the
 ! telescope response
       implicit none
-      integer nex,ne,lresp
+      integer nex,ne
       real earx(0:nex),ear(0:ne),ReGx(nex),ImGx(nex),ReG(ne),ImG(ne)
-      real E,dE
       character (len=500) strenv,respname,arfname
-      character (len=3) exten
       logical needresp,arf
-      integer NENMAX,CHNMAX,NENERG,NUMCHN,I
+      integer NENMAX,CHNMAX,NENERG,NUMCHN
       parameter (NENMAX=5000,CHNMAX=5000)
       real EN(0:NENMAX),RESP(CHNMAX,NENMAX),ECHN(0:CHNMAX)      
       integer NGRP(NENMAX),FCHAN(NENMAX,CHNMAX),LCHAN(NENMAX,CHNMAX)
       real ReGi(nenmax),ImGi(nenmax),ReGtel(chnmax),ImGtel(chnmax)
+!      real E,dE
+!      character (len=3) exten
+!      integer I,lresp
       data needresp/.true./
       common /need/ needresp,nenerg,En,resp,numchn,echn,ngrp,fchan,lchan,respname,arfname
 !      save needresp,nenerg,En,resp,numchn,echn,ngrp,fchan,lchan
@@ -202,8 +203,8 @@
         call rebinE(earx,ReGx,nex,En,ReGi,nenerg)
         call rebinE(earx,ImGx,nex,En,ImGi,nenerg)
         !Then fold around instrument response
-        call fold(NENMAX,CHNMAX,NENERG,ReGi,En,RESP,NGRP,FCHAN,LCHAN,ReGtel)
-        call fold(NENMAX,CHNMAX,NENERG,ImGi,En,RESP,NGRP,FCHAN,LCHAN,ImGtel)
+        call fold(NENMAX,CHNMAX,NENERG,ReGi,RESP,NGRP,FCHAN,LCHAN,ReGtel)
+        call fold(NENMAX,CHNMAX,NENERG,ImGi,RESP,NGRP,FCHAN,LCHAN,ImGtel)
         !Then re-bin back onto input XSPEC grid
         call rebinE(echn,ReGtel,numchn,ear,ReG,ne)
         call rebinE(echn,ImGtel,numchn,ear,ImG,ne)

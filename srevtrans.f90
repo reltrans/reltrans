@@ -45,21 +45,20 @@ include 'subroutines/header.h'
       double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,rnmax,d
       double precision fhisave,flosave,rh,frrel,lens
       real afac,fc,param(19),ear(0:ne),gso,direct,ximin,ximax
-
       real Afe,Ecut_s,Ecut_obs,logxi,xillpar(7),E,dE,earx(0:nex),Emax,Emin,dloge
       real reline(nex),imline(nex),photarx(nex),reconv(nex),imconv(nex)
       real reconvmu(nex),imconvmu(nex),mue,sdmin,sdmax,gsd
-      real phase,ReSx(nex),ImSx(nex),ReS(ne),ImS(ne),photar(ne)
-      real paramsave(19),contx(nex),frac,phiA,absorbx(nex),photerx(nex)
-      real ReGx(nex),ImGx(nex),sum,ReG(ne),ImG(ne),Nh
+      real phase,ReS(ne),ImS(ne),photar(ne)
+      real paramsave(19),contx(nex),phiA,absorbx(nex),photerx(nex)
+      real ReGx(nex),ImGx(nex),Nh
       real contxabs(nex),reconvabs(nex),imconvabs(nex)
       complex,dimension(:,:,:,:),allocatable :: transe,transea
       logical firstcall,needtrans,needconv,needresp
-      integer xbin,xbinhi,myenv,Cpsave,mesave,gesave,xesave
+      integer xbin,xbinhi,myenv,Cpsave
       real logxir
 
 !variable for the grid reading
-      integer :: lrec,irec,nphi_grid,nro_grid,spin_dim,mu_dim,check
+      integer :: irec,spin_dim,mu_dim,check
       integer :: s_lo,s_hi,m_lo,m_hi,xbinhi_sl_ml,xbinhi_sl_mh,xbinhi_sh_ml,xbinhi_sh_mh
       double precision :: honr_grid,spin_lo,spin_hi,mu_lo,mu_hi,spin_start,spin_end,mu_start,mu_end,ave_weight2D
       real :: sdmin_sl_ml,sdmax_sl_ml,sdmin_sl_mh,sdmax_sl_mh,sdmin_sh_ml,sdmax_sh_ml&
@@ -75,9 +74,13 @@ include 'subroutines/header.h'
       real :: photarx_1(nex),photarx_2(nex),photarx_delta(nex),Gamma1,Gamma2,DeltaGamma,phiB,g
       real :: reline_a(nex),imline_a(nex),reconvW1(nex),imconvW1(nex),reconvW1a(nex),imconvW1a(nex)
       real :: reconvabsW1(nex),imconvabsW1(nex),reconvabsW1a(nex),imconvabsW1a(nex)
-      
+
+!variables that can be usefull
+!      real :: sum,ReSx(nex),ImSx(nex),ReG(ne),ImG(ne),frac,
+!      integer :: nro_grid,nphi_grid,mesave,gesave,xesave,lrec,
+
 !time testing 
-      real :: t0,t1,t2,t3
+!      real :: t0,t1,t2,t3
       
       data firstcall /.true./
       data needresp/.true./
@@ -104,13 +107,6 @@ include 'subroutines/header.h'
       call initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,check&
      ,nphi,nro,honr_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim,me,ge,xe)
 
-!check if the grid values are the same one of the model
-      
-         if ( check .ne. 0 .and. honr_grid .ne. honr ) then
-            write(*,*) 'grid has a different honr!'
-            write(*,*) 'honr of the grid is ', honr_grid
-            stop
-         endif
 
 !gridname = "/Users/Gullik/Dropbox/work/reflection_lag/Model_crossen/grid/grid_300_30x30_pem.dat"
 
@@ -143,8 +139,16 @@ include 'subroutines/header.h'
       honr = 0.d0
       muobs = cos( inc * pi / 180.d0 )
 
+
+!check if the grid values are the same one of the model
+            if ( check .ne. 0 .and. honr_grid .ne. honr ) then
+            write(*,*) 'grid has a different honr!'
+            write(*,*) 'honr of the grid is ', honr_grid
+            stop
+         endif
+      
 !Work out how many frequencies to average over
-      fc = 0.5 * ( flo + fhi )
+      fc = 0.5d0 * ( flo + fhi )
       nf = ceiling( log10(fhi/flo) / dlogf )
       if( fhi .lt. 1d-10 .or. flo .lt. 1d-10 )then
         fhi = 0.d0

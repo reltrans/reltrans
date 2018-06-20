@@ -22,13 +22,13 @@
       implicit none
       double precision sins,mus,a_spin,h,lambda,q,scal,mudisk
       double precision rhorizon,velocity(3),f1234(4),pp,pr,pt
-      double precision costheta,sintheta,cosphi,sinphi
       double precision deltamin,deltamax,rout,cosdout
       integer  j,n,k,counter,npts,nout
-      double precision r1(n),d1(n)
+      double precision r1(n)
       double precision dcosdr(n),tc(n)
       double precision deltas,cosd1(n),r_min,r_max,disco
       double precision rcros,mucros,phicros,tcros,sigmacros,pcros
+!      double precision cosphi,costheta,d1(n),sinphi,sintheta
       scal     = 1.d0   !Meaningless scaling factor
       mus      = 1.d0   !Position of source: mus=0 means on-axis
       sins     = 0.d0   !sin of same angle

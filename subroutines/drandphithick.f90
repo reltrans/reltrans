@@ -7,8 +7,8 @@
       implicit none
       double precision alpha,beta,cosi,sini,r,phi
       double precision pi,costheta,sintheta,x,a,b,c,det
-      double precision muplus,muminus,mu,xplus1,xminus1
-      double precision xplus2,xminus2,sinphi,ra,rb,rab
+      double precision mu,sinphi
+!      double precision muplus,muminus,ra,rb,rab,xplus1,xminus1,xplus2,xminus2
       pi = acos(-1.d0)
       sintheta = sqrt( 1.d0 - costheta**2 )
       sini     = sqrt( 1.d0 - cosi**2 )

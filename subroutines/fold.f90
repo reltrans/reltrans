@@ -1,10 +1,10 @@
 !-----------------------------------------------------------------------
-      subroutine fold(NENMAX,CHNMAX,NENERG,photar,En,RESP,NGRP,FCHAN,LCHAN,S)
+      subroutine fold(NENMAX,CHNMAX,NENERG,photar,RESP,NGRP,FCHAN,LCHAN,S)
 !     Fold the model around the response
       implicit none
       integer NENMAX,CHNMAX,NENERG,NGRP(NENMAX),FCHAN(NENMAX,CHNMAX)
       integer LCHAN(NENMAX,CHNMAX),I,J,K
-      real photar(NENMAX),En(0:NENMAX),RESP(CHNMAX,NENMAX)
+      real photar(NENMAX),RESP(CHNMAX,NENMAX)
       real S(CHNMAX)
       S = 0.0
       do J = 1,NENERG
