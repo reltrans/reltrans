@@ -51,50 +51,78 @@ PROGRAM  MAIN
       kmax  = 100
 
 
+        ! call CPU_TIME(t0)
+        ! call tdreltrans(ear,ne,param,ifl,photar)
+        ! call CPU_TIME(t1)
+        ! write(*,*)"Total CPU time=",t1-t0
+
+
+!*********************TEST**************************
+      
+      param(1)  = 3.0
+      param(3)  = 30.0
+      param(13) = 14.7   !M     !BH mass in solar masses
+      param(14) = 1    !flo   !Lowest frequency in band (Hz)
+      param(15) = 2   !fhi   !Highest frequency in band (Hz)
+      param(17) = 0.0     !phiA  
+      param(18) = 0.2     !phiB  
+      param(19) = 0.1     !g     
+
+      kmax = 1000
+      
+      do k=1,kmax
+
+         param(1) = param(1) + float(k)/(float(kmax)*10)
+      write(*,*) "h = ",param(1)
+      
         call CPU_TIME(t0)
         call tdreltrans(ear,ne,param,ifl,photar)
         call CPU_TIME(t1)
         write(*,*)"Total CPU time=",t1-t0
 
-
-
+     enddo
+!*******************************************
       
-!*********************TEST**************************
 
 !Print the model in test_prova.dat
 !*******************************************
-      ! name = '../sim_test/test_prova.dat'
-      ! open(99,file=name)
+ !       name = '../sim_data/200_Re_expar.dat'
+ ! !     name = '../sim_data/050_lag.dat'
+ !      open(99,file=name)
       
-      ! write(99,*) 'skip on' 
+ !      write(99,*) 'skip on' 
 
-      ! param(13) = 4.6e7   !M     !BH mass in solar masses
-      ! param(14) = 1e-5    !flo   !Lowest frequency in band (Hz)
-      ! param(15) = 2e-5   !fhi   !Highest frequency in band (Hz)
-      ! param(17) = 0.0     !phiA  
-      ! param(18) = 0.2     !phiB  
-      ! param(19) = 0.1     !g     
+ !      param(16) = 1
+
+ !      param(1)  = 3.0
+ !      param(3)  = 80.0
+ !      param(13) = 10   !M     !BH mass in solar masses
+ !      param(14) = 1    !flo   !Lowest frequency in band (Hz)
+ !      param(15) = 2   !fhi   !Highest frequency in band (Hz)
+ !      param(17) = 0.0     !phiA  
+ !      param(18) = 0.2     !phiB  
+ !      param(19) = 0.1     !g     
       
-      !   call CPU_TIME(t0)
-      !   call tdreltrans(ear,ne,param,ifl,photar)
-      !   call CPU_TIME(t1)
-      !   write(*,*)"Total CPU time=",t1-t0
+ !        call CPU_TIME(t0)
+ !        call tdreltrans(ear,ne,param,ifl,photar)
+ !        call CPU_TIME(t1)
+ !        write(*,*)"Total CPU time=",t1-t0
         
-      !   if( param(16) .lt. 4 )then
-      !     do i = 1,ne
-      !       E  = 0.5 * ( ear(i) + ear(i-1) )
-      !       dE =         ear(i) - ear(i-1)
-      !       write(99,*)E,E**2*photar(i)/dE
-      !     end do
-      !   else
-      !     do i = 1,ne
-      !       E  = 0.5 * ( ear(i) + ear(i-1) )
-      !       dE =         ear(i) - ear(i-1)
-      !       write(99,*)E,photar(i)/dE
-      !     end do
-      !   end if
+ !        if( param(16) .lt. 4 )then
+ !          do i = 1,ne
+ !            E  = 0.5 * ( ear(i) + ear(i-1) )
+ !            dE =         ear(i) - ear(i-1)
+ !            write(99,*)E,E**2*photar(i)/dE
+ !          end do
+ !        else
+ !          do i = 1,ne
+ !            E  = 0.5 * ( ear(i) + ear(i-1) )
+ !            dE =         ear(i) - ear(i-1)
+ !            write(99,*)E,photar(i)/dE
+ !          end do
+ !        end if
           
-      !   write(99,*)"log"
+        ! write(99,*)"log"
 !*******************************************
 
 

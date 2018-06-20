@@ -5,7 +5,7 @@
         use dyn_gr
         use blcoordinate
       implicit none
-      integer nmax,nro,nphi,i,j
+      integer nro,nphi,i,j
       double precision rn(nro),mueff,mu0,spin,rmin,rout,mudisk,d
       double precision phin,alpha,beta,cos0,sin0,scal,velocity(3),f1234(4),lambda,q
       double precision pem,re,mucros,phie,taudo,sigmacros

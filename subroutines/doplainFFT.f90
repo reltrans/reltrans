@@ -1,9 +1,9 @@
 !------------------------------------------------------------------------
-      subroutine doplainFFT(dt,n,at,ReA,ImA)
+      subroutine doplainFFT(n,at,ReA,ImA)
       implicit none
       integer n,j
       real at(n),ReA(0:n/2),ImA(0:n/2)
-      real data(2*n),dt
+      real data(2*n)
       do j = 1,n
         data(2*j-1) = at(j)
         data(2*j)   = 0.0
@@ -21,11 +21,11 @@
 
 
 !------------------------------------------------------------------------
-      subroutine doplaininvFFT(dt,n,ReA,ImA,at)
+      subroutine doplaininvFFT(n,ReA,ImA,at)
       implicit none
       integer n,j
       real at(n),ReA(0:n/2),ImA(0:n/2)
-      real data(2*n),dt
+      real data(2*n)
 ! +ve frequencies
       do j = 1,n/2
         data(2*j+1) = ReA(j)

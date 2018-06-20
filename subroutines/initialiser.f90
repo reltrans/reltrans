@@ -29,8 +29,8 @@ subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,chec
           earx(i) = Emin * (Emax/Emin)**(float(i)/float(nex))
         end do
 
-        nro   = 300    !resolution variables - these could be made parameters
-        nphi  = 300    !  "
+        nro   = 200    !resolution variables - these could be made parameters
+        nphi  = 200    !  "
         me      = myenv("MU_ZONES",5)     !Set number of mu_e zones used
         ge      = myenv("ECUT_ZONES",5)   !Set number of Ecut zones used
         xe      = myenv("ION_ZONES",10)   !Set number of ionisation zones used

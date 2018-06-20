@@ -1,5 +1,5 @@
 fortran:
-	gfortran -O -c amodules.f90 main_test.f90 srevtrans.f90
+	gfortran -O -Wall -pedantic -c amodules.f90 main_test.f90 srevtrans.f90
 C_code:
 	gcc -O -c relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c
 

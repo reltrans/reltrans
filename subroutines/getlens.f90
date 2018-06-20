@@ -16,12 +16,11 @@
       implicit none
       double precision sins,mus,a_spin,h,lambda,q,scal
       double precision velocity(3),f1234(4),pp,pr,pt
-      double precision costheta,sintheta,cosphi,sinphi
-      double precision deltamin,deltamax,muobs,delt
-      double precision ptotal,cosdelta1,dcosdelta,mu1,lens
-      double precision cosdelta,drtbis,cosidel,newt
+      double precision muobs,delt,drtbis,cosidel
+      double precision ptotal,cosdelta1,dcosdelta,lens
       double precision mua,p,phya,ra,sigmaa,timea,mudiff
-      double precision cosi,cosdelta0,par(3),x1,x2,xacc,mu2
+      double precision par(3),x1,x2,xacc,mu2
+!      double precision cosdelta,cosdelta0,cosi,cosphi,costheta,deltamax,deltamin,mu1,newt,sinphi,sintheta
       external mudiff
       !Settings
       scal      = 1.d0   !Meaningless scaling factor

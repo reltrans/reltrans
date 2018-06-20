@@ -19,11 +19,11 @@
 ! c ECHN(0:NUMCHN)     Energy range of each channel
       implicit none
       integer status,U1,readwrite,blocksize,hdutype,NENERG,NUMCHN
-      integer NENMAX,colnum,J,CHNMAX,K,Lr
+      integer NENMAX,colnum,J,CHNMAX,K   !,Lr
       integer NGRP(NENMAX),FCHAN(NENMAX,CHNMAX)
       integer LCHAN(NENMAX,CHNMAX),I,rows
       character (LEN=500) comment,RESPNAME,ARFNAME,EXNAME
-      character (LEN=3) EXTEN
+!      character (LEN=3) EXTEN
       real En(0:NENMAX),nullval,ECHN(0:CHNMAX)
       real RD(CHNMAX,NENMAX),AREA(NENMAX)
       logical anynull,ARF

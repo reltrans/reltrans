@@ -6,10 +6,10 @@
       implicit none
       double precision mudiff,cosdelta,par(3)
       double precision a_spin,h,muobs
-      double precision thresh,scal,mus,sins
+      double precision scal,mus,sins
       double precision velocity(3),sindelta,pp,pr,pt,lambda,q,f1234(4)
       double precision ptotal,x,y,z,xprev,yprev,zprev,delx,dely,delz
-      double precision ra,mua,phya,timea,sigmaa,p,cosdum,d,diff
+      double precision ra,mua,phya,timea,sigmaa,p,cosdum
       a_spin = par(1)
       h      = par(2)
       muobs  = par(3)
