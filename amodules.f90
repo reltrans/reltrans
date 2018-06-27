@@ -59,7 +59,7 @@ END MODULE dyn_gr
 !* This code comes from internet.
 !********************************************************************
       implicit none
-      Double precision a,b,c,d,p,q,delta,DD,e1,e2,e3,realp,imagep,temp1,temp2,phi,y1,y2,&
+      Double precision a,b,c,d,p,q,DD,temp1,temp2,phi,y1,y2,&
              y3,y2r,y2i,u,v
       complex*16 r1,r2,r3
       integer del
@@ -133,7 +133,7 @@ END MODULE dyn_gr
       !* DATE WRITTEN:  1 Jan 2012 
       !********************************************************************
       implicit none
-      Double precision b,c,d,e,q,r,s,realp,imagep,two
+      Double precision b,c,d,e,q,r,s,two
       parameter(two=2.D0)
       complex*16 r1,r2,r3,r4,s1,s2,s3,temp(1:4),temp1
       integer i,j,del,reals
@@ -205,7 +205,7 @@ END MODULE dyn_gr
 !********************************************************************
       implicit none
   
-      Double precision s1,s2,s3,s4,temp,arr(1:3),a1,a2,a3
+      Double precision s1,s2,s3,temp,arr(1:3),a1,a2,a3
       integer i,j
    
       arr(1)=a1
@@ -258,11 +258,11 @@ END MODULE dyn_gr
 !*    DATE WRITTEN:  1 Jan 2012 
 !********************************************************************
       implicit none
-      Double precisionz,g2,g3,g1,e1,e2,e3,k2,u,sn,alp,bet,sig,lamb,cn,dn,realp,&
-             imagep,rfx,rfy,rfz,EK,two,four,zero
+      Double precisionz,g2,g3,e1,e2,e3,k2,u,sn,alp,bet,sig,lamb,cn,dn,realp,&
+             two,four,zero
       parameter(two=2.D0,four=4.D0,zero=0.D0)                
       complex*16 r1(1:3)        
-      integer  i,del
+      integer  del
         
       If(z.eq.zero)then
           weierstrassP=infinity
@@ -311,11 +311,11 @@ END MODULE dyn_gr
 !*    DATE WRITTEN:  1 Jan 2012 
 !********************************************************************
       implicit none
-      Double precision halfperiodwp,g2,g3,g1,e1,e2,e3,zero,one,two,&
-                           three,four,EK,alp,bet,sig,lamb,k2
+      Double precision halfperiodwp,g2,g3,e1,e2,e3,zero,one,two,&
+                           three,four,EK,alp,bet,sig,k2
       parameter(zero=0.D0,one=1.D0,two=2.D0,three=3.D0,four=4.D0) 
       complex*16 r1(3)      
-        integer  i,del
+        integer  del
  
         if(del.eq.3)then
          e1=real(r1(1))
@@ -775,7 +775,7 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  4 Jan 2012 
 !***********************************************************************
       implicit none
-      Double precision y,x,yt,xt,h4,g2,g3,a1,b1,a2,b2,a3,b3,a4,b4,rff_p,integ(4),b,three,two,one,&
+      Double precision y,x,yt,xt,a1,b1,a2,b2,a3,b3,a4,b4,rff_p,integ(4),b,three,two,one,&
                   tempt,f,g,h,a44,b44,sign_h
       parameter  (three=3.0D0,two=2.0D0,one=1.D0)
       integer  del,p4(4),i,cases
@@ -870,10 +870,10 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  4 Jan 2012 
 !***********************************************************************
       implicit none
-      Double precision y,x,xt,yt,f1,g1,h1,f2,g2,h2,a5,b5,rff,integ(1:5),b,tempt,f,g,h,a55,&
+      Double precision y,x,xt,yt,f1,g1,h1,f2,g2,h2,a5,b5,integ(1:5),tempt,a55,&
                   b55,sign_h,one,zero,rff_p
       parameter(one=1.D0,zero=0.D0)
-      integer  reals,p5(1:5),cases,i
+      integer  p5(1:5),cases,i
       logical :: inverse,neg
       xt=x
       yt=y
@@ -1040,9 +1040,9 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  4 Mar 2009
 !*     REVISIONS: 
 !*********************************************************************** 
-      Double precision a1,b1,a4,b4,f,g,h,y,x,X1,X4,Y1,Y4,d14,d34,beta1,beta4,a11,c44,integ(4),&
+      Double precision a1,b1,a4,b4,f,g,h,y,x,X1,X4,Y1,Y4,d14,beta1,beta4,a11,c44,integ(4),&
              a142,xi,eta,M2,Lp2,Lm2,I1c,U,U2,Wp2,W2,Q2,P2,rho,I3c,I2c,r24xr34,r12xr13,&
-             N2c,K2c,ellcubic,zero,one,two,four,three,half,six,rff,rdd,r14,Ay1,rff_p,By1
+             N2c,K2c,ellcubic,zero,one,two,four,three,half,six,rff,rdd,r14,Ay1,rff_p
       integer   index_p4(4),cases
       PARAMETER ( ONE=1.D0, TWO=2.D0, HALF=0.5d0, THREE=3.D0, FOUR=4.d0, SIX=6.d0, ZERO=0.D0 )
       ellcubic=0.d0
@@ -1167,8 +1167,8 @@ END MODULE dyn_gr
       Double precision one,half,two,three,four,six,f1,g1,h1,f2,g2,h2,a5,b5,y,x,xi1,xi2,eta1,eta2,integ(5),&
                        theta1,theta2,zeta1,zeta2,M,M2,delta122,delta112,delta222,delta,deltap,lp2,lm2,&
                        deltam,rff,ellquartic,U,U2,alpha15,beta15,alpha25,beta25,lambda,omega2,psi,xi5,eta5,&
-                       gamma1,gamma2,Am111m1,A1111m4,XX,S,mu,T,V2,b2,a2,H,A1111m2,xi1p,B,G,Sigma,Lambda0,&
-                       Omega02,psi0,X0,mu0,b02,a02,H0,S2,T2,eta1p,T02,V02,psi2,T0,A1111,rff_p
+                       gamma1,gamma2,Am111m1,A1111m4,XX,S,mu,T,V2,b2,a2,H,A1111m2,xi1p,B,G,Sigma,&
+                       H0,S2,T2,eta1p,psi2,A1111,rff_p
       integer  index_p5(5),cases
       one=1.D0
       half=0.5D0
@@ -1416,12 +1416,10 @@ END MODULE dyn_gr
         IMPLICIT NONE 
         DOUBLE PRECISION f1234(4),lambda,q,sinobs,muobs,a_spin,robs,scal,&
                 zero,one,two,three,four,phi_r,time_r,aff_r,phi_t,time_t,&
-                rp,mup,p_int,mu_cos,r_coord,radi,mu,time,phi,sigma,p,&
-                mu_tp,mu_tp2,Rab
-        CHARACTER varble
+                mu_cos,r_coord,radi,mu,time,phi,sigma,p,Rab
         PARAMETER(zero=0.D0, one=1.D0, two=2.D0, three=3.D0, four=4.D0)
-        LOGICAL rotate,err,mobseqmtp
-        INTEGER tm1,tm2,tr1,tr2,reals,del,t1,t2 
+        LOGICAL rotate,err
+        INTEGER tm1,tm2,tr1,tr2
 
         !************************************************************************************
 ! call integrat_r_part to evaluate t_r,\phi_r,\sigma_r, and function r(p) (here is r_coord).
@@ -1510,8 +1508,8 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  4 Jan 2012
 !*     REVISIONS: ****************************************** 
       implicit none
-      Double precision mucos,f12343,f12342,p,sinobs,muobs,a_spin,q,lambda,bc,cc,dc,ec,mu_tp,&
-                        zero,b0,b1,b2,b3,g2,g3,tinf,fzero,a4,b4,AA,BB,two,delta,scal,four,&
+      Double precision mucos,f12343,f12342,p,sinobs,muobs,a_spin,q,lambda,mu_tp,&
+                        zero,b0,b1,b2,b3,g2,g3,tinf,fzero,a4,b4,AA,BB,two,scal,four,&
                         mu_tp2,one,three,integ4(4),rff_p
       Double precision f12343_1,f12342_1,lambda_1,q_1,sinobs_1,muobs_1,a_spin_1,scal_1
       complex*16 dd(3)
@@ -1655,14 +1653,14 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
       implicit none
       Double precision radius,p,a_spin,rhorizon,q,lambda,scal,zero,integ4(4),&
-             bc,cc,dc,ec,b0,b1,b2,b3,g2,g3,tinf,tinf1,PI0,PI1,robs,cr,dr,integ04(4),&
-             u,v,w,L1,L2,thorizon,m2,pinf,sn,cn,dn,a4,b4,one,two,four,PI2,ttp,sqt3,&
-             integ14(4),three,six,nine,r_tp1,r_tp2,f1234r,tp2,tp,t_inf,PI0_total,&
+             cc,b0,b1,b2,b3,g2,g3,tinf,tinf1,PI0,robs,cr,dr,integ04(4),&
+             u,v,w,L1,L2,thorizon,m2,pinf,sn,cn,dn,a4,b4,one,two,four,sqt3,&
+             integ14(4),three,six,nine,r_tp1,r_tp2,f1234r,tp2,t_inf,PI0_total,&
              PI0_inf_obs,PI0_obs_hori,PI01,PI0_total_2,rff_p
-      Double precision f1234r_1,lambda_1,q_1,p_1,a_spin_1,robs_1,scal_1
+      Double precision f1234r_1,lambda_1,q_1,a_spin_1,robs_1,scal_1
       parameter(zero=0.D0,one=1.D0,two=2.D0,four=4.D0,three=3.D0,six=6.D0,nine=9.D0)
       complex*16 bb(1:4),dd(3)
-      integer ::  reals,i,p4,cases_int,del,index_p4(4),cases,count_num=1
+      integer ::  reals,cases_int,del,index_p4(4),cases,count_num=1
       logical :: robs_eq_rtp,indrhorizon
       save  f1234r_1,lambda_1,q_1,a_spin_1,robs_1,scal_1,r_tp1,r_tp2,reals,&
                 robs_eq_rtp,indrhorizon,cases,bb,rhorizon,b0,b1,b2,b3,g2,g3,dd,del,cc,tinf,tp2,&
@@ -2051,12 +2049,12 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  4 Jan 2012
 !*     REVISIONS: ******************************************
         Implicit none
-        Double precision p,sinobs,muobs,a_spin,phi,phi_r,phi_c,twopi,mu,f1234(4),timet,&
-                         two,arc,Rab,robs,scal,zero,one,lambda,q,p_axis,mu_tp,mu_tp2,phi_c1,&
+        Double precision p,sinobs,muobs,a_spin,phi,phi_r,phi_c,twopi,f1234(4),timet,&
+                         two,Rab,robs,scal,zero,one,lambda,q,&
                          time_r,aff_r,mu_cos,r_coord        
         parameter (zero=0.D0,one=1.D0,two=2.D0)
-        logical :: rotate,clines,err,mobseqmtp
-        integer  tm1,tm2,reals,tr1,tr2
+        logical :: rotate,err
+        integer  tm1,tm2,tr1,tr2
 
         twopi=two*PI
         rotate=.false.
@@ -2165,12 +2163,12 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
         IMPLICIT NONE 
         DOUBLE PRECISION f1234(4),lambda,q,sinobs,muobs,a_spin,robs,scal,radi,mu,time,phi,sigma,&
-                zero,one,two,three,four,phi_r,time_r,aff_r,phi_t,time_t,p,mu_tp,mu_tp2,Rab,&
+                zero,one,two,three,four,phi_r,time_r,aff_r,phi_t,time_t,p,Rab,&
                 rp,mup,p_int,mu_cos,r_coord
         CHARACTER varble
         PARAMETER(zero=0.D0, one=1.D0, two=2.D0, three=3.D0, four=4.D0)
-        LOGICAL rotate,err,mobseqmtp
-        INTEGER tm1,tm2,tr1,tr2,reals,del
+        LOGICAL rotate,err
+        INTEGER tm1,tm2,tr1,tr2
  
         SELECT CASE(varble)
         CASE('r')
@@ -2334,8 +2332,8 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  4 Jan 2012
 !*     REVISIONS: ****************************************** 
       implicit none
-       Double precision f1234(4),sinobs,muobs,a_spin,lambda,q,zero,one,two,four,&
-                  mu_tp1,mu_tp2,delta,mutemp,Bprime,f12342,f12343 
+       Double precision sinobs,muobs,a_spin,lambda,q,zero,one,two,four,&
+                  mu_tp1,mu_tp2,delta,mutemp,f12342,f12343 
       integer  reals
       logical :: mobseqmtp
       parameter (zero=0.D0,two=2.0D0,four=4.D0,one=1.D0)
@@ -2572,11 +2570,11 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
       implicit none
       Double precision mu2p,f12342,f12343,mu,sinobs,muobs,a_spin,lambda,q,mu_tp,tposition,tp2,four,&
-                   bc,cc,dc,ec,b0,b1,b2,b3,g2,g3,tinf,p1,p2,pp,a4,b4,delta,two,mu_tp2,&
-                   scal,zero,mutemp,one,integ4(4),three,rff_p
+                   b0,b1,b2,b3,g2,g3,tinf,p1,p2,pp,a4,b4,two,mu_tp2,&
+                   scal,zero,one,integ4(4),three,rff_p
       parameter (zero=0.D0,two=2.D0,four=4.D0,one=1.D0,three=3.D0)
       integer  t1,t2,reals,p4,index_p4(4),del,cases
-      complex*16 bb(1:4),dd(3)
+      complex*16 dd(3)
       logical :: mobseqmtp  
 
       If(f12343.eq.zero.and.f12342.eq.zero.and.abs(muobs).eq.one)then
@@ -2688,8 +2686,8 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  4 Jan 2012
 !*     REVISIONS: ****************************************** 
       implicit none
-      Double precision f12343,f12342,mu,sinobs,muobs,mu2p,pp,p1,p2,AA,BB,two,DD,&
-                   lambda,q,a_spin,scal,zero,one,mu_tp,mu_tp2
+      Double precision f12343,f12342,mu,sinobs,muobs,mu2p,pp,p1,p2,BB,two,&
+                   lambda,q,scal,zero,one,mu_tp,mu_tp2
       integer  t1,t2      
       parameter(two=2.D0,zero=0.D0,one=1.D0)
       logical :: mobseqmtp
@@ -2756,15 +2754,14 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  4 Jan 2012
 !*     REVISIONS: ****************************************** 
       implicit none
-      Double precision r2p,p,a_spin,rhorizon,q,lambda,scal,zero,integ4(4),&
-                    bc,cc,dc,ec,b0,b1,b2,b3,g2,g3,tinf,tinf1,PI0,PI1,robs,cr,dr,integ04(4),&
-                    u,v,w,L1,L2,thorizon,m2,pinf,sn,cn,dn,a4,b4,one,two,four,PI2,ttp,sqrt3,&
-                    integ14(4),three,six,nine,r_tp1,r_tp2,f1234r,tp2,tp,t_inf,PI0_total,&
-                    PI0_inf_obs,PI0_obs_hori,PI01,PI0_total_2,pp,p1,p2,rend,rff_p
-      Double precision f1234r_1,lambda_1,q_1,p_1,a_spin_1,robs_1,scal_1
+      Double precision r2p,a_spin,rhorizon,q,lambda,scal,zero,integ4(4),&
+                    cc,b0,b1,b2,b3,g2,g3,tinf,tinf1,PI0,PI1,robs,integ04(4),&
+                    u,v,w,L1,L2,thorizon,m2,pinf,a4,b4,one,two,four,sqrt3,&
+                    integ14(4),three,six,nine,r_tp1,r_tp2,f1234r,tp2,tp,t_inf,&
+                    PI0_inf_obs,pp,p1,p2,rend,rff_p
       parameter(zero=0.D0,one=1.D0,two=2.D0,four=4.D0,three=3.D0,six=6.D0,nine=9.D0)
       complex*16 bb(1:4),dd(3)
-      integer  reals,i,p4,cases_int,del,index_p4(4),cases,t1,t2
+      integer  reals,cases_int,del,index_p4(4),cases,t1,t2
       logical :: robs_eq_rtp,indrhorizon
       
       rhorizon=one+sqrt(one-a_spin**2)
@@ -3025,16 +3022,16 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
       USE constants
       IMPLICIT NONE
-      Double precision phyt,timet,f12343,f12342,p,sinobs,muobs,a_spin,lambda,q,mu_tp1,tposition,tp2,mu,tmu,p1J2,&
-             bc,cc,dc,ec,b0,b1,b2,b3,g2,g3,tinf,p1,p2,pp,Wmup,Wmum,tplus,tminus,p1J1,&
-             p1I0,a4,b4 ,delta,mu_tp2,scal,mutemp ,integ4(4),integ(4),rff_p,&
-             integ14(4),pp2,f1234(4),PI0,integ04(4),fzero,mu2p,PI01,h,p1_t,p2_t,pp_t,p1_phi,&
-             p2_phi,pp_phi,radius,mtp1,mtp2,mucos,sqt3,difference,p_mt1_mt2,&
+      Double precision phyt,timet,f12343,f12342,p,sinobs,muobs,a_spin,lambda,q,mu_tp1,tp2,tmu,&
+             b0,b1,b2,b3,g2,g3,tinf,p1,p2,pp,Wmup,Wmum,tplus,tminus,&
+             a4,b4,mu_tp2,scal,integ4(4),integ(4),rff_p,&
+             integ14(4),PI0,integ04(4),mu2p,PI01,h,p1_t,p2_t,pp_t,p1_phi,&
+             p2_phi,pp_phi,mucos,p_mt1_mt2,&
              PI1_phi,PI2_phi,PI1_time,PI2_time,PI2_p
       Double precision f12343_1,f12342_1,lambda_1,q_1,sinobs_1,muobs_1,a_spin_1,scal_1 
-      integer ::  t1,t2,i,j,reals,cases,p4,index_p4(4),del,cases_int,count_num=1
+      integer ::  t1,t2,i,j,reals,index_p4(4),del,cases_int,count_num=1
       complex*16 bb(1:4),dd(3)
-      logical :: err,mobseqmtp
+      logical :: mobseqmtp
       save  f12343_1,f12342_1,lambda_1,q_1,sinobs_1,muobs_1,a_spin_1,scal_1,a4,b4,mu_tp1,mu_tp2,reals,&
                 mobseqmtp,b0,b1,b2,b3,g2,g3,dd,del,PI0,Wmup,Wmum,tplus,tminus,tp2,tinf,h,p_mt1_mt2,&
                 PI1_phi,PI2_phi,PI1_time,PI2_time,PI2_p,PI01
@@ -3469,13 +3466,13 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
         USE constants
         implicit none
-        Double precision phyc_schwatz,f3,f2,p,sinobs,muobs,phyr_schwatz,pp,p1,p2,mu,&
-                        lambda,AA,BB,AAi,AAim,scal,q,mu1,mu2,mu_tp1,mu_tp2,&
+        Double precision phyc_schwatz,f3,f2,p,sinobs,muobs,pp,p1,p2,mu,&
+                        lambda,AA,BB,scal,q,mu_tp1,mu_tp2,&
                         mu2p,mucos,Pt,PI1,PI1_phi,PI2_phi,f3_1,f2_1,lambda_1,q_1,&
                         sinobs_1,muobs_1,scal_1,pp_phi,p1_phi,p2_phi
         !parameter(zero=0.D0,one=1.D0,two=2.D0)
-        integer  :: t1,t2,cases,i,j,count_num=1        
-        logical :: err,mobseqmtp
+        integer  :: t1,t2,i,j,count_num=1        
+        logical :: mobseqmtp
         save :: PI1,PI1_phi,PI2_phi,Pt,f3_1,f2_1,lambda_1,q_1,pp_phi,p1_phi,p2_phi,&
                 sinobs_1,muobs_1,scal_1,mobseqmtp,AA,BB,&
                 mu_tp1,mu_tp2 
@@ -3727,8 +3724,7 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
       USE constants
       implicit none
-      Double precision y,x,yt,xt,AA,schwatz_int,ppx,ppy,A2,tp  
-      logical :: inverse
+      Double precision y,x,yt,xt,AA,schwatz_int,ppx,ppy,A2 
 
       xt=x
       yt=y        
@@ -3791,20 +3787,20 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
         USE constants
         IMPLICIT NONE
-        DOUBLE PRECISION phyr,radius,re,a,B,p,sinobs,muobs,a_spin,rhorizon,q,lambda,integ,integ4(4),&
-                          bc,cc,dc,ec,b0,b1,b2,b3,g2,g3,tobs,tp,pp,p1,p2,PI0,p1I0,p1J1,p1J2,E_add,E_m,&
-                          u,v,w,L1,L2,thorizon,m2,pinf,sn,cn,dn,r_add,r_m,B_add,B_m,D_add,D_m,&
-                         y,x,f1,g1,h1,f2,h2,a5,b5,a4,b4,integ0,integ1,integ2,robs,ttp,&
-                         PI1,PI2,scal,tinf,integ04(4),integ14(4),integ5(5),integ15(5),pp2,&
+        DOUBLE PRECISION phyr,radius,p,sinobs,muobs,a_spin,rhorizon,q,lambda,integ4(4),&
+                         cc,b0,b1,b2,b3,g2,g3,tobs,tp,pp,p1,p2,PI0,E_add,E_m,&
+                         u,v,w,L1,L2,thorizon,m2,pinf,sn,cn,dn,r_add,r_m,B_add,B_m,D_add,D_m,&
+                         y,x,f1,g1,h1,f2,h2,a5,b5,a4,b4,robs,&
+                         scal,tinf,integ04(4),integ14(4),integ5(5),integ15(5),&
                          r_tp1,r_tp2,t_inf,tp2,f1234r,f1234t,p_temp,PI0_obs_inf,PI0_total,PI0_obs_hori,&
-                         PI0_obs_tp2,PI01,timer,affr,r_coord,cr,dr,rff_p,p_t1_t2,&
+                         PI0_obs_tp2,PI01,timer,affr,r_coord,cr,dr,rff_p,&
                          Ap,Am,h,wp,wm,wbarp,wbarm,hm,hp,pp_time,pp_phi,pp_aff,p1_phi,p1_time,p1_aff,&
                          p2_phi,p2_time,p2_aff,time_temp,sqt3,p_tp1_tp2,PI2_p,PI1_p,&
                          PI1_phi,PI2_phi,PI1_time,PI2_time,PI1_aff,PI2_aff        
         DOUBLE PRECISION f1234r_1,f1234t_1,lambda_1,q_1,sinobs_1,muobs_1,a_spin_1,robs_1,scal_1
         !PARAMETER(zero=0.D0,one=1.D0,two=2.D0,four=4.D0,three=3.D0)
         COMPLEX*16 bb(1:4),dd(3)
-        INTEGER ::  reals,i,j,t1,t2,p5,p4,index_p4(4),index_p5(5),del,cases_int,cases,count_num=1
+        INTEGER ::  reals,i,j,t1,t2,index_p4(4),index_p5(5),del,cases_int,cases,count_num=1
         LOGICAL :: robs_eq_rtp,indrhorizon
         SAVE :: f1234r_1,f1234t_1,lambda_1,q_1,sinobs_1,muobs_1,a_spin_1,robs_1,scal_1,rhorizon,r_add,r_m,a4,b4,B_add,&
                 B_m,robs_eq_rtp,indrhorizon,r_tp1,r_tp2,reals,cases,bb,b0,b1,b2,b3,g2,g3,tobs,thorizon,&
@@ -4873,13 +4869,13 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  6 Jan 2012
 !*     REVISIONS: ****************************************** 
         implicit none
-        Double precision Pemdisk,f1234(4),f3,f2,p,sinobs,muobs,a_spin,lambda,q,mu_tp,tposition,tp2,two,&
-                         bc,cc,dc,ec,b0,b1,b2,b3,g2,g3,tinf,p1,p2,pp,mu,scal,zero,robs,&
-                         mutemp,mu_tp2,delta,four,one,pm,rout,rin,re
+        Double precision Pemdisk,f1234(4),f3,f2,sinobs,muobs,a_spin,lambda,q,mu_tp,two,&
+                         mu,scal,zero,robs,&
+                         mu_tp2,four,one,pm,rout,rin,re
         parameter(zero=0.D0,two=2.D0,four=4.D0,one=1.D0)
-        integer  t1,t2,reals,i,j
+        integer  t1,t2,reals
         complex*16 bb(1:4)
-        logical :: err,mobseqmtp 
+        logical :: mobseqmtp 
 
         f3 = f1234(3)
         f2 = f1234(2) 
@@ -4974,13 +4970,12 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  6 Jan 2012
 !*     REVISIONS: ****************************************** 
         implicit none
-        Double precision Pemdisk_all,f3,f2,p,sinobs,muobs,a_spin,lambda,q,mu_tp1,tposition,tp2,two,&
-                         bc,cc,dc,ec,b0,b1,b2,b3,g2,g3,tinf,p1,p2,pp,mu,scal,robs,zero,&
-                         mutemp,mu_tp2,delta,four,one,pm,f1234(4),rout,rin,re,rhorizon
+        Double precision Pemdisk_all,f3,f2,sinobs,muobs,a_spin,lambda,q,mu_tp1,two,&
+                         mu,scal,robs,zero,&
+                         mu_tp2,four,one,pm,f1234(4),rout,rin,re,rhorizon
         parameter(zero=0.D0,two=2.D0,four=4.D0,one=1.D0)
         integer  t1,t2,reals,i,j
-        complex*16 bb(1:4)
-        logical :: err,mobseqmtp 
+        logical :: mobseqmtp 
 
         f3 = f1234(3)
         f2 = f1234(2) 
@@ -5073,7 +5068,7 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  5 Jan 2012.
 !*     REVISIONS: ****************************************** 
         implicit none
-        Double precision robs,theta,a_spin,Delta,bigA,two,sinobs,muobs,one,sigma
+        Double precision robs,a_spin,Delta,bigA,two,sinobs,muobs,one,sigma
         Double precision ,optional :: somiga,expnu,exppsi,expmu1,expmu2        
 
         two=2.D0        
@@ -5113,11 +5108,11 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  5 Jan 2012.
 !*     REVISIONS: ****************************************** 
         implicit none
-        Double precision f1234(4),robs,sinobs,muobs,a_spin,lambda,q,As,Bs,A1,a2,b1,b2,c1,c2,d1,d2,&
-                         Delta,zero,one,two,four,gff,Sigma,Ac,Bc,Cc,at,Bt,lambdap,lambdam,qp,qm,&
-                         RaB2,scal,Vr,Vt,Vp,gama,gama_tp,gama_p,F1,F2,NN1,NN2,DD1,DD2,Aab,expnu2,&
-                         eppsi2,epnu2,epmu12,epmu22,bigA,G1,G2,KF,three,alpha,beta,&
-                         velocity(3),lambda2,somiga,q1,q2,q3
+        Double precision f1234(4),robs,sinobs,muobs,a_spin,lambda,q,A1,&
+                         Delta,zero,one,two,four,Sigma,at,Bt,&
+                         scal,Vr,Vt,Vp,gama,gama_tp,gama_p,Aab,expnu2,&
+                         eppsi2,epmu12,epmu22,bigA,three,alpha,beta,&
+                         velocity(3),somiga
         parameter(zero=0.D0,one=1.D0,two=2.D0,three=3.D0,four=4.D0)
 
         if(abs(beta).lt.1.D-7)beta=zero
@@ -5186,11 +5181,11 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  5 Jan 2012.
 !*     REVISIONS: ****************************************** 
         implicit none
-        Double precision f1234(4),robs,sinobs,muobs,a_spin,lambda,q,As,Bs,A1,a2,b1,b2,c1,c2,d1,d2,&
-                         Delta,zero,one,two,four,gff,Sigma,Ac,Bc,Cc,at,Bt,lambdap,lambdam,qp,qm,&
-                         RaB2,scal,Vr,Vt,Vp,gama,gama_tp,gama_p,F1,F2,NN1,NN2,DD1,DD2,Aab,expnu2,&
-                         eppsi2,epnu2,epmu12,epmu22,bigA,G1,G2,KF,three,alpha,beta,&
-                         velocity(3),lambda2,somiga,q1,q2,q3,prt,ptt,ppt
+        Double precision f1234(4),robs,sinobs,muobs,a_spin,lambda,q,A1,&
+                         Delta,zero,one,two,four,Sigma,at,Bt,&
+                         scal,Vr,Vt,Vp,gama,expnu2,&
+                         eppsi2,epmu12,epmu22,bigA,three,alpha,beta,&
+                         velocity(3),somiga,prt,ptt,ppt
         parameter(zero=0.D0,one=1.D0,two=2.D0,three=3.D0,four=4.D0)
 
         if(abs(beta).lt.1.D-7)beta=zero
@@ -5273,14 +5268,12 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
         implicit none
         Double precision lambda,q,sinobs,muobs,a_spin,robs,zero,one,two,three,four,&
-                        pt,pp,cost,sint,cosp,sinp,Ac,Bc,Cc,moment(4),velocity(3),Vr,Vt,Vp,&
-                        a1,b1,c1,d1,a2,b2,c2,d2,gama,gama_tp,gama_p,f1234(4),KF,F1,F2,&
-                        Delta,Er,Sigma,bigA,eppsi2,epmu12,epmu22,NN1,NN2,DD1,p_E,somiga,&
-                        lambdap,lambdam,pr,ptheta,pphi,theta,phi,pr1,ptheta1,pphi1,&
-                        lambda1,q1
+                        sinp,velocity(3),Vr,Vt,Vp,&
+                        a1,gama,gama_tp,gama_p,f1234(4),&
+                        Delta,Sigma,bigA,eppsi2,epmu12,epmu22,somiga,&
+                        pr,ptheta,pphi
         parameter(zero=0.D0,one=1.D0,two=2.D0,three=3.D0,four=4.D0)
         optional pr,ptheta,pphi 
-        integer cases
 
         Vr=velocity(1)
         Vt=velocity(2)
@@ -5514,16 +5507,16 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  5 Jan 2012
 !*     REVISIONS: ******************************************   
         IMPLICIT NONE
-        DOUBLE PRECISION phyr,re,a,B,sinobs,muobs,a_spin,rhorizon,q,lambda,integ,integ4(4),&
-                          bc,cc,dc,ec,b0,b1,b2,b3,g2,g3,tobs,tp,pp,p1,p2,PI0,p1I0,p1J1,p1J2,E_add,E_m,&
-                          u,v,w,L1,L2,thorizon,m2,pinf,r_add,r_m,B_add,B_m,D_add,D_m,&
-                         y,x,f1,g1,h1,f2,h2,a5,b5,a4,b4,integ0,integ1,integ2,robs,ttp,&
-                         PI1,PI2,scal,tinf,integ04(4),integ14(4),integ5(5),integ15(5),pp2,&
-                         r_tp1,r_tp2,t_inf,tp2,f1234r,p_temp,PI0_obs_inf,PI0_total,PI0_obs_hori,&
-                         PI0_obs_tp2,PI01,rff_p,p_t1_t2,p_total,p_tp1_tp2,PI2_p,PI1_p,sqt3         
+        DOUBLE PRECISION sinobs,muobs,a_spin,rhorizon,q,lambda,&
+                         cc,b0,b1,b2,b3,g2,g3,tobs,pp,p1,p2,PI0,&
+                         u,v,w,L1,L2,thorizon,m2,pinf,r_add,r_m,&
+                         a4,b4,robs,&
+                         scal,tinf,integ04(4),integ14(4),&
+                         r_tp1,r_tp2,t_inf,tp2,f1234r,&
+                         PI0_obs_tp2,PI01,rff_p,p_total,p_tp1_tp2,PI2_p,PI1_p,sqt3         
         !PARAMETER(zero=0.D0,one=1.D0,two=2.D0,four=4.D0,three=3.D0)
         COMPLEX*16 bb(1:4),dd(3)
-        INTEGER ::  reals,i,j,t1,t2,p5,p4,index_p4(4),index_p5(5),del,cases_int,cases,count_num=1
+        INTEGER ::  reals,t1,t2,index_p4(4),del,cases_int,cases
         LOGICAL :: robs_eq_rtp,indrhorizon                
 
                 rhorizon=one+sqrt(one-a_spin**two)
@@ -5732,21 +5725,21 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  5 Jan 2012
 !*     REVISIONS: ****************************************** 
       IMPLICIT NONE
-      Double precision phyt,timet,kp,kt,p,sinobs,muobs,a_spin,lambda,q,mu_tp1,tposition,tp2,mu,tmu,p1J2,&
-             bc,cc,dc,ec,b0,b1,b2,b3,g2,g3,tobs,p1,p2,pp,c_add,c_m,a_add,a_m,p1J1,come,&
-             p1I0,a4,b4,delta,mu_tp2,robs,mutemp ,integ5(5),integ(5),rff_p,tp1,&
-             integ15(5),pp2,f1234(4),PI0,integ05(5),fzero,p_mu,PI01,h,p1_t,p2_t,pp_t,p1_phi,&
-             p2_phi,pp_phi,radius,mtp1,mtp2,mucos,sqt3,difference,p_mt1_mt2,PI1_sig,PI2_sig,&
-             PI1_phi,PI2_phi,PI1_time,PI2_time,PI2_p,bigT,p1_sig,p2_sig,pp_sig,sigmat 
+      Double precision phyt,timet,kp,kt,p,sinobs,muobs,a_spin,lambda,q,mu_tp1,tp2,tmu,&
+             cc,b0,b1,b2,b3,g2,g3,tobs,p1,p2,pp,c_add,c_m,a_add,a_m,come,&
+             a4,b4,delta,mu_tp2,robs,integ5(5),integ(5),rff_p,tp1,&
+             integ15(5),PI0,integ05(5),p_mu,PI01,h,p1_t,p2_t,pp_t,p1_phi,&
+             p2_phi,pp_phi,mucos,p_mt1_mt2,PI1_sig,PI2_sig,&
+             PI1_phi,PI2_phi,PI1_time,PI2_time,PI2_p,p1_sig,p2_sig,pp_sig,sigmat 
       Double precision kp_1,kt_1,lambda_1,q_1,sinobs_1,muobs_1,a_spin_1,robs_1,&
              c_phi,c_time,thetamax,thetamax_1,sinmax,mumax,Omega,somiga,&
              expnu,exppsi,expmu1,expmu2,c_tau 
-      integer ::  t1,t2,i,j,reals,cases,p4,index_p5(5),del,cases_int,count_num=1
-      complex*16 bb(1:4),dd(3)
-      logical :: err,mobseqmtp
-      save  kp_1,kt_1,lambda_1,q_1,sinobs_1,muobs_1,a_spin_1,robs_1,a4,b4,mu_tp1,mu_tp2,reals,&
+      integer ::  t1,t2,i,j,index_p5(5),del,cases_int,count_num=1
+      complex*16 dd(3)
+      logical :: mobseqmtp
+      save  kp_1,kt_1,lambda_1,q_1,sinobs_1,muobs_1,a_spin_1,robs_1,a4,b4,mu_tp1,mu_tp2,&
             mobseqmtp,b0,b1,b2,b3,g2,g3,dd,del,PI0,c_m,c_add,a_m,a_add,tp2,tobs,h,p_mt1_mt2,&
-            PI1_phi,PI2_phi,PI1_time,PI2_time,PI2_p,come,tp1,bigT,Delta,c_phi,c_time,&
+            PI1_phi,PI2_phi,PI1_time,PI2_time,PI2_p,come,tp1,Delta,c_phi,c_time,&
             PI01,sinmax,mumax,thetamax_1,Omega,c_tau
 
 30    continue
@@ -6587,9 +6580,9 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  5 Jan 2012
 !*     REVISIONS: ******************************************  
       implicit none
-      Double precision :: r_sm,a_spin,zetaw,epsilonw,qw,qw1,zero,one,two,three,four,&
-             sinthemax,costhemax,cotmax,dtor,AL,AE,DD,Sigma,Delta,sqrts,signs,lambda,q,mve,ep,&
-             a1,b1,c1,mu_starp,mu_starm,r_max,r_min,c_temp,mutp2,sintp2,theta_min
+      Double precision :: r_sm,a_spin,zero,one,two,three,four,&
+             sinthemax,costhemax,cotmax,dtor,AL,AE,Sigma,Delta,lambda,q,&
+             a1,b1,c1,mu_starm,r_max,r_min,c_temp,mutp2,sintp2,theta_min
       parameter(dtor=asin(1.D0)/90.D0,zero=0.D0,one=1.D0,two=2.D0,three=3.D0,four=4.D0)
 	
       r_max = radiusofsphericalmotion(a_spin,zero)
@@ -6771,19 +6764,16 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
         use BLcoordinate
         implicit none
-        Double precision pemfind,a,B,lambda,q,sinobs,muobs,a_spin,&
-                        robs,scal,rhorizon,NN,r_tp1,r_tp2,mu_tp,mu_tp2,&
-                        deltax,p_rout,p_rout2,&
-                        p_rin,phya1,phya2,p1,p2,p,f_p,paras(10),f1234(4),&
-                        r1,r2
+        Double precision pemfind,lambda,q,sinobs,muobs,a_spin,&
+                        robs,scal,rhorizon,NN,r_tp1,r_tp2,deltax,&
+                        p1,p2,paras(10),f1234(4)
         Double precision rin,rout,muup,mudown,phy1,phy2
         optional rin,rout,muup,mudown,phy1,phy2
         complex*16  bb(1:4)        
-        integer  i,j,k,reals,cases,cases_of_tp,NNf,caserange,tr1,tr2,tm1,tm2,t1,t2
+        integer  reals,cases,cases_of_tp,caserange,tr1,tr2
         Double precision,external :: Fp!,Bisection,rootfind,Sectionp
         parameter(deltax=5.D-5)
-        logical :: err,mobseqmtp,clines,robs_eq_rtp,indrhorizon,bisection
-        character varble 
+        logical :: robs_eq_rtp,indrhorizon,bisection
 
         rhorizon=one+sqrt(one-a_spin**two)        
         call radiustp(f1234(1),a_spin,robs,lambda,q,r_tp1,r_tp2,&
@@ -6929,15 +6919,14 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
         use BLcoordinate
         implicit none
-        Double precision Sectionp,a,B,lambda,q,sinobs,muobs,a_spin,robs,&
-                        scal,rhorizon,NN,mu1,mu2,paras(10),&
-                        deltax,p_rout,p_rout2,&
-                        p_rin,phya1,phya2,p1,p2,p,f_p,f1234(4)
+        Double precision Sectionp,lambda,q,sinobs,muobs,a_spin,robs,&
+                        scal,NN,mu1,mu2,paras(10),deltax,&
+                        phya1,phya2,p1,p2,f1234(4)
         Double precision ,optional :: muup,mudown,phy1,phy2
-        integer  i,j,k,t11,t21,t12,t22,tt,reals,cases,NNf,caserange,t1,t2
+        integer  caserange,t1,t2
         Double precision,external :: Fp!,Bisection,rootfind
         parameter(deltax=5.D-5)
-        logical :: err,mobseqmtp,clines,bisection
+        logical :: bisection
 
             p1=p1-deltax
             p2=p2+deltax
@@ -7017,8 +7006,8 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
         use BLcoordinate
         implicit none
-        Double precision rootfind,a,B,lambda,q,sinobs,muobs,a_spin,&
-                        robs,scal,p1,p2,NN,sp1,sp2,f_p_old,&
+        Double precision rootfind,lambda,q,sinobs,muobs,a_spin,&
+                        robs,scal,p1,p2,NN,sp1,sp2,&
                         f_p,p,paras(10),f1234(4),deltap,dp
         Double precision ,external :: Fp
         parameter (dp=1.D-5)
@@ -7094,9 +7083,9 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
         use BLcoordinate
         implicit none
-        Double precision Bisectionp,a,B,lambda,q,p1,p2,sinobs,muobs,&
+        Double precision Bisectionp,lambda,q,p1,p2,sinobs,muobs,&
                         a_spin,robs,scal,pc,f1,&
-                        f2,fc,rout,rin,counter,paras(10),f1234(4)
+                        f2,fc,counter,paras(10),f1234(4)
         Double precision,external :: Fp
         integer t1,t2
         
@@ -7144,11 +7133,11 @@ END MODULE dyn_gr
 !*****************************************************************
         use BLcoordinate
         implicit none
-        Double precision NewRapson,rootfind,lambda,q,sinobs,muobs,a_spin,robs,&
-               scal,p1,p2,deltap,NN,sp1,sp2,f_p,f_pj,p,paras(10),f1234(4),dfp,&
+        Double precision NewRapson,lambda,q,sinobs,muobs,a_spin,robs,&
+               scal,p1,p2,deltap,f_p,f_pj,paras(10),f1234(4),dfp,&
                dp,pacc,EPS,temp,h,pj,ptn
         Double precision ,external :: Fp
-        integer NNf,k,kMax,t1,t2
+        integer k,kMax,t1,t2
         parameter (kmax=30, deltap=1.D-6, pacc=1.D-2, EPS=1.D-5)
 
         ptn=(p2+p1)/two
@@ -7222,18 +7211,18 @@ END MODULE dyn_gr
 !*     AUTHOR:     Yang & Wang (2012)  
 !*     DATE WRITTEN:  6 Jan 2012       
 !*******************************************************************************  
-      INTEGER n,ntrial,i,j,k,i1,j1,ntriend
-      INTEGER tr1,tr2,reals,del,ax,Bx
+      INTEGER n,ntrial,i,j
+      INTEGER tr1,tr2
       PARAMETER(n=3,ntrial=1000)
-      DOUBLE PRECISION a0,B0,a_spin,cobs,robs,scal,x(n),xem(n),tolx,tolf,sinobs,muobs,a1,B1,&
-                   Delta,sigma,bigA,somiga,expmu,zero,one,two,three,four,rmss,&
-                   fvec(n),rem,muem,phyem,p,mu_tp,mu_tp2,r_tp,lambda,q,pin,&         
-                   g,re,ut,bomiga,deltaa0,deltaB0,abp(3),rmuphy_em(3),pem1,pem2,&
-                   mu1,mu2,phy1,phy2,f1234(4),obs_V(3),alphac,Betac,alpha1,Beta1,&
+      DOUBLE PRECISION a0,B0,a_spin,robs,scal,x(n),xem(n),tolx,tolf,sinobs,muobs,a1,B1,&
+                   zero,one,two,three,four,rmss,&
+                   p,lambda,q,&         
+                   bomiga,abp(3),rmuphy_em(3),&
+                   f1234(4),obs_V(3),alpha1,Beta1,&
                    alen,Blen,adel,Bdel        
       PARAMETER(two=2.D0,three=3.D0,four=4.D0,one=1.D0,zero=0.D0)
       DOUBLE PRECISION,EXTERNAL :: func1,func2,func3
-      LOGICAL :: mobseqmtp,err
+      LOGICAL :: err
 
       p=one
       tr1=0
@@ -7293,14 +7282,14 @@ END MODULE dyn_gr
 !*******************************************************************************  
         IMPLICIT NONE
         INTEGER n,ntrial,NP
-        INTEGER tr1,tr2
+        
         DOUBLE PRECISION tolx,tolf,x(n),zero,xend(n)
         PARAMETER(NP=3,zero=0.D0)     !Up to NP variables.
         INTEGER i,k,indx(NP)
-        DOUBLE PRECISION d,errf,errx,fjac(NP,NP),fvec(NP),p(NP),lambda,q,&
-                         a,B,p_null,sinobs,muobs,a_spin,robs,scal,f1234(4),obs_V(3)
+        DOUBLE PRECISION d,errf,errx,fjac(NP,NP),fvec(NP),p(NP),&
+                         sinobs,muobs,a_spin,robs,scal,obs_V(3)
         DOUBLE PRECISION, EXTERNAL :: func1,func2,func3
-        LOGICAL err,err1
+        LOGICAL err
 
         do k=1,ntrial 
             call usrfun2(x,n,NP,fvec,fjac,sinobs,muobs,a_spin,robs,scal,&
@@ -7357,9 +7346,8 @@ END MODULE dyn_gr
       IMPLICIT NONE                
       INTEGER  n,NP,i,j
       DOUBLE PRECISION x(n),fjac(NP,NP),fvec(NP),sinobs,muobs,a_spin,robs,scal,&
-                   ra,mua,phya,deltax,ra1,mua1,phya1,f(NP),h,EPS,&
-                   temp,xend(n),rhorizon,lambda,q,f1234(4),obs_V(3),&
-                   temp_aB(2),a,B
+                   deltax,f(NP),h,EPS,&
+                   temp,xend(n),rhorizon,lambda,q,f1234(4),obs_V(3)
       PARAMETER(deltax=1.D-6,EPS=1.D-5)
       DOUBLE PRECISION,EXTERNAL :: func1,func2,func3
       LOGICAL err
@@ -7498,7 +7486,7 @@ END MODULE dyn_gr
 !**************************************************************************************
       IMPLICIT NONE
       INTEGER n,np,indx(n)
-      DOUBLE PRECISION a(np,np),b(n),zero,one,sums
+      DOUBLE PRECISION a(np,np),b(n),zero,sums
       INTEGER  i,ii,j,ll
       ii=0      !When ii is set to a positive value, it will become the index
                 !of the first nonvanishing element of b. We now do
