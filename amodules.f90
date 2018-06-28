@@ -258,7 +258,7 @@ END MODULE dyn_gr
 !*    DATE WRITTEN:  1 Jan 2012 
 !********************************************************************
       implicit none
-      Double precisionz,g2,g3,e1,e2,e3,k2,u,sn,alp,bet,sig,lamb,cn,dn,realp,&
+      Double precisionz,g2,g3,e1,e2,e3,k2,u,sn,alp,bet,sig,lamb,cn,dn,&
              two,four,zero
       parameter(two=2.D0,four=4.D0,zero=0.D0)                
       complex*16 r1(1:3)        
@@ -298,7 +298,7 @@ END MODULE dyn_gr
       return
       end function weierstrassP
 !*************************************************************************************************
-      Function halfperiodwp(g2,g3,r1,del)
+      Function halfperiodwp(r1,del)
 !************************************************************************************************* 
 !*    PURPOSE:   to compute the semi period of Weierstrass' elliptical function \wp(z;g_2,g_3) and all of 
 !*               this function involved are real numbers.   
@@ -311,7 +311,7 @@ END MODULE dyn_gr
 !*    DATE WRITTEN:  1 Jan 2012 
 !********************************************************************
       implicit none
-      Double precision halfperiodwp,g2,g3,e1,e2,e3,zero,one,two,&
+      Double precision halfperiodwp,e1,e2,e3,zero,one,two,&
                            three,four,EK,alp,bet,sig,k2
       parameter(zero=0.D0,one=1.D0,two=2.D0,three=3.D0,four=4.D0) 
       complex*16 r1(3)      
@@ -334,6 +334,43 @@ END MODULE dyn_gr
       endif
       return
       End Function halfperiodwp
+!*************************************************************************************************
+!       Function halfperiodwp(g2,g3,r1,del)
+! !************************************************************************************************* 
+! !*    PURPOSE:   to compute the semi period of Weierstrass' elliptical function \wp(z;g_2,g_3) and all of 
+! !*               this function involved are real numbers.   
+! !*    INPUTS:    g_2, g_3---two parameters. 
+! !*               r1(1:3)----an array which is the roots of equation W(t)=4t^3-g_2t-g_3=0.
+! !*               del--------number of real roots among r1(1:3). 
+! !*    RETURN:    halfperiodwp----the semi period of function \wp(z;g_2,g_3).  
+! !*    ROUTINES CALLED:  rf
+! !*    AUTHOR:    Yang, Xiao-lin & Wang, Jian-cheng (2012)
+! !*    DATE WRITTEN:  1 Jan 2012 
+! !********************************************************************
+!       implicit none
+!       Double precision halfperiodwp,g2,g3,e1,e2,e3,zero,one,two,&
+!                            three,four,EK,alp,bet,sig,k2
+!       parameter(zero=0.D0,one=1.D0,two=2.D0,three=3.D0,four=4.D0) 
+!       complex*16 r1(3)      
+!         integer  del
+ 
+!         if(del.eq.3)then
+!          e1=real(r1(1))
+!          e2=real(r1(2))
+!            e3=real(r1(3))
+!          k2=(e2-e3)/(e1-e3)
+!          EK=rf(zero,one-k2,one)
+!          halfperiodwp=EK/sqrt(e1-e3)
+!       else
+!          alp=-real(r1(1))/two
+!           bet=abs(aimag(r1(2)))
+!          sig=(9*alp**two+bet**two)**(one/four)
+!          k2=one/two+three/two*alp/sig**two
+!          EK=rf(zero,one-k2,one)
+!          halfperiodwp=EK/sig
+!       endif
+!       return
+!       End Function halfperiodwp
 !*************************************************************************************************
       subroutine sncndn(uu,emmc,sn,cn,dn)
 !************************************************************************************************* 
@@ -2271,7 +2308,7 @@ END MODULE dyn_gr
       Do i=4,1,-1
          If(aimag(rt(i)).eq.0.D0)then
             rms=real(rt(i))**2
-             return                     
+            return
          endif             
       enddo
       end function rms
@@ -2755,10 +2792,10 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
       implicit none
       Double precision r2p,a_spin,rhorizon,q,lambda,scal,zero,integ4(4),&
-                    cc,b0,b1,b2,b3,g2,g3,tinf,tinf1,PI0,PI1,robs,integ04(4),&
+                    cc,b0,b1,b2,b3,g2,g3,tinf,tinf1,PI0,robs,integ04(4),&
                     u,v,w,L1,L2,thorizon,m2,pinf,a4,b4,one,two,four,sqrt3,&
                     integ14(4),three,six,nine,r_tp1,r_tp2,f1234r,tp2,tp,t_inf,&
-                    PI0_inf_obs,pp,p1,p2,rend,rff_p
+                    pp,p1,p2,rend,rff_p
       parameter(zero=0.D0,one=1.D0,two=2.D0,four=4.D0,three=3.D0,six=6.D0,nine=9.D0)
       complex*16 bb(1:4),dd(3)
       integer  reals,cases_int,del,index_p4(4),cases,t1,t2
@@ -3030,7 +3067,7 @@ END MODULE dyn_gr
              PI1_phi,PI2_phi,PI1_time,PI2_time,PI2_p
       Double precision f12343_1,f12342_1,lambda_1,q_1,sinobs_1,muobs_1,a_spin_1,scal_1 
       integer ::  t1,t2,i,j,reals,index_p4(4),del,cases_int,count_num=1
-      complex*16 bb(1:4),dd(3)
+      complex*16 dd(3)
       logical :: mobseqmtp
       save  f12343_1,f12342_1,lambda_1,q_1,sinobs_1,muobs_1,a_spin_1,scal_1,a4,b4,mu_tp1,mu_tp2,reals,&
                 mobseqmtp,b0,b1,b2,b3,g2,g3,dd,del,PI0,Wmup,Wmum,tplus,tminus,tp2,tinf,h,p_mt1_mt2,&
@@ -4874,7 +4911,6 @@ END MODULE dyn_gr
                          mu_tp2,four,one,pm,rout,rin,re
         parameter(zero=0.D0,two=2.D0,four=4.D0,one=1.D0)
         integer  t1,t2,reals
-        complex*16 bb(1:4)
         logical :: mobseqmtp 
 
         f3 = f1234(3)
@@ -5268,7 +5304,7 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
         implicit none
         Double precision lambda,q,sinobs,muobs,a_spin,robs,zero,one,two,three,four,&
-                        sinp,velocity(3),Vr,Vt,Vp,&
+                        velocity(3),Vr,Vt,Vp,&
                         a1,gama,gama_tp,gama_p,f1234(4),&
                         Delta,Sigma,bigA,eppsi2,epmu12,epmu22,somiga,&
                         pr,ptheta,pphi
@@ -5325,7 +5361,7 @@ END MODULE dyn_gr
       End subroutine initialdirection
 
 !********************************************************************************************        
-      Subroutine center_of_image(robs,sinobs,muobs,a_spin,scal,velocity,alphac,betac)
+      Subroutine center_of_image(robs,scal,velocity,alphac,betac)
 !********************************************************************************************
 !*     PURPOSE:  Solves equations f_3(alphac,betac)=0, f_2(alphac,betac)=0, of (100)  
 !*               and (101) in Yang & Wang (2012). alphac, betac are the coordinates of 
@@ -5345,7 +5381,7 @@ END MODULE dyn_gr
 !*     DATE WRITTEN:  9 Jan 2012.
 !*     REVISIONS: ****************************************** 
         implicit none
-        Double precision robs,sinobs,muobs,a_spin,scal,velocity(3),alphac,betac,zero,one,two,four,&
+        Double precision robs,scal,velocity(3),alphac,betac,zero,one,two,four,&
                         Vr,Vt,Vp,gama,a1,b1,c1,alphap,alpham,betap,betam
         parameter(zero=0.D0,one=1.D0,two=2.D0,four=4.D0)
 
@@ -5402,87 +5438,165 @@ END MODULE dyn_gr
         betac=betac*robs*scal
         return
       End Subroutine center_of_image
-
 !********************************************************************************************        
-      Subroutine center_of_image_old(robs,sinobs,muobs,a_spin,scal,velocity,alphac,betac)
-!********************************************************************************************
-!*     PURPOSE:  Solves equations f_3(alphac,betac)=0, f_2(alphac,betac)=0, of (119)  
-!*               and (120) in Yang & Wang (2012). alphac, betac are the coordinates of 
-!*               center point of images on the screen of observer.    
-!*     INPUTS:   robs-----------radial coordinate of observer or the initial position of photon.
-!*               sinobs,muobs---sinobs=sin(\theta_{obs}), muobs=cos(\theta_{obs}), where 
-!*                              \theta_{obs} is the inclination angle of the observer.
-!*               a_spin---------spin of black hole, on interval (-1,1).  
-!*               scal-----------a dimentionless parameter to control the size of the images.
-!*                              Which is usually be set to 1.D0.  
-!*               velocity(1:3)--Array of physical velocity of observer or emitter with respect to
-!*                              LNRF.        
-!*     OUTPUTS:  alphac,betac---coordinates of center point of images on the screen of observer.            
-!*     ROUTINES CALLED: NONE.
-!*     ACCURACY:   Machine.    
-!*     AUTHOR:     Yang & Wang (2012).  
-!*     DATE WRITTEN:  9 Jan 2012.
-!*     REVISIONS: ****************************************** 
-        implicit none
-        Double precision robs,sinobs,muobs,a_spin,scal,velocity(3),alphac,betac,zero,one,two,four,&
-                        Vr,Vt,Vp,gama,gama_tp,gama_p,a1,b1,c1,alphap,alpham,betap,betam
-        parameter(zero=0.D0,one=1.D0,two=2.D0,four=4.D0)
+!       Subroutine center_of_image(robs,sinobs,muobs,a_spin,scal,velocity,alphac,betac)
+! !********************************************************************************************
+! !*     PURPOSE:  Solves equations f_3(alphac,betac)=0, f_2(alphac,betac)=0, of (100)  
+! !*               and (101) in Yang & Wang (2012). alphac, betac are the coordinates of 
+! !*               center point of images on the screen of observer.    
+! !*     INPUTS:   robs-----------radial coordinate of observer or the initial position of photon.
+! !*               sinobs,muobs---sinobs=sin(\theta_{obs}), muobs=cos(\theta_{obs}), where 
+! !*                              \theta_{obs} is the inclination angle of the observer.
+! !*               a_spin---------spin of black hole, on interval (-1,1).  
+! !*               scal-----------a dimentionless parameter to control the size of the images.
+! !*                              Which is usually be set to 1.D0.  
+! !*               velocity(1:3)--Array of physical velocity of observer or emitter with respect to
+! !*                              LNRF.        
+! !*     OUTPUTS:  alphac,betac---coordinates of center point of images on the screen of observer.            
+! !*     ROUTINES CALLED: NONE.
+! !*     ACCURACY:   Machine.    
+! !*     AUTHOR:     Yang & Wang (2012).  
+! !*     DATE WRITTEN:  9 Jan 2012.
+! !*     REVISIONS: ****************************************** 
+!         implicit none
+!         Double precision robs,sinobs,muobs,a_spin,scal,velocity(3),alphac,betac,zero,one,two,four,&
+!                         Vr,Vt,Vp,gama,a1,b1,c1,alphap,alpham,betap,betam
+!         parameter(zero=0.D0,one=1.D0,two=2.D0,four=4.D0)
 
-        Vr=velocity(1)
-        Vt=velocity(2)
-        Vp=velocity(3)
-! equation (92) in Yang & Wang (2012).
-        gama=one/sqrt(one-(Vr**two+Vt**two+Vp**two))
-        gama_tp=one/sqrt(one-(Vt**two+Vp**two))
-        gama_p=one/sqrt(one-Vp**two)        
+!         Vr=velocity(1)
+!         Vt=velocity(2)
+!         Vp=velocity(3)
+! ! equation (90) in Yang & Wang (2012).
+!         gama=one/sqrt(one-(Vr*Vr+Vt*Vt+Vp*Vp))       
 
-        If(Vt.ne.zero)then
-          If(Vp.ne.zero)then         
-            a1=(gama_tp/gama_p)**two-((Vp/gama_tp)**two+Vt**two)*gama**two
-            b1=two*gama*gama_tp*Vr*Vp/gama_p
-            c1=-Vp**two
-            alphap=(-b1+sqrt(b1**two-four*a1*c1))/two/a1
-            alpham=(-b1-sqrt(b1**two-four*a1*c1))/two/a1                         
-            If(alphap*Vp.lt.zero)then
-                alphac=alphap
-            Else
-                alphac=alpham                
-            Endif
-            betac=alphac*Vt*gama_tp/Vp
-          Else
-            alphac=zero
-            a1=one-(gama*Vt/gama_tp)**two
-            b1=two*gama*Vr*Vt
-            c1=(gama*Vt)**two*(Vr**two-one)        
-            betap=(-b1+sqrt(b1**two-four*a1*c1))/two/a1
-            betam=(-b1-sqrt(b1**two-four*a1*c1))/two/a1        
-            If(betap*Vt.lt.zero)then
-                betac=betap
-            Else
-                betac=betam                
-            Endif
-          Endif  
-        else
-            betac=zero        
-            If(Vp.ne.zero)then
-                a1=gama_p**two-(gama*Vp)**two
-                b1=two*gama*gama_tp*gama_p*Vr*Vp
-                c1=-(gama_tp*Vp)**two
-                alphap=(-b1+sqrt(b1**two-four*a1*c1))/two/a1        
-                alpham=(-b1-sqrt(b1**two-four*a1*c1))/two/a1        
-                If(alphap*Vp.lt.zero)then
-                    alphac=alphap        
-                Else
-                    alphac=alpham        
-                Endif
-            Else
-                alphac=zero
-            Endif
-        endif
-        alphac=alphac*robs*scal
-        betac=betac*robs*scal
-        return
-      End Subroutine center_of_image_old
+!         If(Vt.ne.zero)then
+!             If(Vp.ne.zero)then   
+!                 a1=(one+gama*gama*(Vt*Vt+Vp*Vp)/(one+gama))**two-gama*gama*(Vp*Vp+Vt*Vt)  
+!                 b1=two*gama*gama*Vt*Vr*(one+gama+gama*gama*(Vt*Vt+Vp*Vp))/(one+gama)**two
+!                 c1=(gama*gama*Vt*Vr/(one+gama))**two-gama*gama*Vt*Vt
+!                 betap=(-b1+sqrt(b1**two-four*a1*c1))/two/a1
+!                 betam=(-b1-sqrt(b1**two-four*a1*c1))/two/a1                         
+!                 If(betap*Vp.lt.zero)then
+!                     betac=betap
+!                 Else
+!                     betac=betam                
+!                 Endif
+!                 alphac=Vp/Vt*betac
+!             Else
+!                 alphac=zero
+!                 a1=(one+gama*gama*Vt*Vt/(one+gama))**two-gama*gama*Vt*Vt
+!                 b1=two*gama*gama*Vt*Vr*(one+gama+gama*gama*Vt*Vt)/(one+gama)**two
+!                 c1=(gama*gama*Vt*Vr/(one+gama))**two-gama*gama*Vt*Vt    
+!                 betap=(-b1+sqrt(b1**two-four*a1*c1))/two/a1
+!                 betam=(-b1-sqrt(b1**two-four*a1*c1))/two/a1        
+!                 If(betap*Vt.lt.zero)then
+!                     betac=betap
+!                 Else
+!                     betac=betam                
+!                 Endif
+!             Endif  
+!         else
+!             betac=zero        
+!             If(Vp.ne.zero)then
+!                 a1=(one+gama*gama*Vp*Vp/(one+gama))**two-gama*gama*Vp*Vp
+!                 b1=two*gama*gama*Vp*Vr*(one+gama+gama*gama*Vp*Vp)/(one+gama)**two
+!                 c1=(gama*gama*Vp*Vr/(one+gama))**two-gama*gama*Vp*Vp   
+!                 alphap=(-b1+sqrt(b1**two-four*a1*c1))/two/a1        
+!                 alpham=(-b1-sqrt(b1**two-four*a1*c1))/two/a1        
+!                 If(alphap*Vp.lt.zero)then
+!                     alphac=alphap        
+!                 Else
+!                     alphac=alpham        
+!                 Endif
+!             Else
+!                 alphac=zero
+!             Endif
+!         endif
+!         alphac=alphac*robs*scal
+!         betac=betac*robs*scal
+!         return
+!       End Subroutine center_of_image
+!********************************************************************************************        
+!********************************************************************************************        
+!       Subroutine center_of_image_old(robs,sinobs,muobs,a_spin,scal,velocity,alphac,betac)
+! !********************************************************************************************
+! !*     PURPOSE:  Solves equations f_3(alphac,betac)=0, f_2(alphac,betac)=0, of (119)  
+! !*               and (120) in Yang & Wang (2012). alphac, betac are the coordinates of 
+! !*               center point of images on the screen of observer.    
+! !*     INPUTS:   robs-----------radial coordinate of observer or the initial position of photon.
+! !*               sinobs,muobs---sinobs=sin(\theta_{obs}), muobs=cos(\theta_{obs}), where 
+! !*                              \theta_{obs} is the inclination angle of the observer.
+! !*               a_spin---------spin of black hole, on interval (-1,1).  
+! !*               scal-----------a dimentionless parameter to control the size of the images.
+! !*                              Which is usually be set to 1.D0.  
+! !*               velocity(1:3)--Array of physical velocity of observer or emitter with respect to
+! !*                              LNRF.        
+! !*     OUTPUTS:  alphac,betac---coordinates of center point of images on the screen of observer.            
+! !*     ROUTINES CALLED: NONE.
+! !*     ACCURACY:   Machine.    
+! !*     AUTHOR:     Yang & Wang (2012).  
+! !*     DATE WRITTEN:  9 Jan 2012.
+! !*     REVISIONS: ****************************************** 
+!         implicit none
+!         Double precision robs,sinobs,muobs,a_spin,scal,velocity(3),alphac,betac,zero,one,two,four,&
+!                         Vr,Vt,Vp,gama,gama_tp,gama_p,a1,b1,c1,alphap,alpham,betap,betam
+!         parameter(zero=0.D0,one=1.D0,two=2.D0,four=4.D0)
+
+!         Vr=velocity(1)
+!         Vt=velocity(2)
+!         Vp=velocity(3)
+! ! equation (92) in Yang & Wang (2012).
+!         gama=one/sqrt(one-(Vr**two+Vt**two+Vp**two))
+!         gama_tp=one/sqrt(one-(Vt**two+Vp**two))
+!         gama_p=one/sqrt(one-Vp**two)        
+
+!         If(Vt.ne.zero)then
+!           If(Vp.ne.zero)then         
+!             a1=(gama_tp/gama_p)**two-((Vp/gama_tp)**two+Vt**two)*gama**two
+!             b1=two*gama*gama_tp*Vr*Vp/gama_p
+!             c1=-Vp**two
+!             alphap=(-b1+sqrt(b1**two-four*a1*c1))/two/a1
+!             alpham=(-b1-sqrt(b1**two-four*a1*c1))/two/a1                         
+!             If(alphap*Vp.lt.zero)then
+!                 alphac=alphap
+!             Else
+!                 alphac=alpham                
+!             Endif
+!             betac=alphac*Vt*gama_tp/Vp
+!           Else
+!             alphac=zero
+!             a1=one-(gama*Vt/gama_tp)**two
+!             b1=two*gama*Vr*Vt
+!             c1=(gama*Vt)**two*(Vr**two-one)        
+!             betap=(-b1+sqrt(b1**two-four*a1*c1))/two/a1
+!             betam=(-b1-sqrt(b1**two-four*a1*c1))/two/a1        
+!             If(betap*Vt.lt.zero)then
+!                 betac=betap
+!             Else
+!                 betac=betam                
+!             Endif
+!           Endif  
+!         else
+!             betac=zero        
+!             If(Vp.ne.zero)then
+!                 a1=gama_p**two-(gama*Vp)**two
+!                 b1=two*gama*gama_tp*gama_p*Vr*Vp
+!                 c1=-(gama_tp*Vp)**two
+!                 alphap=(-b1+sqrt(b1**two-four*a1*c1))/two/a1        
+!                 alpham=(-b1-sqrt(b1**two-four*a1*c1))/two/a1        
+!                 If(alphap*Vp.lt.zero)then
+!                     alphac=alphap        
+!                 Else
+!                     alphac=alpham        
+!                 Endif
+!             Else
+!                 alphac=zero
+!             Endif
+!         endif
+!         alphac=alphac*robs*scal
+!         betac=betac*robs*scal
+!         return
+!       End Subroutine center_of_image_old
 
 !********************************************************************************************
       FUNCTION p_total(f1234r,lambda,q,sinobs,muobs,a_spin,robs,scal)
@@ -5513,7 +5627,7 @@ END MODULE dyn_gr
                          a4,b4,robs,&
                          scal,tinf,integ04(4),integ14(4),&
                          r_tp1,r_tp2,t_inf,tp2,f1234r,&
-                         PI0_obs_tp2,PI01,rff_p,p_total,p_tp1_tp2,PI2_p,PI1_p,sqt3         
+                         PI01,rff_p,p_total,p_tp1_tp2,PI2_p,PI1_p,sqt3         
         !PARAMETER(zero=0.D0,one=1.D0,two=2.D0,four=4.D0,three=3.D0)
         COMPLEX*16 bb(1:4),dd(3)
         INTEGER ::  reals,t1,t2,index_p4(4),del,cases_int,cases
@@ -5614,7 +5728,7 @@ END MODULE dyn_gr
                                 endif
                             endif   
                         !*************************************************************************************
-                        200     continue                    
+                        200     continue
                         else  !photon has probability to fall into black hole.
                             If(f1234r.le.zero)then
                                 index_p4(1)=0
@@ -5726,7 +5840,7 @@ END MODULE dyn_gr
 !*     REVISIONS: ****************************************** 
       IMPLICIT NONE
       Double precision phyt,timet,kp,kt,p,sinobs,muobs,a_spin,lambda,q,mu_tp1,tp2,tmu,&
-             cc,b0,b1,b2,b3,g2,g3,tobs,p1,p2,pp,c_add,c_m,a_add,a_m,come,&
+             b0,b1,b2,b3,g2,g3,tobs,p1,p2,pp,c_add,c_m,a_add,a_m,come,&
              a4,b4,delta,mu_tp2,robs,integ5(5),integ(5),rff_p,tp1,&
              integ15(5),PI0,integ05(5),p_mu,PI01,h,p1_t,p2_t,pp_t,p1_phi,&
              p2_phi,pp_phi,mucos,p_mt1_mt2,PI1_sig,PI2_sig,&
@@ -5743,7 +5857,7 @@ END MODULE dyn_gr
             PI01,sinmax,mumax,thetamax_1,Omega,c_tau
 
 30    continue
-      IF(count_num.eq.1)then	 
+      IF(count_num.eq.1)then
           kp_1=kp
           kt_1=kt
           lambda_1=lambda
@@ -5806,7 +5920,7 @@ END MODULE dyn_gr
           call root3(zero,-g2/four,-g3/four,dd(1),dd(2),dd(3),del)
 
 !      equations (30) of Yang and Wang (2013).
-          If(muobs.ne.mu_tp1)then	
+          If(muobs.ne.mu_tp1)then
               tobs=b0/four/(muobs-mu_tp1)+b1/four
           else
               tobs=infinity
@@ -5824,16 +5938,16 @@ END MODULE dyn_gr
           cases_int=1
 !      equations (53) of Yang and Wang (2013).
           call weierstrass_int_J3(tobs,tp1,dd,del,a4,b4,index_p5,rff_p,integ05,cases_int)
-          PI0=integ05(1)	
+          PI0=integ05(1)
           If(kt.lt.zero)then
-              PI01=-PI0	
+              PI01=-PI0
           else
               PI01=PI0
           endif
           tmu=weierstrassP(p+PI01,g2,g3,dd,del)
 !      equations (32) of Yang and Wang (2013).
           mucos = mu_tp1+b0/(four*tmu-b1)
-          h=-b1/four	
+          h=-b1/four
           !to get number of turn points of t1 and t2.
           !111111111*****************************************************************************************
           !mu=mu_tp+b0/(four*tmu-b1)
@@ -5865,16 +5979,16 @@ END MODULE dyn_gr
                           t2=j
                           p_mu=pp+two*(t1*p1+t2*p2)
                       endif
-                  else	
-                      If(kt.lt.zero)then	
+                  else
+                      If(kt.lt.zero)then
                           t1=i
                           t2=j
                           p_mu=pp+two*(t1*p1+t2*p2)
                       endif
-                      If(kt.gt.zero)then	
+                      If(kt.gt.zero)then
                           t1=j
-                          t2=i	
-                          p_mu=-pp+two*(t1*p1+t2*p2)			
+                          t2=i
+                          p_mu=-pp+two*(t1*p1+t2*p2)
                       endif
                   endif    
                   If(dabs(p-p_mu).lt.1.D-3)goto 400
@@ -5892,14 +6006,14 @@ END MODULE dyn_gr
           index_p5(4)=-4
           index_p5(5)=0
           !*****pp part***************************************
-          If(lambda.ne.zero)then	
+          If(lambda.ne.zero)then
               cases_int=2
               call weierstrass_int_J3(tobs,tmu,dd,del,-a_add,b4,index_p5,abs(pp),integ5,cases_int)
               call weierstrass_int_J3(tobs,tmu,dd,del,-a_m,b4,index_p5,abs(pp),integ15,cases_int)
 !      equations (21) (72) of Yang and Wang (2013).
               pp_phi=(pp/(one-mu_tp1**two)+(integ5(2)*c_add-integ15(2)*c_m)/two)*lambda+c_phi*pp 
           else 
-              pp_phi=c_phi*pp 		
+              pp_phi=c_phi*pp
           endif
           cases_int=4
           call weierstrass_int_J3(tobs,tmu,dd,del,h,b4,index_p5,abs(pp),integ,cases_int)
@@ -5909,14 +6023,14 @@ END MODULE dyn_gr
 !      equations (22) of Yang and Wang (2013).
           pp_t=pp_sig+c_time*pp  
           !*****p1 part***************************************
-          If(t1.eq.0)then	
+          If(t1.eq.0)then
               p1_phi=zero
               p1_sig=zero 
               p1_t=zero
           else  
               If(lambda.ne.zero)then  
                   IF(PI1_phi .EQ. zero)THEN
-                      cases_int=2	
+                      cases_int=2
                       call weierstrass_int_J3(tobs,infinity,dd,del,-a_add,b4,index_p5,PI0,integ5,cases_int)
                       call weierstrass_int_J3(tobs,infinity,dd,del,-a_m,b4,index_p5,PI0,integ15,cases_int)
 !      equations (21) (72) of Yang and Wang (2013).
@@ -5925,7 +6039,7 @@ END MODULE dyn_gr
                   p1_phi=PI1_phi-pp_phi 
               else 
                   IF(PI1_phi.eq.zero)PI1_phi=c_phi*PI0
-                  p1_phi=PI1_phi-pp_phi	    
+                  p1_phi=PI1_phi-pp_phi
               endif 
               IF(PI1_time .EQ. zero .or. PI1_sig.eq.zero)THEN  
                   cases_int=4  
@@ -5946,7 +6060,7 @@ END MODULE dyn_gr
           else
               IF(lambda.ne.zero)then  
                   IF(PI2_phi .EQ. zero)THEN  
-                      cases_int=2	
+                      cases_int=2
                       call weierstrass_int_J3(tp2,tobs,dd,del,-a_add,b4,index_p5,PI2_p,integ5,cases_int)
                       call weierstrass_int_J3(tp2,tobs,dd,del,-a_m,b4,index_p5,PI2_p,integ15,cases_int)
 !      equations (21) (72) of Yang and Wang (2013).
@@ -5966,7 +6080,7 @@ END MODULE dyn_gr
                                   sixteen)*a_spin*a_spin+robs*robs*PI2_p
 !      equations (22) of Yang and Wang (2013).
                   PI2_time=PI2_sig+c_time*PI2_p  
-              ENDIF	
+              ENDIF
               p2_sig=PI2_sig+pp_sig
               p2_t=PI2_time+pp_t   
           endif   
@@ -5987,7 +6101,7 @@ END MODULE dyn_gr
           else
               If(kt.lt.zero)then
 !      equations (52) of Yang and Wang (2013).
-                  phyt=pp_phi+two*(t1*p1_phi+t2*p2_phi)	
+                  phyt=pp_phi+two*(t1*p1_phi+t2*p2_phi)
                   timet=pp_t+two*(t1*p1_t+t2*p2_t)
                   sigmat=pp_sig+two*(t1*p1_sig+t2*p2_sig)
               endif
@@ -5995,8 +6109,8 @@ END MODULE dyn_gr
 !      equations (52) of Yang and Wang (2013).		
                   phyt=-pp_phi+two*(t1*p1_phi+t2*p2_phi)
                   timet=-pp_t+two*(t1*p1_t+t2*p2_t)
-                  sigmat=-pp_sig+two*(t1*p1_sig+t2*p2_sig)	
-              endif
+                  sigmat=-pp_sig+two*(t1*p1_sig+t2*p2_sig)
+               endif
           endif
           IF(mu_tp1.eq.one)phyt = phyt+(t1+t2)*PI
           !phyt = mod(phyt,twopi)
@@ -6025,7 +6139,7 @@ END MODULE dyn_gr
               return
           endif   
           tmu=weierstrassP(p+PI01,g2,g3,dd,del)
-          mucos = mu_tp1+b0/(four*tmu-b1) 	
+          mucos = mu_tp1+b0/(four*tmu-b1)
           !to get number of turn points of t1 and t2.
           !111111111*****************************************************************************************
           !mu=mu_tp+b0/(four*tmu-b1) 
@@ -6047,16 +6161,16 @@ END MODULE dyn_gr
                           t2=j
                           p_mu=pp+two*(t1*p1+t2*p2)
                       endif
-                  else	
-                      If(kt.lt.zero)then	
+                  else
+                      If(kt.lt.zero)then
                           t1=i
                           t2=j
                           p_mu=pp+two*(t1*p1+t2*p2)
                       endif
-                      If(kt.gt.zero)then	
+                      If(kt.gt.zero)then
                           t1=j
-                          t2=i	
-                          p_mu=-pp+two*(t1*p1+t2*p2)			
+                          t2=i
+                          p_mu=-pp+two*(t1*p1+t2*p2)
                       endif
                   endif  
                   !write(*,*)p,p_mu,abs(p-p_mu),t1,t2!(a,B,lambda,q,mu,sinobs,muobs,a_spin,t1,t2,robs),t1,t2
@@ -6071,14 +6185,14 @@ END MODULE dyn_gr
           index_p5(4)=-4
           index_p5(5)=0
           !*****pp part***************************************
-          If(lambda.ne.zero)then	
+          If(lambda.ne.zero)then
               cases_int=2
               call weierstrass_int_J3(tobs,tmu,dd,del,-a_add,b4,index_p5,abs(pp),integ5,cases_int)
               call weierstrass_int_J3(tobs,tmu,dd,del,-a_m,b4,index_p5,abs(pp),integ15,cases_int)
 !      equations (21) (72) of Yang and Wang (2013).
               pp_phi=(pp/(one-mu_tp1**two)+(integ5(2)*c_add-integ15(2)*c_m)/two)*lambda+c_phi*pp 
           else 
-              pp_phi=c_phi*pp		
+              pp_phi=c_phi*pp
           endif
           cases_int=4
           call weierstrass_int_J3(tobs,tmu,dd,del,h,b4,index_p5,abs(pp),integ,cases_int)
@@ -6088,13 +6202,13 @@ END MODULE dyn_gr
 !      equations (22) of Yang and Wang (2013).
           pp_t=pp_sig+c_time*pp
           !*****p1 part***************************************
-          If(t1.eq.0)then	
+          If(t1.eq.0)then
               p1_phi=zero
               p1_t=zero
           else  
               If(lambda.ne.zero)then  
                   IF(PI1_phi .EQ. zero)THEN
-                      cases_int=2	
+                      cases_int=2
                       call weierstrass_int_J3(tobs,infinity,dd,del,-a_add,b4,index_p5,PI0,integ5,cases_int)
                       call weierstrass_int_J3(tobs,infinity,dd,del,-a_m,b4,index_p5,PI0,integ15,cases_int)
 !      equations (21) (72) of Yang and Wang (2013).
@@ -6102,7 +6216,7 @@ END MODULE dyn_gr
                   ENDIF 
                   p1_phi=PI1_phi-pp_phi 
               else 
-                  IF(PI1_phi.eq.zero)PI1_phi=c_phi*PI0	
+                  IF(PI1_phi.eq.zero)PI1_phi=c_phi*PI0
                   p1_phi=PI1_phi-pp_phi     
               endif 
               IF(PI1_time .EQ. zero)THEN  
@@ -6124,7 +6238,7 @@ END MODULE dyn_gr
           else
               IF(lambda.ne.zero)then  
                   IF(PI2_phi .EQ. zero)THEN  
-                      cases_int=2	
+                      cases_int=2
                       call weierstrass_int_J3(tp2,tobs,dd,del,-a_add,b4,index_p5,PI2_p,integ5,cases_int)
                       call weierstrass_int_J3(tp2,tobs,dd,del,-a_m,b4,index_p5,PI2_p,integ15,cases_int)
 !      equations (21) (72) of Yang and Wang (2013).
@@ -6144,7 +6258,7 @@ END MODULE dyn_gr
                                   sixteen)*a_spin*a_spin+robs*robs*PI2_p
 !      equations (22) of Yang and Wang (2013).
                   PI2_time=PI2_sig+c_time*PI2_p   
-              ENDIF	
+              ENDIF
               p2_sig=PI2_sig+pp_sig 
               p2_t=PI2_time+pp_t   
           endif   
@@ -6165,7 +6279,7 @@ END MODULE dyn_gr
           else
               If(kt.lt.zero)then
 !      equations (52) of Yang and Wang (2013).
-                  phyt=pp_phi+two*(t1*p1_phi+t2*p2_phi)	
+                  phyt=pp_phi+two*(t1*p1_phi+t2*p2_phi)
                   timet=pp_t+two*(t1*p1_t+t2*p2_t)
                   sigmat=pp_sig+two*(t1*p1_sig+t2*p2_sig)
               endif
@@ -6173,15 +6287,15 @@ END MODULE dyn_gr
 !      equations (52) of Yang and Wang (2013).		
                   phyt=-pp_phi+two*(t1*p1_phi+t2*p2_phi)
                   timet=-pp_t+two*(t1*p1_t+t2*p2_t)
-                  sigmat=-pp_sig+two*(t1*p1_sig+t2*p2_sig)	
+                  sigmat=-pp_sig+two*(t1*p1_sig+t2*p2_sig)
               endif
           endif 
           IF(mu_tp1.eq.one)phyt = phyt+(t1+t2)*PI 
        !***************************************************** 
           else
               count_num=1
-              goto 30  	
-          endif				
+              goto 30
+          endif
       ENDIF 
       RETURN
       END SUBROUTINE SPHERICALMOTION_BL
@@ -6245,19 +6359,19 @@ END MODULE dyn_gr
               BB = dsqrt(q)
           !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
               If(kt.gt.zero)then
-                  mu=sin(asin(muobs*AA)-p*BB*AA)/AA	
+                  mu=sin(asin(muobs*AA)-p*BB*AA)/AA
               else
                   If(kt.eq.zero)then
                       mu=cos(p*AA*BB)*muobs
-                  else			      
-                      mu=sin(asin(muobs*AA)+p*AA*BB)/AA	
-                  endif	
+                  else
+                      mu=sin(asin(muobs*AA)+p*AA*BB)/AA
+                  endif
               endif
               mucos = mu  
           !****************************************************
               If(kt.ne.zero)then
                   mu_tp1=sqrt(q/(lambda**two+q))
-                  mu_tp2=-mu_tp1	
+                  mu_tp2=-mu_tp1
               else
                   mu_tp1=abs(muobs)
                   mu_tp2=-mu_tp1
@@ -6274,10 +6388,10 @@ END MODULE dyn_gr
                   return
               endif  
           !***************************************************
-              PI1=(PI/two-asin(muobs/mu_tp1))*mu_tp1/BB	
+              PI1=(PI/two-asin(muobs/mu_tp1))*mu_tp1/BB
               Ptotal=PI*mu_tp1/BB
-              PI2=Ptotal-PI1	
-              pp=(asin(mu/mu_tp1)-asin(muobs/mu_tp1))*mu_tp1/BB	
+              PI2=Ptotal-PI1
+              pp=(asin(mu/mu_tp1)-asin(muobs/mu_tp1))*mu_tp1/BB
               p1=PI1-pp
               p2=Ptotal-p1 
               PI1_phi=zero
@@ -6297,17 +6411,17 @@ END MODULE dyn_gr
                               t1=i
                               t2=j
                               p_mu=pp+two*(t1*p1+t2*p2)
-                          endif 
-                      else	
-                          If(kt.lt.zero)then	
+                          endif
+                      else
+                          If(kt.lt.zero)then
                               t1=i
                               t2=j
                               p_mu=pp+two*(t1*p1+t2*p2)
                           endif
-                          If(kt.gt.zero)then	
+                          If(kt.gt.zero)then
                               t1=j
-                              t2=i	
-                              p_mu=-pp+two*(t1*p1+t2*p2)			
+                              t2=i
+                              p_mu=-pp+two*(t1*p1+t2*p2)
                           endif
                       endif   
                       If(abs(p-p_mu).lt.1.D-6)goto 300
@@ -6361,27 +6475,27 @@ END MODULE dyn_gr
                   If(muobs.eq.mu_tp1)then  
 !      equations (52) of Yang and Wang (2013).	
                       sigmat = -pp_sigma+two*(t1*p1_sigma+t2*p2_sigma)
-                      timet = -pp_time+two*(t1*p1_time+t2*p2_time)	
-                      phyt = -pp_phi+two*(t1*p1_phi+t2*p2_phi)	
+                      timet = -pp_time+two*(t1*p1_time+t2*p2_time)
+                      phyt = -pp_phi+two*(t1*p1_phi+t2*p2_phi)
                   else
 !      equations (52) of Yang and Wang (2013).	
                       sigmat = pp_sigma+two*(t1*p1_sigma+t2*p2_sigma)
-                      timet = pp_time+two*(t1*p1_time+t2*p2_time)	
-                      phyt = pp_phi+two*(t1*p1_phi+t2*p2_phi)		
+                      timet = pp_time+two*(t1*p1_time+t2*p2_time)
+                      phyt = pp_phi+two*(t1*p1_phi+t2*p2_phi)
                   endif  
               else
                  If(kt.lt.zero)then
 !      equations (52) of Yang and Wang (2013).	
                       sigmat = pp_sigma+two*(t1*p1_sigma+t2*p2_sigma)
-                      timet = pp_time+two*(t1*p1_time+t2*p2_time)	
-                      phyt = pp_phi+two*(t1*p1_phi+t2*p2_phi)	
-                 endif 	
+                      timet = pp_time+two*(t1*p1_time+t2*p2_time)
+                      phyt = pp_phi+two*(t1*p1_phi+t2*p2_phi)
+                 endif
                  If(kt.gt.zero)then
 !      equations (52) of Yang and Wang (2013).	
                       sigmat = -pp_sigma+two*(t1*p1_sigma+t2*p2_sigma)
-                      timet = -pp_time+two*(t1*p1_time+t2*p2_time)	
-                      phyt = -pp_phi+two*(t1*p1_phi+t2*p2_phi)	
-                 endif	  
+                      timet = -pp_time+two*(t1*p1_time+t2*p2_time)
+                      phyt = -pp_phi+two*(t1*p1_phi+t2*p2_phi)
+                 endif
               endif
               If(thetamax.eq.zero.or.thetamax.eq.180.D0)phyt = phyt+(t1+t2)*PI
           ELSE
@@ -6404,13 +6518,13 @@ END MODULE dyn_gr
             IF(q.gt.zero)THEN 
           !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
               If(kt.gt.zero)then
-                  mu=sin(asin(muobs*AA)-p*BB*AA)/AA	
+                  mu=sin(asin(muobs*AA)-p*BB*AA)/AA
               else
                   If(kt.eq.zero)then
                       mu=cos(p*AA*BB)*muobs
-                  else			      
-                      mu=sin(asin(muobs*AA)+p*AA*BB)/AA	
-                  endif	
+                  else
+                      mu=sin(asin(muobs*AA)+p*AA*BB)/AA
+                  endif
               endif
               mucos = mu   
           !^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
@@ -6423,7 +6537,7 @@ END MODULE dyn_gr
                   return
               endif  
           !*************************************************** 
-              pp=(asin(mu/mu_tp1)-asin(muobs/mu_tp1))*mu_tp1/BB	
+              pp=(asin(mu/mu_tp1)-asin(muobs/mu_tp1))*mu_tp1/BB
               p1=PI1-pp
               p2=Ptotal-p1  
               Do j=0,10**6
@@ -6437,17 +6551,17 @@ END MODULE dyn_gr
                               t1=i
                               t2=j
                               p_mu=pp+two*(t1*p1+t2*p2)
-                          endif 
-                      else	
-                          If(kt.lt.zero)then	
+                          endif
+                      else
+                          If(kt.lt.zero)then
                               t1=i
                               t2=j
                               p_mu=pp+two*(t1*p1+t2*p2)
                           endif
-                          If(kt.gt.zero)then	
+                          If(kt.gt.zero)then
                               t1=j
-                              t2=i	
-                              p_mu=-pp+two*(t1*p1+t2*p2)			
+                              t2=i
+                              p_mu=-pp+two*(t1*p1+t2*p2)
                           endif
                       endif   
                       If(abs(p-p_mu).lt.1.D-6)goto 310
@@ -6494,30 +6608,30 @@ END MODULE dyn_gr
               ENDIF
               !**********************************************  
               If(mobseqmtp)then
-                  If(muobs.eq.mu_tp1)then  
+                  If(muobs.eq.mu_tp1)then
 !      equations (52) of Yang and Wang (2013).	
                       sigmat = -pp_sigma+two*(t1*p1_sigma+t2*p2_sigma)
-                      timet = -pp_time+two*(t1*p1_time+t2*p2_time)	
-                      phyt = -pp_phi+two*(t1*p1_phi+t2*p2_phi)	
+                      timet = -pp_time+two*(t1*p1_time+t2*p2_time)
+                      phyt = -pp_phi+two*(t1*p1_phi+t2*p2_phi)
                   else
 !      equations (52) of Yang and Wang (2013).	
                       sigmat = pp_sigma+two*(t1*p1_sigma+t2*p2_sigma)
-                      timet = pp_time+two*(t1*p1_time+t2*p2_time)	
-                      phyt = pp_phi+two*(t1*p1_phi+t2*p2_phi)		
-                  endif  
+                      timet = pp_time+two*(t1*p1_time+t2*p2_time)
+                      phyt = pp_phi+two*(t1*p1_phi+t2*p2_phi)
+                  endif
               else
                  If(kt.lt.zero)then
 !      equations (52) of Yang and Wang (2013).	
                       sigmat = pp_sigma+two*(t1*p1_sigma+t2*p2_sigma)
-                      timet = pp_time+two*(t1*p1_time+t2*p2_time)	
-                      phyt = pp_phi+two*(t1*p1_phi+t2*p2_phi)	
-                 endif 	
+                      timet = pp_time+two*(t1*p1_time+t2*p2_time)
+                      phyt = pp_phi+two*(t1*p1_phi+t2*p2_phi)
+                 endif
                  If(kt.gt.zero)then
 !      equations (52) of Yang and Wang (2013).	
                       sigmat = -pp_sigma+two*(t1*p1_sigma+t2*p2_sigma)
-                      timet = -pp_time+two*(t1*p1_time+t2*p2_time)	
-                      phyt = -pp_phi+two*(t1*p1_phi+t2*p2_phi)	
-                 endif	  
+                      timet = -pp_time+two*(t1*p1_time+t2*p2_time)
+                      phyt = -pp_phi+two*(t1*p1_phi+t2*p2_phi)
+                 endif
               endif
               If(thetamax.eq.zero.or.thetamax.eq.180.D0)phyt = phyt+(t1+t2)*PI
             ELSE 
@@ -6642,7 +6756,7 @@ END MODULE dyn_gr
 
       lambda = dsign(one,a_spin)*dsqrt(sintp2*AL/AE)
       q = mutp2*(AL/AE-a_spin*a_spin) 
-      return	 	
+      return
       End Subroutine lambdaq_sphericalm
 
 !********************************************************************************
@@ -6769,7 +6883,7 @@ END MODULE dyn_gr
                         p1,p2,paras(10),f1234(4)
         Double precision rin,rout,muup,mudown,phy1,phy2
         optional rin,rout,muup,mudown,phy1,phy2
-        complex*16  bb(1:4)        
+        complex*16  bb(1:4)
         integer  reals,cases,cases_of_tp,caserange,tr1,tr2
         Double precision,external :: Fp!,Bisection,rootfind,Sectionp
         parameter(deltax=5.D-5)
@@ -7027,7 +7141,7 @@ END MODULE dyn_gr
         endif 
         If(f_p.lt.zero)then
                 k=0
-                Do while(.true.)			
+                Do while(.true.)
                         If(f_p.eq.zero)then
                             rootfind=p
                             return
@@ -7216,8 +7330,7 @@ END MODULE dyn_gr
       PARAMETER(n=3,ntrial=1000)
       DOUBLE PRECISION a0,B0,a_spin,robs,scal,x(n),xem(n),tolx,tolf,sinobs,muobs,a1,B1,&
                    zero,one,two,three,four,rmss,&
-                   p,lambda,q,&         
-                   bomiga,abp(3),rmuphy_em(3),&
+                   p,lambda,q,abp(3),rmuphy_em(3),&
                    f1234(4),obs_V(3),alpha1,Beta1,&
                    alen,Blen,adel,Bdel        
       PARAMETER(two=2.D0,three=3.D0,four=4.D0,one=1.D0,zero=0.D0)
