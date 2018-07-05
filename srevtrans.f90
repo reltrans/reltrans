@@ -43,8 +43,8 @@ include 'subroutines/header.h'
       parameter (nex=2**12)
       double precision a,h,Gamma,inc,pi,rout,rmin,disco,muobs,rin
       double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,rnmax,d
-      double precision fhisave,flosave,rh,frrel,lens
-      real afac,fc,param(19),ear(0:ne),gso,direct,ximin,ximax
+      double precision fhisave,flosave,rh,frrel,lens,fc
+      real afac,param(19),ear(0:ne),gso,direct,ximin,ximax
       real Afe,Ecut_s,Ecut_obs,logxi,xillpar(7),E,dE,earx(0:nex),Emax,Emin,dloge
       real reline(nex),imline(nex),photarx(nex),reconv(nex),imconv(nex)
       real reconvmu(nex),imconvmu(nex),mue,sdmin,sdmax,gsd
@@ -179,7 +179,7 @@ include 'subroutines/header.h'
 
 !Calculate source to observer g-factor and source frame Ecut
       gso    = real( dgsofac(a,h) )
-      Ecut_s = (1.0+zcos) * Ecut_obs / gso
+      Ecut_s = real(1.d0+zcos) * Ecut_obs / gso
       if( verbose .gt. 0 )then
         if( Cp .eq. 0 )then
           write(*,*)"Ecut in source restframe (keV)=",Ecut_s
@@ -333,7 +333,7 @@ include 'subroutines/header.h'
             do mubin = 1,me      !loop over emission angle zones
               !Calculate input inclination angle
               mue = ( real(mubin) - 0.5 ) / real(me)
-              xillpar(6) = acos( mue ) * 180.0 / pi
+              xillpar(6) = acos( mue ) * 180.0 / real(pi)
               if( me .eq. 1 ) xillpar(6) = real( inc )
 
 !Call xillver
@@ -428,12 +428,12 @@ include 'subroutines/header.h'
         E = 0.5 * ( earx(i) + earx(i-1) )
         dE = earx(i) - earx(i-1)
 
-        direct  = contxabs(i) / dE * lens * ( gso / (1.0+zcos) )**(2+Gamma)
+        direct  = contxabs(i) / dE * real(lens) * ( gso / real(1.d0+zcos) )**real(2.d0+Gamma)
         ReGx(i) = cos(phiA) * (direct + afac*reconvabs(i)/dE) - sin(phiA)*afac*imconvabs(i)/dE + &
-        g * (cos(phiB) * ( log(E*(1+zcos)/gso)*direct - afac*reconvabsW1a(i)/dE - afac*reconvabsW1(i)/dE)+&
+        g * (cos(phiB) * ( log(E*(1+real(zcos))/gso)*direct - afac*reconvabsW1a(i)/dE - afac*reconvabsW1(i)/dE)+&
         sin(phiB)* (imconvabsW1a(i)/dE + imconvabsW1(i)/dE) )
         ImGx(i) = sin(phiA) * (direct + afac*reconvabs(i)/dE) + cos(phiA)*afac*imconvabs(i)/dE + &
-        g * (sin(phiB) * ( log(E*(1+zcos)/gso)*direct - afac*reconvabsW1a(i)/dE - afac*reconvabsW1(i)/dE)-&
+        g * (sin(phiB) * ( log(E*(1+real(zcos))/gso)*direct - afac*reconvabsW1a(i)/dE - afac*reconvabsW1(i)/dE)-&
         cos(phiB) * (afac*imconvabsW1a(i)/dE + afac*imconvabsW1(i)/dE) )
         
      end do
@@ -467,7 +467,7 @@ include 'subroutines/header.h'
           E = 0.5 * ( ear(i) + ear(i-1) )
           dE = ear(i) - ear(i-1)
           phase = atan2( ImS(i) , ReS(i) )
-          photar(i) = phase / (2.0*pi*fc) * dE
+          photar(i) = phase / real(2.d0*pi*fc) * dE
        end do
        write(*,*)"Warning ReIm=4 should not be used for fitting!"
 
@@ -488,7 +488,7 @@ include 'subroutines/header.h'
             E = 0.5 * ( ear(i) + ear(i-1) )
             dE = ear(i) - ear(i-1)
             phase = atan2( ImS(i) , ReS(i) )
-            photar(i) = phase / (2.0*pi*fc) * dE
+            photar(i) = phase / real(2.d0*pi*fc) * dE
           end do
         end if
       end if

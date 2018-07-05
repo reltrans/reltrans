@@ -74,7 +74,7 @@
           Re = 0.0
           do I = Ilo,Ihi
             Im = Im - ImWI(I)
-            Re = Re + lens * ( gso / (1.0+zcos) )**(2+Gamma) * fI(I)
+            Re = Re + real(lens) * ( gso / real(1.d0+zcos) )**real(2.d0+Gamma) * fI(I)
             Re = Re + afac * ReWI(I)
           end do
           Im   = afac * Im
@@ -95,7 +95,7 @@
             E = 0.5 * ( earx(i) + earx(i-1) )
             if( E .ge. Elo .and. E .le. Ehi )then
               Im = Im - imconv(i)
-              Re = Re + lens * ( gso / (1.0+zcos) )**(2+Gamma) * contx(i)
+              Re = Re + real(lens) * ( gso / real(1.d0+zcos) )**real(2.d0+Gamma) * contx(i)
               Re = Re + afac * reconv(i)
             end if
           end do
