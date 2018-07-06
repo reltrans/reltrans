@@ -68,15 +68,27 @@ PROGRAM  MAIN
       param(18) = 0.2     !phiB  
       param(19) = 0.1     !g     
 
-      kmax = 1000
+      kmax = 1
       
       do k=1,kmax
-
-         param(1) = param(1) + float(k)/(float(kmax)*10)
-      write(*,*) "h = ",param(1)
-      
+         
         call CPU_TIME(t0)
         call tdreltrans(ear,ne,param,ifl,photar)
+        write(99,*) 'skip on'
+        if( param(16) .lt. 4 )then
+          do i = 1,ne
+            E  = 0.5 * ( ear(i) + ear(i-1) )
+            dE =         ear(i) - ear(i-1)
+            write(99,*)E,E**2*photar(i)/dE
+          end do
+        else
+          do i = 1,ne
+            E  = 0.5 * ( ear(i) + ear(i-1) )
+            dE =         ear(i) - ear(i-1)
+            write(99,*)E,photar(i)/dE
+          end do
+        end if
+        write(99,*) 'no no'
         call CPU_TIME(t1)
         write(*,*)"Total CPU time=",t1-t0
 
