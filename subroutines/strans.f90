@@ -371,7 +371,17 @@
       
       !Finish calculation of the reflection fraction
       frobs = frobs / (dgsofac(spin,h))**3 / lens
-        
+
+      write(80,*) 'skip on'
+      do j=1, ne
+         write(80,*) real(j),  real(transe(j,1,1,1)) 
+      enddo
+      write(80,*) 'no no'      
+      do j=1, ne
+         write(80,*) real(j),  real(transe_a(j,1,1,1)) 
+      enddo
+      write(80,*) 'no no'      
+    
       return
     end subroutine strans
 !-----------------------------------------------------------------------
