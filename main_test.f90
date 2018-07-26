@@ -13,16 +13,19 @@ PROGRAM  MAIN
       real param(19),numin,numax
       integer k,ne,i,ifl,kmax
       parameter (ne=1000)
-      real ear(0:ne),emin,emax,t0,t1,photar(ne),E,dE
-      real :: freq1(5),freq2(5),vector(5)
+      real ear(0:ne),emin,emax,t0,t1,photar(ne),E,dE,cont(ne)
+      real :: freq1(5),freq2(5),vector(5),av
       character (len=200) name
+      character (len=100) char
+      double precision dear(0:ne),drelxillpar(12),dphotar(ne),dphoter(ne)
+      double precision dcont(ne)
       
       !----Parameters-------------------
-      param(1)  = 6.0     !h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
+      param(1)  = 10.0     !h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
       param(2)  = 0.9     !a     !BH spin
       param(3)  = 30.0    !inc   !Inclination angle in degrees
       param(4)  = -1.0    !rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
-      param(5)  = 20000.0 !rout  !Disk outer radius in Rg - will probably hardwire this
+      param(5)  = 400.0   !rout  !Disk outer radius in Rg - will probably hardwire this
       param(6)  = 0.0     !zcos  !Cosmological redshift
       param(7)  = 2.0     !Gamma !Photon index
       param(8)  = 3.0     !logxi !log10xi - ionisation parameter
@@ -31,8 +34,8 @@ PROGRAM  MAIN
       param(11) = 0.0     !Nh    !Hydrogen absorption column (using tbabs)
       param(12) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
       param(13) = 4.6e7   !M     !BH mass in solar masses
-      param(14) = 1e-5    !flo   !Lowest frequency in band (Hz)
-      param(15) = 2e-5    !fhi   !Highest frequency in band (Hz)
+      param(14) = 0.0     !flo   !Lowest frequency in band (Hz)
+      param(15) = 0.0     !fhi   !Highest frequency in band (Hz)
       param(16) = 1       !ReIm  !1=Re, 2=Im, 3=Modulus, 4=time lag (s), 5=Modulus (with response), 6=time lag (with response)
       param(17) = 0.0     !phiA  !Frequency-dependent phase normalisation (radians) - calculate self-consistently in full version of the model
       param(18) = 0.0     !phiB  !Frequency-dependent phase of the power-law index oscillation 
@@ -48,197 +51,127 @@ PROGRAM  MAIN
 
       numin = 1e-8
       numax = 1e-4
-      kmax  = 100
+      kmax  = 30
 
+      do k = 1,1 != 1,kmax
 
-        ! call CPU_TIME(t0)
-        ! call tdreltrans(ear,ne,param,ifl,photar)
-        ! call CPU_TIME(t1)
-        ! write(*,*)"Total CPU time=",t1-t0
+!        param(1) = 6.0 + real(k-1) * 94.0 / real(kmax-1)
+!         param(3) = 10.0 + real(k-1) * 75.0 / real(kmax-1)
+!         write(*,*)"param(3)=",param(3)
 
-
-!*********************TEST**************************
-      
-      param(1)  = 3.0
-      param(3)  = 30.0
-      param(13) = 14.7   !M     !BH mass in solar masses
-      param(14) = 1    !flo   !Lowest frequency in band (Hz)
-      param(15) = 2   !fhi   !Highest frequency in band (Hz)
-      param(17) = 0.0     !phiA  
-      param(18) = 0.2     !phiB  
-      param(19) = 0.1     !g     
-
-      kmax = 1
-      
-      do k=1,kmax
+!         param(2) = real(k-1) * 0.998 / real(kmax-1)
+!         param(8) = 2.0 + real(k-1) * 1.5 / real(kmax-1)
          
-        call CPU_TIME(t0)
-        call tdreltrans(ear,ne,param,ifl,photar)
-        write(99,*) 'skip on'
-        if( param(16) .lt. 4 )then
-          do i = 1,ne
-            E  = 0.5 * ( ear(i) + ear(i-1) )
-            dE =         ear(i) - ear(i-1)
-            write(99,*)E,E**2*photar(i)/dE
-          end do
-        else
-          do i = 1,ne
-            E  = 0.5 * ( ear(i) + ear(i-1) )
-            dE =         ear(i) - ear(i-1)
-            write(99,*)E,photar(i)/dE
-          end do
-        end if
-        write(99,*) 'no no'
-        call CPU_TIME(t1)
-        write(*,*)"Total CPU time=",t1-t0
-
-     enddo
-!*******************************************
-      
-
-!Print the model in test_prova.dat
-!*******************************************
- !       name = '../sim_data/200_Re_expar.dat'
- ! !     name = '../sim_data/050_lag.dat'
- !      open(99,file=name)
-      
- !      write(99,*) 'skip on' 
-
- !      param(16) = 1
-
- !      param(1)  = 3.0
- !      param(3)  = 80.0
- !      param(13) = 10   !M     !BH mass in solar masses
- !      param(14) = 1    !flo   !Lowest frequency in band (Hz)
- !      param(15) = 2   !fhi   !Highest frequency in band (Hz)
- !      param(17) = 0.0     !phiA  
- !      param(18) = 0.2     !phiB  
- !      param(19) = 0.1     !g     
-      
- !        call CPU_TIME(t0)
- !        call tdreltrans(ear,ne,param,ifl,photar)
- !        call CPU_TIME(t1)
- !        write(*,*)"Total CPU time=",t1-t0
+      !Write out full model of reltrans
+      param(12) = 1.0
         
- !        if( param(16) .lt. 4 )then
- !          do i = 1,ne
- !            E  = 0.5 * ( ear(i) + ear(i-1) )
- !            dE =         ear(i) - ear(i-1)
- !            write(99,*)E,E**2*photar(i)/dE
- !          end do
- !        else
- !          do i = 1,ne
- !            E  = 0.5 * ( ear(i) + ear(i-1) )
- !            dE =         ear(i) - ear(i-1)
- !            write(99,*)E,photar(i)/dE
- !          end do
- !        end if
-          
-        ! write(99,*)"log"
-!*******************************************
-
-
-!Print the model 5 times with different frequency values 
-!*******************************************
-!       name = '../sim_test/test_freq.dat'
-!       open(99,file=name)
-!       write(99,*) 'skip on'
+      call CPU_TIME(t0)
+      call tdreltrans(ear,ne,param,ifl,photar)
+     write(99,*) 'skip on'
+     write(99,*) 'read serr 1 2'
       
-! !Set the frequency ranges       
-!       freq1(1) = 0.05
-!       freq2(1) = 0.06 
-!       freq1(2) = 0.5
-!       freq2(2) = 0.6
-!       freq1(3) = 1.0
-!       freq2(3) = 2.0
-!       freq1(4) = 10.0
-!       freq2(4) = 11.0
-!       freq1(5) = 30.0
-!       freq2(5) = 31.0
+      if( param(16) .lt. 4 )then
+        do i = 1,ne
+          E  = 0.5 * ( ear(i) + ear(i-1) )
+          dE =         ear(i) - ear(i-1)
+          write(99,*)E,0.5*dE,E**2*photar(i)/dE
+        end do
+      else
+        do i = 1,ne
+          E  = 0.5 * ( ear(i) + ear(i-1) )
+          dE =         ear(i) - ear(i-1)
+          write(99,*)E,0.5*dE,photar(i)/dE
+        end do
+      end if
+      write(99,*) 'no no'
+      call CPU_TIME(t1)
+      write(*,*)"Total CPU time=",t1-t0
 
-! !changing some of the fiducial parametes to compare with Mastroserio et al 2018       
-!       param(1)  = 10.0     !h     
-!       param(2)  = 0.98     !a     
-!       param(3)  = 45.0    !inc   
-!       param(4)  = 10.0    !rin   
-!       param(8)  = 3.1     !logxi 
-!       param(13) = 10.0  !Set the mass for a black hole binary
-!       param(16) = 4 !set the lag as output
-!       param(17) = 0.0     !phiA  
-!       param(18) = 0.2     !phiB  
-!       param(19) = 0.1     !g     
+      !Now just continuum
 
-!       do k = 1,5
-
-!         param(14) = freq1(k)
-!         param(15) = freq2(k)
-         
-!         call CPU_TIME(t0)
-!         call tdreltrans(ear,ne,param,ifl,photar)
-!         call CPU_TIME(t1)
-!         write(*,*)"Total CPU time=",t1-t0
-
-        
-!         if( param(16) .lt. 4 )then
-!           do i = 1,ne
-!             E  = 0.5 * ( ear(i) + ear(i-1) )
-!             dE =         ear(i) - ear(i-1)
-!             write(99,*)E,E**2*photar(i)/dE
-!           end do
-!         else
-!           do i = 1,ne
-!             E  = 0.5 * ( ear(i) + ear(i-1) )
-!             dE =         ear(i) - ear(i-1)
-!             write(99,*)E,photar(i)/dE
-!           end do
-!         end if
-          
-!         write(99,*)"no no"
-!       end do
-!*******************************************
-
-
-!Testing the time 
-!*******************************************
-      ! name = '../sim_test/test_prova1.dat'
-      ! open(99,file=name)
-      ! vector(1) = -1.0 
-      ! vector(2) = -2.0
-      ! vector(3) = -2.5
-      ! vector(4) = -3.0
-      ! vector(5) = -5.0
-
-      ! param(13) = 10.0  !Set the mass for a black hole binary
-      ! param(14) = 0.05    !flo   !Lowest frequency in band (Hz)
-      ! param(15) = 0.06   !fhi   !Highest frequency in band (Hz)
-
-      ! do k = 1,5
-
-      ! param(4)  = vector(k)     !a 
-      ! call CPU_TIME(t0)
-      ! call tdreltrans(ear,ne,param,ifl,photar)
-      ! call CPU_TIME(t1)
-      ! write(*,*)"Total CPU time=",t1-t0
-        
-      !   if( param(16) .lt. 4 )then
-      !     do i = 1,ne
-      !       E  = 0.5 * ( ear(i) + ear(i-1) )
-      !       dE =         ear(i) - ear(i-1)
-      !       write(99,*)E,E**2*photar(i)/dE
-      !     end do
-      !   else
-      !     do i = 1,ne
-      !       E  = 0.5 * ( ear(i) + ear(i-1) )
-      !       dE =         ear(i) - ear(i-1)
-      !       write(99,*)E,photar(i)/dE
-      !     end do
-      !   end if
-          
-      !   write(99,*)"no no"
-      ! end do
-!*******************************************
-
-
+      param(12) = 0.0
+      call tdreltrans(ear,ne,param,ifl,cont)
+      do i = 1,ne
+        E  = 0.5 * ( ear(i) + ear(i-1) )
+        dE =         ear(i) - ear(i-1)
+        write(99,*)E,0.5*dE,E**2*cont(i)/dE
+        photar(i) = photar(i) - cont(i)
+      end do
+      write(99,*)"no no"
       
+      !Now write out just reflection
+      do i = 1,ne
+        E  = 0.5 * ( ear(i) + ear(i-1) )
+        dE =         ear(i) - ear(i-1)
+        write(99,*)E,0.5*dE,E**2*photar(i)/dE
+      end do
+      write(99,*)"no no"
+      
+!Call relxilllp with the same model parameters
+
+      !Energy grid
+      dear = dble( ear )
+
+      !Same parameters as reltrans
+      do i = 1,10
+        drelxillpar(i) = dble( param(i) )
+      end do
+      drelxillpar(11) = 0.0
+      drelxillpar(12) = 1
+      
+      call lmodrelxilllpf(dear,ne,drelxillpar,ifl,dphotar,dphoter,char)
+
+      !Write out total
+      do i = 1,ne
+        E  = 0.5 * ( ear(i) + ear(i-1) )
+        dE =         ear(i) - ear(i-1)
+        write(99,*)E,0.5*dE,E**2*real(dphotar(i))/dE
+      end do
+      write(99,*)"no no"
+      
+      !Now just the continuum
+      drelxillpar(11) = 0.0
+      drelxillpar(12) = 0
+      call lmodrelxilllpf(dear,ne,drelxillpar,ifl,dcont,dphoter,char)
+      do i = 1,ne
+        E  = 0.5 * ( ear(i) + ear(i-1) )
+        dE =         ear(i) - ear(i-1)
+        write(99,*)E,0.5*dE,E**2*real(dcont(i))/dE
+        dphotar(i) = dphotar(i) - cont(i)
+      end do
+      write(99,*)"no no"
+      
+      !Finally just reflection
+      do i = 1,ne
+        E  = 0.5 * ( ear(i) + ear(i-1) )
+        dE =         ear(i) - ear(i-1)
+        write(99,*)E,0.5*dE,E**2*real(dphotar(i))/dE
+      end do
+      write(99,*)"no no"
+
+! Write out the ratio between the two
+      av = 0.0
+      do i = 1,ne
+        E  = 0.5 * ( ear(i) + ear(i-1) )
+        dE =         ear(i) - ear(i-1)
+        write(99,*)E,0.5*dE,real(dphotar(i))/photar(i)
+        av = av + real(dphotar(i))/photar(i)
+      end do
+      write(99,*)"no no"
+      
+      write(99,*)"skip on"
+      write(99,*)"log"
+      write(99,*)"li s on"
+      write(99,*)"lw 5"
+      write(99,*)"co 1 on 1,2,3"
+      write(99,*)"co 2 on 4,5,6"
+      write(99,*)"co off 1,4"
+      write(99,*)"co 15 on 7"
+      
+      av = av / real(ne)
+      write(*,*)"Average ratio=",av
+      write(64,*)param(2),av
+
+      end do
       
       end program main

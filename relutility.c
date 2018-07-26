@@ -81,6 +81,9 @@ lpReflFrac* calc_refl_frac(relSysPar* sysPar, relParam* param, int* status){
 		return NULL;
 	}
 
+	/** important: get the radial values for which the RELLINE is calculated
+	 *             should be Rin=r_isco & Rout=1000rg  **/
+
 	// get the angle emitted in the rest-frame of the primary source, which hits the inner and outer edge of the disk
 	double del_bh  = sysPar->del_emit[inv_binary_search(sysPar->re, sysPar->nr, param->rin)];
 	double del_ad = sysPar->del_emit[inv_binary_search(sysPar->re, sysPar->nr, param->rout)];
@@ -90,14 +93,27 @@ lpReflFrac* calc_refl_frac(relSysPar* sysPar, relParam* param, int* status){
 
 	str->f_bh  = 0.5*(1.0 - cos(del_bh));
 	str->f_ad  = 0.5*(cos(del_bh) - cos(del_ad));
-	str->f_inf = 0.5*(1.0 + cos(del_ad));
+	/** photons are not allowed to cross the disk
+	 *  (so they only reach infinity if they don't hit the disk plane) */
+	str->f_inf = 0.5*(1.0 + cos(sysPar->del_ad_rmax));
 
+	/** fraction of photons which would hit the maximally
+	 *  simulated accretion disk */
+	str->f_ad_norm = 0.5*(cos(sysPar->del_ad_risco) - cos(sysPar->del_ad_rmax));
+
+	// photons are not allowed to crosstalk the disk plane
+	if (str->f_inf > 0.5){
+	  str->f_inf = 0.5;
+	}
+	
 	str->refl_frac = str->f_ad/str->f_inf;
+	str->refl_frac_norm = str->f_ad_norm/str->f_inf;
 
-/**	printf(" *** %4f [%.3f,%.3f,%.3f] \n",str->refl_frac,str->f_bh,str->f_ad,str->f_inf);
-	printf(" del_bh = %.1f  ---  del_ad = %.1f \n",del_bh*180/M_PI,del_ad*180/M_PI);
+	// printf(" *** %4f [%.3f,%.3f,%.3f] \n",str->refl_frac,str->f_bh,str->f_ad,str->f_inf);
+	/**	printf(" del_bh = %.1f  ---  del_ad = %.1f \n",del_bh*180/M_PI,del_ad*180/M_PI);
 	printf(" rin %i (%.1f) ---  rout %i (%.1f)\n",binary_search(sysPar->re, sysPar->nr, param->rin),param->rin,
-			binary_search(sysPar->re, sysPar->nr, param->rout),param->rout); **/
+			binary_search(sysPar->re, sysPar->nr,
+			param->rout),param->rout);  **/
 
 	if (param->beta > 1e-6){
 		// TODO: implement beta>0 for refl frac
@@ -210,16 +226,21 @@ int is_relxill_model(int model_type){
 	}
 }
 
-/** trapez integration around a single bin **/
+/** trapez integration around a single bin
+ *  caveat: only returns half of the full 2*PI*r*dr due to computational speed**/
 double trapez_integ_single(double* re, int ii, int nr){
+	double dr;
+	// dr is defined such that the full disk is covered once, with NO overlapping bins
 	if (ii==0){
-		return 1.0/re[ii+1] - 1.0/re[ii];
+		dr = 0.5*(re[ii] - re[ii+1]) ;
 	} else if (ii==nr-1){
-        return 1.0/re[ii] - 1.0/re[ii-1];
+        dr =  0.5*(re[ii-1] - re[ii]) ;
 	} else {
-        return 1.0/re[ii+1] - 1.0/re[ii-1];
+        dr = 0.5*( re[ii-1] - re[ii+1]);
 	}
+	return re[ii]*dr*M_PI;
 }
+
 
 /** convert gstar to energy */
 double gstar2ener(double g, double gmin, double gmax, double ener){
@@ -240,7 +261,7 @@ void get_rzone_grid(double rmin, double rmax, double* rgrid, int nzones, double 
 		int indr = binary_search(rgrid,nzones+1,h*h_fac);
 		int ii;
 
-		if (indr < nzones ){
+		if (indr+1 < nzones ){
 
 			double rlo = rgrid[indr+1];
 			double rhi = rgrid[nzones];
@@ -542,9 +563,6 @@ void rebin_spectrum(double* ener, double* flu, int nbins, double* ener0, double*
 
 			}
 
-	/**		printf("[%i]  %i-%i  -> ener=[%.3f-%.3f] , choosing bins %.3f and %.3f  => flux=%.2f\n",ii,imin,imax,
-								ener[ii],ener[ii+1],ener0[imin],ener0[imax+1],flu[ii]);  **/
-
 		}
 
 	}
@@ -553,16 +571,6 @@ void rebin_spectrum(double* ener, double* flu, int nbins, double* ener0, double*
 int do_renorm_model(relParam* rel_param){
 
 	int renorm = 0;
-
-	char* env;
-	env = getenv("RENORM_RELXILL_MODEL");
-	if (env != NULL){
-		int val_relxill = atof(env);
-		// make sure we directly return if it's either 1 or 0
-		if (val_relxill == 1 || val_relxill == 0){
-			return val_relxill;
-		}
-	}
 
 	if ((! is_relxill_model(rel_param->model_type) ) || (rel_param->emis_type != EMIS_TYPE_LP)){
 		renorm = 1;
