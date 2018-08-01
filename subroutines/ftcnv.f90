@@ -27,8 +27,8 @@
       end do
       
 ! Now do the inverse FFT
-      call four1(adata,nex,-1)
-      call four1(bdata,nex,-1)
+      call ourfour1(adata,nex,-1)
+      call ourfour1(bdata,nex,-1)
 
 ! Now put into complex arrays
       do i = 1,nex
@@ -46,7 +46,7 @@
       end do
       
 ! Then transform back
-      call four1(cdata,nex,1)
+      call ourfour1(cdata,nex,1)
 
 ! Move arrays back into original format
       !-ve frequencies
@@ -94,8 +94,8 @@
       end do
       
 ! Now do the inverse FFT
-      call four1(adata,nex,-1)
-      call four1(bdata,nex,-1)
+      call ourfour1(adata,nex,-1)
+      call ourfour1(bdata,nex,-1)
       
 ! Now put into complex arrays
       do i = 1,nex
@@ -113,7 +113,7 @@
       end do
       
 ! Then transform back
-      call four1(cdata,nex,1)
+      call ourfour1(cdata,nex,1)
       
 ! Move arrays back into original format
       !-ve frequencies
