@@ -1314,6 +1314,7 @@ void relxill_kernel(double* ener_inp, double* spec_inp, int n_ener_inp, xillPara
 	return;
 }
 
+
 /** function adding a primary component with the proper norm to the flux **/
 void add_primary_component(double* ener, int n_ener, double* flu, relParam* rel_param,
 		xillParam* xill_param, int* status){
@@ -1397,7 +1398,12 @@ void add_primary_component(double* ener, int n_ener, double* flu, relParam* rel_
 		CHECK_STATUS_VOID(*status);
 
 		if ((xill_param->fixReflFrac==1)||(xill_param->fixReflFrac==2)) {
+			/** set the reflection fraction calculated from the height and
+			 *  spin of the primary source, in this case for the physical
+			 *  value from Rin to Rout          						 */
 			xill_param->refl_frac = struct_refl_frac->refl_frac;
+		} else {
+
 		}
 
 		/** 4 ** and apply it to primary and reflected spectra **/
@@ -1405,15 +1411,23 @@ void add_primary_component(double* ener, int n_ener, double* flu, relParam* rel_
 			double g_inf = sqrt( 1.0 - ( 2*rel_param->height /
 					(rel_param->height*rel_param->height + rel_param->a*rel_param->a)) );
 
-			double refl_fac = fabs(xill_param->refl_frac); // correct
-			/**			printf(" ** testing ** incl: %f -> expected refl_frac %f, real %f \n",rel_param->incl*180/3.1415,
-						struct_refl_frac->refl_frac_norm, struct_refl_frac->refl_frac); **/
- 			double prim_fac = struct_refl_frac->f_inf / 0.5 * pow(g_inf,xill_param->gam+2) ;
 
+
+			 // calculate the fraction of photons hitting the accretion disk
+			 /** if the user sets the refl_frac parameter manually, we need to calculate the ratio
+			  *  to end up with the correct normalization
+			  */
+			double norm_fac_refl = (fabs(xill_param->refl_frac))/struct_refl_frac->refl_frac;
+
+			 // -> major bug fix after Adam Ingram comments: gi^(gamma+2) is the correct energy shift
+ 			double prim_fac = struct_refl_frac->f_inf / 0.5 * pow(g_inf,xill_param->gam+2);
+
+
+		/**	printf(" **** refl_frac_norm: %.3f  -> factor=%.3f (f_inf=%.3f refl_frac0=%.3f)\n",struct_refl_frac->refl_frac_norm,
+					norm_fac_refl,	struct_refl_frac->f_inf,struct_refl_frac->refl_frac); **/
 			for (ii=0; ii<n_ener; ii++) {
-				 // -> major bug fix after Adam Ingram comments: gi^(gamma+2) is the correct energy shift
-				pl_flux[ii] *= norm_pl * prim_fac;  ;
-				flu[ii] *= refl_fac;
+				pl_flux[ii] *= norm_pl * prim_fac;
+				flu[ii] *= norm_fac_refl;
 			}
 		} else {
 			for (ii=0; ii<n_ener; ii++){
@@ -1461,6 +1475,8 @@ void add_primary_component(double* ener, int n_ener, double* flu, relParam* rel_
 	  }
 
 }
+
+
 
 /** print the relline profile   **/
 void save_relline_profile(rel_spec* spec){
