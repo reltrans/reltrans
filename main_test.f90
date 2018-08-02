@@ -137,7 +137,7 @@ PROGRAM  MAIN
         E  = 0.5 * ( ear(i) + ear(i-1) )
         dE =         ear(i) - ear(i-1)
         write(99,*)E,0.5*dE,E**2*real(dcont(i))/dE
-        dphotar(i) = dphotar(i) - cont(i)
+        dphotar(i) = dphotar(i) - dcont(i)
       end do
       write(99,*)"no no"
       
