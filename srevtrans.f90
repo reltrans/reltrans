@@ -433,7 +433,8 @@ include 'subroutines/header.h'
         E  = 0.5 * ( earx(i) + earx(i-1) )
         dE = earx(i) - earx(i-1)
         !Direct energy-dependent component
-        direct  = contxabs(i) / dE * real(lens) * ( gso / real(1.d0+zcos) )**real(2.d0+Gamma)   
+!        direct  = contxabs(i) / dE * real(lens) * ( gso / real(1.d0+zcos) )**real(2.d0+Gamma)   
+        direct  = contxabs(i) / dE * real(lens) * ( gso / real(1.d0+zcos) )**real(Gamma)   
         !Factors
         ldir = direct * log(E*(1+real(zcos))/gso)
         ReW  = afac * reconvabs(i)/dE

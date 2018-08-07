@@ -226,7 +226,8 @@
               end if             
               !Add flux from pixel to transfer function
               gsd        = dglpfac(re,spin,h)
-              emissivity = gsd**(2.d0+Gamma)
+!              emissivity = gsd**(2.d0+Gamma)
+              emissivity = gsd**(Gamma)
               emissivity = 0.5 * emissivity * cosfac / dareafac(re,spin)              
               dFe        = emissivity * g**3 * domega(i) / (1.d0+zcos)**3
               frobs      = frobs + 2.0 * g**3 * gsd**3 * cosfac/dareafac(re,spin) * domega(i)
@@ -306,7 +307,8 @@
             end if
             !Add flux from pixel to transfer function
             gsd        = dglpfac(re,spin,h)
-            emissivity = gsd**(2.d0+Gamma)
+!            emissivity = gsd**(2.d0+Gamma)
+            emissivity = gsd**(Gamma)
             emissivity = 0.5 * emissivity * cosfac / dareafac(re,spin)
             dFe        = emissivity * g**3 * domegan(i) / (1.d0+zcos)**3
             frobs      = frobs + 2.0 * g**3 * gsd**3 * cosfac/dareafac(re,spin) * domega(i)
