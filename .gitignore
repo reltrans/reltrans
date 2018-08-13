@@ -1,0 +1,7 @@
+exe
+libreltrans.dylib
+main_gullo.f90
+fort.*
+*.o
+*.mod
+reltransFunctionMap.*

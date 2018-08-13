@@ -8,13 +8,13 @@
       integer nro,nphi,i,j
       double precision rn(nro),mueff,mu0,spin,rmin,rout,mudisk,d
       double precision phin,alpha,beta,cos0,sin0,scal,velocity(3),f1234(4),lambda,q
-      double precision pem,re,mucros,phie,taudo,sigmacros
+      double precision pem,re,mucros,phie,taudo,sigmacros      
       cos0  = mu0
       sin0  = sqrt(1.0-cos0**2)
       scal     = 1.d0
       velocity = 0.d0
       taudo1   = 0.0
-      re1      = 0.0
+      re1      = 0.0      
       do i = 1,nro
         do j = 1,NPHI
           phin  = (j-0.5) * 2.d0 * pi / dble(nphi)

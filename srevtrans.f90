@@ -45,6 +45,7 @@ include 'subroutines/header.h'
       double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,rnmax,d
       double precision fhisave,flosave,rh,frrel,lens,fc
       real afac,param(19),ear(0:ne),gso,direct,ximin,ximax
+      real ldir,ReW,ImW,ReW1,ImW1
       real Afe,Ecut_s,Ecut_obs,logxi,xillpar(7),E,dE,earx(0:nex),Emax,Emin,dloge
       real reline(nex),imline(nex),photarx(nex),reconv(nex),imconv(nex)
       real reconvmu(nex),imconvmu(nex),mue,sdmin,sdmax,gsd
@@ -54,8 +55,8 @@ include 'subroutines/header.h'
       real contxabs(nex),reconvabs(nex),imconvabs(nex)
       complex,dimension(:,:,:,:),allocatable :: transe,transea
       logical firstcall,needtrans,needconv,needresp
-      integer xbin,xbinhi,myenv,Cpsave
-      real logxir
+      integer xbin,xbinhi,myenv,Cpsave,gbin
+      real logxir,ghi,glo
 
 !variable for the grid reading
       integer :: irec,spin_dim,mu_dim,check
@@ -90,7 +91,7 @@ include 'subroutines/header.h'
       save paramsave,fhisave,flosave,nfsave,nro,nphi
       save frobs,sdmin,sdmax,frrel,Cpsave !,hsave,rinsave
       save transe,transea,transe_11,transe_12,transe_21,transe_22,transe_11a,transe_12a,transe_21a,transe_22a
-      save reconv,imconv,reconvW1,imconvW1,reconvW1a,imconvW1a,check
+      save reconv,imconv,reconvW1,imconvW1,reconvW1a,imconvW1a,check,d,rnmax
 
 
       pi = acos(-1.d0)
@@ -278,7 +279,7 @@ include 'subroutines/header.h'
             sdmax = max(sdmax_sl_ml,sdmax_sl_mh,sdmax_sh_ml,sdmax_sh_mh)
             
          else 
-!            write(*,*) 'transfer calculation'
+
             if(.not. allocated(transe) ) allocate(transe(nex,me,ge,xe))
             if(.not. allocated(transea) ) allocate(transea(nex,me,ge,xe))
 
@@ -292,11 +293,6 @@ include 'subroutines/header.h'
       if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",afac*frobs
       if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
 
-!        call CPU_TIME(t1)
-!        write(*,*)"kernels CPU time=",t1-t0
-
-
-!        call CPU_TIME(t0)
 !Determine if I need to convolve with the restframe reflection spectrum
       needconv = .false.
       if( needtrans ) needconv = .true.
@@ -306,6 +302,7 @@ include 'subroutines/header.h'
       if( Cp .ne. Cpsave ) needconv = .true.
       
       if( needconv )then
+
 !Get continuum spectrum
         call getcont(nex,earx,Gamma,Afe,Ecut_obs,logxi,Cp,contx,xillpar)
         if( verbose .gt. 0 ) call sourcelum(nex,earx,contx,real(mass))
@@ -338,7 +335,6 @@ include 'subroutines/header.h'
 
 !Call xillver
               call myxill(earx,nex,xillpar,ifl,Cp,photarx)
-              
 
 !non linear effects
                  DeltaGamma = 0.01
@@ -351,7 +347,7 @@ include 'subroutines/header.h'
                  call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
                  photarx_delta = (photarx_2 - photarx_1)/DeltaGamma
 
-
+                 
               if (check .ne. 0) then
 !interpolation of the calculated transfer functions 
                  call myinterp_complex2(a,spin_lo,spin_hi,nex,transe_11(:,mubin,sdbin,xbin),transe_12(:,mubin,sdbin,xbin)&
@@ -377,7 +373,6 @@ include 'subroutines/header.h'
                  end do
               endif
 
-              
 !Convolve with line profile
               call padcnv(1e-7,nex,reline,photarx,reconvmu)
               call padcnv(1e-7,nex,imline,photarx,imconvmu)
@@ -398,17 +393,13 @@ include 'subroutines/header.h'
             end do
           end do
         end do
+
       end if
 
-        ! call CPU_TIME(t1)
-        ! write(*,*)"convolution CPU time=",t1-t0
-
-        ! call CPU_TIME(t0)
       
 ! Calculate absorption
-!        absorbx=1.0
       call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
-
+      
 ! Include absorption in the model
       contxabs  = contx  * absorbx
       reconvabs = reconv * absorbx
@@ -419,29 +410,56 @@ include 'subroutines/header.h'
       reconvabsW1a = reconvW1a * absorbx
       imconvabsW1a = imconvW1a * absorbx
 
+      ! do gbin = 1,nex
+      !   ghi = (1+zcos) * 10.0**( (gbin-nex/2)*dloge )
+      !   glo = (1+zcos) * 10.0**( (gbin-1-nex/2)*dloge )
+      !   write(410,*)6.4*0.5*(glo+ghi),real(transe(gbin,1,1,1))
+      ! end do
+      ! write(410,*)"no no"
       
 ! Calculate phiA from instrument response - if this option is set to on      
       call phaseA(nex,earx,contxabs,reconvabs,imconvabs,gso,zcos,Gamma,afac,lens,phiA)
-
-!Add on continuum (and include boosting fudge factor) + consider the non-linear effects
-      do i = 1,nex
-        E = 0.5 * ( earx(i) + earx(i-1) )
-        dE = earx(i) - earx(i-1)
-
-        direct  = contxabs(i) / dE * real(lens) * ( gso / real(1.d0+zcos) )**real(2.d0+Gamma)
-        ReGx(i) = cos(phiA) * (direct + afac*reconvabs(i)/dE) - sin(phiA)*afac*imconvabs(i)/dE + &
-        g * (cos(phiB) * ( log(E*(1+real(zcos))/gso)*direct - afac*reconvabsW1a(i)/dE - afac*reconvabsW1(i)/dE)+&
-        sin(phiB)* (imconvabsW1a(i)/dE + imconvabsW1(i)/dE) )
-        ImGx(i) = sin(phiA) * (direct + afac*reconvabs(i)/dE) + cos(phiA)*afac*imconvabs(i)/dE + &
-        g * (sin(phiB) * ( log(E*(1+real(zcos))/gso)*direct - afac*reconvabsW1a(i)/dE - afac*reconvabsW1(i)/dE)-&
-        cos(phiB) * (afac*imconvabsW1a(i)/dE + afac*imconvabsW1(i)/dE) )
-        
-     end do
       
+!Add on continuum (and include boosting fudge factor) + consider the non-linear effects
+
+      !Stop unphysical parameters for the DC component
+      if( fhi .lt. tiny(fhi) .or. flo .lt. tiny(flo) )then
+        phiA = 0.0
+        g    = 0.0
+      end if
+
+      !Calculate cross-spectrum
+      do i = 1,nex
+        E  = 0.5 * ( earx(i) + earx(i-1) )
+        dE = earx(i) - earx(i-1)
+        !Direct energy-dependent component
+!        direct  = contxabs(i) / dE * real(lens) * ( gso / real(1.d0+zcos) )**real(2.d0+Gamma)   
+        direct  = contxabs(i) / dE * real(lens) * ( gso / real(1.d0+zcos) )**real(Gamma)   
+        !Factors
+        ldir = direct * log(E*(1+real(zcos))/gso)
+        ReW  = afac * reconvabs(i)/dE
+        ImW  = afac * imconvabs(i)/dE
+        ReW1 = afac * ( reconvabsW1(i) + reconvabsW1a(i) ) / dE
+        ImW1 = afac * ( imconvabsW1(i) + imconvabsW1a(i) ) / dE
+        !Real part
+        ReGx(i) = cos(phiA)*(direct+ReW) - sin(phiA)*ImW
+        ReGx(i) = ReGx(i) + g * ( cos(phiB)*(ldir-ReW1) + sin(phiB)*ImW1 )
+        !Imaginary part
+        ImGx(i) = cos(phiA)*ImW + sin(phiA)*(direct+ReW)
+        ImGx(i) = ImGx(i) + g * ( sin(phiB)*(ldir-ReW1) - cos(phiB)*ImW1 )        
+     end do
+
+        ! ReGx(i) = cos(phiA) * (direct + afac*reconvabs(i)/dE) - sin(phiA)*afac*imconvabs(i)/dE + &
+        ! g * (cos(phiB) * ( log(E*(1+real(zcos))/gso)*direct - afac*reconvabsW1a(i)/dE - afac*reconvabsW1(i)/dE)+&
+        ! sin(phiB)* (imconvabsW1a(i)/dE + imconvabsW1(i)/dE) )
+        ! ImGx(i) = sin(phiA) * (direct + afac*reconvabs(i)/dE) + cos(phiA)*afac*imconvabs(i)/dE + &
+        ! g * (sin(phiB) * ( log(E*(1+real(zcos))/gso)*direct - afac*reconvabsW1a(i)/dE - afac*reconvabsW1(i)/dE)-&
+        ! cos(phiB) * (afac*imconvabsW1a(i)/dE + afac*imconvabsW1(i)/dE) )
+     
       !Re-bin onto input grid
       call rebinE(earx,ReGx,nex,ear,ReS,ne)
       call rebinE(earx,ImGx,nex,ear,ImS,ne)
-
+      
       !Write output (depends on ReIm parameter)
       if( ReIm .eq. 1 .or. flo .lt. 1e-10 )then   !Real part / DC part
         do i = 1,ne
@@ -502,8 +520,6 @@ include 'subroutines/header.h'
       ! gesave    = ge
       ! xesave    = xe
       
-        ! call CPU_TIME(t1)
-        ! write(*,*)"final stuff CPU time=",t1-t0
 
     end subroutine genreltrans
 !-----------------------------------------------------------------------

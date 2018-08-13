@@ -75,7 +75,6 @@
 ! to do full GR ray tracing with      
       mueff  = max( mu0 , 0.3d0 )
       rnmin  = rfunc(spin,mu0)
-!      rnmax  = 300d0
       !Grid to do in full GR
       call getrgrid(rnmin,rnmax,mueff,nro,nphi,rn,domega)
       !Grid for Newtonian approximation
@@ -115,6 +114,13 @@
         cosdin = cosdin + cosd(n-1)
       end if
       frrel = ( cosdin - cosdout ) / ( 1.0 + cosdout )
+
+      ! write(*,*)"---------------------"
+      ! write(*,*)"Reflection fraction calculations"
+      ! write(*,*)"cosdin=",cosdin
+      ! write(*,*)"cosdout=",cosdout
+      ! write(*,*)"---------------------"    
+      
       
 ! Now trace rays in full GR down to mu=0 for impact parameters with b<bmax
       cos0  = mu0
@@ -137,11 +143,8 @@
          if( abs(spinsav-spin) .gt. 1d-6 ) dotrace = .true.
          if( abs(musav-mu0) .gt. 1d-6 ) dotrace = .true.
          if( abs(routsav-rout) .gt. 1d-6 ) dotrace = .true.
-         if( abs(mudsav-mudisk) .gt. 1d-6 ) dotrace = .true.
-
+         if( abs(mudsav-mudisk) .gt. 1d-6 ) dotrace = .true.         
          if( dotrace )then
-            !            call GRtrace(nmax,nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d,pem1,taudo1,re1)
-!            write(*,*) 'Computing GRtrace!!'
             call GRtrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
             ! nrosav  = nro
             ! nphisav = nphi
@@ -187,11 +190,11 @@
 !      write(*,*) 'nf',nf
 !      t4 = 0.0
 ! Construct the transfer function by summing over all pixels ***Could paralellize this loop***
+      
       logxihi = 0.0
       odisc = 1
       i = nro + 1
-      do while( odisc .eq. 1 .and. i .gt. 1 )
-         
+      do while( odisc .eq. 1 .and. i .gt. 1 )         
         i = i - 1
         odisc = 0
         do j = 1,NPHI
@@ -201,7 +204,7 @@
           !If the ray hits the disk, calculate flux and time lag
           if( pem1(j,i) .gt. 0.0d0 )then
             re    = re1(j,i)
-            if( re .gt. rin .and. re .lt. rout )then
+            if( re .gt. rin .and. re .lt. rout )then              
               odisc = 1
               taudo = taudo1(j,i)
               g     = dlgfac( spin,mu0,alpha,re )
@@ -223,13 +226,14 @@
               end if             
               !Add flux from pixel to transfer function
               gsd        = dglpfac(re,spin,h)
-              emissivity = gsd**(2.d0+Gamma)
-              emissivity = 0.5 * emissivity * cosfac / dareafac(re,spin)
+!              emissivity = gsd**(2.d0+Gamma)
+              emissivity = gsd**(Gamma)
+              emissivity = 0.5 * emissivity * cosfac / dareafac(re,spin)              
               dFe        = emissivity * g**3 * domega(i) / (1.d0+zcos)**3
               frobs      = frobs + 2.0 * g**3 * gsd**3 * cosfac/dareafac(re,spin) * domega(i)
               gbin = ceiling( log10( g/(1.d0+zcos) ) / dloge ) + ne / 2
               gbin = MAX( 1    , gbin  )
-              gbin = MIN( gbin , ne    )              
+              gbin = MIN( gbin , ne    )
               !Calculate emission angle and work out which mue bin to add to
               mue   = demang(spin,mu0,re,alpha,beta)
               mubin = ceiling( mue * dble(me) )
@@ -269,13 +273,7 @@
           end if
         end do
       end do
-      !write(124,*)"no no"
-      !write(285,*)"no no"
 
-!     call CPU_TIME(t1)
-!      write(*,*)"GR kernel CPU time=",t1-t0
-      ! write(*,*)"freq CPU time=",t4,t3-t2
-      
       xbinhi = min( xe , ceiling( (logxihi-ximin)/(ximax-ximin) * float(xe) ) )
       if( xe .eq. 1 ) xbinhi = 1
       
@@ -309,7 +307,8 @@
             end if
             !Add flux from pixel to transfer function
             gsd        = dglpfac(re,spin,h)
-            emissivity = gsd**(2.d0+Gamma)
+!            emissivity = gsd**(2.d0+Gamma)
+            emissivity = gsd**(Gamma)
             emissivity = 0.5 * emissivity * cosfac / dareafac(re,spin)
             dFe        = emissivity * g**3 * domegan(i) / (1.d0+zcos)**3
             frobs      = frobs + 2.0 * g**3 * gsd**3 * cosfac/dareafac(re,spin) * domega(i)
@@ -372,15 +371,15 @@
       !Finish calculation of the reflection fraction
       frobs = frobs / (dgsofac(spin,h))**3 / lens
 
-      write(80,*) 'skip on'
-      do j=1, ne
-         write(80,*) real(j),  real(transe(j,1,1,1)) 
-      enddo
-      write(80,*) 'no no'      
-      do j=1, ne
-         write(80,*) real(j),  real(transe_a(j,1,1,1)) 
-      enddo
-      write(80,*) 'no no'      
+      ! write(80,*) 'skip on'
+      ! do j=1, ne
+      !    write(80,*) real(j),  real(transe(j,1,1,1)) 
+      ! enddo
+      ! write(80,*) 'no no'      
+      ! do j=1, ne
+      !    write(80,*) real(j),  real(transe_a(j,1,1,1)) 
+      ! enddo
+      ! write(80,*) 'no no'      
     
       return
     end subroutine strans
