@@ -48,9 +48,8 @@ int c_num_zones=0;
 
 specCache* spec_cache = NULL;
 
-
 // precision to calculate gstar from [H:1-H] instead of [0:1]
-const double GFAC_H = 2e-3;
+const double GFAC_H = 5e-3;
 
 
 /* function to check of the system parameters need to be re-calculated  */
@@ -140,12 +139,12 @@ static void interpol_a_mu0(int ii, double ifac_a, double ifac_mu0, int ind_a,
 /*  get the fine radial grid */
 static void get_fine_radial_grid(double rin, double rout, relSysPar* sysPar){
 
-	double r1=1.0/rout;
-	double r2=1.0/rin;
+	double r1=1.0/sqrt(rout);
+	double r2=1.0/sqrt(rin);
 	int ii;
 	for (ii=0; ii<sysPar->nr; ii++){
 		sysPar->re[ii] = ((double) (ii) )*(r2-r1)/(sysPar->nr-1)+r1;
-		sysPar->re[ii] = 1.0/(sysPar->re[ii]);
+		sysPar->re[ii] = pow(1.0/(sysPar->re[ii]),2);
 		assert(sysPar->re[ii]>1.0);
 	}
 	return;
@@ -490,7 +489,7 @@ static double relb_func(double eg, int k, str_relb_func* str){
   double inte1=1.0-inte;
   double ftrf = inte*str->trff[ind][k] + inte1*str->trff[ind+1][k];
 
-  double val = pow((eg*str->re),3)/((str->gmax-str->gmin)*sqrt(egstar - egstar*egstar))*ftrf*str->emis;
+  double val = pow(eg,3)/((str->gmax-str->gmin)*sqrt(egstar - egstar*egstar))*ftrf*str->emis;
 
   /** isotropic limb law by default (see Svoboda (2009)) **/
   if (str->limb_law==0){
@@ -511,7 +510,7 @@ static double relb_func(double eg, int k, str_relb_func* str){
 
 /** Romberg Integration Routine **/
 static double RombergIntegral(double a,double b,int k, str_relb_func* str, double line_ener){
-  const double prec = 0.05;
+  const double prec = 0.02;
   double obtprec = 1.0;
   const int itermin = 0;
   int itermax = 5;
@@ -633,7 +632,7 @@ static double int_romb(double lo, double hi, str_relb_func* str, double line_ene
 		}
 	} else {
 		for (k=0;k<2;k++){
-			flu += relb_func((hi+lo)/2.0,k,str)*(hi-lo);
+			flu += RombergIntegral(lo,hi,k,str,line_energy);
 		}
 	}
 
@@ -714,7 +713,6 @@ static double integ_relline_bin(str_relb_func* str, double rlo0, double rhi0){
 		}
 		flu = flu  + int_romb(rlo,rhi,str,line_ener);
 	}
-
 
 	return flu;
 }
@@ -821,14 +819,18 @@ void relline_profile(rel_spec* spec, relSysPar* sysPar, int* status){
 	        // in which ionization bin are we?
 	        int izone = binary_search(spec->rgrid,spec->n_zones+1,sysPar->re[ii]);
 
-	        // trapez integration
-	       	double weight = trapez_integ_single(sysPar->re,ii,sysPar->nr);
-
 	       	// set the current parameters in a cached structure (and reset some values) [optimizes speed]
 	       	set_str_relbf(cached_str_relb_func,
 	       			sysPar->re[ii], sysPar->gmin[ii],sysPar->gmax[ii],
 	       			sysPar->trff[ii],sysPar->cosne[ii],
 					sysPar->emis[ii], sysPar->limb_law );
+
+	        /** INTEGRATION
+	         *   [remember: defintion of Xillver/Relxill is 1/2 * Speith Code]
+	         *   [remember: trapez integration returns just r*dr*PI (full integral is over dA/2)]
+	         *   [ -> in the end it's weigth=PI*r*dr/2 ]
+	         */
+	       	double weight = trapez_integ_single(sysPar->re,ii,sysPar->nr)/2;
 
 	       	// lastly, loop over the energies
 	       	for (jj=ielo; jj<=iehi; jj++){
@@ -944,7 +946,7 @@ static void print_angle_dist(rel_cosne* spec, int izone){
 	FILE* fp =  fopen ( "test_angle_dist.dat","w+" );
 	int ii;
 	for(ii=0; ii<spec->n_cosne; ii++ ){
-		fprintf(fp," mu=%e %e \n",spec->cosne[ii],
+		fprintf(fp," %e %e \n",spec->cosne[ii],
 				spec->dist[izone][ii]);
 	}
 	if (fclose(fp)) exit(1);
@@ -960,12 +962,9 @@ static void calc_xillver_angdep(double* xill_flux, xill_spec* xill_spec,
 		xill_flux[ii] = 0.0;
 	}
 
-	double mufac;
 	for (ii=0; ii<xill_spec->n_incl;ii++){
-		/**  0.5*F*mu*dmu (Javier Note, Eq. 25) **/
-		mufac = dist[ii];   // actually it is also mutliplied by  dmu*nincl = 1/nincl * nincl = 1
 		for (jj=0; jj<xill_spec->n_ener;jj++){
-			xill_flux[jj] += mufac*xill_spec->flu[ii][jj];
+			xill_flux[jj] += dist[ii]*xill_spec->flu[ii][jj];
 		}
 	}
 
@@ -1158,8 +1157,8 @@ void relxill_kernel(double* ener_inp, double* spec_inp, int n_ener_inp, xillPara
 		ecut_primary = ecut0 ;
 	}
 
-	int recompute_xill;
-	int recompute_rel;
+	int recompute_xill=1;
+	int recompute_rel=1;
 	check_caching_relxill(rel_param,xill_param,&recompute_rel,&recompute_xill);
 
 	init_specCache(&spec_cache,status);
@@ -1192,7 +1191,6 @@ void relxill_kernel(double* ener_inp, double* spec_inp, int n_ener_inp, xillPara
 		int jj;
 		for (ii=0; ii<rel_profile->n_zones;ii++){
 			assert(spec_cache!=NULL);
-
 
 			// now calculate the reflection spectra for each zone (using the angular distribution)
 			assert(rel_profile->rel_cosne != NULL);
@@ -1227,18 +1225,20 @@ void relxill_kernel(double* ener_inp, double* spec_inp, int n_ener_inp, xillPara
 			rebin_spectrum(ener,xill_flux,n_ener,
 					xill_spec->ener, xill_angdist_inp, xill_spec->n_ener );
 
-			// convolve the spectrum
+
+			/** convolve the spectrum **
+			 * (important for the convolution: need to recompute fft for xillver
+			 *  always if rel changes, as the angular distribution changes !!)
+			 */
 			fft_conv_spectrum(ener, xill_flux, rel_profile->flux[ii], conv_out,  n_ener,
-					recompute_rel, recompute_xill, ii, status);
+					recompute_rel, 1, ii, status);
 			CHECK_STATUS_VOID(*status);
 
-			// rebin to the output grid
-			rebin_spectrum(ener_inp,single_spec_inp,n_ener_inp, ener, conv_out, n_ener);
 
 
 			double test_sum_relline = 0.0;
-			double test_sum_relxill = 0.0;
 			double test_sum_xillver = 0.0;
+			double test_sum_relxill = 0.0;
 			for (jj=0; jj<n_ener;jj++){
 				if (ener[jj] > EMIN_XILLVER && ener[jj+1] < EMAX_XILLVER  ){
 					test_sum_relline += rel_profile->flux[ii][jj];
@@ -1246,6 +1246,10 @@ void relxill_kernel(double* ener_inp, double* spec_inp, int n_ener_inp, xillPara
 					test_sum_xillver += xill_flux[jj];
 				}
 			}
+
+			// rebin to the output grid
+			rebin_spectrum(ener_inp,single_spec_inp,n_ener_inp, ener, conv_out, n_ener);
+
 
 			/** avoid problems where no relxill bin falls into an ionization bin **/
 			if (test_sum_relline < 1e-12){
@@ -1295,7 +1299,6 @@ void relxill_kernel(double* ener_inp, double* spec_inp, int n_ener_inp, xillPara
 			}
 			spec_cache->out_spec->flux[ii] = spec_inp[ii];
 		}
-
 	} /************* END OF THE HUGE COMPUTATION ********************/
 
 
@@ -1303,9 +1306,14 @@ void relxill_kernel(double* ener_inp, double* spec_inp, int n_ener_inp, xillPara
 	/** add a primary spectral component and normalize according to the given refl_frac parameter**/
 	add_primary_component(ener_inp,n_ener_inp,spec_inp,rel_param,xill_param, status);
 
+	double sum_all=0.0;
+	for (ii=0; ii<n_ener_inp; ii++){
+		sum_all+=spec_inp[ii];
+	}
 
 	return;
 }
+
 
 /** function adding a primary component with the proper norm to the flux **/
 void add_primary_component(double* ener, int n_ener, double* flu, relParam* rel_param,
@@ -1390,25 +1398,43 @@ void add_primary_component(double* ener, int n_ener, double* flu, relParam* rel_
 		CHECK_STATUS_VOID(*status);
 
 		if ((xill_param->fixReflFrac==1)||(xill_param->fixReflFrac==2)) {
+			/** set the reflection fraction calculated from the height and
+			 *  spin of the primary source, in this case for the physical
+			 *  value from Rin to Rout          						 */
 			xill_param->refl_frac = struct_refl_frac->refl_frac;
+		} else {
+
 		}
 
 		/** 4 ** and apply it to primary and reflected spectra **/
 		if (rel_param->emis_type == EMIS_TYPE_LP) {
 			double g_inf = sqrt( 1.0 - ( 2*rel_param->height /
 					(rel_param->height*rel_param->height + rel_param->a*rel_param->a)) );
-			for (ii=0; ii<n_ener; ii++) {
-				pl_flux[ii] *= norm_pl * pow(g_inf,xill_param->gam) * (struct_refl_frac->f_inf / 0.5);
-				flu[ii] *= fabs(xill_param->refl_frac) / struct_refl_frac->refl_frac;
-			}
 
+
+
+			 // calculate the fraction of photons hitting the accretion disk
+			 /** if the user sets the refl_frac parameter manually, we need to calculate the ratio
+			  *  to end up with the correct normalization
+			  */
+			double norm_fac_refl = (fabs(xill_param->refl_frac))/struct_refl_frac->refl_frac;
+
+			 // -> major bug fix after Adam Ingram comments: gi^(gamma+2) is the correct energy shift
+ 			double prim_fac = struct_refl_frac->f_inf / 0.5 * pow(g_inf,xill_param->gam+2);
+
+
+		/**	printf(" **** refl_frac_norm: %.3f  -> factor=%.3f (f_inf=%.3f refl_frac0=%.3f)\n",struct_refl_frac->refl_frac_norm,
+					norm_fac_refl,	struct_refl_frac->f_inf,struct_refl_frac->refl_frac); **/
+			for (ii=0; ii<n_ener; ii++) {
+				pl_flux[ii] *= norm_pl * prim_fac;
+				flu[ii] *= norm_fac_refl;
+			}
 		} else {
 			for (ii=0; ii<n_ener; ii++){
 				pl_flux[ii] *= norm_pl;
 				flu[ii] *= fabs(xill_param->refl_frac);
 			}
 		}
-
 
 		/** 5 ** if desired, we ouput the reflection fraction and strength (as defined in Dauser+2016) **/
 		if ((xill_param->fixReflFrac == 2) && (rel_param->emis_type==EMIS_TYPE_LP)) {
@@ -1425,6 +1451,7 @@ void add_primary_component(double* ener, int n_ener, double* flu, relParam* rel_
 				sum_pl += pl_flux[ii];
 				sum += flu[ii];
 			}
+
 
 			printf(" reflection fraction for a = %.3f and h = %.2f rg is: %.3f \n reflection strength is: %.3f \n",
 					rel_param->a,rel_param->height,struct_refl_frac->refl_frac,sum/sum_pl);
@@ -1448,6 +1475,8 @@ void add_primary_component(double* ener, int n_ener, double* flu, relParam* rel_
 	  }
 
 }
+
+
 
 /** print the relline profile   **/
 void save_relline_profile(rel_spec* spec){
@@ -1772,6 +1801,9 @@ relSysPar* new_relSysPar(int nr, int ng, int* status){
 	}
 
 	sysPar->limb_law = 0;
+
+	sysPar->del_ad_risco=0;
+	sysPar->del_ad_rmax=M_PI/2;
 
 	return sysPar;
 }

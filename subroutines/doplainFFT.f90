@@ -8,7 +8,7 @@
         data(2*j-1) = at(j)
         data(2*j)   = 0.0
       end do
-      call four1(data,n,1)
+      call ourfour1(data,n,1)
       do j = 1, n/2
         ReA(j) = data(2*j+1)
         ImA(j) = data(2*j+2)
@@ -39,7 +39,7 @@
 ! DC component
       data(1) = ReA(0)
       data(2) = ImA(0)
-      call four1(data,n,-1)
+      call ourfour1(data,n,-1)
       do j = 1,n
         at(j) = data(2*j-1) / float(n)
       end do

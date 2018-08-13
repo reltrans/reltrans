@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-      SUBROUTINE four1(data,nn,isign)
+      SUBROUTINE ourfour1(data,nn,isign)
       INTEGER isign,nn
       REAL data(2*nn)
       INTEGER i,istep,j,m,mmax,n

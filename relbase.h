@@ -22,9 +22,8 @@
 
 #include "common.h"
 
-
-/* #include "/Data/adamingram/heasoft/heasoft-6.22.1/heacore/cfitsio/fitsio.h" */
 #include "fitsio.h"
+/* #include "/Data/adamingram/heasoft/heasoft-6.22.1/heacore/cfitsio/fitsio.h" */
 
 #include "relutility.h"
 #include "reltable.h"
@@ -37,21 +36,22 @@
 #define PARAM_DEFAULT 0.0
 
 #define version_major 1
-#define version_minor 0
-#define version_build 3
-#define version_dev ""
+#define version_minor 1
+#define version_build 0
+#define version_dev "pre-6"
 
 // TODO: allow to set it by an environment variable
 /** path to all RELXILL tables */
 #define RELXILL_TABLE_PATH "./"
 
 /** dimensions of the RELLINE table */
-#define RELTABLE_NA 30
-#define RELTABLE_NMU0 22
+#define RELTABLE_NA 25
 #define RELTABLE_NR 100
-#define RELTABLE_NG 20
+#define RELTABLE_NG 40
 #define RELTABLE_MAX_R 1000.0
-#define RELTABLE_FILENAME "rel_table_v0.4e.fits"
+#define RELTABLE_FILENAME "rel_table_v0.5a.fits"
+#define RELTABLE_NMU0 30
+
 
 /** dimensions of the LP table */
 #define LPTABLE_NA 20
