@@ -334,6 +334,7 @@ include 'subroutines/header.h'
               if( me .eq. 1 ) xillpar(6) = real( inc )
 
 !Call xillver
+              xillpar(1) = Gamma
               call myxill(earx,nex,xillpar,ifl,Cp,photarx)
 
 !non linear effects
