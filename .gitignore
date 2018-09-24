@@ -5,3 +5,5 @@ fort.*
 *.o
 *.mod
 reltransFunctionMap.*
+Makefile
+lpack_reltrans.cxx
