@@ -246,7 +246,7 @@
               mui = dinang(spin,re,h,mus)
               !write(285,*)re,mue,mui
               !Calculate ionisation parameter and effective ionisation parameter
-              xir = gsd**4 * cosfac / dareafac(re,spin)
+              xir = gsd**2 * cosfac / dareafac(re,spin)
               xir = xir / xinorm
               if( adensity .eq. 1 ) xir = xir * re**(-1.5) * ( 1.0 - sqrt(rin/re) )**2
               logxir   = logxip + log10(xir)
@@ -327,7 +327,7 @@
             mui = dinang(spin,re,h,mus)
             !write(285,*)re,mue,mui
             !Calculate ionisation parameter and effective ionisation parameter
-            xir = gsd**4 * cosfac / dareafac(re,spin)
+            xir = gsd**2 * cosfac / dareafac(re,spin)
             xir = xir / xinorm
             if( adensity .eq. 1 ) xir = xir * re**(-1.5) * ( 1.0 - sqrt(rin/re) )**2
             logxir   = logxip + log10(xir)
