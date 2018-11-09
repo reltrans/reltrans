@@ -178,10 +178,10 @@
       cosfac = (dcosdr(kk)-dcosdr(kk-1))*(re-rlp(kk))/(rlp(kk)-rlp(kk-1))
       cosfac = cosfac + dcosdr(kk)
       if( adensity .eq. 1 )then
-        xinorm = dglpfac(re,spin,h)**4 * cosfac / dareafac(re,spin)
+        xinorm = dglpfac(re,spin,h)**2 * cosfac / dareafac(re,spin)
         xinorm = xinorm * re**(-1.5) * ( 1.0 - sqrt(rin/re) )**2
       else
-        xinorm = dglpfac(re,spin,h)**4 * cosfac / dareafac(re,spin)
+        xinorm = dglpfac(re,spin,h)**2 * cosfac / dareafac(re,spin)
       end if
 
 
@@ -230,7 +230,7 @@
               emissivity = gsd**(Gamma)
               emissivity = 0.5 * emissivity * cosfac / dareafac(re,spin)              
               dFe        = emissivity * g**3 * domega(i) / (1.d0+zcos)**3
-              frobs      = frobs + 2.0 * g**3 * gsd**3 * cosfac/dareafac(re,spin) * domega(i)
+              frobs      = frobs + 2.0 * g**3 * gsd * cosfac/dareafac(re,spin) * domega(i)
               gbin = ceiling( log10( g/(1.d0+zcos) ) / dloge ) + ne / 2
               gbin = MAX( 1    , gbin  )
               gbin = MIN( gbin , ne    )
@@ -311,7 +311,7 @@
             emissivity = gsd**(Gamma)
             emissivity = 0.5 * emissivity * cosfac / dareafac(re,spin)
             dFe        = emissivity * g**3 * domegan(i) / (1.d0+zcos)**3
-            frobs      = frobs + 2.0 * g**3 * gsd**3 * cosfac/dareafac(re,spin) * domega(i)
+            frobs      = frobs + 2.0 * g**3 * gsd * cosfac/dareafac(re,spin) * domega(i)
             gbin = ceiling( log10( g/(1.d0+zcos) ) / dloge ) + ne / 2
             gbin = MAX( 1    , gbin  )
             gbin = MIN( gbin , ne    )
@@ -369,7 +369,7 @@
       transe_a = transe_a / real(nf)
       
       !Finish calculation of the reflection fraction
-      frobs = frobs / (dgsofac(spin,h))**3 / lens
+      frobs = frobs / dgsofac(spin,h) / lens
 
       ! write(80,*) 'skip on'
       ! do j=1, ne
