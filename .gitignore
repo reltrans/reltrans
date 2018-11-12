@@ -7,3 +7,4 @@ fort.*
 reltransFunctionMap.*
 Makefile
 lpack_reltrans.cxx
+.DS_Store
