@@ -74,11 +74,11 @@
           Re = 0.0
           do I = Ilo,Ihi
             Im = Im - ImWI(I)
-            Re = Re + real(lens) * ( gso / real(1.d0+zcos) )**real(2.d0+Gamma) * fI(I)
+            Re = Re + real(lens) * ( gso / real(1.d0+zcos) )**real(Gamma) * fI(I)
             Re = Re + afac * ReWI(I)
           end do
           Im   = afac * Im
-          phiA = atan2( Im , Re )
+          phiA = atan2( Im , Re )          
         else
           !Read in min and max energy range
           if( needchans )then
