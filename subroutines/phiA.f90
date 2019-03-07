@@ -58,7 +58,7 @@
         if( trim(respname) .ne. 'none' )then
           !Read in min and max channels
           if( needchans )then
-            call fetchchans(numchn,Ilo,Ihi)
+            call fetchEchans(numchn,ECHN,Ilo,Ihi)
             needchans = .false.
           end if
           !Re-bin onto internal telescope grid
@@ -121,6 +121,30 @@
       if( exten .eq. 'rmf' .or. exten .eq. 'RMF' ) arf = .true.
       return
       end subroutine arfcheck
+!-----------------------------------------------------------------------
+
+
+!-----------------------------------------------------------------------
+      subroutine fetchEchans(numchn,ECHN,Ilo,Ihi)
+      implicit none
+      integer numchn,Ilo,Ihi,i
+      real ECHN(0:NUMCHN),Elo,Ehi
+      write(*,*)"Enter lower energy bound of the reference band in keV"
+      read(*,*)Elo
+      write(*,*)"Enter Upper energy bound of the reference band in keV"
+      read(*,*)Ehi
+      i = 1
+      do while( ECHN(i-1) .lt. Elo .and. i .lt. NUMCHN )
+         i = i + 1
+      end do
+      ilo = i
+      do while( ECHN(i) .le. Ehi .and. i .lt. NUMCHN )
+         i = i + 1
+      end do
+      ihi = i - 1
+      write(*,*)"ilo,ihi=",ilo,ihi
+      return
+      end subroutine fetchEchans
 !-----------------------------------------------------------------------
       
       
