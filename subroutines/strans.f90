@@ -216,7 +216,7 @@
               !Interpolate (or extrapolate) the time function
               tausd = (tlp(kk)-tlp(kk-1))*(re-rlp(kk))/(rlp(kk)-rlp(kk-1))
               tausd = tausd + tlp(kk)
-              tau   = tausd+taudo-tauso !This is the time lag between direct and reflected photons 
+              tau   = (1.d0+zcos) * (tausd+taudo-tauso) !This is the time lag between direct and reflected photons
               !Interpolate |dcos\delta/dr| function
               cosfac = (dcosdr(kk)-dcosdr(kk-1))*(re-rlp(kk))/(rlp(kk)-rlp(kk-1))
               cosfac = cosfac + dcosdr(kk)              
@@ -294,6 +294,7 @@
             g = dlgfac( spin,mu0,alpha,re )
             !Time lag
             tau = sqrt(re**2+(h-honr*re)**2) - re*(sin0*sindisk*cos(phie)+mu0*mudisk ) + h*mu0
+            tau = (1.d0+zcos) * tau
             !Interpolate (or most likely extrapolate) |dcos\delta/dr| function
             kk = 2
             do while( ( rlp(kk) .le. re .or. rlp(kk-1) .lt. rmin ) .and. kk .lt. npts )
