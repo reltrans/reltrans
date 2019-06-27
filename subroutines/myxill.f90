@@ -46,7 +46,10 @@
       comp_par(5) = 0.0            !cosmological redshift is accounted for by the transfer function     
       call nthcomp(ear,ne,comp_par,Ifl,new_cont,photer)
       !Now convert reflection spectrum for the new continuum
-      photar = photar * new_cont / old_cont      
+      do i = 1,ne
+         photar(i) = photar(i) * new_cont(i) / old_cont(i)
+         if( photar(i) .ne. photar(i) ) photar(i) = 0.0
+      end do
       return
       end subroutine myxill_T
 !-----------------------------------------------------------------------
