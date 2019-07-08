@@ -306,7 +306,7 @@ include 'subroutines/header.h'
 
 !Get continuum spectrum
         call getcont_kTbb(nex,earx,Gamma,Afe,kTbb,Ecut_obs,logxi,contx,xillpar)
-        if( verbose .gt. 0 ) call sourcelum(nex,earx,contx,real(mass))
+        if( verbose .gt. 0 ) call sourcelum(nex,earx,contx,real(mass),gso,real(Gamma))
         
 !Now reflection
         xillpar(7) = -1.0       !reflection fraction of 1        
@@ -801,7 +801,7 @@ include 'subroutines/header.h'
 
 !Get continuum spectrum
         call getcont(nex,earx,Gamma,Afe,Ecut_obs,logxi,Cp,contx,xillpar)
-        if( verbose .gt. 0 ) call sourcelum(nex,earx,contx,real(mass))
+        if( verbose .gt. 0 ) call sourcelum(nex,earx,contx,real(mass),gso,real(Gamma))
 !Now reflection
         xillpar(7) = -1.0       !reflection fraction of 1        
         reconv = 0.0

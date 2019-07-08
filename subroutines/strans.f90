@@ -50,9 +50,9 @@
       double precision mudisk
       double precision rnmax,rnmin,rn(nro),phin,mueff
       double precision fi(nf),dgsofac,sindisk,mue,demang,frobs,cosdin,frrel
-      integer nron,nphin,nrosav,nphisav,mubin,xbinhi,adensity
+      integer nron,nphin,nrosav,nphisav,mubin,xbinhi,adensity,verbose
       double precision spinsav,musav,routsav,mudsav,rnn(nro),domegan(nro)
-      double precision mus,mui,dinang,xir,logxieff,logxir,xinorm,logxip,logxihi
+      double precision mus,mui,dinang,xir,logxieff,logxir,xinorm,logxip,logxihi,rfacmax
       logical dotrace
 !      real :: t0,t1,t2,t3,t4
       !      character (len=1) A_DENSITY
@@ -161,7 +161,7 @@
 
 ! Decide on zone a density profile or constant density profile
       adensity = myenv("A_DENSITY",1)
-      
+
 ! Set up logxi part of the calculation
       logxip = dble(rlxi)
       if( adensity .eq. 1 )then
@@ -190,7 +190,8 @@
 !      write(*,*) 'nf',nf
 !      t4 = 0.0
 ! Construct the transfer function by summing over all pixels ***Could paralellize this loop***
-      
+
+      rfacmax = -huge(rfacmax)
       logxihi = 0.0
       odisc = 1
       i = nro + 1
@@ -228,7 +229,7 @@
               gsd        = dglpfac(re,spin,h)
 !              emissivity = gsd**(2.d0+Gamma)
               emissivity = gsd**(Gamma)
-              emissivity = 0.5 * emissivity * cosfac / dareafac(re,spin)              
+              emissivity = 0.5 * emissivity * cosfac / dareafac(re,spin)
               dFe        = emissivity * g**3 * domega(i) / (1.d0+zcos)**3
               frobs      = frobs + 2.0 * g**3 * gsd * cosfac/dareafac(re,spin) * domega(i)
               gbin = ceiling( log10( g/(1.d0+zcos) ) / dloge ) + ne / 2
@@ -247,6 +248,7 @@
               !write(285,*)re,mue,mui
               !Calculate ionisation parameter and effective ionisation parameter
               xir = gsd**2 * cosfac / dareafac(re,spin)
+              rfacmax = max( rfacmax , 0.5*xir )
               xir = xir / xinorm
               if( adensity .eq. 1 ) xir = xir * re**(-1.5) * ( 1.0 - sqrt(rin/re) )**2
               logxir   = logxip + log10(xir)
@@ -274,6 +276,12 @@
         end do
       end do
 
+      verbose = myenv("REV_VERB",0)     !Set verbose level
+      if( verbose .gt. 0 )then
+         write(*,*)"[gsd^{2-Gamma} epsilon(r)]max=",rfacmax
+         write(*,*)"A_DENSITY=",adensity
+      end if
+      
       xbinhi = min( xe , ceiling( (logxihi-ximin)/(ximax-ximin) * float(xe) ) )
       if( xe .eq. 1 ) xbinhi = 1
       
