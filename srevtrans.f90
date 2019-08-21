@@ -694,13 +694,6 @@ include 'subroutines/header.h'
         if( nf .ne. nfsave ) needtrans = .true.
         if( abs( fhi - fhisave ) .gt. 1e-7 ) needtrans = .true.
         if( abs( flo - flosave ) .gt. 1e-7 ) needtrans = .true.
-        ! if( abs( h - hsave ) .gt. 1e-7 ) needtrans = .true.
-        ! if( abs( rin - rinsave ) .gt. 1e-7 ) needtrans = .true.
-        ! if( nro .ne. nrosave ) needtrans = .true.
-        ! if( nphi .ne. nphisave ) needtrans = .true.
-        ! if( me .ne. mesave ) needtrans = .true.
-        ! if( ge .ne. gesave ) needtrans = .true.
-        ! if( xe .ne. xesave ) needtrans = .true.
       end if
 
       ximin   = 0.0
