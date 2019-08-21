@@ -117,7 +117,7 @@ include 'subroutines/header.h'
       verbose = myenv("REV_VERB",0)     !Set verbose level
       
 ! Initialise
-      if( firstcall ) call FNINIT
+!      if( firstcall ) call FNINIT
       call initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,check&
      ,nphi,nro,honr_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim,me,ge,xe)
 
@@ -600,7 +600,7 @@ include 'subroutines/header.h'
       verbose = myenv("REV_VERB",0)     !Set verbose level
       
 ! Initialise
-      if( firstcall ) call FNINIT
+!      if( firstcall ) call FNINIT
       call initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,check&
      ,nphi,nro,honr_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim,me,ge,xe)
 
@@ -823,13 +823,13 @@ include 'subroutines/header.h'
               if( me .eq. 1 ) xillpar(6) = real( inc )
 
 !Call xillver
-              xillpar(1) = Gamma
+              xillpar(1) = real(Gamma)
               call myxill(earx,nex,xillpar,ifl,Cp,photarx)
 
 !non linear effects
                  DeltaGamma = 0.01
-                 Gamma1 = param(7) -0.5*DeltaGamma
-                 Gamma2 = param(7) +0.5*DeltaGamma
+                 Gamma1 = real(Gamma) - 0.5*DeltaGamma
+                 Gamma2 = real(Gamma) + 0.5*DeltaGamma
 
                  xillpar(1) = Gamma1
                  call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
