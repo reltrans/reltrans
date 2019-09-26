@@ -11,8 +11,9 @@ subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,chec
       double precision :: d,rnmax,spin_start,spin_end,mu_start,mu_end
       character (len=500) gridname
       needtrans = .false.
-      call get_environment_variable("GRID",gridname,check)
-
+!      call get_environment_variable("GRID",gridname,check)
+      check = 0
+      
       if( firstcall )then
         needtrans = .true.
         write(*,*)"----------------------------------------------------"
@@ -35,44 +36,44 @@ subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,chec
         ge      = myenv("ECUT_ZONES",5)   !Set number of Ecut zones used
         xe      = myenv("ION_ZONES",10)   !Set number of ionisation zones used
 
-        if (check .ne. 0) then 
-           write(*,*) 'This code uses a grid to compute the kernel trasfer funcion' 
+!         if (check .ne. 0) then 
+!            write(*,*) 'This code uses a grid to compute the kernel trasfer funcion' 
       
-!open the grid 
-           lrec = 8*nphi*nro         
-           open(98,file=gridname,access='direct',form='unformatted',status='old',recl=lrec)
-           irec = 1 
-           read(98,rec=1) rnmax,nphi_grid,nro_grid,honr_grid,rout_grid,d_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim
-!remember that rout_grid is the rout used to make the grid. It is not the same as param 5
-!         write(*,*) 'rout of the grid', rout_grid
+! !open the grid 
+!            lrec = 8*nphi*nro         
+!            open(98,file=gridname,access='direct',form='unformatted',status='old',recl=lrec)
+!            irec = 1 
+!            read(98,rec=1) rnmax,nphi_grid,nro_grid,honr_grid,rout_grid,d_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim
+! !remember that rout_grid is the rout used to make the grid. It is not the same as param 5
+! !         write(*,*) 'rout of the grid', rout_grid
 
 
            
-! !check if the grid has the correct values 
-!            if (nphi_grid .ne. nphi .or. nro_grid .ne. nro) then
-!               write(*,*) 'Not compatible grid dimentions'
+! ! !check if the grid has the correct values 
+! !            if (nphi_grid .ne. nphi .or. nro_grid .ne. nro) then
+! !               write(*,*) 'Not compatible grid dimentions'
+! !               stop
+! !            endif
+
+! !Define nphi and nro according to the grid
+!            nphi = nphi_grid
+!            nro = nro_grid
+           
+           
+! ! Set sensible distance for observer from the BH now that we took rnmax from the grid 
+!            d = max( 1.0d4 , 2.0d2 * rnmax**2 )
+         
+! !check if the grid distance has been calculated in the same way
+!            if (d_grid .ne. d ) then
+!               write(*,*) 'The distance has been computed differently in the grid'
 !               stop
 !            endif
-
-!Define nphi and nro according to the grid
-           nphi = nphi_grid
-           nro = nro_grid
-           
-           
-! Set sensible distance for observer from the BH now that we took rnmax from the grid 
-           d = max( 1.0d4 , 2.0d2 * rnmax**2 )
-         
-!check if the grid distance has been calculated in the same way
-           if (d_grid .ne. d ) then
-              write(*,*) 'The distance has been computed differently in the grid'
-              stop
-           endif
-        else
+!         else
            rnmax= 300.d0
 ! Set sensible distance for observer from the BH
            d = max( 1.0d4 , 2.0d2 * rnmax**2 )
            
-        endif
+        ! endif
 
         firstcall = .false.
      end if

@@ -1,4 +1,19 @@
 
+module telematrix
+  !Module containing definitions needs to fold around the telescope
+  !response matrix
+  logical needchans,needresp,arf
+  integer nenerg,numchn,Ilo,Ihi,needEs
+  real, allocatable :: En(:),resp(:,:),ECHN(:)
+  integer, allocatable :: NGRP(:),FCHAN(:,:),LCHAN(:,:),NCHAN(:,:)
+  character (len=500) respname,arfname
+  real Elo,Ehi
+  data needresp/.true./
+  data needchans/.true./
+end module telematrix
+
+
+  
 MODULE dyn_gr
 !---------------------------------------------------------------------
 !  Module containing definitions needed to dynamically allocate 
