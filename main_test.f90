@@ -19,11 +19,11 @@ program main_test
   param(10) = 300.0   !kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
   param(11) = 0.0     !Nh
   param(12) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
-  param(13) = 4.6e7   !M     !BH mass in solar masses
-  param(14) = 1e-8    !flo   !Lowest frequency in band (Hz)
-  param(15) = 1e-4    !fhi   !Highest frequency in band (Hz)
-  param(16) = 1       !ReIm  !1=Re, 2=Im, 3=Modulus, 4=phase lag (cycles), 5=time lag (s)
-  param(17) = 0.0     !phiA
+  param(13) = 10.0    !M     !BH mass in solar masses
+  param(14) = 0.1     !flo   !Lowest frequency in band (Hz)
+  param(15) = 0.11    !fhi   !Highest frequency in band (Hz)
+  param(16) = 6       !ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
+  param(17) = 0.0     !DelA
   param(18) = 0.0     !DelAB
   param(19) = 0.0     !gamma
   !---------------------------------
@@ -39,7 +39,26 @@ program main_test
   do i = 1,ne
      E  = 0.5 * ( ear(i) + ear(i-1) )
      dE = ear(i) - ear(i-1)
-     write(99,*)E,E**2*photar(i)/dE
+     if( param(16) .gt. 3.5 .and. param(16) .lt. 4.5 .or. param(16) .gt. 5.5 )then
+        write(99,*)E,photar(i)/dE
+     else
+        write(99,*)E,E**2*photar(i)/dE
+     end if
+  end do
+  write(99,*)"no no"
+  
+  param(12) = 0.8
+
+  call tdreltransCp(ear,ne,param,ifl,photar)
+  
+  do i = 1,ne
+     E  = 0.5 * ( ear(i) + ear(i-1) )
+     dE = ear(i) - ear(i-1)
+     if( param(16) .gt. 3.5 .and. param(16) .lt. 4.5 .or. param(16) .gt. 5.5 )then
+        write(99,*)E,photar(i)/dE
+     else
+        write(99,*)E,E**2*photar(i)/dE
+     end if
   end do
   
 end program main_test

@@ -35,187 +35,167 @@ include 'subroutines/header.h'
 
 
 !-----------------------------------------------------------------------
-      subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
-      use dyn_gr
-      implicit none
-      integer nro,nphi,nex,i,nf,ifl,ne,ReIm,nfsave
-      integer verbose,mubin,rbin
-      integer me,ge,xe,Cp,j,nfmax
-      parameter (nex=2**12,nfmax=50)
-      double precision a,h,Gamma,inc,pi,rout,rmin,disco,muobs,rin
-      double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,rnmax,d
-      double precision fhisave,flosave,rh,frrel,lens,fc
-      real afac,param(19),ear(0:ne),gso
-      real Afe,Ecut_s,Ecut_obs,logxi,xillpar(7),E,dE,earx(0:nex),Emax,Emin,dloge
-      real reline(nex),imline(nex),photarx(nex)
-      real reconvmu(nex),imconvmu(nex),mue,sdmin,sdmax,gsd
-      real phase,ReS(ne),ImS(ne),photar(ne)
-      real paramsave(19),contx(nex),absorbx(nex),photerx(nex)
-      real ReGx(nex),ImGx(nex),Nh
-      complex,dimension(:,:,:,:),allocatable :: transe,transea
-      logical firstcall,needtrans,needconv,needresp
-      integer myenv,Cpsave,gbin,check
-      real, allocatable :: ReW0(:,:),ImW0(:,:),ReW1(:,:),ImW1(:,:),ReW2(:,:),ImW2(:,:)
-      real, allocatable :: ReW3(:,:),ImW3(:,:)
-      real, allocatable :: ReGraw(:,:),ImGraw(:,:),cosphiA(:),sinphiA(:)
-      real, allocatable :: ReGrawa(:,:),ImGrawa(:,:),ReG(:,:),ImG(:,:)
-      double precision, allocatable :: logxir(:),gsdr(:)
-      complex FTphotarx(4*nex),FTphotarx_delta(4*nex),FTreline(4*nex),FTimline(4*nex)
-      complex FTreline_a(4*nex),FTimline_a(4*nex),FTreconv(4*nex),FTimconv(4*nex)
-      complex FTphotarx_dlogxi(4*nex),sum
-      real dyn,f,integral,phiA,logxi0
+subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
+  use dyn_gr
+  implicit none
+  integer nro,nphi,nex,i,nf,ifl,ne,ReIm,nfsave
+  integer verbose,mubin,rbin
+  integer me,ge,xe,Cp,j
+  parameter (nex=2**12)
+  double precision a,h,Gamma,inc,pi,rout,rmin,disco,muobs,rin
+  double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,rnmax,d
+  double precision fhisave,flosave,rh,frrel,lens,fc
+  real afac,param(19),ear(0:ne),gso
+  real Afe,Ecut_s,Ecut_obs,logxi,xillpar(7),E,dE,earx(0:nex),Emax,Emin,dloge
+  real reline(nex),imline(nex),photarx(nex)
+  real reconvmu(nex),imconvmu(nex),mue,gsd
+  real phase,ReS(ne),ImS(ne),photar(ne)
+  real paramsave(19),contx(nex),absorbx(nex),photerx(nex)
+  real ReGx(nex),ImGx(nex),Nh
+  complex,dimension(:,:,:,:),allocatable :: transe,transea
+  logical firstcall,needtrans,needconv
+  integer myenv,Cpsave,gbin,check
+  real, allocatable :: ReW0(:,:),ImW0(:,:),ReW1(:,:),ImW1(:,:),ReW2(:,:),ImW2(:,:)
+  real, allocatable :: ReW3(:,:),ImW3(:,:)
+  real, allocatable :: ReGraw(:,:),ImGraw(:,:),cosphiA(:),sinphiA(:)
+  real, allocatable :: ReGrawa(:,:),ImGrawa(:,:),ReG(:,:),ImG(:,:)
+  double precision, allocatable :: logxir(:),gsdr(:)
+  complex FTphotarx(4*nex),FTphotarx_delta(4*nex),FTreline(4*nex),FTimline(4*nex)
+  complex FTreline_a(4*nex),FTimline_a(4*nex),FTreconv(4*nex),FTimconv(4*nex)
+  complex FTphotarx_dlogxi(4*nex),sum
+  real dyn,f,integral,phiA,logxi0,ImGbar(nex),ReGbar(nex),DelA
 
 ! !variable for the grid reading
-       integer :: irec,spin_dim,mu_dim
-       double precision :: honr_grid,spin_lo,spin_hi,mu_lo,mu_hi,spin_start,spin_end,mu_start,mu_end,ave_weight2D
+  integer :: irec,spin_dim,mu_dim
+  double precision :: honr_grid,spin_lo,spin_hi,mu_lo,mu_hi,spin_start,spin_end,mu_start,mu_end,ave_weight2D
       
 !variable for non linear effects
-      real :: photarx_1(nex),photarx_2(nex),photarx_delta(nex),Gamma1,Gamma2,DeltaGamma,DelAB,g
-      real :: reline_a(nex),imline_a(nex),photarx_dlogxi(nex),Deltalogxi,logxi1,logxi2
-      integer ionvar
+  real :: photarx_1(nex),photarx_2(nex),photarx_delta(nex),Gamma1,Gamma2,DeltaGamma,DelAB,g
+  real :: reline_a(nex),imline_a(nex),photarx_dlogxi(nex),Deltalogxi,logxi1,logxi2
+  integer ionvar
       
-      data firstcall /.true./
-      data needresp/.true./
-      data Cpsave/2/
-      save firstcall,Emax,Emin,dloge,earx
-      save lens,contx,needresp,me,ge,xe !,mesave,gesave,xesave
-      save paramsave,fhisave,flosave,nfsave,nro,nphi
-      save frobs,sdmin,sdmax,frrel,Cpsave !,hsave,rinsave
-      save transe,transea
-      save check,d,rnmax
-      save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,logxir,gsdr
-      
-      pi = acos(-1.d0)
-      ifl = 1
+  data firstcall /.true./
+  data Cpsave/2/
+  data nfsave /-1/
+  save firstcall,Emax,Emin,dloge,earx
+  save lens,contx,me,ge,xe
+  save paramsave,fhisave,flosave,nfsave,nro,nphi
+  save frobs,frrel,Cpsave
+  save transe,transea
+  save check,d,rnmax
+  save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,logxir,gsdr
+  save sinphiA,cosphiA,ReGraw,ImGraw,ReGrawa,ImGrawa,ReG,ImG
+  
+  pi = acos(-1.d0)
+  ifl = 1
+
+! Parameter (DO SOMETHING WITH THIS)
+  ionvar = 0
       
 ! Settings
-      dlogf = 0.4!0.09 !0.0073  !This is a resolution parameter (base 10)
-      dyn   = 1e-7
+  dlogf = 0.09 !0.0073  !This is a resolution parameter (base 10)
+  dyn   = 1e-7
       
 ! Call environment variables
-      verbose = myenv("REV_VERB",0)     !Set verbose level
+  verbose = myenv("REV_VERB",0)     !Set verbose level
       
 ! Initialise
-      call initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,check&
+  call initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,check&
      ,nphi,nro,honr_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim,me,ge,xe)
 
 !Allocate dynamically the array to calculate the trasfer function          
-         if (.not. allocated(re1)) allocate(re1(nphi,nro))
-         if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
-         if (.not. allocated(pem1)) allocate(pem1(nphi,nro))
+  if (.not. allocated(re1)) allocate(re1(nphi,nro))
+  if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
+  if (.not. allocated(pem1)) allocate(pem1(nphi,nro))
 
 ! Parameters
-      h        = dble( param(1) )
-      a        = dble( param(2) )
-      inc      = dble( param(3) )
-      rin      = dble( param(4) )
-      rout     = dble( param(5) )
-      zcos     = dble( param(6) )
-      Gamma    = dble( param(7) )
-      logxi    = param(8)
-      Afe      = param(9)
-      Ecut_obs = param(10)
-      Nh       = param(11)
-      afac     = param(12)
-      Mass     = dble( param(13) )
-      flo      = dble( param(14) )
-      fhi      = dble( param(15) )
-      ReIm     = int( param(16) )
-!      phiA     = param(17)
-      DelAB    = param(18)
-      g        = param(19)
+  h        = dble( param(1) )
+  a        = dble( param(2) )
+  inc      = dble( param(3) )
+  rin      = dble( param(4) )
+  rout     = dble( param(5) )
+  zcos     = dble( param(6) )
+  Gamma    = dble( param(7) )
+  logxi    = param(8)
+  Afe      = param(9)
+  Ecut_obs = param(10)
+  Nh       = param(11)
+  afac     = param(12)
+  Mass     = dble( param(13) )
+  flo      = dble( param(14) )
+  fhi      = dble( param(15) )
+  ReIm     = int( param(16) )
+  DelA     = param(17)
+  DelAB    = param(18)
+  g        = param(19)
 
-      honr = 0.d0
-      muobs = cos( inc * pi / 180.d0 )
-
+  honr = 0.d0
+  muobs = cos( inc * pi / 180.d0 )
 
 !check if the grid values are the same one of the model
-         if ( check .ne. 0 .and. honr_grid .ne. honr ) then
-            write(*,*) 'grid has a different honr!'
-            write(*,*) 'honr of the grid is ', honr_grid
-            stop
-         endif
+  if ( check .ne. 0 .and. honr_grid .ne. honr ) then
+     write(*,*) 'grid has a different honr!'
+     write(*,*) 'honr of the grid is ', honr_grid
+     stop
+  endif
       
 !Work out how many frequencies to average over
-      fc = 0.5d0 * ( flo + fhi )
-      nf = ceiling( log10(fhi/flo) / dlogf )
-      if( fhi .lt. tiny(fhi) .or. flo .lt. tiny(flo) )then
-        fhi = 0.d0
-        flo = 0.d0
-        nf  = 1
-      end if
-      write(*,*)"nf=",nf
+  fc = 0.5d0 * ( flo + fhi )
+  nf = ceiling( log10(fhi/flo) / dlogf )
+  if( fhi .lt. tiny(fhi) .or. flo .lt. tiny(flo) )then
+    fhi = 0.d0
+    flo = 0.d0
+    nf  = 1
+  end if
       
 !Convert frequency bounds from Hz to c/Rg
-      fhi = fhi * 4.916d-6 * Mass
-      flo = flo * 4.916d-6 * Mass
+  fhi = fhi * 4.916d-6 * Mass
+  flo = flo * 4.916d-6 * Mass
       
 !Set minimum r (ISCO) and convert rin and h to rg
-      rmin   = disco( a )
-      if( rin .lt. 0.d0 ) rin = abs(rin) * rmin
-      rh     = 1.d0+sqrt(1.d0-a**2)
-      if( h .lt. 0.d0 ) h = abs(h) * rh
-      if( verbose .gt. 0 ) write(*,*)"rin (Rg)=",rin
-      if( verbose .gt. 0 ) write(*,*)"h (Rg)=",h
-      if( rin .lt. rmin )then
-        write(*,*)"Warning! rin<ISCO! Set to ISCO"
-        rin = rmin
-      end if
-      if( h .lt. 1.5d0*rh )then
-        write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
-        h = 1.5d0 * rh
-      end if
+  if( abs(a) .gt. 0.999 ) a = sign(a,1.d0) * 0.999
+  rmin   = disco( a )
+  if( rin .lt. 0.d0 ) rin = abs(rin) * rmin
+  rh     = 1.d0+sqrt(1.d0-a**2)
+  if( h .lt. 0.d0 ) h = abs(h) * rh
+  if( verbose .gt. 0 ) write(*,*)"rin (Rg)=",rin
+  if( verbose .gt. 0 ) write(*,*)"h (Rg)=",h
+  if( rin .lt. rmin )then
+     write(*,*)"Warning! rin<ISCO! Set to ISCO"
+     rin = rmin
+  end if
+  if( h .lt. 1.5d0*rh )then
+     write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
+     h = 1.5d0 * rh
+  end if
 
 !Calculate source to observer g-factor and source frame Ecut
-      gso    = real( dgsofac(a,h) )
-      Ecut_s = real(1.d0+zcos) * Ecut_obs / gso
-      if( verbose .gt. 0 )then
-        if( Cp .eq. 0 )then
-          write(*,*)"Ecut in source restframe (keV)=",Ecut_s
-        else
-          write(*,*)"kTe in source restframe (keV)=",Ecut_s
-        end if
-      end if
-      
+  gso    = real( dgsofac(a,h) )
+  Ecut_s = real(1.d0+zcos) * Ecut_obs / gso
+  if( verbose .gt. 0 )then
+     if( Cp .eq. 0 )then
+        write(*,*)"Ecut in source restframe (keV)=",Ecut_s
+     else
+        write(*,*)"kTe in source restframe (keV)=",Ecut_s
+     end if
+  end if
+  
 !Determine if I need to calculate the kernel
-      if( .not. needtrans )then
-        do i = 1,8
-          if( abs( param(i) - paramsave(i) ) .gt. 1e-7 ) needtrans = .true.
-        end do
-        if( abs( param(11) - paramsave(11) ) .gt. 1e-7 ) needtrans = .true.
-        if( nf .ne. nfsave ) needtrans = .true.
-        if( abs( fhi - fhisave ) .gt. 1e-7 ) needtrans = .true.
-        if( abs( flo - flosave ) .gt. 1e-7 ) needtrans = .true.
-      end if
-      
-  if( needtrans )then
-     !Allocate arrays for kernels
+  if( .not. needtrans )then
+     do i = 1,8
+        if( abs( param(i) - paramsave(i) ) .gt. 1e-7 ) needtrans = .true.
+     end do
+     if( nf .ne. nfsave ) needtrans = .true.
+     if( abs( fhi - fhisave ) .gt. 1e-7 ) needtrans = .true.
+     if( abs( flo - flosave ) .gt. 1e-7 ) needtrans = .true.
+   end if
+   
+! Allocate arrays that depend on frequency
+  if( nf .ne. nfsave )then
      if( allocated(transe ) ) deallocate(transe )
      if( allocated(transea) ) deallocate(transea)
      allocate(  transe(nex,nf,me,xe) )
      allocate( transea(nex,nf,me,xe) )
-     if( .not. allocated(logxir) ) allocate( logxir(xe) )
-     if( .not. allocated(gsdr)   ) allocate( gsdr(xe) )
-     !Calculate the Kernel for the given parameters
-     status_re_tau = .true.
-     call rtrans(a,h,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,nro,nphi,nex,dloge,&
-          nf,fhi,flo,me,xe,logxi,transe,transea,frobs,frrel,lens,logxir,gsdr)
-        
-  end if
-  
-  if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",afac*frobs
-  if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
-
-!Determine if I need to convolve with the restframe reflection spectrum
-  needconv = .false.
-  if( needtrans ) needconv = .true.
-  do i = 8,10
-    if( abs( param(i) - paramsave(i) ) .gt. 1e-7 ) needconv = .true.
-  end do
-  if( Cp .ne. Cpsave ) needconv = .true.
-
-  if( needconv )then
-     !Allocate arrays for transfer functions
      if( allocated(ReW0) ) deallocate(ReW0)
      if( allocated(ImW0) ) deallocate(ImW0)
      if( allocated(ReW1) ) deallocate(ReW1)
@@ -232,7 +212,46 @@ include 'subroutines/header.h'
      allocate( ImW2(nex,nf) )
      allocate( ReW3(nex,nf) )
      allocate( ImW3(nex,nf) )
+     if( allocated(ReGraw) ) deallocate(ReGraw)
+     if( allocated(ImGraw) ) deallocate(ImGraw)
+     allocate( ReGraw(nex,nf) )
+     allocate( ImGraw(nex,nf) )
+     if( allocated(cosphiA) ) deallocate(cosphiA)
+     allocate( cosphiA(nf) )
+     if( allocated(sinphiA) ) deallocate(sinphiA)
+     allocate( sinphiA(nf) )
+     if( allocated(ReGrawa) ) deallocate(ReGrawa)
+     if( allocated(ImGrawa) ) deallocate(ImGrawa)
+     allocate( ReGrawa(nex,nf) )
+     allocate( ImGrawa(nex,nf) )
+     if( allocated(ReG) ) deallocate(ReG)
+     if( allocated(ImG) ) deallocate(ImG)
+     allocate( ReG(nex,nf) )
+     allocate( ImG(nex,nf) )
+  end if
      
+  if( needtrans )then
+     !Allocate arrays for kernels
+     if( .not. allocated(logxir) ) allocate( logxir(xe) )
+     if( .not. allocated(gsdr)   ) allocate( gsdr(xe) )
+     !Calculate the Kernel for the given parameters
+     status_re_tau = .true.
+     call rtrans(a,h,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,nro,nphi,nex,dloge,&
+          nf,fhi,flo,me,xe,logxi,transe,transea,frobs,frrel,lens,logxir,gsdr)      
+  end if
+  
+  if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",afac*frobs
+  if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
+
+!Determine if I need to convolve with the restframe reflection spectrum
+  needconv = .false.
+  if( needtrans ) needconv = .true.
+  do i = 8,10
+    if( abs( param(i) - paramsave(i) ) .gt. 1e-7 ) needconv = .true.
+  end do
+  if( Cp .ne. Cpsave ) needconv = .true.
+  
+  if( needconv )then     
      !Initialize arrays for transfer functions
      ReW0 = 0.0
      ImW0 = 0.0
@@ -340,126 +359,99 @@ include 'subroutines/header.h'
      end do
 
   end if
-
+  
 ! Calculate raw cross-spectrum (without the e^{i\phi_A} normalisation)
-  if( allocated(ReGraw) ) deallocate(ReGraw)
-  if( allocated(ImGraw) ) deallocate(ImGraw)
-  allocate( ReGraw(nex,nf) )
-  allocate( ImGraw(nex,nf) )
-  ionvar = 0
+  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) )then
+     ionvar = 0
+     g      = 0.0
+     DelAB  = 0.0
+     DelA   = 0.0
+  end if
   call rawcross(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
                 gso,real(lens),real(Gamma),ionvar,ReGraw,ImGraw)
   
 ! Calculate absorption and multiply by the raw cross-spectrum
   call FNINIT
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
-  if( allocated(ReGrawa) ) deallocate(ReGrawa)
-  if( allocated(ImGrawa) ) deallocate(ImGrawa)
-  allocate( ReGrawa(nex,nf) )
-  allocate( ImGrawa(nex,nf) )
   do j = 1,nf
      do i = 1,nex
         ReGrawa(i,j) = ReGraw(i,j) * absorbx(i)
         ImGrawa(i,j) = ImGraw(i,j) * absorbx(i)
      end do
   end do
-
+  
 ! Calculate \phi_A(\nu)
   if( flo .gt. tiny(flo) .and. fhi .gt. tiny(fhi) )then
-     if( allocated(cosphiA) ) deallocate(cosphiA)
-     allocate( cosphiA(nf) )
-     if( allocated(sinphiA) ) deallocate(sinphiA)
-     allocate( sinphiA(nf) )
      call newphaseA(nex,nf,earx,ReGrawa,ImGrawa,cosphiA,sinphiA)
+  else
+     cosphiA = 1.0
+     sinphiA = 0.0
   end if
-
+  
+! Apply phase normalization to the cross-spectral model
   do j = 1,nf
-     f = flo*( 10.0**(j*dlogf) + 10.0**((j-1)*dlogf) )
-     phiA = atan2( sinphiA(j) , cosphiA(j) )
-     write(154,*)f,phiA/(2.0*pi)
-  end do
-
-  if( allocated(ReG) ) deallocate(ReG)
-  if( allocated(ImG) ) deallocate(ImG)
-  allocate( ReG(nex,nf) )
-  allocate( ImG(nex,nf) )
-  do j = 1,nf
-     f = flo * (fhi/flo)**( (real(j)-0.5)/real(nf) )
-     f = f / ( 4.916d-6 * Mass )
      do i = 1,nex
+        !phiA
         ReG(i,j) = cosphiA(j) * ReGrawa(i,j) - sinphiA(j) * ImGrawa(i,j)
         ImG(i,j) = cosphiA(j) * ImGrawa(i,j) + sinphiA(j) * ReGrawa(i,j)
-        E  = 0.5 * ( earx(i) + earx(i-1) )
-        dE =         earx(i) - earx(i-1)
-        write(401,*)E,atan2( ImG(i,j) , ReG(i,j) )/(2.0*pi*f)
+        !DelA
+        ReG(i,j) = cos(DelA) * ReG(i,j) - sin(DelA) * ImG(i,j)
+        ImG(i,j) = cos(DelA) * ImG(i,j) + sin(DelA) * ReG(i,j)
      end do
-     write(401,*)"no no"
   end do
 
-   
-     
-!       !Re-bin onto input grid
-!       call rebinE(earx,ReGx,nex,ear,ReS,ne)
-!       call rebinE(earx,ImGx,nex,ear,ImS,ne)
-      
-!       !Write output (depends on ReIm parameter)
-!       if( ReIm .eq. 1 .or. flo .lt. 1e-10 )then   !Real part / DC part
-!         do i = 1,ne
-!           E = 0.5 * ( ear(i) + ear(i-1) )
-!           dE = ear(i) - ear(i-1)
-!           photar(i) = ReS(i) * dE
-!         end do
-!      else if( ReIm .eq. 2 )then   !Imaginary part
-!         do i = 1,ne
-!           E = 0.5 * ( ear(i) + ear(i-1) )
-!           dE = ear(i) - ear(i-1)
-!           photar(i) = ImS(i) * dE
-!         end do
-!       else if( ReIm .eq. 3 )then   !Modulus
-!         do i = 1,ne
-!           E = 0.5 * ( ear(i) + ear(i-1) )
-!           dE = ear(i) - ear(i-1)
-!           photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) * dE
-!         end do
-!         write(*,*)"Warning ReIm=3 should not be used for fitting!"
-!      else if( ReIm .eq. 4 )then   !Time lag (seconds)
-!         do i = 1,ne
-!           E = 0.5 * ( ear(i) + ear(i-1) )
-!           dE = ear(i) - ear(i-1)
-!           phase = atan2( ImS(i) , ReS(i) )
-!           photar(i) = phase / real(2.d0*pi*fc) * dE
-!        end do
-!        write(*,*)"Warning ReIm=4 should not be used for fitting!"
+! Average over the frequency range
+  ReGbar = 0.0
+  ImGbar = 0.0
+  do j = 1,nf
+     do i = 1,nex
+        ReGbar(i) = ReGbar(i) + ReG(i,j)
+        ImGbar(i) = ImGbar(i) + ImG(i,j)
+     end do
+  end do
+  ReGbar = ReGbar / real(nf)
+  ImGbar = ImGbar / real(nf)
+  
+! Write output depending on ReIm parameter
+  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) ) ReIm = 1
+  if( ReIm .le. 4 )then
+     call crebin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS) !S is in photar form
+     if( ReIm .eq. 1 )then        !Real part
+        photar = ReS
+     else if( ReIm .eq. 2 )then   !Imaginary part
+        photar = ImS
+     else if( ReIm .eq. 3 )then   !Modulus
+        photar = sqrt( ReS**2 + ImS**2 )
+        write(*,*)"Warning ReIm=3 should not be used for fitting!"
+     else if( ReIm .eq. 3 )then   !Time lag (s)
+        do i = 1,ne
+           dE = ear(i) - ear(i-1)
+           photar(i) = atan2( ImS(i) , ReS(i) ) / ( 2.0*pi*fc ) * dE
+        end do
+        write(*,*)"Warning ReIm=4 should not be used for fitting!"
+     end if
+  else
+     call cfoldandbin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS) !S is count rate
+     if( ReIm .eq. 5 )then        !Modulus
+        do i = 1,ne
+           dE = ear(i) - ear(i-1)
+           photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) * dE
+        end do
+     else if( ReIm .eq. 6 )then   !Time lag (s)
+        do i = 1,ne
+           dE = ear(i) - ear(i-1)
+           photar(i) = atan2( ImS(i) , ReS(i) ) / ( 2.0*pi*fc ) * dE
+        end do
+     end if
+  end if
+ 
+  fhisave   = fhi
+  flosave   = flo
+  nfsave    = nf
+  paramsave = param
+  Cpsave    = Cp
 
-!     end if
-
-!       !Write out options to fit for lags and amplitude
-!       if( ReIm .gt. 4 )then
-!         !Fold real and imaginary parts around the telescope response
-!         call folder(nex,earx,ReGx,ImGx,ne,ear,ReS,ImS)
-!         if( ReIm .eq. 5 )then   !Modulus
-!           do i = 1,ne
-!             E = 0.5 * ( ear(i) + ear(i-1) )
-!             dE = ear(i) - ear(i-1)
-!             photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) * dE
-!           end do
-!         else if( ReIm .eq. 6 )then   !Time lag (seconds)
-!           do i = 1,ne
-!             E = 0.5 * ( ear(i) + ear(i-1) )
-!             dE = ear(i) - ear(i-1)
-!             phase = atan2( ImS(i) , ReS(i) )
-!             photar(i) = phase / real(2.d0*pi*fc) * dE
-!           end do
-!         end if
-!       end if
-      
-      fhisave   = fhi
-      flosave   = flo
-      nfsave    = nf
-      paramsave = param
-      Cpsave    = Cp
-
-    end subroutine genreltrans
+end subroutine genreltrans
 !-----------------------------------------------------------------------
 
 

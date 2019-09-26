@@ -9,14 +9,16 @@ subroutine newphaseA(nex,nf,earx,ReGrawa,ImGrawa,cosphiA,sinphiA)
   real, allocatable :: ReGtel(:),ImGtel(:)
   real resum,imsum,E,dum,integral
   integer i,j
-
+  
   !Read from response file
   if( needresp )then
      call initmatrix
-     allocate( ReGtel(numchn) )
-     allocate( ImGtel(numchn) )
   end if
 
+  !Allocate arrays
+  if( .not. allocated(ReGtel) ) allocate(ReGtel(numchn))
+  if( .not. allocated(ImGtel) ) allocate(ImGtel(numchn))
+  
   !Get energy bounds of the reference band
   if( needchans )then
      write(*,*)"Enter lower energy in reference band"

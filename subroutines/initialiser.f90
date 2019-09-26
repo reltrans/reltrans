@@ -18,8 +18,8 @@ subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,chec
         needtrans = .true.
         write(*,*)"----------------------------------------------------"
         write(*,*)"This is RELTRANS: a transfer function model for"
-        write(*,*)"X-ray reverberation mapping written by Adam Ingram."
-        write(*,*)"Please cite Ingram et al (2018)."
+        write(*,*)"X-ray reverberation mapping."
+        write(*,*)"Please cite Ingram et al (2019) MNRAS 488 p324-347."
         write(*,*)"----------------------------------------------------"
         !Create *logarithmic* working energy grid
         !Will need to evaluate xillver on this grid to use the FT convolution code 
