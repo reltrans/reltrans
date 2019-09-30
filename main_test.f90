@@ -20,9 +20,9 @@ program main_test
   param(11) = 0.0     !Nh
   param(12) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
   param(13) = 10.0    !M     !BH mass in solar masses
-  param(14) = 0.1     !flo   !Lowest frequency in band (Hz)
-  param(15) = 0.11    !fhi   !Highest frequency in band (Hz)
-  param(16) = 6       !ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
+  param(14) = 30.0    !flo   !Lowest frequency in band (Hz)
+  param(15) = 31.0    !fhi   !Highest frequency in band (Hz)
+  param(16) = 3       !ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
   param(17) = 0.0     !DelA
   param(18) = 0.0     !DelAB
   param(19) = 0.0     !gamma
@@ -47,18 +47,18 @@ program main_test
   end do
   write(99,*)"no no"
   
-  param(12) = 0.8
+  ! param(12) = 0.8
 
-  call tdreltransCp(ear,ne,param,ifl,photar)
+  ! call tdreltransCp(ear,ne,param,ifl,photar)
   
-  do i = 1,ne
-     E  = 0.5 * ( ear(i) + ear(i-1) )
-     dE = ear(i) - ear(i-1)
-     if( param(16) .gt. 3.5 .and. param(16) .lt. 4.5 .or. param(16) .gt. 5.5 )then
-        write(99,*)E,photar(i)/dE
-     else
-        write(99,*)E,E**2*photar(i)/dE
-     end if
-  end do
+  ! do i = 1,ne
+  !    E  = 0.5 * ( ear(i) + ear(i-1) )
+  !    dE = ear(i) - ear(i-1)
+  !    if( param(16) .gt. 3.5 .and. param(16) .lt. 4.5 .or. param(16) .gt. 5.5 )then
+  !       write(99,*)E,photar(i)/dE
+  !    else
+  !       write(99,*)E,E**2*photar(i)/dE
+  !    end if
+  ! end do
   
 end program main_test

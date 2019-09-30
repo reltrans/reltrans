@@ -71,8 +71,8 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
       
 !variable for non linear effects
   real :: photarx_1(nex),photarx_2(nex),photarx_delta(nex),Gamma1,Gamma2,DeltaGamma,DelAB,g
-  real :: reline_a(nex),imline_a(nex),photarx_dlogxi(nex),Deltalogxi,logxi1,logxi2
-  integer ionvar
+  real :: reline_a(nex),imline_a(nex),photarx_dlogxi(nex),dlogxi1,dlogxi2
+  integer ionvar,DC
       
   data firstcall /.true./
   data Cpsave/2/
@@ -90,7 +90,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   ifl = 1
 
 ! Parameter (DO SOMETHING WITH THIS)
-  ionvar = 0
+  ionvar = 1
       
 ! Settings
   dlogf = 0.09 !0.0073  !This is a resolution parameter (base 10)
@@ -151,7 +151,19 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 !Convert frequency bounds from Hz to c/Rg
   fhi = fhi * 4.916d-6 * Mass
   flo = flo * 4.916d-6 * Mass
-      
+
+!Decide if this is the DC component or not
+  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) )then
+     DC     = 1
+     ionvar = 0
+     g      = 0.0
+     DelAB  = 0.0
+     DelA   = 0.0
+     ReIm   = 1
+  else
+     DC     = 0
+  end if
+  
 !Set minimum r (ISCO) and convert rin and h to rg
   if( abs(a) .gt. 0.999 ) a = sign(a,1.d0) * 0.999
   rmin   = disco( a )
@@ -267,10 +279,11 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
      !Get continuum spectrum
      call getcont(nex,earx,Gamma,Afe,Ecut_obs,logxi,Cp,contx,xillpar)
      if( verbose .gt. 0 ) call sourcelum(nex,earx,contx,real(mass),gso,real(Gamma))
+     !Get logxi values corresponding to Gamma1 and Gamma2
+     call xilimits(nex,earx,contx,DeltaGamma,gso,real(zcos),dlogxi1,dlogxi2)
      !Now reflection
      xillpar(7) = -1.0       !reflection fraction of 1             
      !Loop over radius, emission angle and frequency
-     Deltalogxi = 1e-3
      do rbin = 1,xe  !Loop over radial zones
         xillpar(3) = real( gsdr(rbin) ) * Ecut_s
         logxi0     = real( logxir(rbin) )
@@ -278,8 +291,6 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
            xillpar(3) = Ecut_s
            logxi0     = logxi
         end if
-        logxi1     = logxi0 - 0.5*Deltalogxi
-        logxi2     = logxi0 + 0.5*Deltalogxi
         do mubin = 1,me      !loop over emission angle zones
            !Calculate input inclination angle
            mue = ( real(mubin) - 0.5 ) / real(me)
@@ -292,17 +303,20 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
            !non linear effects
            !Gamma variations
            xillpar(1) = Gamma1
+           xillpar(4) = logxi0 + ionvar*dlogxi1
            call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
            xillpar(1) = Gamma2
+           xillpar(4) = logxi0 + ionvar*dlogxi2
            call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
-           photarx_delta = (photarx_2 - photarx_1)/DeltaGamma
+           photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
            !xi variations
            xillpar(1) = real(Gamma)
-           xillpar(4) = logxi1
+           xillpar(4) = logxi0 + ionvar*dlogxi1
            call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
-           xillpar(4) = logxi2
+           xillpar(1) = real(Gamma)
+           xillpar(4) = logxi0 + ionvar*dlogxi2
            call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
-           photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / Deltalogxi !pre-factor is 1/ln10           
+           photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
            !Loop through frequencies
            do j = 1,nf
               do i = 1,nex
@@ -361,14 +375,8 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   end if
   
 ! Calculate raw cross-spectrum (without the e^{i\phi_A} normalisation)
-  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) )then
-     ionvar = 0
-     g      = 0.0
-     DelAB  = 0.0
-     DelA   = 0.0
-  end if
   call rawcross(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
-                gso,real(lens),real(Gamma),ionvar,ReGraw,ImGraw)
+                gso,real(lens),real(Gamma),ionvar,DC,ReGraw,ImGraw)
   
 ! Calculate absorption and multiply by the raw cross-spectrum
   call FNINIT
@@ -381,7 +389,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   end do
   
 ! Calculate \phi_A(\nu)
-  if( flo .gt. tiny(flo) .and. fhi .gt. tiny(fhi) )then
+  if( DC .eq. 0 )then
      call newphaseA(nex,nf,earx,ReGrawa,ImGrawa,cosphiA,sinphiA)
   else
      cosphiA = 1.0
@@ -423,7 +431,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
      else if( ReIm .eq. 3 )then   !Modulus
         photar = sqrt( ReS**2 + ImS**2 )
         write(*,*)"Warning ReIm=3 should not be used for fitting!"
-     else if( ReIm .eq. 3 )then   !Time lag (s)
+     else if( ReIm .eq. 4 )then   !Time lag (s)
         do i = 1,ne
            dE = ear(i) - ear(i-1)
            photar(i) = atan2( ImS(i) , ReS(i) ) / ( 2.0*pi*fc ) * dE
@@ -496,7 +504,32 @@ end subroutine genreltrans
               ! end do
     
 
-      
+!-----------------------------------------------------------------------
+subroutine xilimits(nex,earx,contx,DeltaGamma,gso,z,dlogxi1,dlogxi2)
+! Inputs: nex,earx,contx,DeltaGamma,gso
+! Outputs: dlogxi1,dlogxi2
+! logxi1 = logxi0 + dlogxi1
+  implicit none
+  integer nex,i
+  real earx(0:nex),contx(nex),DeltaGamma,gso,z,dlogxi1,dlogxi2
+  real num1,num2,den,logS1,logS2,gsoz,E
+  gsoz = gso / (1.0+z)
+  num1 = 0.0
+  num2 = 0.0
+  den = 0.0
+  do i = 1,nex
+     E   = 0.5 * ( earx(i) + earx(i-1) )
+     num2 = num2 + E**(1.0-0.5*DeltaGamma) * contx(i)
+     num1 = num1 + E**(1.0+0.5*DeltaGamma) * contx(i)
+     den  = den  + E * contx(i)
+  end do
+  logS1 = log10(num1/den)
+  logS2 = log10(num2/den)
+  dlogxi1 = -0.5*DeltaGamma * log10(gsoz) + logS1
+  dlogxi2 =  0.5*DeltaGamma * log10(gsoz) + logS2
+  return
+end subroutine xilimits
+!-----------------------------------------------------------------------  
       
 
 ! !-----------------------------------------------------------------------
