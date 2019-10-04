@@ -57,13 +57,13 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   integer myenv,Cpsave,gbin,check
   real, allocatable :: ReW0(:,:),ImW0(:,:),ReW1(:,:),ImW1(:,:),ReW2(:,:),ImW2(:,:)
   real, allocatable :: ReW3(:,:),ImW3(:,:)
-  real, allocatable :: ReGraw(:,:),ImGraw(:,:),cosphiA(:),sinphiA(:)
+  real, allocatable :: ReSraw(:,:),ImSraw(:,:),ReSrawa(:,:),ImSrawa(:,:)
   real, allocatable :: ReGrawa(:,:),ImGrawa(:,:),ReG(:,:),ImG(:,:)
   double precision, allocatable :: logxir(:),gsdr(:)
   complex FTphotarx(4*nex),FTphotarx_delta(4*nex),FTreline(4*nex),FTimline(4*nex)
   complex FTreline_a(4*nex),FTimline_a(4*nex),FTreconv(4*nex),FTimconv(4*nex)
   complex FTphotarx_dlogxi(4*nex),sum
-  real dyn,f,integral,phiA,logxi0,ImGbar(nex),ReGbar(nex),DelA
+  real dyn,f,integral,phiA,logxi0,ImGbar(nex),ReGbar(nex),DelA,fhiHz,floHz,fac
 
 ! !variable for the grid reading
   integer :: irec,spin_dim,mu_dim
@@ -84,7 +84,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   save transe,transea
   save check,d,rnmax
   save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,logxir,gsdr
-  save sinphiA,cosphiA,ReGraw,ImGraw,ReGrawa,ImGrawa,ReG,ImG
+  save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
   
   pi = acos(-1.d0)
   ifl = 1
@@ -122,8 +122,8 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   Nh       = param(11)
   afac     = param(12)
   Mass     = dble( param(13) )
-  flo      = dble( param(14) )
-  fhi      = dble( param(15) )
+  floHz    = param(14)
+  fhiHz    = param(15)
   ReIm     = int( param(16) )
   DelA     = param(17)
   DelAB    = param(18)
@@ -133,24 +133,24 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   muobs = cos( inc * pi / 180.d0 )
 
 !check if the grid values are the same one of the model
-  if ( check .ne. 0 .and. honr_grid .ne. honr ) then
+  if( check .ne. 0 .and. honr_grid .ne. honr ) then
      write(*,*) 'grid has a different honr!'
      write(*,*) 'honr of the grid is ', honr_grid
      stop
   endif
       
 !Work out how many frequencies to average over
-  fc = 0.5d0 * ( flo + fhi )
-  nf = ceiling( log10(fhi/flo) / dlogf )
-  if( fhi .lt. tiny(fhi) .or. flo .lt. tiny(flo) )then
-    fhi = 0.d0
-    flo = 0.d0
-    nf  = 1
+  fc = 0.5d0 * ( floHz + fhiHz )
+  nf = ceiling( log10(fhiHz/floHz) / dlogf )
+  if( fhiHz .lt. tiny(fhiHz) .or. floHz .lt. tiny(floHz) )then
+    fhiHz = 0.d0
+    floHz = 0.d0
+    nf    = 1
   end if
       
 !Convert frequency bounds from Hz to c/Rg
-  fhi = fhi * 4.916d-6 * Mass
-  flo = flo * 4.916d-6 * Mass
+  fhi   = dble(fhiHz) * 4.916d-6 * Mass
+  flo   = dble(floHz) * 4.916d-6 * Mass
 
 !Decide if this is the DC component or not
   if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) )then
@@ -224,14 +224,14 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
      allocate( ImW2(nex,nf) )
      allocate( ReW3(nex,nf) )
      allocate( ImW3(nex,nf) )
-     if( allocated(ReGraw) ) deallocate(ReGraw)
-     if( allocated(ImGraw) ) deallocate(ImGraw)
-     allocate( ReGraw(nex,nf) )
-     allocate( ImGraw(nex,nf) )
-     if( allocated(cosphiA) ) deallocate(cosphiA)
-     allocate( cosphiA(nf) )
-     if( allocated(sinphiA) ) deallocate(sinphiA)
-     allocate( sinphiA(nf) )
+     if( allocated(ReSraw) ) deallocate(ReSraw)
+     if( allocated(ImSraw) ) deallocate(ImSraw)
+     allocate( ReSraw(nex,nf) )
+     allocate( ImSraw(nex,nf) )
+     if( allocated(ReSrawa) ) deallocate(ReSrawa)
+     if( allocated(ImSrawa) ) deallocate(ImSrawa)
+     allocate( ReSrawa(nex,nf) )
+     allocate( ImSrawa(nex,nf) )
      if( allocated(ReGrawa) ) deallocate(ReGrawa)
      if( allocated(ImGrawa) ) deallocate(ImGrawa)
      allocate( ReGrawa(nex,nf) )
@@ -374,52 +374,52 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 
   end if
   
-! Calculate raw cross-spectrum (without the e^{i\phi_A} normalisation)
-  call rawcross(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
-                gso,real(lens),real(Gamma),ionvar,DC,ReGraw,ImGraw)
+! Calculate raw FT of the full spectrum without absorption
+  call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
+                gso,real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
   
-! Calculate absorption and multiply by the raw cross-spectrum
+! Calculate absorption and multiply by the raw FT
   call FNINIT
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
   do j = 1,nf
      do i = 1,nex
-        ReGrawa(i,j) = ReGraw(i,j) * absorbx(i)
-        ImGrawa(i,j) = ImGraw(i,j) * absorbx(i)
+        ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
+        ImSrawa(i,j) = ImSraw(i,j) * absorbx(i)
      end do
   end do
+
+! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
+  call propercross(nex,nf,earx,ReSrawa,ImSrawa,ReGrawa,ImGrawa)
   
-! Calculate \phi_A(\nu)
-  if( DC .eq. 0 )then
-     call newphaseA(nex,nf,earx,ReGrawa,ImGrawa,cosphiA,sinphiA)
-  else
-     cosphiA = 1.0
-     sinphiA = 0.0
-  end if
-  
-! Apply phase normalization to the cross-spectral model
+! Apply phase correction parameter to the cross-spectral model (for bad calibration)
   do j = 1,nf
      do i = 1,nex
-        !phiA
-        ReG(i,j) = cosphiA(j) * ReGrawa(i,j) - sinphiA(j) * ImGrawa(i,j)
-        ImG(i,j) = cosphiA(j) * ImGrawa(i,j) + sinphiA(j) * ReGrawa(i,j)
-        !DelA
-        ReG(i,j) = cos(DelA) * ReG(i,j) - sin(DelA) * ImG(i,j)
-        ImG(i,j) = cos(DelA) * ImG(i,j) + sin(DelA) * ReG(i,j)
+        ReG(i,j) = cos(DelA) * ReGrawa(i,j) - sin(DelA) * ImGrawa(i,j)
+        ImG(i,j) = cos(DelA) * ImGrawa(i,j) + sin(DelA) * ReGrawa(i,j)
      end do
   end do
 
 ! Average over the frequency range
-  ReGbar = 0.0
-  ImGbar = 0.0
-  do j = 1,nf
+  if( DC .eq. 1 )then
      do i = 1,nex
-        ReGbar(i) = ReGbar(i) + ReG(i,j)
-        ImGbar(i) = ImGbar(i) + ImG(i,j)
+        ReGbar(i) = ReG(i,j)
+        ImGbar(i) = ImG(i,j)
      end do
-  end do
-  ReGbar = ReGbar / real(nf)
-  ImGbar = ImGbar / real(nf)
-  
+  else
+     ReGbar = 0.0
+     ImGbar = 0.0
+     fac    = 2.302585*fc**2*log10(fhiHz/floHz) / ( (fhiHz-floHz)*real(nf) )
+     do j = 1,nf
+        f = floHz * (fhiHz/floHz)**(  (real(j)-0.5) / real(nf) )
+        do i = 1,nex
+           ReGbar(i) = ReGbar(i) + ReG(i,j) / f
+           ImGbar(i) = ImGbar(i) + ImG(i,j) / f
+        end do
+     end do
+     ReGbar = ReGbar * fac
+     ImGbar = ImGbar * fac
+  end if
+     
 ! Write output depending on ReIm parameter
   if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) ) ReIm = 1
   if( ReIm .le. 4 )then

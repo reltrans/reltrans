@@ -1,9 +1,9 @@
-subroutine rawcross(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,z,gso,lens,&
+subroutine rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,z,gso,lens,&
      Gamma,ionvar,DC,ReGraw,ImGraw)
-! Calculates the pre-normalisation cross-spectrum (where the norm is alpha*e^{i\phi_A}).
+! Calculates the FT of the spectrum before multiplying by the absorption model
 !
 ! Input: continuum model (contx is f(E) in the papers) and the reflection transfer functions
-! Output: un-normalized cross-spectrum Graw
+! Output: Sraw(E,\nu) before multiplying by the absorption model
 ! These inputs and outputs are all in terms of (dN/dE)*dE; i.e. photar
 !
 ! Inputs:
@@ -29,8 +29,8 @@ subroutine rawcross(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,
 ! DC                    Integer: DC=1 means this is the DC component, DC=0 means opposite.
   
 ! Outputs
-! ReGraw(1:nex,1:nf)    Real part of G(E,nu)      - in specific photon flux (photar/dE)
-! ImGraw(1:nex,1:nf)    Imaginary part of G(E,nu) - in specific photon flux (photar/dE)
+! ReGraw(1:nex,1:nf)    Real part of Sraw(E,nu)      - in specific photon flux (photar/dE)
+! ImGraw(1:nex,1:nf)    Imaginary part of Sraw(E,nu) - in specific photon flux (photar/dE)
   implicit none
   integer nex,nf,ionvar,DC
   real earx(0:nex),corr,contx(nex),ReW0(nex,nf),ImW0(nex,nf)
@@ -67,5 +67,5 @@ subroutine rawcross(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,
      end do
   end do
   return
-end subroutine rawcross
+end subroutine rawS
 

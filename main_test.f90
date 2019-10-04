@@ -21,8 +21,8 @@ program main_test
   param(12) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
   param(13) = 10.0    !M     !BH mass in solar masses
   param(14) = 30.0    !flo   !Lowest frequency in band (Hz)
-  param(15) = 31.0    !fhi   !Highest frequency in band (Hz)
-  param(16) = 3       !ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
+  param(15) = 100.0   !fhi   !Highest frequency in band (Hz)
+  param(16) = 4       !ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
   param(17) = 0.0     !DelA
   param(18) = 0.0     !DelAB
   param(19) = 0.0     !gamma
