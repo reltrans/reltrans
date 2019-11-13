@@ -340,7 +340,7 @@
             xir = xir / xinorm
             if( adensity .eq. 1 ) xir = xir * re**(-1.5) * ( 1.0 - sqrt(rin/re) )**2
             logxir   = logxip + log10(xir)
-            logxieff = logxir - 0.1505 - log10(mui)              
+            logxieff = logxir - 0.1505 - log10(mui)
             !Calculate which logxieff bin to add to
             xbin = min( xe , ceiling( (logxieff-ximin)/(ximax-ximin) * float(xe) ) )
             xbin = max( 1 , xbin )

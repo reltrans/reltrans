@@ -13,7 +13,7 @@
         if( E .gt. 13.6e-3 .and. E .gt. 13.6 ) F = F + E * contx(i)
       end do
       lambda = 1.436e-3 * gso**(gamma-2.0) * integral / mass
-      write(*,*)"\mathcal{F} = norm * ",F*1.6e-9,"erg/cm^2/s"
+      write(*,*)"\mathcal{F} = norm * ",integral*1.6e-9,"erg/cm^2/s"
       write(*,*)"Ls/Ledd = norm * (D/kpc)**2 *",lambda
 ! Ls = A * 4*pi*D**2 * gso**(Gamma-2) * I; units erg/s
 ! A        = reltrans norm; units = cm^{-2}
