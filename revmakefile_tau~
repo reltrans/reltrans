@@ -1,0 +1,66 @@
+
+# control options on which code to do
+main    = main
+do_fftw = 1
+debug   = 0
+
+# compiling options
+prof         = -pg -g -fbacktrace 
+optimization = -O3 -fopenmp
+preprocessor = -x f95-cpp-input
+
+# libs and includes
+incs = -I /scratch/guglielmo/fftw_compil/include/ -I ./ -I ./subroutines/
+libs = -L/scratch/guglielmo/fftw_compil/lib/ -lfftw3_omp -lfftw3 -lm \
+       -L/scratch/sw-astro/supernova/heasoft-6.23/x86_64-unknown-linux-gnu-libc2.19/lib/  -lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS -lwcs-5.16 -lCCfits_2.5 -lhdsp_2.9 -ltcl8.6
+
+# the object files to produce
+FOBJ = amodules.o $(main).o srevtrans.o
+COBJ = relmodels.o rellp.o relbase.o reltable.o relutility.o donthcomp.o xilltable.o
+
+# build last options from choices
+PPFLAGS =
+ifeq ($(do_fftw),1)
+  PPFLAGS += -DDO_FFTW
+endif
+ifeq ($(debug),1)
+  PPFLAGS += -DDEBUG
+endif
+
+# combine the options
+optionsF = $(prof) $(optimization) $(preprocessor) $(PPFLAGS)
+optionsC = $(prof) $(optimization)                 $(PPFLAGS)
+optionsL = $(prof) $(optimization) 
+
+# set compilers
+fcomp = gfortran $(optionsF) $(incs)
+ccomp = gcc $(optionsC) -c
+
+# compilation rules
+.SUFFIXES: .f90 .c .o
+.f90.o:
+	$(fcomp) -E -o $*.i90 $<
+	$(fcomp) -c -o $*.o   $<
+.c.o:
+	$(ccomp) -c -o $*.o $<
+
+
+# tasks
+run: $(FOBJ) $(COBJ)
+	gfortran $(optionsL) -fno-second-underscore -fno-automatic -fPIC $(FOBJ) $(COBJ) $(libs) -o exe
+
+clean:
+	rm -vf *.o *.mod *~ subroutines/*~ *.i90 *.s
+
+# dependencies
+$(main).o:   amodules.o  srevtrans.o  $(COBJ)
+srevtrans.o: amodules.o
+amodules.o:
+
+relmodels.o:
+rellp.o:
+relbase.o:
+reltable.o:
+relutility.o:
+donthcomp.o:
+xilltable.o:

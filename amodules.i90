@@ -1,3 +1,8 @@
+# 1 "amodules.f90"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/scratch/guglielmo/git/reverberation_code//"
+# 1 "amodules.f90"
 
 module telematrix
   !Module containing definitions needs to fold around the telescope
@@ -30,9 +35,9 @@ END MODULE dyn_gr
 module conv_mod
   use, intrinsic :: iso_c_binding
   implicit none
-#ifdef DO_FFTW
+
   include 'fftw3.f03'
-#endif
+
 
   integer,parameter :: nex = 2**12, nex_conv=4 * nex,nec=nex_conv/2 + 1
   real   , dimension(2 * nex_conv) :: adata,bdata,cdata
@@ -44,19 +49,9 @@ module conv_mod
   
   type(C_ptr) :: plan1, plan2, plan3, a1, a2, a3, a4, a5
 
-
-!start the new convolution code
-  !Initialisation
-
-  real(   c_double), pointer, dimension(:) :: in_photarx, in_photarx_delta, in_reline , in_imline, in_reline_a , in_imline_a, in_photarx_dlogxi, out_conv
-  complex(c_double), pointer, dimension(:) :: out_photarx, out_photarx_delta, out_reline , out_imline, out_reline_a , out_imline_a, out_photarx_dlogxi, out
-  
-  
-
-
 contains
   
-#ifdef DO_FFTW
+
   
   subroutine init_fftw()
     implicit none
@@ -87,215 +82,7 @@ contains
     plan2 = fftw_plan_dft_r2c_1d(nex_conv,  in2, out2, flags)
     plan3 = fftw_plan_dft_c2r_1d(nex_conv, out2, out3, flags)
   end subroutine init_fftw
-
-
-
-
-  subroutine init_fftw_allconv()
-    implicit none
-    integer(c_int) :: flags, i
-    integer, external :: omp_get_max_threads
-
-
-    ! allocate
-    a1 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a2 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a3 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a4 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a5 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a6 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a7 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a4 = fftw_alloc_complex(int(nec     , c_size_t))
-    a5 = fftw_alloc_complex(int(nec     , c_size_t))
-
-    call c_f_pointer(a1 , in_photarx        , [nex_conv])
-    call c_f_pointer(a2 , in_photarx_delta  , [nex_conv])
-    call c_f_pointer(a3 , in_photarx_dlogxi , [nex_conv])
-    call c_f_pointer(a4 , in_reline         , [nex_conv])
-    call c_f_pointer(a5 , in_imline         , [nex_conv])
-    call c_f_pointer(a6 , in_reline_a       , [nex_conv])
-    call c_f_pointer(a7 , in_imline_a       , [nex_conv])
-    call c_f_pointer(a16, out_conv          , [nex_conv])
-
-    call c_f_pointer(a8 , out_photarx       , [nec    ])
-    call c_f_pointer(a9 , out_photarx_delta , [nec    ])
-    call c_f_pointer(a10, out_photarx_dlogxi, [nec    ])
-    call c_f_pointer(a11, out_reline        , [nec    ])
-    call c_f_pointer(a12, out_imline        , [nec    ])
-    call c_f_pointer(a13, out_reline_a      , [nec    ])
-    call c_f_pointer(a14, out_imline_a      , [nec    ])
-
-
- !   flags = 0 + FFTW_ESTIMATE
-    flags = 0 + FFTW_PATIENT
-
-    plan1 = fftw_plan_dft_r2c_1d(nex_conv,  in1, out1, flags)
-    plan2 = fftw_plan_dft_r2c_1d(nex_conv,  in2, out2, flags)
-    plan3 = fftw_plan_dft_c2r_1d(nex_conv, out2, out3, flags)
-  end subroutine init_fftw
-
-
-
-
  
-  subroutine conv_all_FFTw(photarx, photarx_delta, reline , imline, reline_a , imline_a, photarx_dlogxi)
-
-    implicit none
-    real :: dyn
-    real,intent(in) ::  photarx(nex), photarx_delta(nex), reline(nex), imline(nex), reline_a(nex), imline_a(nex), photarx_dlogxi(nex)
-
-    integer :: i
-
-    call padding4(photarx, in_photarx)
-    call padding4(photarx_delta, in_photarx_delta)
-    call padding4(photarx_dlogxi, in_photarx_dlogxi)
-    call padding4(reline, in_reline)
-    call padding4(imline, in_imline)
-    call padding4(reline_a, in_reline_a)
-    call padding4(imline_a, in_imline_a)
-
-
-    call fftw_execute_dft_r2c(plan1, in_photarx , out_photarx)
-    call fftw_execute_dft_r2c(plan2, in_photarx_delta , out_photarx_delta)
-    call fftw_execute_dft_r2c(plan3, in_photarx_dlogxi , out_photarx_dlogxi)
-    call fftw_execute_dft_r2c(plan4, in_reline , out_reline)
-    call fftw_execute_dft_r2c(plan5, in_imline , out_imline)
-    call fftw_execute_dft_r2c(plan6, in_reline_a , out_reline_a)
-    call fftw_execute_dft_r2c(plan7, in_imline_a , out_imline_a)
-
-    out = (out_photarx * out_reline) * nexm1
-    call fftw_execute_dft_c2r(plan8, out, out_conv)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ReW0(i) = out_conv(i + nex/2 + 1)
-       photmax = max( photmax , ReW0(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ReW0(i)) .lt. abs(dyn * photmax) ) ReW0(i) = 0.0
-    end do
-
-
-    out = (out_photarx * out_imline) * nexm1
-    call fftw_execute_dft_c2r(plan9, out, out_conv)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ImW0(i) = out_conv(i + nex/2 + 1)
-       photmax = max( photmax , ImW0(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ImW0(i)) .lt. abs(dyn * photmax) ) ImW0(i) = 0.0
-    end do
-
-
-    out = (out_photarx * out_reline_a) * nexm1
-    call fftw_execute_dft_c2r(plan10, out, out_conv)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ReW1(i) = out_conv(i + nex/2 + 1)
-       photmax = max( photmax , ReW1(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ReW1(i)) .lt. abs(dyn * photmax) ) ReW1(i) = 0.0
-    end do
-
-
-    out = (out_photarx * out_imline_a) * nexm1
-    call fftw_execute_dft_c2r(plan11, out, out_conv)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ImW1(i) = out_conv(i + nex/2 + 1)
-       photmax = max( photmax , ImW1(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ImW1(i)) .lt. abs(dyn * photmax) ) ImW1(i) = 0.0
-    end do
-
-
-    out = (out_photarx_delta * out_reline) * nexm1
-    call fftw_execute_dft_c2r(plan12, out, out_conv)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ReW2(i) = out_conv(i + nex/2 + 1)
-       photmax = max( photmax , ReW2(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ReW2(i)) .lt. abs(dyn * photmax) ) ReW2(i) = 0.0
-    end do
-
-
-    out = (out_photarx_delta * out_imline) * nexm1
-    call fftw_execute_dft_c2r(plan13, out, out_conv)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ImW2(i) = out_conv(i + nex/2 + 1)
-       photmax = max( photmax , ImW2(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ImW2(i)) .lt. abs(dyn * photmax) ) ImW2(i) = 0.0
-    end do
-
-
-    out = (out_photarx_dlogxi * out_reline) * nexm1
-    call fftw_execute_dft_c2r(plan14, out, out_conv)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ReW3(i) = out_conv(i + nex/2 + 1)
-       photmax = max( photmax , ReW3(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ReW3(i)) .lt. abs(dyn * photmax) ) ReW3(i) = 0.0
-    end do
-
-
-    out = (out_photarx_dlogxi * out_imline) * nexm1
-    call fftw_execute_dft_c2r(plan15, out, out_conv)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ImW3(i) = out_conv(i + nex/2 + 1)
-       photmax = max( photmax , ImW3(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ImW3(i)) .lt. abs(dyn * photmax) ) ImW3(i) = 0.0
-    end do
-
-
-
-  end subroutine conv_all_FFTw
-
-
-
-   subroutine padding4(line, pad_line)
-     implicit none 
-     real, intent(in) :: line(nex)
-     real, intent(out) :: pad_line(4 * nex)
-     
-     ! Fill padded arrays
-     line(1) = 0.0
-     do i = 1, nex
-        pad_line(i+1) = line(i)
-     end do
-     do i = 2, 3 * nex
-        pad_line(i + nex) = 0.
-     end do
-     
-   end subroutine padding4
-
 
   subroutine padcnv_fftw(dyn,diskline,photard,conv)
 ! Convolves the array diskline(1:ne) with the array photard(1:ne) using
@@ -373,13 +160,13 @@ contains
     end do
 
   end subroutine padcnv_fftw
-#else
-  
-  subroutine init_fftw()
-    implicit none
-    print *, "Without FFTW"
-  end subroutine init_fftw
-#endif /*DO_FFTW*/
+
+
+
+
+
+
+
 
 end module conv_mod
 

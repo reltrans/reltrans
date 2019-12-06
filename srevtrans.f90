@@ -328,12 +328,15 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
               !Convolve with line profile
               !First FFTs
               call pad4FFT(nex,photarx,FTphotarx)
-              call pad4FFT(nex,photarx_delta,FTphotarx_delta)
               call pad4FFT(nex,reline,FTreline)
               call pad4FFT(nex,imline,FTimline)
+
+              call pad4FFT(nex,photarx_delta,FTphotarx_delta)
               call pad4FFT(nex,reline_a,FTreline_a)
               call pad4FFT(nex,imline_a,FTimline_a)
               call pad4FFT(nex,photarx_dlogxi,FTphotarx_dlogxi)
+
+
               !Then the multiplications and inverse FFTs
               FTreconv = FTreline * FTphotarx
               FTimconv = FTimline * FTphotarx

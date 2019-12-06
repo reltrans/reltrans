@@ -8,3 +8,5 @@ reltransFunctionMap.*
 Makefile
 lpack_reltrans.cxx
 .DS_Store
+pkgIndex.tcl
+libreltrans.so

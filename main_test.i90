@@ -1,0 +1,69 @@
+# 1 "main_test.f90"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/scratch/guglielmo/git/reverberation_code//"
+# 1 "main_test.f90"
+program main_test
+!  make -f revmakefile run
+!  make -f revmakefile_laptop run
+  implicit none
+  integer ne,i,ifl
+  parameter (ne=6000)
+  real Emax,Emin,ear(0:ne),param(19),photar(ne),E,dE
+
+  !----Parameters-------------------
+  param(1)  = 6.0     !h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
+  param(2)  = 0.9     !a     !BH spin
+  param(3)  = 30.0    !inc   !Inclination angle in degrees
+  param(4)  = -1.0    !rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
+  param(5)  = 20000.0 !rout  !Disk outer radius in Rg - will probably hardwire this
+  param(6)  = 0.0     !zcos  !Cosmological redshift
+  param(7)  = 2.0     !Gamma !Photon index
+  param(8)  = 3.75    !logxi !log10xi - ionisation parameter
+  param(9)  = 1.0     !Afe   !Iron abundance      
+  param(10) = 300.0   !kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
+  param(11) = 0.0     !Nh
+  param(12) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
+  param(13) = 10.0    !M     !BH mass in solar masses
+  param(14) = 30.0    !flo   !Lowest frequency in band (Hz)
+  param(15) = 100.0   !fhi   !Highest frequency in band (Hz)
+  param(16) = 4       !ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
+  param(17) = 0.0     !DelA
+  param(18) = 0.0     !DelAB
+  param(19) = 0.0     !gamma
+  !---------------------------------
+  
+  Emax  = 500.0
+  Emin  = 0.1
+  do i = 0,ne
+    ear(i) = Emin * (Emax/Emin)**(real(i)/real(ne))
+  end do
+
+  call tdreltransCp(ear,ne,param,ifl,photar)
+  
+  do i = 1,ne
+     E  = 0.5 * ( ear(i) + ear(i-1) )
+     dE = ear(i) - ear(i-1)
+     if( param(16) .gt. 3.5 .and. param(16) .lt. 4.5 .or. param(16) .gt. 5.5 )then
+        write(99,*)E,photar(i)/dE
+     else
+        write(99,*)E,E**2*photar(i)/dE
+     end if
+  end do
+  write(99,*)"no no"
+  
+  ! param(12) = 0.8
+
+  ! call tdreltransCp(ear,ne,param,ifl,photar)
+  
+  ! do i = 1,ne
+  !    E  = 0.5 * ( ear(i) + ear(i-1) )
+  !    dE = ear(i) - ear(i-1)
+  !    if( param(16) .gt. 3.5 .and. param(16) .lt. 4.5 .or. param(16) .gt. 5.5 )then
+  !       write(99,*)E,photar(i)/dE
+  !    else
+  !       write(99,*)E,E**2*photar(i)/dE
+  !    end if
+  ! end do
+  
+end program main_test
