@@ -2,8 +2,11 @@
 subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,check&
      ,nphi,nro,honr_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim,me,ge,xe)
 ! Initialises the model and writes the header
+
+  use conv_mod
+  use dyn_gr
       implicit none
-      integer nex,i,spin_dim,mu_dim,nphi,nro,nphi_grid,nro_grid,lrec,irec,check
+      integer i,spin_dim,mu_dim,nphi,nro,nphi_grid,nro_grid,lrec,irec,check
       integer me,ge,xe,myenv
       logical firstcall,needtrans
       real Emin,Emax,dloge,earx(0:nex)
@@ -15,6 +18,9 @@ subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,chec
       check = 0
       
       if( firstcall )then
+
+        call init_fftw_allconv() !call the initializer of the fftw convolution 
+
         needtrans = .true.
         write(*,*)"----------------------------------------------------"
         write(*,*)"This is RELTRANS: a transfer function model for"
