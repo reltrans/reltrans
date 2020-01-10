@@ -1,13 +1,24 @@
+# libs and includes
+incs_tau = -I /scratch/guglielmo/fftw_compil/include/ -I ./ -I ./subroutines/
+libs_tau = -L/scratch/guglielmo/fftw_compil/lib/ -lfftw3_omp -lfftw3 -lm \
+       -L/scratch/sw-astro/supernova/heasoft-6.23/x86_64-unknown-linux-gnu-libc2.19/lib/  -lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS -lwcs-5.16 -lCCfits_2.5 -lhdsp_2.9 -ltcl8.6
+
+
+libs_mac = -L/usr/local/opt/cfitsio/  -L/Users/Gullik/Software/heasoft-6.23/x86_64-apple-darwin17.4.0/lib  -lcfitsio -lXSFunctions -lXSModel -lXSUtil -lXS -lCCfits_2.5
+
+optimization = -O3 -fopenmp
+preprocessor = -x f95-cpp-input
+
+
 fortran:
 	gfortran -O -Wall -pedantic -c amodules.f90 main_test.f90 srevtrans.f90
 C_code:
 	gcc -O -c relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c
 
 compile: fortran C_code 
-	 gfortran -O *.o -L/usr/local/opt/cfitsio/  -L/Users/Gullik/Software/heasoft-6.23/x86_64-apple-darwin17.4.0/lib \
-	 -lcfitsio -lXSFunctions -lXSModel -lXSUtil -lXS -lCCfits_2.5 -o exe  
+	 gfortran *.o $(incs_tau) $(libs_tau) -o exe  
 
-run: compile clean 
+run:  clean compile
 
 clean:
-	rm -f *.o *.mod
+	rm -f *.o *.mod exe

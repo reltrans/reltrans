@@ -1,8 +1,7 @@
 !-----------------------------------------------------------------------
-subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,check&
+subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,check&
      ,nphi,nro,honr_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim,me,ge,xe)
 ! Initialises the model and writes the header
-
   use conv_mod
   use dyn_gr
       implicit none
@@ -19,7 +18,7 @@ subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,chec
       
       if( firstcall )then
 
-        call init_fftw_allconv() !call the initializer of the fftw convolution 
+        call init_fftw() !call the initializer of the fftw convolution 
 
         needtrans = .true.
         write(*,*)"----------------------------------------------------"

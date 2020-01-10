@@ -39,10 +39,11 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   use dyn_gr
   use conv_mod
   implicit none
-  integer nro,nphi,nex,i,nf,ifl,ne,ReIm,nfsave
+  integer nro,nphi, i,nf,ifl,ne,ReIm,nfsave
   integer verbose,mubin,rbin
   integer me,ge,xe,Cp,j
-  parameter (nex=2**12)
+  ! integer nex
+  ! parameter (nex=2**12)
   double precision a,h,Gamma,inc,pi,rout,rmin,disco,muobs,rin
   double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,rnmax,d
   double precision fhisave,flosave,rh,frrel,lens,fc
@@ -101,7 +102,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   verbose = myenv("REV_VERB",0)     !Set verbose level
       
 ! Initialise
-  call initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,check&
+  call initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,check&
      ,nphi,nro,honr_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim,me,ge,xe)
 
 !Allocate dynamically the array to calculate the trasfer function          
@@ -327,17 +328,38 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
                     imline_a(i) = aimag( transea(i,j,mubin,rbin) )
                  end do
               
-                 fftw = .true.
-                 if (fftw) then !start the fftw if
+#ifdef DO_FFTW
+                 ! fftw = .true.
+                 ! if (fftw) then !start the fftw if
                     
+                    write(*, *) "FFtw convolution start"
                     call conv_all_FFTw(photarx, photarx_delta, reline, imline, reline_a , imline_a,&
                          photarx_dlogxi, ReW0(:,j), ImW0(:,j), ReW1(:,j), ImW1(:,j), &
                          ReW2(:,j), ImW2(:,j), ReW3(:,j), ImW3(:,j))
+                    write(*, *) "FFtw convolution end"
 
-                 else 
+                 ! else 
+! #ifdef DEBUG
+!     do i = 1, nex
+!        write(50, *)  i, photarx(i)
+!        write(55, *)  i, reline(i)
+!     end do
+! #endif
+
+
+! #ifdef DEBUG
+!     do i = 1, nex
+!        write(71, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
+!     end do
+!     write(71, *) "no no"
+! #endif
+
+#else
 
                     !Convolve with line profile
                     !First FFTs
+                    write(*, *) "Adam convolution start"
+
                     call pad4FFT(nex,photarx,FTphotarx)
                     call pad4FFT(nex,reline,FTreline)
                     call pad4FFT(nex,imline,FTimline)
@@ -355,6 +377,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
                        ReW0(i,j) = ReW0(i,j) + reconvmu(i)
                        ImW0(i,j) = ImW0(i,j) + imconvmu(i)
                     end do
+
                     FTreconv = FTreline_a * FTphotarx
                     FTimconv = FTimline_a * FTphotarx
                     call pad4invFFT(dyn,nex,FTreconv,reconvmu)
@@ -380,7 +403,31 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
                        ImW3(i,j) = ImW3(i,j) + imconvmu(i)
                     end do
 
-                 endif !end of the fftw if 
+                    write(*, *) "Adam convolution end"
+
+
+#ifdef DEBUG
+
+    write(*,*) 'nexxxxxx', nex
+    do i = 1, nex
+       write(60, *)  i, photarx(i)
+       write(65, *)  i, reline(i)
+       write(62, *)  i, FTphotarx(i)
+       write(68, *)  i, FTreline(i)
+    end do
+
+
+
+    ! do i = 1, nex
+    !    write(81, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
+    ! end do
+    ! write(81, *) "no no"
+#endif
+
+
+
+                 
+#endif /*DO_FFTW*/ !end of the fftw if 
 
               end do !end of the frequency loop 
 
@@ -388,13 +435,16 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
         end do
 
      end if
+
   
 ! Calculate raw FT of the full spectrum without absorption
   call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
                 gso,real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
-  
+
+   
 ! Calculate absorption and multiply by the raw FT
   call FNINIT
+
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
   do j = 1,nf
      do i = 1,nex
@@ -405,7 +455,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 
 ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
   call propercross(nex,nf,earx,ReSrawa,ImSrawa,ReGrawa,ImGrawa)
-  
+
 ! Apply phase correction parameter to the cross-spectral model (for bad calibration)
   do j = 1,nf
      do i = 1,nex
@@ -413,6 +463,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
         ImG(i,j) = cos(DelA) * ImGrawa(i,j) + sin(DelA) * ReGrawa(i,j)
      end do
   end do
+
 
 ! Average over the frequency range
   if( DC .eq. 1 )then

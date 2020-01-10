@@ -1,3 +1,8 @@
+# 1 "main_test.f90"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 1 "/scratch/guglielmo/git/reverberation_code//"
+# 1 "main_test.f90"
 program main_test
 !  make -f revmakefile run
 !  make -f revmakefile_laptop run
@@ -41,14 +46,14 @@ program main_test
      dE = ear(i) - ear(i-1)
      if( param(16) .gt. 3.5 .and. param(16) .lt. 4.5 .or. param(16) .gt. 5.5 )then
         write(99,*)E,photar(i)/dE
-#ifdef DO_FFTW
-        write(98,*)E,photar(i)/dE
-#endif
+
+
+
      else
         write(99,*)E,E**2*photar(i)/dE
-#ifdef DO_FFTW
-        write(98,*)E,E**2*photar(i)/dE
-#endif
+
+
+
 
      end if
   end do

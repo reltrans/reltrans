@@ -1,8 +1,8 @@
 
 # control options on which code to do
 main    = main_test
-do_fftw = 1
-debug   = 0
+do_fftw = 0
+debug   = 1
 
 # compiling options
 prof         = -pg -g -fbacktrace 
@@ -50,7 +50,7 @@ run: $(FOBJ) $(COBJ)
 	gfortran $(optionsL) -fno-second-underscore -fno-automatic -fPIC $(FOBJ) $(COBJ) $(libs) -o exe
 
 clean:
-	rm -vf *.o *.mod *~ subroutines/*~ *.i90 *.s
+	rm -vf *.o *.mod *~ subroutines/*~ *.i90 *.s exe
 
 # dependencies
 $(main).o:   amodules.o  srevtrans.o  $(COBJ)

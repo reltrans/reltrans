@@ -30,9 +30,9 @@ END MODULE dyn_gr
 module conv_mod
   use, intrinsic :: iso_c_binding
   implicit none
-#ifdef DO_FFTW
+! #ifdef DO_FFTW
   include 'fftw3.f03'
-#endif
+! #endif
 
   integer,parameter :: nex = 2**12, nex_conv=4 * nex,nec=nex_conv/2 + 1
   real   , dimension(2 * nex_conv) :: adata,bdata,cdata
@@ -63,7 +63,7 @@ out_imline, out_reline_a, out_imline_a, out_photarx_dlogxi
 
 contains
   
-#ifdef DO_FFTW
+! #ifdef DO_FFTW
   
   subroutine init_fftw()
     implicit none
@@ -292,7 +292,6 @@ ReW2_conv(nex), ImW2_conv(nex), ReW3_conv(nex), ImW3_conv(nex)
     call padding4(reline_a, in_reline_a)
     call padding4(imline_a, in_imline_a)
 
-
     call fftw_execute_dft_r2c(plan1, in_photarx , out_photarx)
     call fftw_execute_dft_r2c(plan2, in_photarx_delta , out_photarx_delta)
     call fftw_execute_dft_r2c(plan3, in_photarx_dlogxi , out_photarx_dlogxi)
@@ -300,6 +299,16 @@ ReW2_conv(nex), ImW2_conv(nex), ReW3_conv(nex), ImW3_conv(nex)
     call fftw_execute_dft_r2c(plan5, in_imline , out_imline)
     call fftw_execute_dft_r2c(plan6, in_reline_a , out_reline_a)
     call fftw_execute_dft_r2c(plan7, in_imline_a , out_imline_a)
+
+
+! #ifdef DEBUG
+!     do i = 1,  nex
+!        write(51, *) i , real(in_photarx(i))
+!        write(52, *) i , out_photarx(i)
+!        write(56, *) i , real(in_reline(i))
+!        write(57, *) i , out_reline(i)
+!     end do
+! #endif
 
     out8 = (out_photarx * out_reline) * nexm1
     call fftw_execute_dft_c2r(plan8, out8, out_conv8)
@@ -412,6 +421,26 @@ ReW2_conv(nex), ImW2_conv(nex), ReW3_conv(nex), ImW3_conv(nex)
        if( abs(ImW3_conv(i)) .lt. abs(dyn * photmax) ) ImW3_conv(i) = 0.0
     end do
 
+! #ifdef DEBUG
+!     do i = 1, nex
+!        write(71, *) i, ReW0_conv(i)
+!        write(72, *) i, ImW0_conv(i)
+!        write(73, *) i, ReW1_conv(i)
+!        write(74, *) i, ImW1_conv(i)
+!        write(75, *) i, ReW2_conv(i)
+!        write(76, *) i, ImW2_conv(i)
+!        write(77, *) i, ReW3_conv(i)
+!        write(78, *) i, ImW3_conv(i)
+!     end do
+!     write(71, *) "no no"
+!     write(72, *) "no no"
+!     write(73, *) "no no"
+!     write(74, *) "no no"
+!     write(75, *) "no no"
+!     write(76, *) "no no"
+!     write(77, *) "no no"
+!     write(78, *) "no no"
+! #endif
 
 
   end subroutine conv_all_FFTw
@@ -434,12 +463,12 @@ ReW2_conv(nex), ImW2_conv(nex), ReW3_conv(nex), ImW3_conv(nex)
      
    end subroutine padding4
 
-#else
-  subroutine init_fftw_allconv()
-    implicit none
-    print *, "Without FFTW"
-  end subroutine init_fftw_allconv
-#endif /*DO_FFTW*/
+! #else
+!   subroutine init_fftw_allconv()
+!     implicit none
+!     print *, "Without FFTW"
+!   end subroutine init_fftw_allconv
+! #endif /*DO_FFTW*/
 
 end module conv_mod
 
