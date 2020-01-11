@@ -333,9 +333,15 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
                  ! if (fftw) then !start the fftw if
                     
                     write(*, *) "FFtw convolution start"
-                    call conv_all_FFTw(photarx, photarx_delta, reline, imline, reline_a , imline_a,&
+                    call conv_all_FFTw(dyn, photarx, photarx_delta, reline, imline, reline_a , imline_a,&
                          photarx_dlogxi, ReW0(:,j), ImW0(:,j), ReW1(:,j), ImW1(:,j), &
                          ReW2(:,j), ImW2(:,j), ReW3(:,j), ImW3(:,j))
+
+
+                    ! call padcnv_fftw(1e-7, reline, photarx, reconvmu)
+                    ! do i = 1,nex
+                    !    ReW0(i,j) = ReW0(i,j) + reconvmu(i)
+                    ! enddo
                     write(*, *) "FFtw convolution end"
 
                  ! else 
@@ -347,12 +353,15 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 ! #endif
 
 
-! #ifdef DEBUG
-!     do i = 1, nex
-!        write(71, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
-!     end do
-!     write(71, *) "no no"
-! #endif
+#ifdef DEBUG
+    ! write(71, *) 'skip on'
+    do i = 1, nex
+       ! write(71, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
+
+       write(71, *) i, ReW0(i,j)
+    end do
+    write(71, *) 'no no'
+#endif
 
 #else
 
@@ -408,20 +417,19 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 
 #ifdef DEBUG
 
-    write(*,*) 'nexxxxxx', nex
     do i = 1, nex
        write(60, *)  i, photarx(i)
        write(65, *)  i, reline(i)
-       write(62, *)  i, FTphotarx(i)
-       write(68, *)  i, FTreline(i)
+       ! write(62, *)  i, FTphotarx(i)
+       ! write(68, *)  i, FTreline(i)
     end do
 
 
 
-    ! do i = 1, nex
-    !    write(81, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
-    ! end do
-    ! write(81, *) "no no"
+    do i = 1, nex
+       ! write(81, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
+       write(81, *) i, ReW0(i,j)
+    end do
 #endif
 
 

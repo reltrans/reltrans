@@ -18,7 +18,7 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,check&
       
       if( firstcall )then
 
-        call init_fftw() !call the initializer of the fftw convolution 
+        call init_fftw_allconv() !call the initializer of the fftw convolution 
 
         needtrans = .true.
         write(*,*)"----------------------------------------------------"

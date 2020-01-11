@@ -25,8 +25,8 @@ program main_test
   param(11) = 0.0     !Nh
   param(12) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
   param(13) = 10.0    !M     !BH mass in solar masses
-  param(14) = 0.0    !flo   !Lowest frequency in band (Hz)
-  param(15) = 0.0   !fhi   !Highest frequency in band (Hz)
+  param(14) = 1.0    !flo   !Lowest frequency in band (Hz)
+  param(15) = 5.0   !fhi   !Highest frequency in band (Hz)
   param(16) = 4       !ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
   param(17) = 0.0     !DelA
   param(18) = 0.0     !DelAB
@@ -45,14 +45,14 @@ program main_test
      E  = 0.5 * ( ear(i) + ear(i-1) )
      dE = ear(i) - ear(i-1)
      if( param(16) .gt. 3.5 .and. param(16) .lt. 4.5 .or. param(16) .gt. 5.5 )then
-        write(99,*)E,photar(i)/dE
+        write(99,*)E, photar(i)/dE
 
-
+        write(98,*)E, photar(i)/dE
 
      else
-        write(99,*)E,E**2*photar(i)/dE
+        write(99,*)E, E**2*photar(i)/dE
 
-
+        write(98,*)E, E**2*photar(i)/dE
 
 
      end if

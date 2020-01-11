@@ -1,8 +1,8 @@
 
 # control options on which code to do
 main    = main_test
-do_fftw = 0
-debug   = 1
+do_fftw = 1
+debug   = 0
 
 # compiling options
 prof         = -pg -g -fbacktrace 

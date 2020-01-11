@@ -30,42 +30,157 @@ END MODULE dyn_gr
 module conv_mod
   use, intrinsic :: iso_c_binding
   implicit none
-! #ifdef DO_FFTW
+#ifdef DO_FFTW
   include 'fftw3.f03'
-! #endif
+#endif
 
-  integer,parameter :: nex = 2**12, nex_conv=4 * nex,nec=nex_conv/2 + 1
-  real   , dimension(2 * nex_conv) :: adata,bdata,cdata
-  complex, dimension(nex_conv) :: ac,bc,cc
+  integer,parameter :: nex = 2**12, nex_conv = 4 * nex, nec = nex_conv/2 + 1
+  ! real   , dimension(2 * nex_conv) :: adata,bdata,cdata
+  ! complex, dimension(nex_conv) :: ac,bc,cc
   
   double precision, parameter :: nexm1 = 1. / real(nex_conv, kind(8))
-  real(   c_double), pointer, dimension(:) :: in1 , in2 , out3
-  complex(c_double), pointer, dimension(:) :: out1, out2
+
+  type(C_ptr) :: plan1, plan2
+  real(   c_double), pointer, dimension(:) :: in,  out_conv
+  complex(c_double), pointer, dimension(:) :: out, in_conv
+  type(C_ptr) :: a1, a2, a3, a4
+
+  ! real(   c_double), pointer, dimension(:) :: in1 , in2 , out3
+  ! complex(c_double), pointer, dimension(:) :: out1, out2
   
-  type(C_ptr) :: plan1, plan2, plan3, plan4, plan5, plan6, plan7, plan8, plan9, plan10, &
-plan11, plan12, plan13, plan14, plan15
-  type(C_ptr) :: a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, &
-a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30
+!   type(C_ptr) :: plan1, plan2, plan3, plan4, plan5, plan6, plan7, plan8, plan9, plan10, &
+! plan11, plan12, plan13, plan14, plan15
+!   type(C_ptr) :: a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, &
+! a16, a17, a18, a19, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a30
 
 
 !start the new convolution code
   !Initialisation
 
-  real(   c_double), pointer, dimension(:) :: in_photarx, in_photarx_delta, in_reline , in_imline, &
-in_reline_a , in_imline_a, in_photarx_dlogxi
-  real(   c_double), pointer, dimension(:) :: out_conv8, out_conv9, out_conv10, out_conv11, &
-out_conv12, out_conv13, out_conv14, out_conv15
+!   real(   c_double), pointer, dimension(:) :: in_photarx, in_photarx_delta, in_reline , in_imline, &
+! in_reline_a , in_imline_a, in_photarx_dlogxi
+!   real(   c_double), pointer, dimension(:) :: out_conv8, out_conv9, out_conv10, out_conv11, &
+! out_conv12, out_conv13, out_conv14, out_conv15
 
-  complex(c_double), pointer, dimension(:) :: out_photarx, out_photarx_delta, out_reline, &
-out_imline, out_reline_a, out_imline_a, out_photarx_dlogxi
-  complex(c_double), pointer, dimension(:) :: out8, out9, out10, out11, out12, out13, out14, out15
+!   complex(c_double), pointer, dimension(:) :: out_photarx, out_photarx_delta, out_reline, &
+! out_imline, out_reline_a, out_imline_a, out_photarx_dlogxi
+!   complex(c_double), pointer, dimension(:) :: out8, out9, out10, out11, out12, out13, out14, out15
   
 
 contains
   
-! #ifdef DO_FFTW
+#ifdef DO_FFTW
   
-  subroutine init_fftw()
+!   subroutine init_fftw()
+!     implicit none
+!     integer(c_int) :: flags, i
+!     integer, external :: omp_get_max_threads
+
+!     !i = fftw_init_threads()
+!     !call fftw_plan_with_nthreads(omp_get_max_threads())
+!     !print*, "Using threads num:", omp_get_max_threads()
+
+!     ! allocate
+!     a1 = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a2 = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a3 = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a4 = fftw_alloc_complex(int(nec     , c_size_t))
+!     a5 = fftw_alloc_complex(int(nec     , c_size_t))
+
+!     call c_f_pointer(a1, in1 , [nex_conv])
+!     call c_f_pointer(a2, in2 , [nex_conv])
+!     call c_f_pointer(a3, out3, [nex_conv])
+!     call c_f_pointer(a4, out1, [nec     ])
+!     call c_f_pointer(a5, out2, [nec     ])
+
+!  !   flags = 0 + FFTW_ESTIMATE
+!     flags = 0 + FFTW_PATIENT
+
+!     plan1 = fftw_plan_dft_r2c_1d(nex_conv,  in1, out1, flags)
+!     plan2 = fftw_plan_dft_r2c_1d(nex_conv,  in2, out2, flags)
+!     plan3 = fftw_plan_dft_c2r_1d(nex_conv, out2, out3, flags)
+!   end subroutine init_fftw
+
+
+!   subroutine padcnv_fftw(dyn,diskline,photard,conv)
+! ! Convolves the array diskline(1:ne) with the array photard(1:ne) using
+! ! FFTw, the result is recorded in conv(1:ne).
+! ! This code uses extensive zero padding, and also applies a gate to
+! ! get rid of high energy noise.
+! ! Parameter dyn sets the dynamic range allowed in the output array.
+! ! Anything smaller than dyn * ( the maximum value of conv ) will
+! ! be set to zero. The value dyn = 1e-7 works very well.
+!     implicit none
+!     real :: dyn
+!     real, intent(in) ::  diskline(nex),photard(nex)
+!     real, intent(inout) :: conv(nex)
+
+!     integer :: i
+!     real    :: photmax
+
+!     ! Fill padded arrays
+!     in1(1) = 0.0
+!     in2(1) = 0.0 
+!     do i = 1, nex
+!        in1(i+1) = diskline(i)
+!        in2(i+1) = photard(i)
+!     end do
+!     do i = 2, 3 * nex
+!        in1(i + nex) = 0.
+!        in2(i + nex) = 0.
+!     end do
+
+! ! #ifdef DEBUG
+! !     do i = 1, 4 * nex
+! !        write(50, *) "InFT", in1(i)
+! !     end do
+! ! #endif
+
+!     ! Call the convolution code
+! !    call FTcnv_fftw(in1,in2,out3)
+
+!      call fftw_execute_dft_r2c(plan1, in1 , out1)
+!      call fftw_execute_dft_r2c(plan2, in2 , out2)
+
+! ! #ifdef DEBUG
+! !     do i = 1, nec ! nec = 4 nex / 2 + 1 = 2 nex + 1
+! !        write(50, *) "OuF2", real(out1(i)), aimag(out1(i))
+! !     end do
+! ! #endif
+
+!      out2 = (out1 * out2) * nexm1
+
+!      call fftw_execute_dft_c2r(plan3, out2, out3)
+
+
+! ! #ifdef DEBUG
+! !     do i = 1, 4 * nex
+! !        write(50, *) "OuFT", out3(i)
+! !     end do
+! ! #endif
+
+!     ! Populate output array
+!     photmax = 0.0
+!     do i = 1, nex
+!        conv(i) = out3(i + nex/2 + 1)
+!        photmax = max( photmax , conv(i) )
+!     end do
+
+! ! #ifdef DEBUG
+! !     do i = 1, nex
+! !        write(50, *) "Res", conv(i), photmax
+! !     end do
+! ! #endif
+
+!     ! Clean any residual edge effects
+!     do i = 1, nex
+!        if( abs(conv(i)) .lt. abs(dyn * photmax) ) conv(i) = 0.0
+!     end do
+
+!   end subroutine padcnv_fftw
+
+
+  subroutine init_fftw_allconv()
     implicit none
     integer(c_int) :: flags, i
     integer, external :: omp_get_max_threads
@@ -77,201 +192,123 @@ contains
     ! allocate
     a1 = fftw_alloc_real(   int(nex_conv, c_size_t))
     a2 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a3 = fftw_alloc_real(   int(nex_conv, c_size_t))
+    a3 = fftw_alloc_complex(int(nec     , c_size_t))
     a4 = fftw_alloc_complex(int(nec     , c_size_t))
-    a5 = fftw_alloc_complex(int(nec     , c_size_t))
 
-    call c_f_pointer(a1, in1 , [nex_conv])
-    call c_f_pointer(a2, in2 , [nex_conv])
-    call c_f_pointer(a3, out3, [nex_conv])
-    call c_f_pointer(a4, out1, [nec     ])
-    call c_f_pointer(a5, out2, [nec     ])
+
+    call c_f_pointer(a1, in      , [nex_conv])
+    call c_f_pointer(a2, out_conv, [nex_conv])
+    call c_f_pointer(a3, out     , [nec     ])
+    call c_f_pointer(a4, in_conv , [nec     ])
+
 
  !   flags = 0 + FFTW_ESTIMATE
     flags = 0 + FFTW_PATIENT
 
-    plan1 = fftw_plan_dft_r2c_1d(nex_conv,  in1, out1, flags)
-    plan2 = fftw_plan_dft_r2c_1d(nex_conv,  in2, out2, flags)
-    plan3 = fftw_plan_dft_c2r_1d(nex_conv, out2, out3, flags)
-  end subroutine init_fftw
-
-
-  subroutine padcnv_fftw(dyn,diskline,photard,conv)
-! Convolves the array diskline(1:ne) with the array photard(1:ne) using
-! FFTs, the result is recorded in conv(1:ne).
-! This code uses extensive zero padding, and also applies a gate to
-! get rid of high energy noise.
-! Parameter dyn sets the dynamic range allowed in the output array.
-! Anything smaller than dyn * ( the maximum value of conv ) will
-! be set to zero. The value dyn = 1e-7 works very well.
-    implicit none
-    real :: dyn
-    real, intent(in) ::  diskline(nex),photard(nex)
-    real, intent(inout) :: conv(nex)
-
-    integer :: i
-    real    :: photmax
-
-    ! Fill padded arrays
-    in1(1) = 0.0
-    in2(1) = 0.0 
-    do i = 1, nex
-       in1(i+1) = diskline(i)
-       in2(i+1) = photard(i)
-    end do
-    do i = 2, 3 * nex
-       in1(i + nex) = 0.
-       in2(i + nex) = 0.
-    end do
-
-! #ifdef DEBUG
-!     do i = 1, 4 * nex
-!        write(50, *) "InFT", in1(i)
-!     end do
-! #endif
-
-    ! Call the convolution code
-!    call FTcnv_fftw(in1,in2,out3)
-
-     call fftw_execute_dft_r2c(plan1, in1 , out1)
-     call fftw_execute_dft_r2c(plan2, in2 , out2)
-
-! #ifdef DEBUG
-!     do i = 1, nec ! nec = 4 nex / 2 + 1 = 2 nex + 1
-!        write(50, *) "OuF2", real(out1(i)), aimag(out1(i))
-!     end do
-! #endif
-
-     out2 = (out1 * out2) * nexm1
-
-     call fftw_execute_dft_c2r(plan3, out2, out3)
-
-
-! #ifdef DEBUG
-!     do i = 1, 4 * nex
-!        write(50, *) "OuFT", out3(i)
-!     end do
-! #endif
-
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       conv(i) = out3(i + nex/2 + 1)
-       photmax = max( photmax , conv(i) )
-    end do
-
-! #ifdef DEBUG
-!     do i = 1, nex
-!        write(50, *) "Res", conv(i), photmax
-!     end do
-! #endif
-
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(conv(i)) .lt. abs(dyn * photmax) ) conv(i) = 0.0
-    end do
-
-  end subroutine padcnv_fftw
-
-
-  subroutine init_fftw_allconv()
-    implicit none
-    integer(c_int) :: flags, i
-    integer, external :: omp_get_max_threads
-
-
-    ! allocate
-    a1  = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a2  = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a3  = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a4  = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a5  = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a6  = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a7  = fftw_alloc_real(   int(nex_conv, c_size_t))
-
-    a23 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a24 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a25 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a26 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a27 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a28 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a29 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a30 = fftw_alloc_real(   int(nex_conv, c_size_t))
-
-    a8  = fftw_alloc_complex(int(nec     , c_size_t))
-    a9  = fftw_alloc_complex(int(nec     , c_size_t))
-    a10 = fftw_alloc_complex(int(nec     , c_size_t))
-    a11 = fftw_alloc_complex(int(nec     , c_size_t))
-    a12 = fftw_alloc_complex(int(nec     , c_size_t))
-    a13 = fftw_alloc_complex(int(nec     , c_size_t))
-    a14 = fftw_alloc_complex(int(nec     , c_size_t))
-
-    a15 = fftw_alloc_complex(int(nec     , c_size_t))
-    a16 = fftw_alloc_complex(int(nec     , c_size_t))
-    a17 = fftw_alloc_complex(int(nec     , c_size_t))
-    a18 = fftw_alloc_complex(int(nec     , c_size_t))
-    a19 = fftw_alloc_complex(int(nec     , c_size_t))
-    a20 = fftw_alloc_complex(int(nec     , c_size_t))
-    a21 = fftw_alloc_complex(int(nec     , c_size_t))
-    a22 = fftw_alloc_complex(int(nec     , c_size_t))
-
-    call c_f_pointer(a1 , in_photarx        , [nex_conv])
-    call c_f_pointer(a2 , in_photarx_delta  , [nex_conv])
-    call c_f_pointer(a3 , in_photarx_dlogxi , [nex_conv])
-    call c_f_pointer(a4 , in_reline         , [nex_conv])
-    call c_f_pointer(a5 , in_imline         , [nex_conv])
-    call c_f_pointer(a6 , in_reline_a       , [nex_conv])
-    call c_f_pointer(a7 , in_imline_a       , [nex_conv])
-
-    call c_f_pointer(a23, out_conv8         , [nex_conv])
-    call c_f_pointer(a24, out_conv9         , [nex_conv])
-    call c_f_pointer(a25, out_conv10        , [nex_conv])
-    call c_f_pointer(a26, out_conv11        , [nex_conv])
-    call c_f_pointer(a27, out_conv12        , [nex_conv])
-    call c_f_pointer(a28, out_conv13        , [nex_conv])
-    call c_f_pointer(a29, out_conv14        , [nex_conv])
-    call c_f_pointer(a30, out_conv15        , [nex_conv])
-                           
-    call c_f_pointer(a8 , out_photarx       , [nec    ])
-    call c_f_pointer(a9 , out_photarx_delta , [nec    ])
-    call c_f_pointer(a10, out_photarx_dlogxi, [nec    ])
-    call c_f_pointer(a11, out_reline        , [nec    ])
-    call c_f_pointer(a12, out_imline        , [nec    ])
-    call c_f_pointer(a13, out_reline_a      , [nec    ])
-    call c_f_pointer(a14, out_imline_a      , [nec    ])
-
-    call c_f_pointer(a15, out8              , [nec    ])
-    call c_f_pointer(a16, out9              , [nec    ])
-    call c_f_pointer(a17, out10             , [nec    ])
-    call c_f_pointer(a18, out11             , [nec    ])
-    call c_f_pointer(a19, out12             , [nec    ])
-    call c_f_pointer(a20, out13             , [nec    ])
-    call c_f_pointer(a21, out14             , [nec    ])
-    call c_f_pointer(a22, out15             , [nec    ])
-
- !   flags = 0 + FFTW_ESTIMATE
-    flags = 0 + FFTW_PATIENT
-
-    plan1  = fftw_plan_dft_r2c_1d(nex_conv, in_photarx, out_photarx, flags)
-    plan2  = fftw_plan_dft_r2c_1d(nex_conv, in_photarx_delta, out_photarx_delta, flags)
-    plan3  = fftw_plan_dft_r2c_1d(nex_conv, in_reline, out_reline, flags)
-    plan4  = fftw_plan_dft_r2c_1d(nex_conv, in_imline, out_imline, flags)
-    plan5  = fftw_plan_dft_r2c_1d(nex_conv, in_reline_a, out_reline_a, flags)
-    plan6  = fftw_plan_dft_r2c_1d(nex_conv, in_imline_a, out_imline_a, flags)
-    plan7  = fftw_plan_dft_r2c_1d(nex_conv, in_photarx_dlogxi, out_photarx_dlogxi, flags)
-           
-    plan8  = fftw_plan_dft_c2r_1d(nex_conv, out8 , out_conv8 , flags)
-    plan9  = fftw_plan_dft_c2r_1d(nex_conv, out9 , out_conv9 , flags)
-    plan10 = fftw_plan_dft_c2r_1d(nex_conv, out10, out_conv10, flags)
-    plan11 = fftw_plan_dft_c2r_1d(nex_conv, out11, out_conv11, flags)
-    plan12 = fftw_plan_dft_c2r_1d(nex_conv, out12, out_conv12, flags)
-    plan13 = fftw_plan_dft_c2r_1d(nex_conv, out13, out_conv13, flags)
-    plan14 = fftw_plan_dft_c2r_1d(nex_conv, out14, out_conv14, flags)
-    plan15 = fftw_plan_dft_c2r_1d(nex_conv, out15, out_conv15, flags)
+    plan1 = fftw_plan_dft_r2c_1d(nex_conv,  in, out, flags)
+    plan2 = fftw_plan_dft_c2r_1d(nex_conv, in_conv, out_conv, flags)
   end subroutine init_fftw_allconv
 
+
+
+!   subroutine init_fftw_allconv()
+!     implicit none
+!     integer(c_int) :: flags, i
+!     integer, external :: omp_get_max_threads
+
+
+!     ! allocate
+!     a1  = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a2  = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a3  = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a4  = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a5  = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a6  = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a7  = fftw_alloc_real(   int(nex_conv, c_size_t))
+
+!     a23 = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a24 = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a25 = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a26 = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a27 = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a28 = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a29 = fftw_alloc_real(   int(nex_conv, c_size_t))
+!     a30 = fftw_alloc_real(   int(nex_conv, c_size_t))
+
+!     a8  = fftw_alloc_complex(int(nec     , c_size_t))
+!     a9  = fftw_alloc_complex(int(nec     , c_size_t))
+!     a10 = fftw_alloc_complex(int(nec     , c_size_t))
+!     a11 = fftw_alloc_complex(int(nec     , c_size_t))
+!     a12 = fftw_alloc_complex(int(nec     , c_size_t))
+!     a13 = fftw_alloc_complex(int(nec     , c_size_t))
+!     a14 = fftw_alloc_complex(int(nec     , c_size_t))
+
+!     a15 = fftw_alloc_complex(int(nec     , c_size_t))
+!     a16 = fftw_alloc_complex(int(nec     , c_size_t))
+!     a17 = fftw_alloc_complex(int(nec     , c_size_t))
+!     a18 = fftw_alloc_complex(int(nec     , c_size_t))
+!     a19 = fftw_alloc_complex(int(nec     , c_size_t))
+!     a20 = fftw_alloc_complex(int(nec     , c_size_t))
+!     a21 = fftw_alloc_complex(int(nec     , c_size_t))
+!     a22 = fftw_alloc_complex(int(nec     , c_size_t))
+
+!     call c_f_pointer(a1 , in_photarx        , [nex_conv])
+!     call c_f_pointer(a2 , in_photarx_delta  , [nex_conv])
+!     call c_f_pointer(a3 , in_photarx_dlogxi , [nex_conv])
+!     call c_f_pointer(a4 , in_reline         , [nex_conv])
+!     call c_f_pointer(a5 , in_imline         , [nex_conv])
+!     call c_f_pointer(a6 , in_reline_a       , [nex_conv])
+!     call c_f_pointer(a7 , in_imline_a       , [nex_conv])
+
+!     call c_f_pointer(a23, out_conv8         , [nex_conv])
+!     call c_f_pointer(a24, out_conv9         , [nex_conv])
+!     call c_f_pointer(a25, out_conv10        , [nex_conv])
+!     call c_f_pointer(a26, out_conv11        , [nex_conv])
+!     call c_f_pointer(a27, out_conv12        , [nex_conv])
+!     call c_f_pointer(a28, out_conv13        , [nex_conv])
+!     call c_f_pointer(a29, out_conv14        , [nex_conv])
+!     call c_f_pointer(a30, out_conv15        , [nex_conv])
+                           
+!     call c_f_pointer(a8 , out_photarx       , [nec    ])
+!     call c_f_pointer(a9 , out_photarx_delta , [nec    ])
+!     call c_f_pointer(a10, out_photarx_dlogxi, [nec    ])
+!     call c_f_pointer(a11, out_reline        , [nec    ])
+!     call c_f_pointer(a12, out_imline        , [nec    ])
+!     call c_f_pointer(a13, out_reline_a      , [nec    ])
+!     call c_f_pointer(a14, out_imline_a      , [nec    ])
+
+!     call c_f_pointer(a15, out8              , [nec    ])
+!     call c_f_pointer(a16, out9              , [nec    ])
+!     call c_f_pointer(a17, out10             , [nec    ])
+!     call c_f_pointer(a18, out11             , [nec    ])
+!     call c_f_pointer(a19, out12             , [nec    ])
+!     call c_f_pointer(a20, out13             , [nec    ])
+!     call c_f_pointer(a21, out14             , [nec    ])
+!     call c_f_pointer(a22, out15             , [nec    ])
+
+!  !   flags = 0 + FFTW_ESTIMATE
+!     flags = 0 + FFTW_PATIENT
+
+!     plan1  = fftw_plan_dft_r2c_1d(nex_conv, in_photarx, out_photarx, flags)
+!     plan2  = fftw_plan_dft_r2c_1d(nex_conv, in_photarx_delta, out_photarx_delta, flags)
+!     plan3  = fftw_plan_dft_r2c_1d(nex_conv, in_reline, out_reline, flags)
+!     plan4  = fftw_plan_dft_r2c_1d(nex_conv, in_imline, out_imline, flags)
+!     plan5  = fftw_plan_dft_r2c_1d(nex_conv, in_reline_a, out_reline_a, flags)
+!     plan6  = fftw_plan_dft_r2c_1d(nex_conv, in_imline_a, out_imline_a, flags)
+!     plan7  = fftw_plan_dft_r2c_1d(nex_conv, in_photarx_dlogxi, out_photarx_dlogxi, flags)
+           
+!     plan8  = fftw_plan_dft_c2r_1d(nex_conv, out8 , out_conv8 , flags)
+!     plan9  = fftw_plan_dft_c2r_1d(nex_conv, out9 , out_conv9 , flags)
+!     plan10 = fftw_plan_dft_c2r_1d(nex_conv, out10, out_conv10, flags)
+!     plan11 = fftw_plan_dft_c2r_1d(nex_conv, out11, out_conv11, flags)
+!     plan12 = fftw_plan_dft_c2r_1d(nex_conv, out12, out_conv12, flags)
+!     plan13 = fftw_plan_dft_c2r_1d(nex_conv, out13, out_conv13, flags)
+!     plan14 = fftw_plan_dft_c2r_1d(nex_conv, out14, out_conv14, flags)
+!     plan15 = fftw_plan_dft_c2r_1d(nex_conv, out15, out_conv15, flags)
+!   end subroutine init_fftw_allconv
+
  
-  subroutine conv_all_FFTw(photarx, photarx_delta, reline , imline, reline_a , imline_a, & 
+  subroutine conv_all_FFTw(dyn, photarx, photarx_delta, reline , imline, reline_a , imline_a, & 
 photarx_dlogxi, ReW0_conv, ImW0_conv, ReW1_conv, ImW1_conv, ReW2_conv, ImW2_conv, ReW3_conv, ImW3_conv)
 
     implicit none
@@ -281,25 +318,44 @@ reline_a(nex), imline_a(nex), photarx_dlogxi(nex)
     real, intent(inout) :: ReW0_conv(nex), ImW0_conv(nex), ReW1_conv(nex), ImW1_conv(nex), &
 ReW2_conv(nex), ImW2_conv(nex), ReW3_conv(nex), ImW3_conv(nex)
 
+    complex :: conv(nec), padFT_photarx(nec), padFT_photarx_delta(nec), & 
+         padFT_photarx_dlogxi(nec), padFT_reline(nec), padFT_imline(nec), & 
+         padFT_reline_a(nec), padFT_imline_a(nec)
     integer :: i
     real    :: photmax
 
-    call padding4(photarx, in_photarx)
-    call padding4(photarx_delta, in_photarx_delta)
-    call padding4(photarx_dlogxi, in_photarx_dlogxi)
-    call padding4(reline, in_reline)
-    call padding4(imline, in_imline)
-    call padding4(reline_a, in_reline_a)
-    call padding4(imline_a, in_imline_a)
+    call padding4FT(photarx       , padFT_photarx)
+    call padding4FT(photarx_delta , padFT_photarx_delta)
+    call padding4FT(photarx_dlogxi, padFT_photarx_dlogxi)
+    call padding4FT(reline        , padFT_reline)
+    call padding4FT(imline        , padFT_imline)
+    call padding4FT(reline_a      , padFT_reline_a)
+    call padding4FT(imline_a      , padFT_imline_a)
 
-    call fftw_execute_dft_r2c(plan1, in_photarx , out_photarx)
-    call fftw_execute_dft_r2c(plan2, in_photarx_delta , out_photarx_delta)
-    call fftw_execute_dft_r2c(plan3, in_photarx_dlogxi , out_photarx_dlogxi)
-    call fftw_execute_dft_r2c(plan4, in_reline , out_reline)
-    call fftw_execute_dft_r2c(plan5, in_imline , out_imline)
-    call fftw_execute_dft_r2c(plan6, in_reline_a , out_reline_a)
-    call fftw_execute_dft_r2c(plan7, in_imline_a , out_imline_a)
 
+    conv = (padFT_photarx * padFT_reline) * nexm1
+    call de_paddingFT(dyn, conv, ReW0_conv)
+
+    conv = (padFT_photarx * padFT_imline) * nexm1
+    call de_paddingFT(dyn, conv, ImW0_conv)
+
+    conv = (padFT_photarx * padFT_reline_a) * nexm1
+    call de_paddingFT(dyn, conv, ReW1_conv)
+
+    conv = (padFT_photarx * padFT_imline_a) * nexm1
+    call de_paddingFT(dyn, conv, ImW1_conv)
+
+    conv = (padFT_photarx_delta * padFT_reline) * nexm1
+    call de_paddingFT(dyn, conv, ReW2_conv)
+
+    conv = (padFT_photarx_delta * padFT_imline) * nexm1
+    call de_paddingFT(dyn, conv, ImW2_conv)
+
+    conv = (padFT_photarx_dlogxi * padFT_reline) * nexm1
+    call de_paddingFT(dyn, conv, ReW3_conv)
+
+    conv = (padFT_photarx_dlogxi * padFT_imline) * nexm1
+    call de_paddingFT(dyn, conv, ImW3_conv)
 
 ! #ifdef DEBUG
 !     do i = 1,  nex
@@ -310,116 +366,126 @@ ReW2_conv(nex), ImW2_conv(nex), ReW3_conv(nex), ImW3_conv(nex)
 !     end do
 ! #endif
 
-    out8 = (out_photarx * out_reline) * nexm1
-    call fftw_execute_dft_c2r(plan8, out8, out_conv8)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ReW0_conv(i) = out_conv8(i + nex/2 + 1)
-       photmax = max( photmax , ReW0_conv(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ReW0_conv(i)) .lt. abs(dyn * photmax) ) ReW0_conv(i) = 0.0
-    end do
+    ! call padding4(photarx       , out_photarx)
+    ! call padding4(photarx_delta , out_photarx_delta)
+    ! call padding4(photarx_dlogxi, out_photarx_dlogxi)
+    ! call padding4(reline        , out_reline)
+    ! call padding4(imline        , out_imline)
+    ! call padding4(reline_a      , out_reline_a)
+    ! call padding4(imline_a      , out_imline_a)
 
 
-    out9 = (out_photarx * out_imline) * nexm1
-    call fftw_execute_dft_c2r(plan9, out9, out_conv9)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ImW0_conv(i) = out_conv9(i + nex/2 + 1)
-       photmax = max( photmax , ImW0_conv(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ImW0_conv(i)) .lt. abs(dyn * photmax) ) ImW0_conv(i) = 0.0
-    end do
+    ! out8 = (out_photarx * out_reline) * nexm1
+
+    ! call fftw_execute_dft_c2r(plan2, out8, out_conv8)
+    ! ! Populate output array
+    ! photmax = 0.0
+    ! do i = 1, nex
+    !    ReW0_conv(i) = out_conv8(i + nex/2 + 1)
+    !    photmax = max( photmax , ReW0_conv(i) )
+    ! end do
+    ! ! Clean any residual edge effects
+    ! do i = 1, nex
+    !    if( abs(ReW0_conv(i)) .lt. abs(dyn * photmax) ) ReW0_conv(i) = 0.0
+    ! end do
 
 
-    out10 = (out_photarx * out_reline_a) * nexm1
-    call fftw_execute_dft_c2r(plan10, out10, out_conv10)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ReW1_conv(i) = out_conv10(i + nex/2 + 1)
-       photmax = max( photmax , ReW1_conv(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ReW1_conv(i)) .lt. abs(dyn * photmax) ) ReW1_conv(i) = 0.0
-    end do
+    ! out9 = (out_photarx * out_imline) * nexm1
+    ! call fftw_execute_dft_c2r(plan9, out9, out_conv9)
+    ! ! Populate output array
+    ! photmax = 0.0
+    ! do i = 1, nex
+    !    ImW0_conv(i) = out_conv9(i + nex/2 + 1)
+    !    photmax = max( photmax , ImW0_conv(i) )
+    ! end do
+    ! ! Clean any residual edge effects
+    ! do i = 1, nex
+    !    if( abs(ImW0_conv(i)) .lt. abs(dyn * photmax) ) ImW0_conv(i) = 0.0
+    ! end do
 
 
-    out11 = (out_photarx * out_imline_a) * nexm1
-    call fftw_execute_dft_c2r(plan11, out11, out_conv11)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ImW1_conv(i) = out_conv11(i + nex/2 + 1)
-       photmax = max( photmax , ImW1_conv(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ImW1_conv(i)) .lt. abs(dyn * photmax) ) ImW1_conv(i) = 0.0
-    end do
+    ! out10 = (out_photarx * out_reline_a) * nexm1
+    ! call fftw_execute_dft_c2r(plan10, out10, out_conv10)
+    ! ! Populate output array
+    ! photmax = 0.0
+    ! do i = 1, nex
+    !    ReW1_conv(i) = out_conv10(i + nex/2 + 1)
+    !    photmax = max( photmax , ReW1_conv(i) )
+    ! end do
+    ! ! Clean any residual edge effects
+    ! do i = 1, nex
+    !    if( abs(ReW1_conv(i)) .lt. abs(dyn * photmax) ) ReW1_conv(i) = 0.0
+    ! end do
 
 
-    out12 = (out_photarx_delta * out_reline) * nexm1
-    call fftw_execute_dft_c2r(plan12, out12, out_conv12)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ReW2_conv(i) = out_conv12(i + nex/2 + 1)
-       photmax = max( photmax , ReW2_conv(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ReW2_conv(i)) .lt. abs(dyn * photmax) ) ReW2_conv(i) = 0.0
-    end do
+    ! out11 = (out_photarx * out_imline_a) * nexm1
+    ! call fftw_execute_dft_c2r(plan11, out11, out_conv11)
+    ! ! Populate output array
+    ! photmax = 0.0
+    ! do i = 1, nex
+    !    ImW1_conv(i) = out_conv11(i + nex/2 + 1)
+    !    photmax = max( photmax , ImW1_conv(i) )
+    ! end do
+    ! ! Clean any residual edge effects
+    ! do i = 1, nex
+    !    if( abs(ImW1_conv(i)) .lt. abs(dyn * photmax) ) ImW1_conv(i) = 0.0
+    ! end do
 
 
-    out13 = (out_photarx_delta * out_imline) * nexm1
-    call fftw_execute_dft_c2r(plan13, out13, out_conv13)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ImW2_conv(i) = out_conv13(i + nex/2 + 1)
-       photmax = max( photmax , ImW2_conv(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ImW2_conv(i)) .lt. abs(dyn * photmax) ) ImW2_conv(i) = 0.0
-    end do
+    ! out12 = (out_photarx_delta * out_reline) * nexm1
+    ! call fftw_execute_dft_c2r(plan12, out12, out_conv12)
+    ! ! Populate output array
+    ! photmax = 0.0
+    ! do i = 1, nex
+    !    ReW2_conv(i) = out_conv12(i + nex/2 + 1)
+    !    photmax = max( photmax , ReW2_conv(i) )
+    ! end do
+    ! ! Clean any residual edge effects
+    ! do i = 1, nex
+    !    if( abs(ReW2_conv(i)) .lt. abs(dyn * photmax) ) ReW2_conv(i) = 0.0
+    ! end do
 
 
-    out14 = (out_photarx_dlogxi * out_reline) * nexm1
-    call fftw_execute_dft_c2r(plan14, out14, out_conv14)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ReW3_conv(i) = out_conv14(i + nex/2 + 1)
-       photmax = max( photmax , ReW3_conv(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ReW3_conv(i)) .lt. abs(dyn * photmax) ) ReW3_conv(i) = 0.0
-    end do
+    ! out13 = (out_photarx_delta * out_imline) * nexm1
+    ! call fftw_execute_dft_c2r(plan13, out13, out_conv13)
+    ! ! Populate output array
+    ! photmax = 0.0
+    ! do i = 1, nex
+    !    ImW2_conv(i) = out_conv13(i + nex/2 + 1)
+    !    photmax = max( photmax , ImW2_conv(i) )
+    ! end do
+    ! ! Clean any residual edge effects
+    ! do i = 1, nex
+    !    if( abs(ImW2_conv(i)) .lt. abs(dyn * photmax) ) ImW2_conv(i) = 0.0
+    ! end do
 
 
-    out15 = (out_photarx_dlogxi * out_imline) * nexm1
-    call fftw_execute_dft_c2r(plan15, out15, out_conv15)
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-       ImW3_conv(i) = out_conv15(i + nex/2 + 1)
-       photmax = max( photmax , ImW3_conv(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-       if( abs(ImW3_conv(i)) .lt. abs(dyn * photmax) ) ImW3_conv(i) = 0.0
-    end do
+    ! out14 = (out_photarx_dlogxi * out_reline) * nexm1
+    ! call fftw_execute_dft_c2r(plan14, out14, out_conv14)
+    ! ! Populate output array
+    ! photmax = 0.0
+    ! do i = 1, nex
+    !    ReW3_conv(i) = out_conv14(i + nex/2 + 1)
+    !    photmax = max( photmax , ReW3_conv(i) )
+    ! end do
+    ! ! Clean any residual edge effects
+    ! do i = 1, nex
+    !    if( abs(ReW3_conv(i)) .lt. abs(dyn * photmax) ) ReW3_conv(i) = 0.0
+    ! end do
+
+
+    ! out15 = (out_photarx_dlogxi * out_imline) * nexm1
+    ! call fftw_execute_dft_c2r(plan15, out15, out_conv15)
+    ! ! Populate output array
+    ! photmax = 0.0
+    ! do i = 1, nex
+    !    ImW3_conv(i) = out_conv15(i + nex/2 + 1)
+    !    photmax = max( photmax , ImW3_conv(i) )
+    ! end do
+    ! ! Clean any residual edge effects
+    ! do i = 1, nex
+    !    if( abs(ImW3_conv(i)) .lt. abs(dyn * photmax) ) ImW3_conv(i) = 0.0
+    ! end do
 
 ! #ifdef DEBUG
 !     do i = 1, nex
@@ -445,30 +511,64 @@ ReW2_conv(nex), ImW2_conv(nex), ReW3_conv(nex), ImW3_conv(nex)
 
   end subroutine conv_all_FFTw
 
-   subroutine padding4(line, pad_line)
+   subroutine padding4FT(line, padFT_line)
      implicit none 
      real           , intent(in)  :: line(nex)
-     doubleprecision, intent(out) :: pad_line(4 * nex)
-     
+     complex        , intent(out) :: padFT_line(nec)
+   
      integer :: i 
      
      ! Fill padded arrays
-     pad_line(1) = 0.0
+     in(1) = 0.0
      do i = 1, nex
-        pad_line(i+1) = line(i)
+        in(i+1) = line(i)
      end do
      do i = 2, 3 * nex
-        pad_line(i + nex) = 0.
+        in(i + nex) = 0.
      end do
      
-   end subroutine padding4
+     call fftw_execute_dft_r2c(plan1, in, out)
+     
+     padFT_line = out
 
-! #else
-!   subroutine init_fftw_allconv()
-!     implicit none
-!     print *, "Without FFTW"
-!   end subroutine init_fftw_allconv
-! #endif /*DO_FFTW*/
+   end subroutine padding4FT
+
+
+   subroutine de_paddingFT(dyn, padFT_line, out_line)
+     implicit none 
+     real    , intent(in) :: dyn
+     complex , intent(in) :: padFT_line(nec)
+     real    , intent(out):: out_line(nex)
+
+     integer :: i 
+     real    :: photmax
+
+     in_conv = padFT_line
+
+     call fftw_execute_dft_c2r(plan2, in_conv, out_conv)
+
+     ! Populate output array
+     photmax = 0.0
+     do i = 1, nex
+        out_line(i) = out_conv(i + nex/2 + 1)
+        photmax = max( photmax , out_line(i) )
+     end do
+     ! Clean any residual edge effects
+     do i = 1, nex
+        if( abs(out_line(i)) .lt. abs(dyn * photmax) ) out_line(i) = 0.0
+     end do
+
+     return 
+   end subroutine de_paddingFT
+
+
+
+#else
+  subroutine init_fftw_allconv()
+    implicit none
+    print *, "Without FFTW"
+  end subroutine init_fftw_allconv
+#endif /*DO_FFTW*/
 
 end module conv_mod
 
