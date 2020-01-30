@@ -7,7 +7,7 @@ subroutine pad4FFT(ne,photar,padFT)
   integer ne,i
   real photar(ne),padphot(4*ne)
   complex padFT(4*ne)
-
+  
 ! Pad out the array
   padphot = 0.0
   do i = 1,ne
@@ -110,21 +110,31 @@ subroutine E_FT(nex,photarx,bc)
   !-ve frequencies
   do i = 1,nex/2-1
     bdata(2*i+nex+1) = photarx(i)
-  end do
-  !DC component
+  end do 
+ !DC component
   bdata(1) = photarx(nex/2)
   !+ve frequencies
   do i = nex/2,nex
     bdata(2*i-nex+1) = photarx(i)
   end do
-      
+
+! #ifdef DEBUG
+    ! do i = 1, nex
+    !    write(61, *)  i , bdata(2*i - 1)
+    ! end do
+! #endif
+
 ! Now do the inverse FFT
   call ourfour1(bdata,nex,-1)
-      
+
 ! Now put into complex arrays
   do i = 1,nex
     bc(i) = complex( bdata(2*i-1) , bdata(2*i) ) / sqrt(float(nex))
   end do
+
+  ! do i = 1, nex
+  !      write(64, *)  i , bc(i)
+  ! end do
 
   return
 end subroutine E_FT

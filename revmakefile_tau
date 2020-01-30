@@ -50,7 +50,7 @@ run: $(FOBJ) $(COBJ)
 	gfortran $(optionsL) -fno-second-underscore -fno-automatic -fPIC $(FOBJ) $(COBJ) $(libs) -o exe
 
 clean:
-	rm -vf *.o *.mod *~ subroutines/*~ *.i90 *.s
+	rm -vf *.o *.mod *~ subroutines/*~ *.i90 *.s exe
 
 # dependencies
 $(main).o:   amodules.o  srevtrans.o  $(COBJ)
