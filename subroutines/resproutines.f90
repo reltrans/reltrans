@@ -363,8 +363,8 @@ subroutine initmatrix
   call getdim(respname,nenerg,numchn)
   
 !Allocate the arrays
-  allocate( En(nenerg) )
-  allocate( Echn(numchn) )
+  allocate( En(0:nenerg) )
+  allocate( Echn(0:numchn) )
   allocate( resp(numchn,nenerg) )
   allocate( Ngrp(nenerg) )
   allocate( fchan(nenerg,numchn) )
