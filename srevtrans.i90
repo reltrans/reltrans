@@ -1,7 +1,7 @@
 # 1 "srevtrans.f90"
 # 1 "<built-in>"
 # 1 "<command-line>"
-# 1 "/scratch/guglielmo/git/reverberation_code//"
+# 1 "/Users/gullo/Work/git/reverberation_code//"
 # 1 "srevtrans.f90"
 ! This calculates a relativistic transfer function for an on-axis lamppost source
 ! including as many effects as possible:
@@ -350,7 +350,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
                     write(*, *) "FFtw convolution end"
 
                  ! else 
-! #ifdef DEBUG
+! #ifdef 1
 !     do i = 1, nex
 !        write(50, *)  i, photarx(i)
 !        write(55, *)  i, reline(i)
@@ -358,7 +358,15 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 ! #endif
 
 
-# 365 "srevtrans.f90"
+
+    ! write(71, *) 'skip on'
+    do i = 1, nex
+       ! write(71, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
+
+       write(71, *) i, ReW0(i,j)
+    end do
+    write(71, *) 'no no'
+
 
 # 439 "srevtrans.f90"
 

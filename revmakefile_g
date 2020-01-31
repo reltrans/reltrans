@@ -17,17 +17,17 @@
 # control options on which code to do
 main    = main_test
 do_fftw = 1
-debug   = 0
+debug   = 1
 
 # compiling options
-prof         = -pg -g -fbacktrace 
+prof         = -g -fbacktrace 
 optimization = -O3 -fopenmp
 preprocessor = -x f95-cpp-input
 
 # libs and includes
 incs = -I /usr/local/Cellar/fftw/3.3.8_1/include/ -ffree-line-length-none -I ./ -I ./subroutines/
 libs = -L /usr/local/Cellar/fftw/3.3.8_1/lib/ -lfftw3_omp -lfftw3 -lm \
-       -L/Users/gullo/Software/heasoft-6.26.1/x86_64-apple-darwin18.7.0/lib/  -lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS -lwcs-5.16 -lCCfits_2.5 -lhdsp_2.9 -ltcl8.6
+       -L/Users/gullo/Software/heasoft-6.26.1/x86_64-apple-darwin18.7.0/lib/  -lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS #-lwcs-5.16 -lCCfits_2.5 -lhdsp_2.9 -ltcl8.6 
 
 # the object files to produce
 FOBJ = amodules.o $(main).o srevtrans.o
