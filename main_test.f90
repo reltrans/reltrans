@@ -5,6 +5,7 @@ program main_test
   integer ne,i,ifl
   parameter (ne=6000)
   real Emax,Emin,ear(0:ne),param(19),photar(ne),E,dE
+  real relxill_par(12)
 
   !----Parameters-------------------
   param(1)  = 6.0     !h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
@@ -53,6 +54,24 @@ program main_test
      end if
   end do
   write(99,*)"no no"
+
+
+  relxill_par(1)  = param(1) 
+  relxill_par(2)  = param(2) 
+  relxill_par(3)  = param(3) 
+  relxill_par(4)  = param(4) 
+  relxill_par(5)  = param(5) 
+  relxill_par(6)  = param(6) 
+  relxill_par(7)  = param(7) 
+  relxill_par(8)  = param(8) 
+  relxill_par(9)  = param(9) 
+  relxill_par(10) = param(10) 
+  relxill_par(11) = param(12) 
+  relxill_par(12) = 0.0 
+  
+  relxill_par = dble(relxill_par)
+  
+  call lmodrelxilllp()
   
   ! param(12) = 0.8
 
