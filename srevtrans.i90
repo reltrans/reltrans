@@ -370,17 +370,25 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 
 # 439 "srevtrans.f90"
 
-              end do !end of the frequency loop 
+                 end do !end of the frequency loop 
 
+              end do
            end do
-        end do
 
-     end if
+        end if
 
   
 ! Calculate raw FT of the full spectrum without absorption
   call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
                 gso,real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
+
+write(*,*) '****** frequency number *******', nf
+
+
+    do i = 1, nex
+       write(21, *)  i, ReSraw(i,1)
+       write(22, *)  i, ImSraw(i,1)
+    end do
 
    
 ! Calculate absorption and multiply by the raw FT
@@ -394,8 +402,24 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
      end do
   end do
 
+
+
+    do i = 1, nex
+       write(23, *)  i, ReSrawa(i,1)
+       write(24, *)  i, ImSrawa(i,1)
+    end do
+
+
 ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
   call propercross(nex,nf,earx,ReSrawa,ImSrawa,ReGrawa,ImGrawa)
+
+
+    do i = 1, nex
+       write(25, *)  i, ReGrawa(i,1)
+       write(26, *)  i, ImGrawa(i,1)
+    end do
+
+
 
 ! Apply phase correction parameter to the cross-spectral model (for bad calibration)
   do j = 1,nf
@@ -406,11 +430,17 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   end do
 
 
+    do i = 1, nex
+       write(27, *)  i, ReG(i,1)
+       write(28, *)  i, ImG(i,1)
+    end do
+
+
 ! Average over the frequency range
   if( DC .eq. 1 )then
      do i = 1,nex
-        ReGbar(i) = ReG(i,j)
-        ImGbar(i) = ImG(i,j)
+        ReGbar(i) = ReG(i,1)
+        ImGbar(i) = ImG(i,1)
      end do
   else
      ReGbar = 0.0

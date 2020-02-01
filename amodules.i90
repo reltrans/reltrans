@@ -146,6 +146,8 @@ ReW2_conv(nex), ImW2_conv(nex), ReW3_conv(nex), ImW3_conv(nex)
     do i = 1,  nec
        write(54, *) i , real(padFT_photarx(i))
        write(55, *) i , real(padFT_reline(i))
+       write(56, *) i , aimag(padFT_photarx(i)) 
+       write(57, *) i , aimag(padFT_reline(i)) 
     end do
 
 

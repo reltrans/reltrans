@@ -414,41 +414,49 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 
                     write(*, *) "Adam convolution end"
 
-
+                    
 #ifdef DEBUG
 
-    do i = 1, nex
-       write(60, *)  i, photarx(i)
-       write(65, *)  i, reline(i)
-       ! write(62, *)  i, FTphotarx(i)
-       ! write(68, *)  i, FTreline(i)
-    end do
+!     do i = 1, nex
+!        write(60, *)  i, photarx(i)
+!        write(65, *)  i, reline(i)
+!        ! write(62, *)  i, FTphotarx(i)
+!        ! write(68, *)  i, FTreline(i)
+!     end do
 
 
 
-    do i = 1, nex
-       ! write(81, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
-       write(81, *) i, ReW0(i,j)
-    end do
+                    do i = 1, nex
+                       ! write(81, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
+                       write(81, *) i, ReW0(i,j)
+                    end do
 #endif
-
+                    
 
 
                  
 #endif /*DO_FFTW*/ !end of the fftw if 
 
-              end do !end of the frequency loop 
+                 end do !end of the frequency loop 
 
+              end do
            end do
-        end do
 
-     end if
+        end if
 
   
 ! Calculate raw FT of the full spectrum without absorption
   call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
                 gso,real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
 
+write(*,*) '****** frequency number *******', nf
+
+#ifdef DEBUG
+    do i = 1, nex
+       write(21, *)  i, ReSraw(i,1)
+       write(22, *)  i, ImSraw(i,1)
+    end do
+#endif
    
 ! Calculate absorption and multiply by the raw FT
   call FNINIT
@@ -461,8 +469,24 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
      end do
   end do
 
+
+#ifdef DEBUG
+    do i = 1, nex
+       write(23, *)  i, ReSrawa(i,1)
+       write(24, *)  i, ImSrawa(i,1)
+    end do
+#endif
+
 ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
   call propercross(nex,nf,earx,ReSrawa,ImSrawa,ReGrawa,ImGrawa)
+
+#ifdef DEBUG
+    do i = 1, nex
+       write(25, *)  i, ReGrawa(i,1)
+       write(26, *)  i, ImGrawa(i,1)
+    end do
+#endif
+
 
 ! Apply phase correction parameter to the cross-spectral model (for bad calibration)
   do j = 1,nf
@@ -472,12 +496,18 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
      end do
   end do
 
+#ifdef DEBUG
+    do i = 1, nex
+       write(27, *)  i, ReG(i,1)
+       write(28, *)  i, ImG(i,1)
+    end do
+#endif
 
 ! Average over the frequency range
   if( DC .eq. 1 )then
      do i = 1,nex
-        ReGbar(i) = ReG(i,j)
-        ImGbar(i) = ImG(i,j)
+        ReGbar(i) = ReG(i,1)
+        ImGbar(i) = ImG(i,1)
      end do
   else
      ReGbar = 0.0
