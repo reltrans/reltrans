@@ -424,8 +424,6 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 !        ! write(68, *)  i, FTreline(i)
 !     end do
 
-
-
                     do i = 1, nex
                        ! write(81, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
                        write(81, *) i, ReW0(i,j)

@@ -137,19 +137,7 @@ ReW2_conv(nex), ImW2_conv(nex), ReW3_conv(nex), ImW3_conv(nex)
     conv = (padFT_photarx_dlogxi * padFT_imline) * nexm1
     call de_paddingFT(dyn, conv, ImW3_conv)
 
-
-    do i = 1,  nex
-       write(51, *) i , photarx(i)
-       write(52, *) i , reline(i) 
-       write(53, *) i , ReW0_conv(i)
-    end do
-    do i = 1,  nec
-       write(54, *) i , real(padFT_photarx(i))
-       write(55, *) i , real(padFT_reline(i))
-       write(56, *) i , aimag(padFT_photarx(i)) 
-       write(57, *) i , aimag(padFT_reline(i)) 
-    end do
-
+# 148 "amodules.f90"
 
   end subroutine conv_all_FFTw
 

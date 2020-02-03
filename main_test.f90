@@ -4,18 +4,19 @@ program main_test
   implicit none
   integer ne,i,ifl
   parameter (ne=6000)
-  real Emax,Emin,ear(0:ne),param(19),photar(ne),E,dE
-  real relxill_par(12)
+  real Emax, Emin, ear(0:ne), param(19), photar(ne), E, dE
+  double precision :: relxill_par(12), dear(0:ne), dphotar(ne), dphoter(ne)
+  character (len = 100) :: char 
 
   !----Parameters-------------------
   param(1)  = 6.0     !h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
   param(2)  = 0.9     !a     !BH spin
   param(3)  = 30.0    !inc   !Inclination angle in degrees
   param(4)  = -1.0    !rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
-  param(5)  = 20000.0 !rout  !Disk outer radius in Rg - will probably hardwire this
+  param(5)  = 400.0 !rout  !Disk outer radius in Rg - will probably hardwire this
   param(6)  = 0.0     !zcos  !Cosmological redshift
   param(7)  = 2.0     !Gamma !Photon index
-  param(8)  = 3.75    !logxi !log10xi - ionisation parameter
+  param(8)  = 3.0    !logxi !log10xi - ionisation parameter
   param(9)  = 1.0     !Afe   !Iron abundance      
   param(10) = 300.0   !kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
   param(11) = 0.0     !Nh
@@ -35,7 +36,7 @@ program main_test
     ear(i) = Emin * (Emax/Emin)**(real(i)/real(ne))
   end do
 
-  call tdreltransCp(ear,ne,param,ifl,photar)
+ call tdreltrans(ear,ne,param,ifl,photar)
   
   do i = 1,ne
      E  = 0.5 * ( ear(i) + ear(i-1) )
@@ -43,48 +44,44 @@ program main_test
      if( param(16) .gt. 3.5 .and. param(16) .lt. 4.5 .or. param(16) .gt. 5.5 )then
         write(99,*)E, photar(i)/dE
 ! #ifdef DO_FFTW
-!         write(98,*)E, photar(i)/dE
-! #endif
-     else
-        write(99,*)E, E**2*photar(i)/dE
-! #ifdef DO_FFTW
+!         write(99,*)E, E**2*photar(i)/dE
+! #else 
 !         write(98,*)E, E**2*photar(i)/dE
 ! #endif
+     else
+#ifdef DO_FFTW
+        write(99,*)E, E**2*photar(i)/dE
+#else 
+        write(98,*)E, E**2*photar(i)/dE
+#endif
 
      end if
   end do
   write(99,*)"no no"
 
+!Call directly relxilllp to compare with our model
 
-  relxill_par(1)  = param(1) 
-  relxill_par(2)  = param(2) 
-  relxill_par(3)  = param(3) 
-  relxill_par(4)  = param(4) 
-  relxill_par(5)  = param(5) 
-  relxill_par(6)  = param(6) 
-  relxill_par(7)  = param(7) 
-  relxill_par(8)  = param(8) 
-  relxill_par(9)  = param(9) 
-  relxill_par(10) = param(10) 
-  relxill_par(11) = param(12) 
-  relxill_par(12) = 0.0 
+!   relxill_par(1)  = dble(param(1) )
+!   relxill_par(2)  = dble(param(2) )
+!   relxill_par(3)  = dble(param(3) )
+!   relxill_par(4)  = dble(param(4) )
+!   relxill_par(5)  = dble(param(5) )
+!   relxill_par(6)  = dble(param(6) )
+!   relxill_par(7)  = dble(param(7) )
+!   relxill_par(8)  = dble(param(8) )
+!   relxill_par(9)  = dble(param(9) )
+!   relxill_par(10) = dble(param(10)) 
+!   relxill_par(11) = dble(param(12)) 
+!   relxill_par(12) = 1.d0 
   
-  relxill_par = dble(relxill_par)
-  
-  call lmodrelxilllp()
-  
-  ! param(12) = 0.8
 
-  ! call tdreltransCp(ear,ne,param,ifl,photar)
-  
-  ! do i = 1,ne
-  !    E  = 0.5 * ( ear(i) + ear(i-1) )
-  !    dE = ear(i) - ear(i-1)
-  !    if( param(16) .gt. 3.5 .and. param(16) .lt. 4.5 .or. param(16) .gt. 5.5 )then
-  !       write(99,*)E,photar(i)/dE
-  !    else
-  !       write(99,*)E,E**2*photar(i)/dE
-  !    end if
-  ! end do
+!   dear = dble(ear)
+!   call lmodrelxilllpf(dear, ne, relxill_par, ifl, dphotar, dphoter, char)
+
+!   do i = 1, ne 
+!      E  = 0.5 * ( ear(i) + ear(i-1) )
+!      dE = ear(i) - ear(i-1)
+!      write(10, *) E, E**2 * dphotar(i)/ dE
+!   enddo
   
 end program main_test

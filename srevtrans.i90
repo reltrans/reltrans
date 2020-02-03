@@ -350,7 +350,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
                     write(*, *) "FFtw convolution end"
 
                  ! else 
-! #ifdef 1
+! #ifdef DEBUG
 !     do i = 1, nex
 !        write(50, *)  i, photarx(i)
 !        write(55, *)  i, reline(i)
@@ -358,17 +358,9 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 ! #endif
 
 
+# 365 "srevtrans.f90"
 
-    ! write(71, *) 'skip on'
-    do i = 1, nex
-       ! write(71, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
-
-       write(71, *) i, ReW0(i,j)
-    end do
-    write(71, *) 'no no'
-
-
-# 439 "srevtrans.f90"
+# 437 "srevtrans.f90"
 
                  end do !end of the frequency loop 
 
@@ -385,10 +377,10 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 write(*,*) '****** frequency number *******', nf
 
 
-    do i = 1, nex
-       write(21, *)  i, ReSraw(i,1)
-       write(22, *)  i, ImSraw(i,1)
-    end do
+
+
+
+
 
    
 ! Calculate absorption and multiply by the raw FT
@@ -404,20 +396,20 @@ write(*,*) '****** frequency number *******', nf
 
 
 
-    do i = 1, nex
-       write(23, *)  i, ReSrawa(i,1)
-       write(24, *)  i, ImSrawa(i,1)
-    end do
+
+
+
+
 
 
 ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
   call propercross(nex,nf,earx,ReSrawa,ImSrawa,ReGrawa,ImGrawa)
 
 
-    do i = 1, nex
-       write(25, *)  i, ReGrawa(i,1)
-       write(26, *)  i, ImGrawa(i,1)
-    end do
+
+
+
+
 
 
 
@@ -430,10 +422,10 @@ write(*,*) '****** frequency number *******', nf
   end do
 
 
-    do i = 1, nex
-       write(27, *)  i, ReG(i,1)
-       write(28, *)  i, ImG(i,1)
-    end do
+
+
+
+
 
 
 ! Average over the frequency range

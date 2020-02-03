@@ -17,11 +17,11 @@
 # control options on which code to do
 main    = main_test
 do_fftw = 1
-debug   = 1
+debug   = 0
 
 # compiling options
 prof         = -g -fbacktrace 
-optimization = -O3 -fopenmp
+optimization = -O3 #-fopenmp
 preprocessor = -x f95-cpp-input
 
 # libs and includes
