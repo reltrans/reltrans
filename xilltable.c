@@ -13,7 +13,7 @@
    For a copy of the GNU General Public License see
    <http://www.gnu.org/licenses/>.
 
-    Copyright 2017 Thomas Dauser, Remeis Observatory & ECAP
+    Copyright 2019 Thomas Dauser, Remeis Observatory & ECAP
 */
 
 #include "xilltable.h"
@@ -392,7 +392,6 @@ void norm_xillver_spec(xill_spec* spec, double incl){
 	/** adds the proper flux normalization for a semi-infinate slab
 	 *  under inclination angle incl */
 	int ii;
-	/* printf(" incl=%.3f FAC* %.4e \n",incl,cos(incl*M_PI/180)); */
 	for (ii=0; ii<spec->n_ener; ii++){
 		spec->flu[0][ii] *= 0.5*cos(incl*M_PI/180);
 	}
