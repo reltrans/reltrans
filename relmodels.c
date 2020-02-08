@@ -827,6 +827,15 @@ void tdxillver(const double* ener0, const int n_ener0, double* photar, const dou
 	xillver_base(ener0, n_ener0, photar, param_struct, status);
 }
 
+/** ***intensity version of XSPEC XILLVER MODEL FUNCTION **/
+void i_tdxillver(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status){
+
+	xillParam* param_struct = init_par_xillver(parameter,n_parameter,status);
+	CHECK_STATUS_VOID(*status);
+
+	i_xillver_base(ener0, n_ener0, photar, param_struct, status);
+}
+
 /** XSPEC XILLVER NTHCOMP MODEL FUNCTION **/
 void tdxillver_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status){
 
@@ -836,6 +845,14 @@ void tdxillver_nthcomp(const double* ener0, const int n_ener0, double* photar, c
 	xillver_base(ener0, n_ener0, photar, param_struct, status);
 }
 
+/** XSPEC XILLVER NTHCOMP MODEL FUNCTION (intensity version) **/
+void i_tdxillver_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status){
+
+	xillParam* param_struct = init_par_xillver_nthcomp(parameter,n_parameter,status);
+	CHECK_STATUS_VOID(*status);
+
+	i_xillver_base(ener0, n_ener0, photar, param_struct, status);
+}
 
 /** XSPEC XILLVER DENS MODEL FUNCTION **/
 void tdxillverdens(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status){
@@ -845,6 +862,17 @@ void tdxillverdens(const double* ener0, const int n_ener0, double* photar, const
 
 	xillver_base(ener0, n_ener0, photar, param_struct, status);
 }
+
+
+/** XSPEC XILLVER DENS MODEL FUNCTION (intensity version)**/
+void i_tdxillverdens(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status){
+
+	xillParam* param_struct = init_par_xillver_dens(parameter,n_parameter,status);
+	CHECK_STATUS_VOID(*status);
+
+	i_xillver_base(ener0, n_ener0, photar, param_struct, status);
+}
+
 
 /** BASIC XILLVER MODEL FUNCTION **/
 void xillver_base(const double* ener0, const int n_ener0, double* photar, xillParam* param_struct, int* status){
@@ -887,6 +915,49 @@ void xillver_base(const double* ener0, const int n_ener0, double* photar, xillPa
 	free_xill_spec(spec);
 	free(ener_shifted);
 }
+
+/** BASIC XILLVER ***intensity*** MODEL FUNCTION **/
+void i_xillver_base(const double* ener0, const int n_ener0, double* photar, xillParam* param_struct, int* status){
+
+
+	// call the function which calculates the xillver spectrum
+	xill_spec* spec = get_xillver_spectra(param_struct,status);
+	CHECK_STATUS_VOID(*status);
+
+	// =4= rebin to the input grid
+	assert(spec->n_incl==1); // make sure there is only one spectrum given (for the chosen inclination)
+
+	/* /\** add the dependence on incl, assuming a semi-infinite slab **\/ */
+	/* norm_xillver_spec(spec, param_struct->incl); */
+
+	double * ener = (double*) ener0;
+	int n_ener = (int) n_ener0;
+	double flux[n_ener];
+
+	rebin_spectrum( ener, flux,n_ener,spec->ener,spec->flu[0],spec->n_ener);
+
+	int ii;
+
+	for (ii=0; ii<n_ener0; ii++){
+		// we make the spectrum normalization independent of the ionization
+		flux[ii] /= pow(10,param_struct->lxi) ;
+		if (fabs(param_struct->dens - 15) > 1e-6 ){
+			flux[ii] /= pow(10,param_struct->dens - 15);
+		}
+	}
+
+	add_primary_component(ener,n_ener,flux,NULL,param_struct, status);
+
+	double* ener_shifted = shift_energ_spec_1keV(ener, n_ener, 1.0, param_struct->z,status);
+
+	rebin_spectrum(ener_shifted, photar, n_ener, ener, flux, n_ener);
+
+	/** free **/
+	free_xillParam(param_struct);
+	free_xill_spec(spec);
+	free(ener_shifted);
+}
+
 
 
 
@@ -1192,12 +1263,34 @@ void lmodxillver(const double* ener0, const int n_ener0, const double* parameter
 	RELXILL_ERROR("evaluating xillver model failed",&status);
 }
 
+/** MODIFIED FOR FORTRAN XSPEC XILLVER MODEL FUNCTION (spectrum is intensity and not flux) **/
+void lmodxillverf_(const double* ener0, const int *n_ener0, const double* parameter, int *ifl, double* photar, double* photer, const char* init){
+
+	const int n_parameter = 7;
+	int status = EXIT_SUCCESS;
+	i_tdxillver(ener0, *n_ener0, photar, parameter, n_parameter, &status);
+
+	if (status!=EXIT_SUCCESS)
+	RELXILL_ERROR("evaluating xillver model failed",&status);
+}
+
 /** XSPEC XILLVER MODEL FUNCTION **/
 void lmodxillverdens(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init){
 
 	const int n_parameter = 7;
 	int status = EXIT_SUCCESS;
 	tdxillverdens(ener0, n_ener0, photar, parameter, n_parameter, &status);
+
+	if (status!=EXIT_SUCCESS)
+	RELXILL_ERROR("evaluating xillver model failed",&status);
+}
+
+/** MODIFIED FOR FORTRAN XSPEC XILLVER MODEL FUNCTION (spectrum is intensity and not flux) **/
+void lmodxillverdensf_(const double* ener0, const int *n_ener0, const double* parameter, int *ifl, double* photar, double* photer, const char* init){
+
+	const int n_parameter = 7;
+	int status = EXIT_SUCCESS;
+	i_tdxillverdens(ener0, *n_ener0, photar, parameter, n_parameter, &status);
 
 	if (status!=EXIT_SUCCESS)
 	RELXILL_ERROR("evaluating xillver model failed",&status);
@@ -1212,6 +1305,17 @@ void lmodxillvernthcomp(const double* ener0, const int n_ener0, const double* pa
 
 	if (status!=EXIT_SUCCESS)
 	RELXILL_ERROR("evaluating xillver model failed",&status);
+}
+
+/** MODIIED FOR FORTRAN XSPEC XILLVERCP MODEL FUNCTION (spectrum is intensity, not flux) **/
+void lmodxillvercpf_(const double* ener0, const int *n_ener0, const double* parameter, int *ifl, double* photar, double* photer, const char* init){
+
+	const int n_parameter = 7;
+	int status = EXIT_SUCCESS;
+	i_tdxillver_nthcomp(ener0, *n_ener0, photar, parameter, n_parameter, &status);
+
+	if (status!=EXIT_SUCCESS)
+	RELXILL_ERROR("evaluating xillvernthcomp model failed",&status);
 }
 
 /** XSPEC RELLINE MODEL FUNCTION **/

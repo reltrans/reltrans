@@ -31,7 +31,7 @@ libs = -L /usr/local/Cellar/fftw/3.3.8_1/lib/ -lfftw3_omp -lfftw3 -lm \
 
 # the object files to produce
 FOBJ = amodules.o $(main).o srevtrans.o
-COBJ = relmodels.o rellp.o relbase.o reltable.o relutility.o donthcomp.o xilltable.o
+COBJ = relmodels.o rellp.o relbase.o reltable.o relutility.o donthcomp.o xilltable.o relcache.o
 
 # build last options from choices
 PPFLAGS =
@@ -79,3 +79,4 @@ reltable.o:
 relutility.o:
 donthcomp.o:
 xilltable.o:
+relcache.o:
