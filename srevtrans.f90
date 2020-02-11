@@ -48,7 +48,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,rnmax,d
   double precision fhisave,flosave,rh,frrel,lens,fc
   real afac,param(19),ear(0:ne),gso
-  real Afe,Ecut_s,Ecut_obs,logxi,xillpar(7),E,dE,earx(0:nex),Emax,Emin,dloge
+  real Afe,Ecut_s,Ecut_obs,logxi,lognep, xillpar(7),E,dE,earx(0:nex),Emax,Emin,dloge
   real reline(nex),imline(nex),photarx(nex)
   real reconvmu(nex),imconvmu(nex),mue,gsd
   real phase,ReS(ne),ImS(ne),photar(ne)
@@ -61,7 +61,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   real, allocatable :: ReW3(:,:),ImW3(:,:)
   real, allocatable :: ReSraw(:,:),ImSraw(:,:),ReSrawa(:,:),ImSrawa(:,:)
   real, allocatable :: ReGrawa(:,:),ImGrawa(:,:),ReG(:,:),ImG(:,:)
-  double precision, allocatable :: logxir(:),gsdr(:)
+  double precision, allocatable :: logxir(:),gsdr(:), logner(:)
   complex FTphotarx(4*nex),FTphotarx_delta(4*nex),FTreline(4*nex),FTimline(4*nex)
   complex FTreline_a(4*nex),FTimline_a(4*nex),FTreconv(4*nex),FTimconv(4*nex)
   complex FTphotarx_dlogxi(4*nex),sum
@@ -120,7 +120,8 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   Gamma    = dble( param(7) )
   logxi    = param(8)
   Afe      = param(9)
-  Ecut_obs = param(10)
+!   Ecut_obs = param(10)
+  lognep   = param(10)
   Nh       = param(11)
   afac     = param(12)
   Mass     = dble( param(13) )
@@ -130,6 +131,8 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   DelA     = param(17)
   DelAB    = param(18)
   g        = param(19)
+
+  Ecut_obs = 300.0 ! It is frozen in xillverD 
 
   honr = 0.d0
   muobs = cos( inc * pi / 180.d0 )
@@ -245,13 +248,14 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   end if
      
   if( needtrans )then
-     !Allocate arrays for kernels
+     !Allocate arrays for kernels     
      if( .not. allocated(logxir) ) allocate( logxir(xe) )
      if( .not. allocated(gsdr)   ) allocate( gsdr(xe) )
+     if( .not. allocated(logner) ) allocate( logner(xe) )
      !Calculate the Kernel for the given parameters
      status_re_tau = .true.
      call rtrans(a,h,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,nro,nphi,nex,dloge,&
-          nf,fhi,flo,me,xe,logxi,transe,transea,frobs,frrel,lens,logxir,gsdr)      
+          nf,fhi,flo,me,xe,logxi, lognep, transe,transea,frobs,frrel,lens,logxir,gsdr, logner)
   end if
   
   if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",afac*frobs
@@ -278,8 +282,9 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
      DeltaGamma = 0.01
      Gamma1 = real(Gamma) - 0.5*DeltaGamma
      Gamma2 = real(Gamma) + 0.5*DeltaGamma
-     !Get continuum spectrum
-     call getcont(nex,earx,Gamma,Afe,Ecut_obs,logxi,Cp,contx,xillpar)
+     !Get continuum spectrum (D is the high density xillver)
+!      call getcont(nex,earx,Gamma,Afe,Ecut_obs,logxi,Cp,contx,xillpar)
+     call getcontD(nex, earx, Gamma, Afe, logdens, logxi, Cp, contx, xillpar)
      if( verbose .gt. 0 ) call sourcelum(nex,earx,contx,real(mass),gso,real(Gamma))
      !Get logxi values corresponding to Gamma1 and Gamma2
      call xilimits(nex,earx,contx,DeltaGamma,gso,real(zcos),dlogxi1,dlogxi2)
@@ -287,10 +292,15 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
      xillpar(7) = -1.0       !reflection fraction of 1             
      !Loop over radius, emission angle and frequency
      do rbin = 1,xe  !Loop over radial zones
-        xillpar(3) = real( gsdr(rbin) ) * Ecut_s
+
+!Remember: xillpar(3) is the Ecut when xillver is with density fixed to 10^15 
+!          whereas in xillverD the parameter 3 is logN 
+!         xillpar(3) = real( gsdr(rbin) ) * Ecut_s
+        xillpar(3) = logdens
         logxi0     = real( logxir(rbin) )
         if( xe .eq. 1 )then
-           xillpar(3) = Ecut_s
+!            xillpar(3) = Ecut_s
+           xillpar(3) = logdens
            logxi0     = logxi
         end if
         do mubin = 1,me      !loop over emission angle zones
@@ -301,23 +311,28 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
            !Call xillver
            xillpar(1) = real(Gamma)
            xillpar(4) = logxi0
-           call myxill(earx,nex,xillpar,ifl,Cp,photarx)
+!           call myxill   (earx,nex,xillpar,ifl,Cp,photarx)
+           call myxill_hd(earx,nex,xillpar,ifl,Cp,photarx)
            !non linear effects
            !Gamma variations
            xillpar(1) = Gamma1
            xillpar(4) = logxi0 + ionvar*dlogxi1
-           call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
+!           call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
+           call myxill_hd(earx,nex,xillpar,ifl,Cp,photarx_1)
            xillpar(1) = Gamma2
            xillpar(4) = logxi0 + ionvar*dlogxi2
            call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
+           call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_2)
            photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
            !xi variations
            xillpar(1) = real(Gamma)
            xillpar(4) = logxi0 + ionvar*dlogxi1
            call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
+           call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_1)
            xillpar(1) = real(Gamma)
            xillpar(4) = logxi0 + ionvar*dlogxi2
            call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
+           call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_2)
            photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
            !Loop through frequencies
            do j = 1,nf

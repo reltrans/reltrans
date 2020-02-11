@@ -1,6 +1,7 @@
 !-----------------------------------------------------------------------
 subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,nro,nphi,ne,dloge,&
-           nf,fhi,flo,me,xe,rlxi,transe,transe_a,frobs,frrel,lens,logxir,gsdr)
+           nf,fhi,flo,me,xe,rlxi, lognep, transe,transe_a,frobs,frrel,lens&
+           &,logxir,gsdr, logner)
 ! Code to calculate the transfer function for an accretion disk.
 ! This code first does full GR ray tracing for a camera with impact parameters < bmax
 ! It then also does straight line ray tracing for impact parameters >bmax
@@ -28,8 +29,9 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,nro,nphi,ne,dloge,
   use blcoordinate
   implicit none
   integer nro,nphi,ndelta,ne,nf,me,xe
-  double precision spin,h,mu0,Gamma,rin,rout,zcos,fhi,flo,honr,cosdout,logxir(xe),gsdr(xe)
-  real rlxi,dloge
+  double precision spin,h,mu0,Gamma,rin,rout,zcos,fhi,flo,honr&
+       &,cosdout,logxir(xe),gsdr(xe), logner(xe)
+  real rlxi, dloge, lognep
   complex cexp,transe(ne,nf,me,xe),transe_a(ne,nf,me,xe)
   integer i,npts,j,odisc,n,gbin,rbin,mubin
   parameter (ndelta=1000)
@@ -79,9 +81,10 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,nro,nphi,ne,dloge,
   call getdcos(spin,h,mudisk,ndelta,rout,npts,rlp,dcosdr,tlp,cosd,cosdout)
 
 ! Set up grids for ionization and g-factor as a function of radius
-  call radfunctions(xe,rin,rnmax,dble(rlxi),spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts,logxir,gsdr)
+  call radfunctions(xe,rin,rnmax,dble(rlxi),dble(lognep), spin,h,honr,rlp,dcosdr&
+       &,cosd,ndelta,rmin,npts,logxir,gsdr, logner)
   !Outputs: logxir(1:xe),gsdr(1:xe)
-  
+ 
 ! Calculate the relxill reflection fraction
   frrel = sysfref(rin,rlp,cosd,ndelta,cosdout)      
       
@@ -265,15 +268,15 @@ end function sysfref
 !-----------------------------------------------------------------------
 
 
-      
 !-----------------------------------------------------------------------
-subroutine radfunctions(xe,rin,rnmax,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts,logxir,gsdr)
+subroutine radfunctions(xe,rin,rnmax,logxip, lognep, spin,h,honr,rlp,dcosdr&
+     &,cosd,ndelta,rmin,npts,logxir,gsdr, logner)
 ! In  : xe,rin,rnmax,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
 ! Out : logxir(1:xe),gsdr(1:xe)
   implicit none
   integer xe,ndelta,npts,adensity
-  double precision rin,rnmax,logxip,spin,h,honr,rlp(ndelta),dcosdr(ndelta)
-  double precision cosd(ndelta),rmin,logxir(xe),gsdr(xe)
+  double precision rin,rnmax,logxip,lognep,spin,h,honr,rlp(ndelta),dcosdr(ndelta)
+  double precision cosd(ndelta),rmin,logxir(xe),gsdr(xe), logner(xe)
   integer i,kk,get_index,myenv
   double precision rp,logxinorm,logxiraw,mylogne,re,mus,interper,newtex
   double precision mui,dinang,gsd,dglpfac
@@ -287,7 +290,7 @@ subroutine radfunctions(xe,rin,rnmax,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,r
   logxinorm = logxinorm - adensity * mylogne(rp,rin)
   !Now calculate logxi itself
   rp = rin * ( 11.0 / 9.0 )**2
-  do i = 1,xe-1
+  do i = 1, xe - 1
      !Calculate the radius for this bin
      if( i .eq. 1 )then
         re = 10.0**( 0.5 * ( log10(rin) + log10(rp) ) )
@@ -310,6 +313,8 @@ subroutine radfunctions(xe,rin,rnmax,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,r
      logxir(i) = min( logxir(i) , 4.7d0 )
      !Also save gsd(r)
      gsdr(i) = gsd
+
+     logner(i) = lognep * mylogner(rp, rin)
   end do
   logxir(xe) = 0.0
   gsdr(xe)   = dglpfac(1000.d0,spin,h)
@@ -344,6 +349,16 @@ end function logxiraw
   
 !-----------------------------------------------------------------------
 function mylogne(r,rin)
+! Calculates log10(ne). Don't let r=rin
+  implicit none
+  double precision mylogne,r,rin
+  mylogne = 1.5 * log10(r) - 2.0 * log10( 1.0 - sqrt(rin/r) )
+  return
+end function mylogne 
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+function mylogne_hD(r,rin)
 ! Calculates log10(ne). Don't let r=rin
   implicit none
   double precision mylogne,r,rin

@@ -1,4 +1,28 @@
 !-----------------------------------------------------------------------
+      subroutine getcontD(nex, earx, Gamma, Afe, logdens, logxi, Cp, contx, xillparD)
+! Calculates continuum spectrum
+      implicit none
+      integer nex,ifl,Cp
+      real earx(0:nex), Afe, logxi, contx(nex), xillparD(7)
+      double precision Gamma
+        
+      !First continuum
+      xillparD(1) = real( Gamma )
+      xillparD(2) = Afe
+      xillparD(3) = dens
+      xillparD(4) = logxi
+      xillparD(5) = 0.0   !cosmological redshift is accounted for by the transfer function
+      xillparD(6) = 30.0       !inclination angle (doesn't matter for continuum)
+      xillparD(7) = 0.0       !reflection fraction of 0
+
+      ifl        = 1
+
+      call myxill_hD(earx, nex, xillparD, ifl, Cp, contx)
+      return
+    end subroutine getcontD
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
       subroutine getcont(nex,earx,Gamma,Afe,Ecut_obs,logxi,Cp,contx,xillpar)
 ! Calculates continuum spectrum
       implicit none
@@ -15,7 +39,8 @@
       xillpar(6) = 30.0       !inclination angle (doesn't matter for continuum)
       xillpar(7) = 0.0       !reflection fraction of 0
       ifl        = 1
-      call myxill(earx,nex,xillpar,ifl,Cp,contx)
+
+      call myxill_hD(earx,nex,xillparD,ifl,Cp,contx)
       return
       end subroutine getcont
 !-----------------------------------------------------------------------

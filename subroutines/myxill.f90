@@ -1,20 +1,26 @@
 !-----------------------------------------------------------------------
-      subroutine myxill_hD(ear,ne,param,ifl,Cp,photar)
+      subroutine myxill_hD(ear, ne, param, ifl, Cp, photar)
       implicit none
-      integer ne,ifl,Cp
-      real ear(0:ne),param(7),photar(ne)
-      double precision dxillpar(7),dear(0:ne),dphotar(ne)
-      double precision dphoter(ne)
-      character (len=100) char
+      integer, intent(in)  :: ne,ifl,Cp
+      real,    intent(in)  :: ear(0:ne), param(7),
+      real,    intent(out) :: photar(ne)
+      double precision     :: dxillpar(7), dear(0:ne), dphotar(ne)
+      double precision     :: dphoter(ne)
+      character (len=100)  :: char
+
       dxillpar = dble( param )
       dear = dble( ear )      
-      if( Cp .eq. 0 )then
-        call lmodxillverdensf(dear,ne,dxillpar,ifl,dphotar,dphoter,char)
-      else
-         write(*,*) 'WARNING: there is no nthComp illumination for xillver if you want to use high density'
-        call lmodxillverdensf(dear,ne,dxillpar,ifl,dphotar,dphoter,char)
-!         call lmodxillvercpf(dear,ne,dxillpar,ifl,dphotar,dphoter,char)
-      end if
+
+      call lmodxillverdensf(dear, ne, dxillpar, ifl, dphotar, dphoter, char)
+
+!This if work only when we add xillver with nthComp for High density model 
+!       if( Cp .eq. 0 )then
+!         call lmodxillverdensf(dear,ne,dxillpar,ifl,dphotar,dphoter,char)
+!       else
+!          write(*,*) 'WARNING: there is no nthComp illumination for xillver if you want to use high density'
+!         call lmodxillverdensf(dear,ne,dxillpar,ifl,dphotar,dphoter,char)
+!       end if
+
       photar = sngl( dphotar )      
       return
     end subroutine myxill_hD
