@@ -83,7 +83,7 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,nro,nphi,ne,dloge,
 ! Set up grids for ionization and g-factor as a function of radius
   call radfunctions(xe,rin,rnmax,dble(rlxi),dble(lognep), spin,h,honr,rlp,dcosdr&
        &,cosd,ndelta,rmin,npts,logxir,gsdr, logner)
-  !Outputs: logxir(1:xe),gsdr(1:xe)
+  !Outputs: logxir(1:xe),gsdr(1:xe), logner(1:xe)
  
 ! Calculate the relxill reflection fraction
   frrel = sysfref(rin,rlp,cosd,ndelta,cosdout)      
@@ -290,7 +290,7 @@ subroutine radfunctions(xe,rin,rnmax,logxip, lognep, spin,h,honr,rlp,dcosdr&
   logxinorm = logxinorm - adensity * mylogne(rp,rin)
   !Now calculate logxi itself
   rp = rin * ( 11.0 / 9.0 )**2
-  do i = 1, xe - 1
+  do i = 1, xe - 1 
      !Calculate the radius for this bin
      if( i .eq. 1 )then
         re = 10.0**( 0.5 * ( log10(rin) + log10(rp) ) )
@@ -314,7 +314,9 @@ subroutine radfunctions(xe,rin,rnmax,logxip, lognep, spin,h,honr,rlp,dcosdr&
      !Also save gsd(r)
      gsdr(i) = gsd
 
-     logner(i) = lognep * mylogner(rp, rin)
+     logner(i) = lognep + mylogne(re, rin)
+     write(*,*) 'in radfunc  rin, re, mylogne', i, rin, re,  mylogne(re, rin) 
+     write(*,*) 'logner ', logner(i)
   end do
   logxir(xe) = 0.0
   gsdr(xe)   = dglpfac(1000.d0,spin,h)
@@ -357,18 +359,6 @@ function mylogne(r,rin)
 end function mylogne 
 !-----------------------------------------------------------------------
 
-!-----------------------------------------------------------------------
-function mylogne_hD(r,rin)
-! Calculates log10(ne). Don't let r=rin
-  implicit none
-  double precision mylogne,r,rin
-  mylogne = 1.5 * log10(r) - 2.0 * log10( 1.0 - sqrt(rin/r) )
-  return
-end function mylogne 
-!-----------------------------------------------------------------------
-
-
-
 
 !-----------------------------------------------------------------------
 function get_index(rlp,ndelta,re,rmin,npts)
@@ -383,7 +373,6 @@ function get_index(rlp,ndelta,re,rmin,npts)
   return
 end function get_index
 !-----------------------------------------------------------------------
-
 
 
 !-----------------------------------------------------------------------

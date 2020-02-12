@@ -2,7 +2,7 @@
       subroutine myxill_hD(ear, ne, param, ifl, Cp, photar)
       implicit none
       integer, intent(in)  :: ne,ifl,Cp
-      real,    intent(in)  :: ear(0:ne), param(7),
+      real,    intent(in)  :: ear(0:ne), param(7)
       real,    intent(out) :: photar(ne)
       double precision     :: dxillpar(7), dear(0:ne), dphotar(ne)
       double precision     :: dphoter(ne)

@@ -1,10 +1,12 @@
 !-----------------------------------------------------------------------
-      subroutine getcontD(nex, earx, Gamma, Afe, logdens, logxi, Cp, contx, xillparD)
+      subroutine getcontD(nex, earx, Gamma, Afe, dens, logxi, Cp, contx, xillparD)
 ! Calculates continuum spectrum
       implicit none
-      integer nex,ifl,Cp
-      real earx(0:nex), Afe, logxi, contx(nex), xillparD(7)
-      double precision Gamma
+      integer,          intent(in)  :: nex, Cp
+      integer                       :: ifl 
+      real,             intent(in)  :: earx(0:nex), Afe, logxi, dens
+      real,             intent(out) :: xillparD(7),  contx(nex)
+      double precision, intent(in)  :: Gamma
         
       !First continuum
       xillparD(1) = real( Gamma )
@@ -40,7 +42,7 @@
       xillpar(7) = 0.0       !reflection fraction of 0
       ifl        = 1
 
-      call myxill_hD(earx,nex,xillparD,ifl,Cp,contx)
+      call myxill_hD(earx,nex,xillpar,ifl,Cp,contx)
       return
       end subroutine getcont
 !-----------------------------------------------------------------------

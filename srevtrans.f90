@@ -250,7 +250,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   if( needtrans )then
      !Allocate arrays for kernels     
      if( .not. allocated(logxir) ) allocate( logxir(xe) )
-     if( .not. allocated(gsdr)   ) allocate( gsdr(xe) )
+     if( .not. allocated(gsdr)   ) allocate( gsdr  (xe) )
      if( .not. allocated(logner) ) allocate( logner(xe) )
      !Calculate the Kernel for the given parameters
      status_re_tau = .true.
@@ -284,23 +284,25 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
      Gamma2 = real(Gamma) + 0.5*DeltaGamma
      !Get continuum spectrum (D is the high density xillver)
 !      call getcont(nex,earx,Gamma,Afe,Ecut_obs,logxi,Cp,contx,xillpar)
-     call getcontD(nex, earx, Gamma, Afe, logdens, logxi, Cp, contx, xillpar)
+     call getcontD(nex, earx, Gamma, Afe, lognep, logxi, Cp, contx, xillpar)
      if( verbose .gt. 0 ) call sourcelum(nex,earx,contx,real(mass),gso,real(Gamma))
      !Get logxi values corresponding to Gamma1 and Gamma2
      call xilimits(nex,earx,contx,DeltaGamma,gso,real(zcos),dlogxi1,dlogxi2)
      !Now reflection
      xillpar(7) = -1.0       !reflection fraction of 1             
+
      !Loop over radius, emission angle and frequency
-     do rbin = 1,xe  !Loop over radial zones
+     do rbin = 1, xe  !Loop over radial zones
 
 !Remember: xillpar(3) is the Ecut when xillver is with density fixed to 10^15 
 !          whereas in xillverD the parameter 3 is logN 
 !         xillpar(3) = real( gsdr(rbin) ) * Ecut_s
-        xillpar(3) = logdens
+        xillpar(3) = logner(i)
+        write(*,*) 'logxir, logner ', rbin, logxir(rbin), logner(rbin)
         logxi0     = real( logxir(rbin) )
         if( xe .eq. 1 )then
 !            xillpar(3) = Ecut_s
-           xillpar(3) = logdens
+           xillpar(3) = lognep
            logxi0     = logxi
         end if
         do mubin = 1,me      !loop over emission angle zones
@@ -321,17 +323,17 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
            call myxill_hd(earx,nex,xillpar,ifl,Cp,photarx_1)
            xillpar(1) = Gamma2
            xillpar(4) = logxi0 + ionvar*dlogxi2
-           call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
+!            call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
            call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_2)
            photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
            !xi variations
            xillpar(1) = real(Gamma)
-           xillpar(4) = logxi0 + ionvar*dlogxi1
-           call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
+           xillpar(4) = logxi0 + ionvar * dlogxi1
+!            call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
            call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_1)
            xillpar(1) = real(Gamma)
-           xillpar(4) = logxi0 + ionvar*dlogxi2
-           call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
+           xillpar(4) = logxi0 + ionvar * dlogxi2
+!            call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
            call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_2)
            photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
            !Loop through frequencies
@@ -347,7 +349,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
                  ! fftw = .true.
                  ! if (fftw) then !start the fftw if
                     
-                    write(*, *) "FFtw convolution start"
+!                    write(*, *) "FFtw convolution start"
                     call conv_all_FFTw(dyn, photarx, photarx_delta, reline, imline, reline_a , imline_a,&
                          photarx_dlogxi, ReW0(:,j), ImW0(:,j), ReW1(:,j), ImW1(:,j), &
                          ReW2(:,j), ImW2(:,j), ReW3(:,j), ImW3(:,j))
@@ -357,7 +359,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
                     ! do i = 1,nex
                     !    ReW0(i,j) = ReW0(i,j) + reconvmu(i)
                     ! enddo
-                    write(*, *) "FFtw convolution end"
+!                    write(*, *) "FFtw convolution end"
 
                  ! else 
 ! #ifdef DEBUG
@@ -462,7 +464,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
                 gso,real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
 
-write(*,*) '****** frequency number *******', nf
+!write(*,*) '****** frequency number *******', nf
 
 #ifdef DEBUG
     do i = 1, nex
