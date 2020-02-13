@@ -7,16 +7,17 @@ subroutine propercross(nex,nf,earx,ReSraw,ImSraw,ReGraw,ImGraw)
   real, allocatable :: ReStel(:),ImStel(:)
   real reref,imref,dum
   integer i,j
-  
+
+
   !Read from response file
   if( needresp )then
      call initmatrix
-  end if
+  endif
 
   !Allocate arrays
   if( .not. allocated(ReStel) ) allocate(ReStel(numchn))
   if( .not. allocated(ImStel) ) allocate(ImStel(numchn))
-  
+
   !Get energy bounds of the reference band
   if( needchans )then
      write(*,*)"Enter lower energy in reference band"
@@ -41,18 +42,18 @@ subroutine propercross(nex,nf,earx,ReSraw,ImSraw,ReGraw,ImGraw)
   end if
 
   !Calculate `raw' cross-spectrum
-  do j = 1,nf
+  do j = 1, nf
      !Fold around the response matrix
-     call cfold(nex,earx,ReSraw(:,j),ImSraw(:,j),ReStel,ImStel)
+     call cfold(nex, earx, ReSraw(:,j), ImSraw(:,j), ReStel, ImStel)
      !Calcluate reference band
      reref = 0.0
      imref = 0.0
-     do i = Ilo,Ihi
+     do i = Ilo, Ihi
         reref = reref + ReStel(i)
         imref = imref + ImStel(i)
      end do
      !Cross subject band with reference band
-     do i = 1,nex
+     do i = 1, nex
         ReGraw(i,j) = ReSraw(i,j) * reref + ImSraw(i,j) * imref
         ImGraw(i,j) = ImSraw(i,j) * reref - ReSraw(i,j) * imref
      end do

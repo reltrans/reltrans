@@ -115,6 +115,7 @@ void free_xillParam(xillParam*);
 /* xspec local model wrapper functions **/
 void lmodrelxill(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
 void lmodrelxilllp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
+void lmodrelxilllpf_(const double* ener0, const int *n_ener0, const double* parameter, int *ifl, double* photar, double* photer, const char* init);
 void lmodrelxilllpion(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
 void lmodxillver(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
 void lmodxillverf_(const double* ener0, const int *n_ener0, const double* parameter, int *ifl, double* photar, double* photer, const char* init);

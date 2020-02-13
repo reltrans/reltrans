@@ -1229,6 +1229,16 @@ void lmodrelxilllp(const double* ener0, const int n_ener0, const double* paramet
 	if (status!=EXIT_SUCCESS)
 	RELXILL_ERROR("evaluating rellinelp model failed",&status);
 }
+/** MODIFIED FOR FORTRAN XSPEC XILLVER MODEL FUNCTION **/
+void lmodrelxilllpf_(const double* ener0, const int *n_ener0, const double* parameter, int *ifl, double* photar, double* photer, const char* init){
+
+	const int n_parameter = 12;
+	int status = EXIT_SUCCESS;
+	tdrelxilllp(ener0, *n_ener0, photar, parameter, n_parameter, &status);
+
+	if (status!=EXIT_SUCCESS)
+	RELXILL_ERROR("evaluating rellinelp model failed",&status);
+}
 
 /** XSPEC RELXILLLPDENS MODEL FUNCTION **/
 void lmodrelxilllpdens(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init){

@@ -297,14 +297,14 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 !Remember: xillpar(3) is the Ecut when xillver is with density fixed to 10^15 
 !          whereas in xillverD the parameter 3 is logN 
 !         xillpar(3) = real( gsdr(rbin) ) * Ecut_s
-        xillpar(3) = logner(i)
-        write(*,*) 'logxir, logner ', rbin, logxir(rbin), logner(rbin)
+        xillpar(3) = real( logner(rbin) )
         logxi0     = real( logxir(rbin) )
         if( xe .eq. 1 )then
 !            xillpar(3) = Ecut_s
            xillpar(3) = lognep
            logxi0     = logxi
         end if
+        write(*,*) 'logxir, logner xillver(3) ', rbin, logxir(rbin), logner(rbin), xillpar(3)
         do mubin = 1,me      !loop over emission angle zones
            !Calculate input inclination angle
            mue = ( real(mubin) - 0.5 ) / real(me)
@@ -314,15 +314,15 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
            xillpar(1) = real(Gamma)
            xillpar(4) = logxi0
 !           call myxill   (earx,nex,xillpar,ifl,Cp,photarx)
-           call myxill_hd(earx,nex,xillpar,ifl,Cp,photarx)
+           call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx)
            !non linear effects
            !Gamma variations
            xillpar(1) = Gamma1
-           xillpar(4) = logxi0 + ionvar*dlogxi1
+           xillpar(4) = logxi0 + ionvar * dlogxi1
 !           call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
-           call myxill_hd(earx,nex,xillpar,ifl,Cp,photarx_1)
+           call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_1)
            xillpar(1) = Gamma2
-           xillpar(4) = logxi0 + ionvar*dlogxi2
+           xillpar(4) = logxi0 + ionvar * dlogxi2
 !            call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
            call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_2)
            photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
@@ -346,32 +346,13 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
                  end do
               
 #ifdef DO_FFTW
-                 ! fftw = .true.
-                 ! if (fftw) then !start the fftw if
-                    
-!                    write(*, *) "FFtw convolution start"
                     call conv_all_FFTw(dyn, photarx, photarx_delta, reline, imline, reline_a , imline_a,&
                          photarx_dlogxi, ReW0(:,j), ImW0(:,j), ReW1(:,j), ImW1(:,j), &
                          ReW2(:,j), ImW2(:,j), ReW3(:,j), ImW3(:,j))
 
 
-                    ! call padcnv_fftw(1e-7, reline, photarx, reconvmu)
-                    ! do i = 1,nex
-                    !    ReW0(i,j) = ReW0(i,j) + reconvmu(i)
-                    ! enddo
-!                    write(*, *) "FFtw convolution end"
-
-                 ! else 
-! #ifdef DEBUG
-!     do i = 1, nex
-!        write(50, *)  i, photarx(i)
-!        write(55, *)  i, reline(i)
-!     end do
-! #endif
-
-
 #ifdef DEBUG
-    ! write(71, *) 'skip on'
+    write(71, *) 'skip on'
     do i = 1, nex
        ! write(71, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
 
@@ -384,8 +365,6 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 
                     !Convolve with line profile
                     !First FFTs
-                    write(*, *) "Adam convolution start"
-
                     call pad4FFT(nex,photarx,FTphotarx)
                     call pad4FFT(nex,reline,FTreline)
                     call pad4FFT(nex,imline,FTimline)
@@ -429,27 +408,6 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
                        ImW3(i,j) = ImW3(i,j) + imconvmu(i)
                     end do
 
-                    write(*, *) "Adam convolution end"
-
-                    
-#ifdef DEBUG
-
-!     do i = 1, nex
-!        write(60, *)  i, photarx(i)
-!        write(65, *)  i, reline(i)
-!        ! write(62, *)  i, FTphotarx(i)
-!        ! write(68, *)  i, FTreline(i)
-!     end do
-
-                    do i = 1, nex
-                       ! write(81, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
-                       write(81, *) i, ReW0(i,j)
-                    end do
-#endif
-                    
-
-
-                 
 #endif /*DO_FFTW*/ !end of the fftw if 
 
                  end do !end of the frequency loop 
@@ -459,72 +417,47 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 
         end if
 
+    do i = 1, nex
+       write(11, *)  i, ReW0(i,1)
+    end do
   
 ! Calculate raw FT of the full spectrum without absorption
   call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
                 gso,real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
 
-!write(*,*) '****** frequency number *******', nf
 
-#ifdef DEBUG
-    do i = 1, nex
-       write(21, *)  i, ReSraw(i,1)
-       write(22, *)  i, ImSraw(i,1)
-    end do
-#endif
-   
 ! Calculate absorption and multiply by the raw FT
   call FNINIT
 
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
-  do j = 1,nf
-     do i = 1,nex
+  
+  do j = 1, nf
+     do i = 1, nex
         ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
         ImSrawa(i,j) = ImSraw(i,j) * absorbx(i)
      end do
   end do
 
-
-#ifdef DEBUG
-    do i = 1, nex
-       write(23, *)  i, ReSrawa(i,1)
-       write(24, *)  i, ImSrawa(i,1)
-    end do
-#endif
-
-! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
-  call propercross(nex,nf,earx,ReSrawa,ImSrawa,ReGrawa,ImGrawa)
-
-#ifdef DEBUG
-    do i = 1, nex
-       write(25, *)  i, ReGrawa(i,1)
-       write(26, *)  i, ImGrawa(i,1)
-    end do
-#endif
-
-
-! Apply phase correction parameter to the cross-spectral model (for bad calibration)
-  do j = 1,nf
-     do i = 1,nex
-        ReG(i,j) = cos(DelA) * ReGrawa(i,j) - sin(DelA) * ImGrawa(i,j)
-        ImG(i,j) = cos(DelA) * ImGrawa(i,j) + sin(DelA) * ReGrawa(i,j)
-     end do
-  end do
-
-#ifdef DEBUG
-    do i = 1, nex
-       write(27, *)  i, ReG(i,1)
-       write(28, *)  i, ImG(i,1)
-    end do
-#endif
-
 ! Average over the frequency range
   if( DC .eq. 1 )then
-     do i = 1,nex
-        ReGbar(i) = ReG(i,1)
-        ImGbar(i) = ImG(i,1)
+     do i = 1, nex
+        ReGbar(i) = ReSrawa(i,1)
+        ImGbar(i) = ImSrawa(i,1)
      end do
   else
+
+     
+! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
+     call propercross(nex,nf,earx,ReSrawa,ImSrawa,ReGrawa,ImGrawa) 
+
+! Apply phase correction parameter to the cross-spectral model (for bad calibration)
+     do j = 1,nf
+        do i = 1,nex
+           ReG(i,j) = cos(DelA) * ReGrawa(i,j) - sin(DelA) * ImGrawa(i,j)
+           ImG(i,j) = cos(DelA) * ImGrawa(i,j) + sin(DelA) * ReGrawa(i,j)
+        end do
+     end do
+
      ReGbar = 0.0
      ImGbar = 0.0
      fac    = 2.302585*fc**2*log10(fhiHz/floHz) / ( (fhiHz-floHz)*real(nf) )

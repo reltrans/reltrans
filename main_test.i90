@@ -55,52 +55,46 @@ program main_test
      dE = ear(i) - ear(i-1)
      if( param(16) .gt. 3.5 .and. param(16) .lt. 4.5 .or. param(16) .gt. 5.5 )then
         write(99,*)E, photar(i)/dE
-! #ifdef 1
-!         write(99,*)E, E**2*photar(i)/dE
-! #else 
-!         write(98,*)E, E**2*photar(i)/dE
-! #endif
+
      else
 
-        write(99,*)E, E**2*photar(i)/dE
 
 
+        write(98,*)E, E**2*photar(i)/dE
 
 
      end if
   end do
-  write(98,*)"no no"
-  write(99,*)"no no"
 ! ***************************************************************** !
 
 
 
 
 !Call directly relxilllp to compare with our model 
-! ***************************************************************** !
+!***************************************************************** !
 
-!   relxill_par(1)  = dble(param(1) )
-!   relxill_par(2)  = dble(param(2) )
-!   relxill_par(3)  = dble(param(3) )
-!   relxill_par(4)  = dble(param(4) )
-!   relxill_par(5)  = dble(param(5) )
-!   relxill_par(6)  = dble(param(6) )
-!   relxill_par(7)  = dble(param(7) )
-!   relxill_par(8)  = dble(param(8) )
-!   relxill_par(9)  = dble(param(9) )
-!   relxill_par(10) = dble(param(10)) 
-!   relxill_par(11) = dble(param(12)) 
-!   relxill_par(12) = 1.d0 
+  relxill_par(1)  = dble(param(1) )
+  relxill_par(2)  = dble(param(2) )
+  relxill_par(3)  = dble(param(3) )
+  relxill_par(4)  = dble(param(4) )
+  relxill_par(5)  = dble(param(5) )
+  relxill_par(6)  = dble(param(6) )
+  relxill_par(7)  = dble(param(7) )
+  relxill_par(8)  = dble(param(8) )
+  relxill_par(9)  = dble(param(9) )
+  relxill_par(10) = 300.d0 
+  relxill_par(11) = dble(param(12)) 
+  relxill_par(12) = 1.d0 
   
 
-!   dear = dble(ear)
-!   call lmodrelxilllpf(dear, ne, relxill_par, ifl, dphotar, dphoter, char)
+  dear = dble(ear)
+  call lmodrelxilllpf(dear, ne, relxill_par, ifl, dphotar, dphoter, char)
 
-!   do i = 1, ne 
-!      E  = 0.5 * ( ear(i) + ear(i-1) )
-!      dE = ear(i) - ear(i-1)
-!      write(10, *) E, E**2 * dphotar(i)/ dE
-!   enddo
+  do i = 1, ne 
+     E  = 0.5 * ( ear(i) + ear(i-1) )
+     dE = ear(i) - ear(i-1)
+     write(88, *) E, E**2 * dphotar(i)/ dE
+  enddo
 
 ! ***************************************************************** !
 
