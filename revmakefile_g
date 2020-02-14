@@ -16,7 +16,7 @@
 
 # control options on which code to do
 main    = main_test
-do_fftw = 0
+do_fftw = 1
 debug   = 0
 
 # compiling options

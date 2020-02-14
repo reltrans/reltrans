@@ -80,7 +80,7 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,nro,nphi,ne,dloge,
 ! Calculate dcos/dr and time lags vs r for the lamppost model
   call getdcos(spin,h,mudisk,ndelta,rout,npts,rlp,dcosdr,tlp,cosd,cosdout)
 
-! Set up grids for ionization and g-factor as a function of radius
+  ! Set up grids for ionization and g-factor as a function of radius
   call radfunctions(xe,rin,rnmax,dble(rlxi),dble(lognep), spin,h,honr,rlp,dcosdr&
        &,cosd,ndelta,rmin,npts,logxir,gsdr, logner)
   !Outputs: logxir(1:xe),gsdr(1:xe), logner(1:xe)
@@ -284,10 +284,14 @@ subroutine radfunctions(xe,rin,rnmax,logxip, lognep, spin,h,honr,rlp,dcosdr&
   adensity = myenv("A_DENSITY",1)
   adensity = min( adensity , 1 )
   adensity = max( adensity , 0 )
+
   !Calculate normalisation of logxi(r) function
-  rp = rin * ( 11.0 / 9.0 )**(2*adensity)
+  ! The last numeric factor is to avoid to have rp = rin in case of A_DENSITY=0. This would cause a problem in the function mylogne (it'd go to infinity)
+  rp = rin * ( 11.0 / 9.0 )**(2*adensity)  + 0.0000001d0
+  
   logxinorm = logxiraw(rp,spin,h,honr,rlp,dcosdr,ndelta,rmin,npts,gsd)
   logxinorm = logxinorm - adensity * mylogne(rp,rin)
+  
   !Now calculate logxi itself
   rp = rin * ( 11.0 / 9.0 )**2
   do i = 1, xe - 1 
@@ -299,32 +303,32 @@ subroutine radfunctions(xe,rin,rnmax,logxip, lognep, spin,h,honr,rlp,dcosdr&
         re = re + (rnmax/rp)**(real(i-2)/real(xe-1))
         re = re * rp / 2.0        
      end if
-     !Calculate the incident angle for this bin
+!Calculate the incident angle for this bin
      kk = get_index(rlp,ndelta,re,rmin,npts)
      mus = interper(rlp,cosd,ndelta,re,kk)
      if( kk .eq. npts ) mus = newtex(rlp,cosd,ndelta,re,h,honr,kk)
      mui = dinang(spin,re,h,mus)
-     !Now logxi(r)
+!Now logxi(r)
      logxir(i) = logxiraw(re,spin,h,honr,rlp,dcosdr,ndelta,rmin,npts,gsd)
      logxir(i) = logxir(i) - adensity * mylogne(re,rin)
      logxir(i) = logxir(i) - logxinorm + logxip
      logxir(i) = logxir(i) - 0.1505 - log10(mui)
      logxir(i) = max( logxir(i) , 0.d0  )
      logxir(i) = min( logxir(i) , 4.7d0 )
-     !Also save gsd(r)
+
+!Also save gsd(r)
      gsdr(i) = gsd
 
      logner(i) = lognep + adensity * mylogne(re, rin)
 ! Check if the density is in the limits 
      logner(i) = max( logner(i) , 15.d0  )
      logner(i) = min( logner(i) , 19.d0 )
-     write(*,*) 'in radfunc  rin, re, mylogne', i, rin, re,  mylogne(re, rin) 
      write(*,*) 'logner ', logner(i)
   end do
   logxir(xe) = 0.0
   gsdr(xe)   = dglpfac(1000.d0,spin,h)
-!The last bin has the maximum density available
-  logner(xe) = 19.d0
+!The last bin has the maximum density available a part in the case A_DENSITY=0 in that case it should have the density assigned by the user (parameter in the model)
+  logner(xe) = lognep + adensity * 4.d0
   return
 end subroutine radfunctions
 !-----------------------------------------------------------------------
@@ -356,7 +360,7 @@ end function logxiraw
   
 !-----------------------------------------------------------------------
 function mylogne(r,rin)
-! Calculates log10(ne). Don't let r=rin
+! Calculates log10(ne). Don't let r = rin
   implicit none
   double precision mylogne,r,rin
   mylogne = 1.5 * log10(r) - 2.0 * log10( 1.0 - sqrt(rin/r) )

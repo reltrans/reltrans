@@ -26,8 +26,8 @@ program main_test
   param(11) = 0.0     !Nh
   param(12) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
   param(13) = 10.0    !M     !BH mass in solar masses
-  param(14) = 0.0    !flo   !Lowest frequency in band (Hz)
-  param(15) = 0.0   !fhi   !Highest frequency in band (Hz)
+  param(14) = 1.0    !flo   !Lowest frequency in band (Hz)
+  param(15) = 5.0   !fhi   !Highest frequency in band (Hz)
   param(16) = 1       !ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
   param(17) = 0.0     !DelA
   param(18) = 0.0     !DelAB
@@ -68,28 +68,28 @@ program main_test
 !Call directly relxilllp to compare with our model 
 !***************************************************************** !
 
-  relxill_par(1)  = dble(param(1) )
-  relxill_par(2)  = dble(param(2) )
-  relxill_par(3)  = dble(param(3) )
-  relxill_par(4)  = dble(param(4) )
-  relxill_par(5)  = dble(param(5) )
-  relxill_par(6)  = dble(param(6) )
-  relxill_par(7)  = dble(param(7) )
-  relxill_par(8)  = dble(param(8) )
-  relxill_par(9)  = dble(param(9) )
-  relxill_par(10) = 300.d0 
-  relxill_par(11) = dble(param(12)) 
-  relxill_par(12) = 1.d0 
+  ! relxill_par(1)  = dble(param(1) )
+  ! relxill_par(2)  = dble(param(2) )
+  ! relxill_par(3)  = dble(param(3) )
+  ! relxill_par(4)  = dble(param(4) )
+  ! relxill_par(5)  = dble(param(5) )
+  ! relxill_par(6)  = dble(param(6) )
+  ! relxill_par(7)  = dble(param(7) )
+  ! relxill_par(8)  = dble(param(8) )
+  ! relxill_par(9)  = dble(param(9) )
+  ! relxill_par(10) = 300.d0 
+  ! relxill_par(11) = dble(param(12)) 
+  ! relxill_par(12) = 1.d0 
   
 
-  dear = dble(ear)
-  call lmodrelxilllpf(dear, ne, relxill_par, ifl, dphotar, dphoter, char)
+  ! dear = dble(ear)
+  ! call lmodrelxilllpf(dear, ne, relxill_par, ifl, dphotar, dphoter, char)
 
-  do i = 1, ne 
-     E  = 0.5 * ( ear(i) + ear(i-1) )
-     dE = ear(i) - ear(i-1)
-     write(88, *) E, E**2 * dphotar(i)/ dE
-  enddo
+  ! do i = 1, ne 
+  !    E  = 0.5 * ( ear(i) + ear(i-1) )
+  !    dE = ear(i) - ear(i-1)
+  !    write(88, *) E, E**2 * dphotar(i)/ dE
+  ! enddo
 
 ! ***************************************************************** !
 

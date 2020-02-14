@@ -417,9 +417,9 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 
         end if
 
-    do i = 1, nex
-       write(11, *)  i, ReW0(i,1)
-    end do
+    ! do i = 1, nex
+    !    write(11, *)  i, ReW0(i,1)
+    ! end do
   
 ! Calculate raw FT of the full spectrum without absorption
   call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
