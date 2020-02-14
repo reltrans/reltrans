@@ -304,7 +304,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
            xillpar(3) = lognep
            logxi0     = logxi
         end if
-        write(*,*) 'logxir, logner xillver(3) ', rbin, logxir(rbin), logner(rbin), xillpar(3)
+!        write(*,*) 'logxir, logner xillver(3) ', rbin, logxir(rbin), logner(rbin), xillpar(3)
         do mubin = 1,me      !loop over emission angle zones
            !Calculate input inclination angle
            mue = ( real(mubin) - 0.5 ) / real(me)
@@ -345,70 +345,57 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
                     imline_a(i) = aimag( transea(i,j,mubin,rbin) )
                  end do
               
-#ifdef DO_FFTW
-                    call conv_all_FFTw(dyn, photarx, photarx_delta, reline, imline, reline_a , imline_a,&
+                 call conv_all_FFTw(dyn, photarx, photarx_delta, reline, imline, reline_a , imline_a,&
                          photarx_dlogxi, ReW0(:,j), ImW0(:,j), ReW1(:,j), ImW1(:,j), &
                          ReW2(:,j), ImW2(:,j), ReW3(:,j), ImW3(:,j))
 
 
-#ifdef DEBUG
-    write(71, *) 'skip on'
-    do i = 1, nex
-       ! write(71, *) i, ReW0(i,j), ImW0(i,j), ReW1(i,j), ImW1(i,j), ReW2(i,j), ImW2(i,j), ReW3(i,j), ImW3(i,j)
+!*************************************************************************!
+!Convolve with line profile. This convolution is done with four1
+                    ! !First FFTs
+                    ! call pad4FFT(nex,photarx,FTphotarx)
+                    ! call pad4FFT(nex,reline,FTreline)
+                    ! call pad4FFT(nex,imline,FTimline)
+                    ! call pad4FFT(nex,photarx_delta,FTphotarx_delta)
+                    ! call pad4FFT(nex,reline_a,FTreline_a)
+                    ! call pad4FFT(nex,imline_a,FTimline_a)
+                    ! call pad4FFT(nex,photarx_dlogxi,FTphotarx_dlogxi)
 
-       write(71, *) i, ReW0(i,j)
-    end do
-    write(71, *) 'no no'
-#endif
+                    ! !Then the multiplications and inverse FFTs
+                    ! FTreconv = FTreline * FTphotarx
+                    ! FTimconv = FTimline * FTphotarx
+                    ! call pad4invFFT(dyn,nex,FTreconv,reconvmu)
+                    ! call pad4invFFT(dyn,nex,FTimconv,imconvmu) 
+                    ! do i = 1,nex
+                    !    ReW0(i,j) = ReW0(i,j) + reconvmu(i)
+                    !    ImW0(i,j) = ImW0(i,j) + imconvmu(i)
+                    ! end do
 
-#else
-
-                    !Convolve with line profile
-                    !First FFTs
-                    call pad4FFT(nex,photarx,FTphotarx)
-                    call pad4FFT(nex,reline,FTreline)
-                    call pad4FFT(nex,imline,FTimline)
-                    call pad4FFT(nex,photarx_delta,FTphotarx_delta)
-                    call pad4FFT(nex,reline_a,FTreline_a)
-                    call pad4FFT(nex,imline_a,FTimline_a)
-                    call pad4FFT(nex,photarx_dlogxi,FTphotarx_dlogxi)
-
-                    !Then the multiplications and inverse FFTs
-                    FTreconv = FTreline * FTphotarx
-                    FTimconv = FTimline * FTphotarx
-                    call pad4invFFT(dyn,nex,FTreconv,reconvmu)
-                    call pad4invFFT(dyn,nex,FTimconv,imconvmu) 
-                    do i = 1,nex
-                       ReW0(i,j) = ReW0(i,j) + reconvmu(i)
-                       ImW0(i,j) = ImW0(i,j) + imconvmu(i)
-                    end do
-
-                    FTreconv = FTreline_a * FTphotarx
-                    FTimconv = FTimline_a * FTphotarx
-                    call pad4invFFT(dyn,nex,FTreconv,reconvmu)
-                    call pad4invFFT(dyn,nex,FTimconv,imconvmu)
-                    do i = 1,nex
-                       ReW1(i,j) = ReW1(i,j) + reconvmu(i)
-                       ImW1(i,j) = ImW1(i,j) + imconvmu(i)
-                    end do
-                    FTreconv = FTreline * FTphotarx_delta
-                    FTimconv = FTimline * FTphotarx_delta
-                    call pad4invFFT(dyn,nex,FTreconv,reconvmu)
-                    call pad4invFFT(dyn,nex,FTimconv,imconvmu)
-                    do i = 1,nex
-                       ReW2(i,j) = ReW2(i,j) + reconvmu(i)
-                       ImW2(i,j) = ImW2(i,j) + imconvmu(i)
-                    end do
-                    FTreconv = FTreline * FTphotarx_dlogxi
-                    FTimconv = FTimline * FTphotarx_dlogxi
-                    call pad4invFFT(dyn,nex,FTreconv,reconvmu)
-                    call pad4invFFT(dyn,nex,FTimconv,imconvmu)
-                    do i = 1,nex
-                       ReW3(i,j) = ReW3(i,j) + reconvmu(i)
-                       ImW3(i,j) = ImW3(i,j) + imconvmu(i)
-                    end do
-
-#endif /*DO_FFTW*/ !end of the fftw if 
+                    ! FTreconv = FTreline_a * FTphotarx
+                    ! FTimconv = FTimline_a * FTphotarx
+                    ! call pad4invFFT(dyn,nex,FTreconv,reconvmu)
+                    ! call pad4invFFT(dyn,nex,FTimconv,imconvmu)
+                    ! do i = 1,nex
+                    !    ReW1(i,j) = ReW1(i,j) + reconvmu(i)
+                    !    ImW1(i,j) = ImW1(i,j) + imconvmu(i)
+                    ! end do
+                    ! FTreconv = FTreline * FTphotarx_delta
+                    ! FTimconv = FTimline * FTphotarx_delta
+                    ! call pad4invFFT(dyn,nex,FTreconv,reconvmu)
+                    ! call pad4invFFT(dyn,nex,FTimconv,imconvmu)
+                    ! do i = 1,nex
+                    !    ReW2(i,j) = ReW2(i,j) + reconvmu(i)
+                    !    ImW2(i,j) = ImW2(i,j) + imconvmu(i)
+                    ! end do
+                    ! FTreconv = FTreline * FTphotarx_dlogxi
+                    ! FTimconv = FTimline * FTphotarx_dlogxi
+                    ! call pad4invFFT(dyn,nex,FTreconv,reconvmu)
+                    ! call pad4invFFT(dyn,nex,FTimconv,imconvmu)
+                    ! do i = 1,nex
+                    !    ReW3(i,j) = ReW3(i,j) + reconvmu(i)
+                    !    ImW3(i,j) = ImW3(i,j) + imconvmu(i)
+                    ! end do
+!*************************************************************************!
 
                  end do !end of the frequency loop 
 
@@ -417,10 +404,6 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 
         end if
 
-    ! do i = 1, nex
-    !    write(11, *)  i, ReW0(i,1)
-    ! end do
-  
 ! Calculate raw FT of the full spectrum without absorption
   call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
                 gso,real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)

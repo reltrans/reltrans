@@ -26,8 +26,8 @@ program main_test
   param(11) = 0.0     !Nh
   param(12) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
   param(13) = 10.0    !M     !BH mass in solar masses
-  param(14) = 1.0    !flo   !Lowest frequency in band (Hz)
-  param(15) = 5.0   !fhi   !Highest frequency in band (Hz)
+  param(14) = 0.0    !flo   !Lowest frequency in band (Hz)
+  param(15) = 0.0   !fhi   !Highest frequency in band (Hz)
   param(16) = 1       !ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
   param(17) = 0.0     !DelA
   param(18) = 0.0     !DelAB
@@ -43,23 +43,23 @@ program main_test
 !Test to simply print the output of the model 
 ! ***************************************************************** !
 
- call tdreltrans(ear,ne,param,ifl,photar)
+!  call tdreltrans(ear,ne,param,ifl,photar)
   
-  do i = 1,ne
-     E  = 0.5 * ( ear(i) + ear(i-1) )
-     dE = ear(i) - ear(i-1)
-     if( param(16) .gt. 3.5 .and. param(16) .lt. 4.5 .or. param(16) .gt. 5.5 )then
-        write(99,*)E, photar(i)/dE
+!   do i = 1,ne
+!      E  = 0.5 * ( ear(i) + ear(i-1) )
+!      dE = ear(i) - ear(i-1)
+!      if( param(16) .gt. 3.5 .and. param(16) .lt. 4.5 .or. param(16) .gt. 5.5 )then
+!         write(99,*)E, photar(i)/dE
 
-     else
-#ifdef DO_FFTW
-        write(99,*)E, E**2*photar(i)/dE
-#else 
-        write(98,*)E, E**2*photar(i)/dE
-#endif
+!      else
+! #ifdef DO_FFTW
+!         write(99,*)E, E**2*photar(i)/dE
+! #else 
+!         write(98,*)E, E**2*photar(i)/dE
+! #endif
 
-     end if
-  end do
+!      end if
+!   end do
 ! ***************************************************************** !
 
 
@@ -97,120 +97,120 @@ program main_test
 
 !Test of the time 
 ! ***************************************************************** !
-!         param(14) = 0.0166016
-!         param(15) = 0.0458984
+        param(14) = 0.0166016
+        param(15) = 0.0458984
 
-!       write(*,*) "----------------------------------------------------"
-!         call system_clock(count0,count_rate,count_max)
-!         call tdreltrans(ear,ne,param,ifl,photar)
-!         call system_clock(count1,count_rate,count_max)
-!         write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
-!       write(*,*) "----------------------------------------------------"
-!       write(*,*) 
-!       write(*,*) 
+      write(*,*) "----------------------------------------------------"
+        call system_clock(count0,count_rate,count_max)
+        call tdreltrans(ear,ne,param,ifl,photar)
+        call system_clock(count1,count_rate,count_max)
+        write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
+      write(*,*) "----------------------------------------------------"
+      write(*,*) 
+      write(*,*) 
 
-!         param(16) = 2
+        param(16) = 2
 
-!       write(*,*) "----------------------------------------------------"
-!         call system_clock(count0,count_rate,count_max)
-!         call tdreltrans(ear,ne,param,ifl,photar)
-!         call system_clock(count1,count_rate,count_max)
-!         write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
-!       write(*,*) "----------------------------------------------------"
-!       write(*,*) 
+      write(*,*) "----------------------------------------------------"
+        call system_clock(count0,count_rate,count_max)
+        call tdreltrans(ear,ne,param,ifl,photar)
+        call system_clock(count1,count_rate,count_max)
+        write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
+      write(*,*) "----------------------------------------------------"
+      write(*,*) 
 
-!         param(1)  = 5.0
-!         param(14) = 0.0458984
-!         param(15) = 0.12207
-!         param(16) = 1
+        param(1)  = 5.0
+        param(14) = 0.0458984
+        param(15) = 0.12207
+        param(16) = 1
 
-!       write(*,*) "----------------------------------------------------"
-!         call system_clock(count0,count_rate,count_max)
-!         call tdreltrans(ear,ne,param,ifl,photar)
-!         call system_clock(count1,count_rate,count_max)
-!         write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
-!       write(*,*) "----------------------------------------------------"
-!       write(*,*) 
-!       write(*,*) 
+      write(*,*) "----------------------------------------------------"
+        call system_clock(count0,count_rate,count_max)
+        call tdreltrans(ear,ne,param,ifl,photar)
+        call system_clock(count1,count_rate,count_max)
+        write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
+      write(*,*) "----------------------------------------------------"
+      write(*,*) 
+      write(*,*) 
 
-!         param(16) = 2
+        param(16) = 2
 
-!       write(*,*) "----------------------------------------------------"
-!         call system_clock(count0,count_rate,count_max)
-!         call tdreltrans(ear,ne,param,ifl,photar)
-!         call system_clock(count1,count_rate,count_max)
-!         write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
-!       write(*,*) "----------------------------------------------------"
-!       write(*,*) 
+      write(*,*) "----------------------------------------------------"
+        call system_clock(count0,count_rate,count_max)
+        call tdreltrans(ear,ne,param,ifl,photar)
+        call system_clock(count1,count_rate,count_max)
+        write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
+      write(*,*) "----------------------------------------------------"
+      write(*,*) 
 
 
 
-!         param(14) = 0.12207
-!         param(15) = 0.311523
-!         param(16) = 1
+        param(14) = 0.12207
+        param(15) = 0.311523
+        param(16) = 1
 
-!       write(*,*) "----------------------------------------------------"
-!         call system_clock(count0,count_rate,count_max)
-!         call tdreltrans(ear,ne,param,ifl,photar)
-!         call system_clock(count1,count_rate,count_max)
-!         write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
-!       write(*,*) "----------------------------------------------------"
-!       write(*,*) 
-!       write(*,*) 
+      write(*,*) "----------------------------------------------------"
+        call system_clock(count0,count_rate,count_max)
+        call tdreltrans(ear,ne,param,ifl,photar)
+        call system_clock(count1,count_rate,count_max)
+        write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
+      write(*,*) "----------------------------------------------------"
+      write(*,*) 
+      write(*,*) 
 
-!         param(16) = 2
-!       write(*,*) "----------------------------------------------------"
-!         call system_clock(count0,count_rate,count_max)
-!         call tdreltrans(ear,ne,param,ifl,photar)
-!         call system_clock(count1,count_rate,count_max)
-!         write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
-!       write(*,*) "----------------------------------------------------"
-!       write(*,*) 
+        param(16) = 2
+      write(*,*) "----------------------------------------------------"
+        call system_clock(count0,count_rate,count_max)
+        call tdreltrans(ear,ne,param,ifl,photar)
+        call system_clock(count1,count_rate,count_max)
+        write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
+      write(*,*) "----------------------------------------------------"
+      write(*,*) 
 
-!         param(14) = 0.311523
-!         param(15) = 0.788085
-!         param(16) = 1
+        param(14) = 0.311523
+        param(15) = 0.788085
+        param(16) = 1
 
-!       write(*,*) "----------------------------------------------------"
-!         call system_clock(count0,count_rate,count_max)
-!         call tdreltrans(ear,ne,param,ifl,photar)
-!         call system_clock(count1,count_rate,count_max)
-!         write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
-!       write(*,*) "----------------------------------------------------"
-!       write(*,*) 
-!       write(*,*) 
+      write(*,*) "----------------------------------------------------"
+        call system_clock(count0,count_rate,count_max)
+        call tdreltrans(ear,ne,param,ifl,photar)
+        call system_clock(count1,count_rate,count_max)
+        write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
+      write(*,*) "----------------------------------------------------"
+      write(*,*) 
+      write(*,*) 
 
-!         param(16) = 2
+        param(16) = 2
 
-!       write(*,*) "----------------------------------------------------"
-!         call system_clock(count0,count_rate,count_max)
-!         call tdreltrans(ear,ne,param,ifl,photar)
-!         call system_clock(count1,count_rate,count_max)
-!         write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
-!       write(*,*) "----------------------------------------------------"
-!       write(*,*) 
+      write(*,*) "----------------------------------------------------"
+        call system_clock(count0,count_rate,count_max)
+        call tdreltrans(ear,ne,param,ifl,photar)
+        call system_clock(count1,count_rate,count_max)
+        write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
+      write(*,*) "----------------------------------------------------"
+      write(*,*) 
 
-!         param(14) = 0.788085
-!         param(15) = 1.97949 
-!         param(16) = 1
+        param(14) = 0.788085
+        param(15) = 1.97949 
+        param(16) = 1
 
-!       write(*,*) "----------------------------------------------------"
-!         call system_clock(count0,count_rate,count_max)
-!         call tdreltrans(ear,ne,param,ifl,photar)
-!         call system_clock(count1,count_rate,count_max)
-!         write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
-!       write(*,*) "----------------------------------------------------"
-!       write(*,*) 
-!       write(*,*) 
-!         param(16) = 2
+      write(*,*) "----------------------------------------------------"
+        call system_clock(count0,count_rate,count_max)
+        call tdreltrans(ear,ne,param,ifl,photar)
+        call system_clock(count1,count_rate,count_max)
+        write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
+      write(*,*) "----------------------------------------------------"
+      write(*,*) 
+      write(*,*) 
+        param(16) = 2
 
-!       write(*,*) "----------------------------------------------------"
-!         call system_clock(count0,count_rate,count_max)
-!         call tdreltrans(ear,ne,param,ifl,photar)
-!         call system_clock(count1,count_rate,count_max)
-!         write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
-!       write(*,*) "----------------------------------------------------"
-!       write(*,*) 
+      write(*,*) "----------------------------------------------------"
+        call system_clock(count0,count_rate,count_max)
+        call tdreltrans(ear,ne,param,ifl,photar)
+        call system_clock(count1,count_rate,count_max)
+        write(*,*)"TOTAL CPU time=",real(count1-count0)/real(count_rate)
+      write(*,*) "----------------------------------------------------"
+      write(*,*) 
 
 ! ***************************************************************** !
   

@@ -1,82 +1,72 @@
-# fortran:
-# 	gfortran -O -Wall -pedantic -c amodules.f90 main_test.f90 srevtrans.f90
-# C_code:
-# 	gcc -O -c relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c
 
-# compile: fortran C_code 
-# 	 gfortran -O *.o -L/usr/local/opt/cfitsio/  -L/Users/Gullik/Software/heasoft-6.23/x86_64-apple-darwin17.4.0/lib \
-# 	 -lcfitsio -lXSFunctions -lXSModel -lXSUtil -lXS -lCCfits_2.5 -o exe  
 
-# run: compile clean 
+##########################################################################
+# PREPROCESSOR MAKEFILE #
+# # control options on which code to do
+# main    = main_test
+# do_fftw = 0
+# debug   = 0
+
+# # compiling options
+# prof         = -g -fbacktrace 
+# optimization = -O3 #-fopenmp
+# preprocessor = -x f95-cpp-input
+
+# # libs and includes
+# incs = -I /usr/local/Cellar/fftw/3.3.8_1/include/ -ffree-line-length-none -I ./ -I ./subroutines/
+# libs = -L /usr/local/Cellar/fftw/3.3.8_1/lib/ -lfftw3_omp -lfftw3 -lm \
+#        -L/Users/gullo/Software/heasoft-6.26.1/x86_64-apple-darwin18.7.0/lib/  -lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS #-lwcs-5.16 -lCCfits_2.5 -lhdsp_2.9 -ltcl8.6 
+
+# # the object files to produce
+# FOBJ = amodules.o $(main).o srevtrans.o
+# COBJ = relmodels.o rellp.o relbase.o reltable.o relutility.o donthcomp.o xilltable.o relcache.o
+
+# # build last options from choices
+# PPFLAGS =
+# ifeq ($(do_fftw),1)
+#   PPFLAGS += -DDO_FFTW
+# endif
+# ifeq ($(debug),1)
+#   PPFLAGS += -DDEBUG
+# endif
+
+# # combine the options
+# optionsF = $(prof) $(optimization) $(preprocessor) $(PPFLAGS)
+# optionsC = $(prof) $(optimization)                 $(PPFLAGS)
+# optionsL = $(prof) $(optimization) 
+
+# # set compilers
+# fcomp = gfortran $(optionsF) $(incs)
+# ccomp = gcc $(optionsC) -c
+
+# # compilation rules
+# .SUFFIXES: .f90 .c .o
+# .f90.o:
+# 	$(fcomp) -E -o $*.i90 $<
+# 	$(fcomp) -c -o $*.o   $<
+# .c.o:
+# 	$(ccomp) -c -o $*.o $<
+
+
+# # tasks
+# run: $(FOBJ) $(COBJ)
+# 	gfortran $(optionsL) -fno-second-underscore -fno-automatic -fPIC $(FOBJ) $(COBJ) $(libs) -o exe
 
 # clean:
-# 	rm -f *.o *.mod
+# 	rm -vf *.o *.mod *~ subroutines/*~ *.i90 *.s
 
+# # dependencies
+# $(main).o:   amodules.o  srevtrans.o  $(COBJ)
+# srevtrans.o: amodules.o
+# amodules.o:
 
+# relmodels.o:
+# rellp.o:
+# relbase.o:
+# reltable.o:
+# relutility.o:
+# donthcomp.o:
+# xilltable.o:
+# relcache.o:
 
-# control options on which code to do
-main    = main_test
-do_fftw = 1
-debug   = 0
-
-# compiling options
-prof         = -g -fbacktrace 
-optimization = -O3 #-fopenmp
-preprocessor = -x f95-cpp-input
-
-# libs and includes
-incs = -I /usr/local/Cellar/fftw/3.3.8_1/include/ -ffree-line-length-none -I ./ -I ./subroutines/
-libs = -L /usr/local/Cellar/fftw/3.3.8_1/lib/ -lfftw3_omp -lfftw3 -lm \
-       -L/Users/gullo/Software/heasoft-6.26.1/x86_64-apple-darwin18.7.0/lib/  -lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS #-lwcs-5.16 -lCCfits_2.5 -lhdsp_2.9 -ltcl8.6 
-
-# the object files to produce
-FOBJ = amodules.o $(main).o srevtrans.o
-COBJ = relmodels.o rellp.o relbase.o reltable.o relutility.o donthcomp.o xilltable.o relcache.o
-
-# build last options from choices
-PPFLAGS =
-ifeq ($(do_fftw),1)
-  PPFLAGS += -DDO_FFTW
-endif
-ifeq ($(debug),1)
-  PPFLAGS += -DDEBUG
-endif
-
-# combine the options
-optionsF = $(prof) $(optimization) $(preprocessor) $(PPFLAGS)
-optionsC = $(prof) $(optimization)                 $(PPFLAGS)
-optionsL = $(prof) $(optimization) 
-
-# set compilers
-fcomp = gfortran $(optionsF) $(incs)
-ccomp = gcc $(optionsC) -c
-
-# compilation rules
-.SUFFIXES: .f90 .c .o
-.f90.o:
-	$(fcomp) -E -o $*.i90 $<
-	$(fcomp) -c -o $*.o   $<
-.c.o:
-	$(ccomp) -c -o $*.o $<
-
-
-# tasks
-run: $(FOBJ) $(COBJ)
-	gfortran $(optionsL) -fno-second-underscore -fno-automatic -fPIC $(FOBJ) $(COBJ) $(libs) -o exe
-
-clean:
-	rm -vf *.o *.mod *~ subroutines/*~ *.i90 *.s
-
-# dependencies
-$(main).o:   amodules.o  srevtrans.o  $(COBJ)
-srevtrans.o: amodules.o
-amodules.o:
-
-relmodels.o:
-rellp.o:
-relbase.o:
-reltable.o:
-relutility.o:
-donthcomp.o:
-xilltable.o:
-relcache.o:
+##########################################################################

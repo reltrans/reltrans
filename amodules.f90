@@ -30,11 +30,9 @@ END MODULE dyn_gr
 module conv_mod
   use, intrinsic :: iso_c_binding
   implicit none
-#ifdef DO_FFTW
   include 'fftw3.f03'
-#endif
 
-  integer,parameter :: nex = 2**12, nex_conv = 4 * nex, nec = nex_conv/2 + 1
+  integer, parameter :: nex = 2**12, nex_conv = 4 * nex, nec = nex_conv/2 + 1
   ! real   , dimension(2 * nex_conv) :: adata,bdata,cdata
   ! complex, dimension(nex_conv) :: ac,bc,cc
   
@@ -48,10 +46,6 @@ module conv_mod
 
 contains
   
-#ifdef DO_FFTW
-  
-
-
   subroutine init_fftw_allconv()
     implicit none
     integer(c_int) :: flags, i
@@ -132,20 +126,6 @@ ReW2_conv(nex), ImW2_conv(nex), ReW3_conv(nex), ImW3_conv(nex)
     conv = (padFT_photarx_dlogxi * padFT_imline) * nexm1
     call de_paddingFT(dyn, conv, ImW3_conv)
 
-#ifdef DEBUG
-    do i = 1,  nex
-       write(51, *) i , photarx(i)
-       write(52, *) i , reline(i) 
-       write(53, *) i , ReW0_conv(i)
-    end do
-    do i = 1,  nec
-       write(54, *) i , real(padFT_photarx(i))
-       write(55, *) i , real(padFT_reline(i))
-       write(56, *) i , aimag(padFT_photarx(i)) 
-       write(57, *) i , aimag(padFT_reline(i)) 
-    end do
-#endif
-
   end subroutine conv_all_FFTw
 
    subroutine padding4FT(line, padFT_line)
@@ -198,14 +178,10 @@ ReW2_conv(nex), ImW2_conv(nex), ReW3_conv(nex), ImW3_conv(nex)
      return 
    end subroutine de_paddingFT
 
-
-
-#else
-  subroutine init_fftw_allconv()
-    implicit none
-    print *, "Without FFTW"
-  end subroutine init_fftw_allconv
-#endif /*DO_FFTW*/
+  ! subroutine init_fftw_allconv()
+  !   implicit none
+  !   print *, "Without FFTW"
+  ! end subroutine init_fftw_allconv
 
 end module conv_mod
 
