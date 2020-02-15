@@ -28,7 +28,10 @@ cobj:
 compile: mod fobj cobj
 	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) $(libs) *.o -o reltrans
 
-run: clean compile clean 
+run: clean compile cleanup
+
 
 clean:
+	rm -vf *.o *.mod *~ subroutines/*~
+cleanup:
 	rm -vf *.o *.mod *~ subroutines/*~

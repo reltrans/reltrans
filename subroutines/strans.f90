@@ -323,7 +323,6 @@ subroutine radfunctions(xe,rin,rnmax,logxip, lognep, spin,h,honr,rlp,dcosdr&
 ! Check if the density is in the limits 
      logner(i) = max( logner(i) , 15.d0  )
      logner(i) = min( logner(i) , 19.d0 )
-     write(*,*) 'logner ', logner(i)
   end do
   logxir(xe) = 0.0
   gsdr(xe)   = dglpfac(1000.d0,spin,h)
