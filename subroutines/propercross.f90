@@ -41,7 +41,6 @@ subroutine propercross(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
         needchans = .false.
      end if
 
-     write(*,*) 'Ilo Ihi matrix', Ilo, Ihi
      !Calculate `raw' cross-spectrum
      do j = 1, nf
         !Fold around the response matrix
@@ -53,7 +52,6 @@ subroutine propercross(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
            reref = reref + ReStel(i)
            imref = imref + ImStel(i)
         end do
-        write(*,*) reref, imref
         !Cross subject band with reference band
         do i = 1, nex
            ReGraw(i,j) = ReSraw(i,j) * reref + ImSraw(i,j) * imref
@@ -100,7 +98,6 @@ subroutine propercross_NOmatrix(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
         needchans = .false.
      end if
 
-     write(*,*) 'Ilo Ihi', Ilo, Ihi 
      !Calculate `raw' cross-spectrum
      do j = 1, nf
         !Fold around the response matrix
@@ -113,7 +110,6 @@ subroutine propercross_NOmatrix(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
            reref = reref + ReSraw(i,j) * dE
            imref = imref + ImSraw(i,j) * dE
         end do
-        write(*,*) reref, imref
         !Cross subject band with reference band
         do i = 1, nex
            ReGraw(i,j) = ReSraw(i,j) * reref + ImSraw(i,j) * imref
