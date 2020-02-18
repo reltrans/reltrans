@@ -56,7 +56,7 @@ end subroutine cfoldandbin
 
 
 !-----------------------------------------------------------------------
-subroutine cfold(nex,earx,ReGx,ImGx,ReGtel,ImGtel)
+subroutine cfold(nex, earx, ReGx, ImGx, ReGtel, ImGtel)
 ! Initmatrix must have alreadt been called
 ! Input (ReGx,ImGx) is in terms of **PHOTAR**; i.e. (dN/dE)*dE
 ! RGtel, ImGtel is in count rate vs channel number
@@ -85,19 +85,20 @@ subroutine cfold(nex,earx,ReGx,ImGx,ReGtel,ImGtel)
      ReGi(i) = ReGi(i) / E**2 * dE
      ImGi(i) = ImGi(i) / E**2 * dE
   end do
-  
+
   !Fold around response
   ReGtel = 0.0
   ImGtel = 0.0
-  do J = 1,NENERG
+  do J = 1, NENERG
      do K = 1,NGRP(J)
-        do I = FCHAN(J,K)+1,LCHAN(J,K)
-           dE = En(J) - En(J-1)
+        do I = FCHAN(J,K) + 1, LCHAN(J,K)
+           dE = En(J) - En(J-1) !I think this can be commented out
            ReGtel(I) = ReGtel(I) + ReGi(J) * RESP(I,J)
            ImGtel(I) = ImGtel(I) + ImGi(J) * RESP(I,J)
         end do
      end do
   end do
+
   
   return
 end subroutine cfold
@@ -346,7 +347,7 @@ subroutine initmatrix
 !If this is not set, ask for it
   if( trim(respname) .eq. 'none' )then
      write(*,*)"Enter name of the response file (with full path)"
-     read(*,'(a)')respname
+     read(*,'(a)') respname
   end if
 !Check if I need the arf
   call arfcheck(respname,arf)
@@ -375,7 +376,7 @@ subroutine initmatrix
   call readinresp
 
   needresp = .false.
-  
+  needchans = .true.
   return
 end subroutine initmatrix
 !-----------------------------------------------------------------------

@@ -410,7 +410,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 
 
 ! Calculate absorption and multiply by the raw FT
-  ! call FNINIT
+  call FNINIT
 
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
   
@@ -429,10 +429,14 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
      end do
   else
 
-     
-! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
-     call propercross(nex,nf,earx,ReSrawa,ImSrawa,ReGrawa,ImGrawa) 
 
+     ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
+     if (ReIm .gt. 0.0) then
+        call propercross(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa)
+     else
+        call propercross_NOmatrix(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa)
+     endif
+     
 ! Apply phase correction parameter to the cross-spectral model (for bad calibration)
      do j = 1,nf
         do i = 1,nex
@@ -457,16 +461,16 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
      
 ! Write output depending on ReIm parameter
   if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) ) ReIm = 1
-  if( ReIm .le. 4 )then
+  if( abs(ReIm) .le. 4 )then
      call crebin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS) !S is in photar form
-     if( ReIm .eq. 1 )then        !Real part
+     if( abs(ReIm) .eq. 1 )then        !Real part
         photar = ReS
-     else if( ReIm .eq. 2 )then   !Imaginary part
+     else if( abs(ReIm) .eq. 2 )then   !Imaginary part
         photar = ImS
-     else if( ReIm .eq. 3 )then   !Modulus
+     else if( abs(ReIm) .eq. 3 )then   !Modulus
         photar = sqrt( ReS**2 + ImS**2 )
-        write(*,*)"Warning ReIm=3 should not be used for fitting!"
-     else if( ReIm .eq. 4 )then   !Time lag (s)
+        write(*,*) "Warning ReIm=3 should not be used for fitting!"
+     else if( abs(ReIm) .eq. 4 )then   !Time lag (s)
         do i = 1,ne
            dE = ear(i) - ear(i-1)
            photar(i) = atan2( ImS(i) , ReS(i) ) / ( 2.0*pi*fc ) * dE
@@ -475,13 +479,13 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
      end if
   else
      call cfoldandbin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS) !S is count rate
-     if( ReIm .eq. 5 )then        !Modulus
-        do i = 1,ne
+     if( abs(ReIm) .eq. 5 )then        !Modulus
+        do i = 1, ne
            dE = ear(i) - ear(i-1)
            photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) * dE
         end do
-     else if( ReIm .eq. 6 )then   !Time lag (s)
-        do i = 1,ne
+     else if( abs(ReIm) .eq. 6 )then   !Time lag (s)
+        do i = 1, ne
            dE = ear(i) - ear(i-1)
            photar(i) = atan2( ImS(i) , ReS(i) ) / ( 2.0*pi*fc ) * dE
         end do
