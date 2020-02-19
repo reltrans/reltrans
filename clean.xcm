@@ -1,9 +1,0 @@
-rm -vf *.mod
-rm -vf exe
-rm -vf *.o
-rm -vf *Function*
-rm -vf libreltrans.dylib 
-rm -vf *.cxx
-rm -vf *.tcl
-rm -vf *~
-

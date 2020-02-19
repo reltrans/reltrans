@@ -22,9 +22,9 @@
 
 #include "common.h"
 
-/* #include "fitsio.h" */
+#include "fitsio.h"
 /* #include "/Data/adamingram/heasoft/heasoft-6.22.1/heacore/cfitsio/fitsio.h" */
-#include "/Users/gullo/Software/heasoft-6.26.1/heacore/cfitsio/fitsio.h"
+/* #include "/Users/gullo/Software/heasoft-6.26.1/heacore/cfitsio/fitsio.h" */
 
 #include "relutility.h"
 #include "reltable.h"
