@@ -46,9 +46,9 @@
 
 
 /** name of the XILLVER table */
-#define XILLTABLE_FILENAME "xillver-a-Ec5.fits"
-#define XILLTABLE_DENS_FILENAME "xillverD-5.fits"
-#define XILLTABLE_NTHCOMP_FILENAME "xillver-comp.fits"
+#define XILLTABLE_FILENAME         "tables/xillver-a-Ec5.fits"
+#define XILLTABLE_DENS_FILENAME    "tables/xillverD-5.fits"
+#define XILLTABLE_NTHCOMP_FILENAME "tables/xillver-comp.fits"
 
 /** get a new and empty rel table (structure will be allocated)  */
 xillTable* new_xillTable(int n_gam, int n_afe, int n_lxi, int n_ect, int n_incl, int* status);

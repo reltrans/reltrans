@@ -55,10 +55,10 @@ subroutine rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelA
         ReW3s = (1-DC) * ionvar * boost * ReW3(i,j)
         ImW3s = (1-DC) * ionvar * boost * ImW3(i,j)
         !Real part
-        ReGraw(i,j) = cosD * ( fac*corr*contx(i) + ReWbs )
+        ReGraw(i,j) = cosD * ( fac * corr * contx(i) + ReWbs )
         ReGraw(i,j) = ReGraw(i,j) - sinD * ImWbs
         ReGraw(i,j) = ReGraw(i,j) * g
-        ReGraw(i,j) = ReGraw(i,j) + corr*contx(i) + ReW0s + ReW3s
+        ReGraw(i,j) = ReGraw(i,j) + corr * contx(i) + ReW0s + ReW3s
         !Imaginary part
         ImGraw(i,j) = sinD * ( fac*corr*contx(i) + ReWbs )
         ImGraw(i,j) = ImGraw(i,j) + cosD * ImWbs

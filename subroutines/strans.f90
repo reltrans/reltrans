@@ -274,7 +274,7 @@ subroutine radfunctions(xe,rin,rnmax,logxip, lognep, spin,h,honr,rlp,dcosdr&
 ! In  : xe,rin,rnmax,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
 ! Out : logxir(1:xe),gsdr(1:xe)
   implicit none
-  integer xe,ndelta,npts,adensity
+  integer xe, ndelta, npts, adensity
   double precision rin,rnmax,logxip,lognep,spin,h,honr,rlp(ndelta),dcosdr(ndelta)
   double precision cosd(ndelta),rmin,logxir(xe),gsdr(xe), logner(xe)
   integer i,kk,get_index,myenv
@@ -290,6 +290,7 @@ subroutine radfunctions(xe,rin,rnmax,logxip, lognep, spin,h,honr,rlp,dcosdr&
   rp = rin * ( 11.0 / 9.0 )**(2*adensity)  + 0.0000001d0
   
   logxinorm = logxiraw(rp,spin,h,honr,rlp,dcosdr,ndelta,rmin,npts,gsd)
+!  write(*,*) 'logxinorm, rp', logxinorm, rp
   logxinorm = logxinorm - adensity * mylogne(rp,rin)
   
   !Now calculate logxi itself
@@ -310,15 +311,18 @@ subroutine radfunctions(xe,rin,rnmax,logxip, lognep, spin,h,honr,rlp,dcosdr&
      mui = dinang(spin,re,h,mus)
 !Now logxi(r)
      logxir(i) = logxiraw(re,spin,h,honr,rlp,dcosdr,ndelta,rmin,npts,gsd)
+!     write(*,*) 'logxir_temp re', logxir(i), re
      logxir(i) = logxir(i) - adensity * mylogne(re,rin)
      logxir(i) = logxir(i) - logxinorm + logxip
      logxir(i) = logxir(i) - 0.1505 - log10(mui)
+!     write(*,*) 'logxir_final , mui, logxinorm', logxir(i), mui, logxinorm
      logxir(i) = max( logxir(i) , 0.d0  )
      logxir(i) = min( logxir(i) , 4.7d0 )
 
 !Also save gsd(r)
      gsdr(i) = gsd
 
+!Calculate the density 
      logner(i) = lognep + adensity * mylogne(re, rin)
 ! Check if the density is in the limits 
      logner(i) = max( logner(i) , 15.d0  )
@@ -326,8 +330,8 @@ subroutine radfunctions(xe,rin,rnmax,logxip, lognep, spin,h,honr,rlp,dcosdr&
   end do
   logxir(xe) = 0.0
   gsdr(xe)   = dglpfac(1000.d0,spin,h)
-!The last bin has the maximum density available a part in the case A_DENSITY=0 in that case it should have the density assigned by the user (parameter in the model)
-  logner(xe) = lognep + adensity * 4.d0
+!The last bin has the maximum density available (19.0) a part in the case A_DENSITY=0 in that case it should have the density assigned by the user (parameter in the model)
+  logner(xe) = (19.d0 * adensity) + (1 - adensity) * lognep
   return
 end subroutine radfunctions
 !-----------------------------------------------------------------------

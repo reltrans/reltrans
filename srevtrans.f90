@@ -294,9 +294,10 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
      !Loop over radius, emission angle and frequency
      do rbin = 1, xe  !Loop over radial zones
 
-!Remember: xillpar(3) is the Ecut when xillver is with density fixed to 10^15 
+!Remember: xillpar(3) is Ecut when xillver is with density fixed to 10^15 
 !          whereas in xillverD the parameter 3 is logN 
-!         xillpar(3) = real( gsdr(rbin) ) * Ecut_s
+
+!       xillpar(3) = real( gsdr(rbin) ) * Ecut_s
         xillpar(3) = real( logner(rbin) )
         logxi0     = real( logxir(rbin) )
         if( xe .eq. 1 )then
@@ -304,7 +305,11 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
            xillpar(3) = lognep
            logxi0     = logxi
         end if
-!        write(*,*) 'logxir, logner xillver(3) ', rbin, logxir(rbin), logner(rbin), xillpar(3)
+        
+!Avoid negative values of the ionisation parameter 
+        if (logxi0 .eq. 0.0) then
+           ionvar = 0.0
+        endif
         do mubin = 1,me      !loop over emission angle zones
            !Calculate input inclination angle
            mue = ( real(mubin) - 0.5 ) / real(me)
@@ -313,29 +318,35 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
            !Call xillver
            xillpar(1) = real(Gamma)
            xillpar(4) = logxi0
+!           write(*,*) xillpar            
 !           call myxill   (earx,nex,xillpar,ifl,Cp,photarx)
            call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx)
-           !non linear effects
-           !Gamma variations
-           xillpar(1) = Gamma1
-           xillpar(4) = logxi0 + ionvar * dlogxi1
-!           call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
-           call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_1)
-           xillpar(1) = Gamma2
-           xillpar(4) = logxi0 + ionvar * dlogxi2
-!            call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
-           call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_2)
-           photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
-           !xi variations
-           xillpar(1) = real(Gamma)
-           xillpar(4) = logxi0 + ionvar * dlogxi1
-!            call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
-           call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_1)
-           xillpar(1) = real(Gamma)
-           xillpar(4) = logxi0 + ionvar * dlogxi2
-!            call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
-           call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_2)
-           photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
+           
+           if (DC .eq. 0) then 
+!NON LINEAR EFFECTS
+              !Gamma variations
+              xillpar(1) = Gamma1
+              xillpar(4) = logxi0 + ionvar * dlogxi1
+              ! call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
+              call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_1)
+              xillpar(1) = Gamma2
+              xillpar(4) = logxi0 + ionvar * dlogxi2
+              ! call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
+              call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_2)
+              photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
+              !xi variations
+              xillpar(1) = real(Gamma)
+              xillpar(4) = logxi0 + ionvar * dlogxi1
+              ! call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
+              call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_1)
+              xillpar(1) = real(Gamma)
+              xillpar(4) = logxi0 + ionvar * dlogxi2
+              ! call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
+              call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_2)
+              photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
+
+        endif
+        
            !Loop through frequencies
            do j = 1,nf
                  do i = 1,nex
@@ -347,9 +358,9 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
               
                  call conv_all_FFTw(dyn, photarx, photarx_delta, reline, imline, reline_a , imline_a,&
                          photarx_dlogxi, ReW0(:,j), ImW0(:,j), ReW1(:,j), ImW1(:,j), &
-                         ReW2(:,j), ImW2(:,j), ReW3(:,j), ImW3(:,j))
+                         ReW2(:,j), ImW2(:,j), ReW3(:,j), ImW3(:,j), DC)
 
-
+                 
 !*************************************************************************!
 !Convolve with line profile. This convolution is done with four1
                     ! !First FFTs
@@ -410,7 +421,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 
 
 ! Calculate absorption and multiply by the raw FT
-  call FNINIT
+!  call FNINIT
 
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
   
@@ -425,10 +436,9 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   if( DC .eq. 1 )then
      do i = 1, nex
         ReGbar(i) = ReSrawa(i,1)
-        ImGbar(i) = ImSrawa(i,1)
+!        ImGbar(i) = ImSrawa(i,1)  !No need for the immaginary part in DC
      end do
   else
-
 
      ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
      if (ReIm .gt. 0.0) then
@@ -447,7 +457,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
 
      ReGbar = 0.0
      ImGbar = 0.0
-     fac    = 2.302585*fc**2*log10(fhiHz/floHz) / ( (fhiHz-floHz)*real(nf) )
+     fac = 2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf))
      do j = 1,nf
         f = floHz * (fhiHz/floHz)**(  (real(j)-0.5) / real(nf) )
         do i = 1,nex
@@ -460,7 +470,7 @@ subroutine genreltrans(Cp,ear,ne,param,ifl,photar)
   end if
      
 ! Write output depending on ReIm parameter
-  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) ) ReIm = 1
+!  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) ) ReIm = 1
   if( abs(ReIm) .le. 4 )then
      call crebin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS) !S is in photar form
      if( abs(ReIm) .eq. 1 )then        !Real part

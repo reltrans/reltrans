@@ -16,7 +16,7 @@ subroutine crebin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG)
      E2ReGx(i) = E**2 * ReGx(i) / dE
      E2ImGx(i) = E**2 * ImGx(i) / dE
   end do
-
+  
   !Re-bin
   call rebinE(earx,E2ReGx,nex,ear,ReG,ne)
   call rebinE(earx,E2ImGx,nex,ear,ImG,ne)
