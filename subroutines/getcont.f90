@@ -42,7 +42,7 @@
       xillpar(7) = 0.0       !reflection fraction of 0
       ifl        = 1
 
-      call myxill_hD(earx,nex,xillpar,ifl,Cp,contx)
+      call myxill(earx,nex,xillpar,ifl,Cp,contx)
       return
       end subroutine getcont
 !-----------------------------------------------------------------------

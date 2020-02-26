@@ -322,7 +322,7 @@ subroutine radfunctions(xe,rin,rnmax,logxip, lognep, spin,h,honr,rlp,dcosdr&
 !Also save gsd(r)
      gsdr(i) = gsd
 
-!Calculate the density 
+!Now calculate the density (this matters only for high dens model reltransD)
      logner(i) = lognep + adensity * mylogne(re, rin)
 ! Check if the density is in the limits 
      logner(i) = max( logner(i) , 15.d0  )
