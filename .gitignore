@@ -1,11 +1,10 @@
 exe
 libreltrans.dylib
-main_gullo.f90
+Makefile 
 fort.*
 *.o
 *.mod
 reltransFunctionMap.*
-Makefile
 lpack_reltrans.cxx
 .DS_Store
 pkgIndex.tcl
