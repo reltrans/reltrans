@@ -11,7 +11,7 @@ mkdir $flib
 
 cd $fftw
 ./configure --prefix=$pwdPATH/fftw/$flib/
-make
+make CFLAGS="-fPIC"
 make install 
 
 
