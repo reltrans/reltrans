@@ -10,5 +10,7 @@ lpack_reltrans.cxx
 pkgIndex.tcl
 libreltrans.so
 *~
+tables
 tables/*
+fftw
 fftw/*
