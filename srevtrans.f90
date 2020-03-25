@@ -93,7 +93,7 @@ subroutine genreltransD(Cp,ear,ne,param,ifl,photar)
   save lens,contx,me,ge,xe
   save paramsave,fhisave,flosave,nfsave,nro,nphi
   save frobs,frrel,Cpsave
-  save transe,transea
+  save transe, transea, logxir, gsdr, logner
   save check,d,rnmax
   save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,logxir,gsdr
   save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
