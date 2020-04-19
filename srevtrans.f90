@@ -212,6 +212,7 @@ subroutine genreltransD(Cp,ear,ne,param,ifl,photar)
      do i = 1,8
         if( abs( param(i) - paramsave(i) ) .gt. 1e-7 ) needtrans = .true.
      end do
+     if( abs( param(10) - paramsave(10) ) .gt. 1e-7 )needtrans=.true.
      if( nf .ne. nfsave ) needtrans = .true.
      if( abs( fhi - fhisave ) .gt. 1e-7 ) needtrans = .true.
      if( abs( flo - flosave ) .gt. 1e-7 ) needtrans = .true.

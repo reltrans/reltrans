@@ -81,7 +81,7 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,nro,nphi,ne,dloge,
   call getdcos(spin,h,mudisk,ndelta,rout,npts,rlp,dcosdr,tlp,cosd,cosdout)
 
   ! Set up grids for ionization and g-factor as a function of radius
-  call radfunctions(xe,rin,rnmax,dble(rlxi),dble(lognep), spin,h,honr,rlp,dcosdr&
+  call radfunctions_dens(xe,rin,rnmax,dble(rlxi),dble(lognep), spin,h,honr,rlp,dcosdr&
        &,cosd,ndelta,rmin,npts,logxir,gsdr, logner)
   !Outputs: logxir(1:xe),gsdr(1:xe), logner(1:xe)
  
@@ -336,6 +336,100 @@ subroutine radfunctions(xe,rin,rnmax,logxip, lognep, spin,h,honr,rlp,dcosdr&
 end subroutine radfunctions
 !-----------------------------------------------------------------------
 
+!-----------------------------------------------------------------------
+subroutine radfunctions_dens(xe, rin, rnmax, logxip, lognep, spin, h, honr, rlp, dcosdr&
+     &, cosd, ndelta, rmin, npts, logxir, gsdr, logner)
+! In  : xe,rin,rnmax,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
+! Out : logxir(1:xe), gsdr(1:xe), logner(1:xe)
+  implicit none
+  integer         , intent(IN)   :: xe, ndelta, npts 
+  double precision, intent(IN)   :: rin, rmin, rnmax, logxip, lognep, spin, h, honr, rlp(ndelta), dcosdr(ndelta), cosd(ndelta)
+  double precision, intent(INOUT):: logxir(xe), gsdr(xe), logner(xe)
+
+  integer          :: i, kk, get_index, myenv, adensity
+  double precision :: rp, logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd, dglpfac
+  double precision :: logxiraw, mylogne
+  double precision, allocatable :: rad(:)
+  !Decide on zone a density profile or constant density profile
+  adensity = myenv("A_DENSITY",1)
+  adensity = min( adensity , 1 )
+  adensity = max( adensity , 0 )
+
+  allocate(rad(xe))
+  !Now calculate logxi itself
+
+  !radius calculation 
+  do i = 1, xe
+     rad(i) = (rnmax/rin)**(real(i-1) / real(xe))
+     rad(i) = rad(i) + (rnmax/rin)**(real(i) / real(xe))
+     rad(i) = rad(i) * rin * 0.5
+     ! write(*,*) i, rad(i)
+  enddo
+
+  !this is the peak assuming the emissivity profile r**-3 
+  rp = rin * ( 11.0 / 9.0 )**2 
+  if (rad(1) .gt. rp) then
+     !Calculate the radius for this bin     
+     do i = 1, xe
+        if( i .eq. 1 )then
+           rad(i) = 10.0**( 0.5 * ( log10(rin) + log10(rp) ) )
+        else
+           rad(i) =     (rnmax/rp)**(real(i-1)  /real(xe-1))
+           rad(i) = rad(i) + (rnmax/rp)**(real(i-2)/real(xe-1))
+           rad(i) = rad(i) * rp * 0.5        
+        end if
+        ! write(*,*) i, rad(i)
+     enddo
+  endif
+  
+  ! The loop calculates the raw xi and raw n_e.
+  ! This means they are without normalization: only to find the maximum and the minimum. Remember that the max of the ionisation is not the same as the minumim in the density because the flux depends on r
+  !The loops calculates also the correction factor mui 
+  do i = 1, xe 
+     !Now logxi(r)
+     logxir(i) = logxiraw(rad(i),spin,h,honr,rlp,dcosdr,ndelta,rmin,npts,gsd)
+     logxir(i) = logxir(i) - adensity * mylogne(rad(i), rin)
+!Also save gsd(r)
+     gsdr(i) = gsd
+!Now calculate the raw density (this matters only for high dens model reltransD)
+     logner(i) = adensity * mylogne(rad(i), rin)
+     ! write(*,*) 'logxir, logner', rad(i), logxir(i), logner(i)
+  end do
+
+  !After the loop calculate the max and the min
+  logxinorm = maxval(logxir)
+  lognenorm = minval(logner)
+  ! write(*,*)'-----------------------'
+  ! write(*,*) logxinorm, lognenorm  
+  ! write(*,*)'-----------------------'
+
+  do i = 1, xe      
+
+ !Calculate the incident angle for this bin
+     kk = get_index(rlp, ndelta, rad(i), rmin, npts)
+     mus = interper(rlp, cosd, ndelta, rad(i), kk)
+     if( kk .eq. npts ) mus = newtex(rlp, cosd, ndelta, rad(i), h, honr, kk)
+     mui = dinang(spin, rad(i), h, mus)
+
+     logxir(i) = logxir(i) - logxinorm + logxip
+!Correction to account for the radial dependence of incident angle
+     logxir(i) = logxir(i) - 0.1505 - log10(mui)
+
+     ! Check if the density is in the limits
+     logxir(i) = max( logxir(i) , 0.d0  )
+     logxir(i) = min( logxir(i) , 4.7d0 )
+!Density profile 
+     logner(i) = logner(i) - lognenorm + lognep
+     logner(i) = max( logner(i) , 15.d0  )
+     logner(i) = min( logner(i) , 19.d0 )
+
+     ! write(*,*) 'logxir, logner', rad(i), logxir(i), logner(i)
+  enddo
+  
+  deallocate(rad)
+  return
+end subroutine radfunctions_dens
+!-----------------------------------------------------------------------
 
   
 !-----------------------------------------------------------------------
