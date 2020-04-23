@@ -329,7 +329,7 @@ subroutine genreltransD(Cp,ear,ne,param,ifl,photar)
            !Call xillver
            xillpar(1) = real(Gamma)
            xillpar(4) = logxi0
-!           write(*,*) xillpar            
+          ! write(*,*) xillpar(4), xillpar(3)            
 !           call myxill   (earx,nex,xillpar,ifl,Cp,photarx)
            call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx)
            
@@ -432,7 +432,7 @@ subroutine genreltransD(Cp,ear,ne,param,ifl,photar)
 
 
 ! Calculate absorption and multiply by the raw FT
-!  call FNINIT
+ ! call FNINIT
 
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
   

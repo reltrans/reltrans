@@ -322,16 +322,9 @@ subroutine radfunctions(xe,rin,rnmax,logxip, lognep, spin,h,honr,rlp,dcosdr&
 !Also save gsd(r)
      gsdr(i) = gsd
 
-!Now calculate the density (this matters only for high dens model reltransD)
-     logner(i) = lognep + adensity * mylogne(re, rin)
-! Check if the density is in the limits 
-     logner(i) = max( logner(i) , 15.d0  )
-     logner(i) = min( logner(i) , 19.d0 )
   end do
   logxir(xe) = 0.0
   gsdr(xe)   = dglpfac(1000.d0,spin,h)
-!The last bin has the maximum density available (19.0) a part in the case A_DENSITY=0 in that case it should have the density assigned by the user (parameter in the model)
-  logner(xe) = (19.d0 * adensity) + (1 - adensity) * lognep
   return
 end subroutine radfunctions
 !-----------------------------------------------------------------------
@@ -358,6 +351,7 @@ subroutine radfunctions_dens(xe, rin, rnmax, logxip, lognep, spin, h, honr, rlp,
   allocate(rad(xe))
   !Now calculate logxi itself
 
+  
   !radius calculation 
   do i = 1, xe
      rad(i) = (rnmax/rin)**(real(i-1) / real(xe))
@@ -365,34 +359,20 @@ subroutine radfunctions_dens(xe, rin, rnmax, logxip, lognep, spin, h, honr, rlp,
      rad(i) = rad(i) * rin * 0.5
      ! write(*,*) i, rad(i)
   enddo
-
-  !this is the peak assuming the emissivity profile r**-3 
-  rp = rin * ( 11.0 / 9.0 )**2 
-  if (rad(1) .gt. rp) then
-     !Calculate the radius for this bin     
-     do i = 1, xe
-        if( i .eq. 1 )then
-           rad(i) = 10.0**( 0.5 * ( log10(rin) + log10(rp) ) )
-        else
-           rad(i) =     (rnmax/rp)**(real(i-1)  /real(xe-1))
-           rad(i) = rad(i) + (rnmax/rp)**(real(i-2)/real(xe-1))
-           rad(i) = rad(i) * rp * 0.5        
-        end if
-        ! write(*,*) i, rad(i)
-     enddo
-  endif
   
   ! The loop calculates the raw xi and raw n_e.
   ! This means they are without normalization: only to find the maximum and the minimum. Remember that the max of the ionisation is not the same as the minumim in the density because the flux depends on r
   !The loops calculates also the correction factor mui 
   do i = 1, xe 
-     !Now logxi(r)
-     logxir(i) = logxiraw(rad(i),spin,h,honr,rlp,dcosdr,ndelta,rmin,npts,gsd)
-     logxir(i) = logxir(i) - adensity * mylogne(rad(i), rin)
-!Also save gsd(r)
-     gsdr(i) = gsd
+
 !Now calculate the raw density (this matters only for high dens model reltransD)
      logner(i) = adensity * mylogne(rad(i), rin)
+
+     !Now logxi(r)
+     logxir(i) = logxiraw(rad(i),spin,h,honr,rlp,dcosdr,ndelta,rmin,npts,gsd)
+     logxir(i) = logxir(i) - logner(i)
+!Also save gsd(r)
+     gsdr(i) = gsd
      ! write(*,*) 'logxir, logner', rad(i), logxir(i), logner(i)
   end do
 
@@ -423,7 +403,7 @@ subroutine radfunctions_dens(xe, rin, rnmax, logxip, lognep, spin, h, honr, rlp,
      logner(i) = max( logner(i) , 15.d0  )
      logner(i) = min( logner(i) , 19.d0 )
 
-     ! write(*,*) 'logxir, logner', rad(i), logxir(i), logner(i)
+     ! write(*,*) 'logxir, logner', i, rad(i), logxir(i), logner(i)
   enddo
   
   deallocate(rad)
