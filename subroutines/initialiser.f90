@@ -38,11 +38,10 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,check&
 
         nro   = 200    !resolution variables - these could be made parameters
         nphi  = 200    !  "
-        me      = myenv("MU_ZONES",5)     !Set number of mu_e zones used
-        ge      = myenv("ECUT_ZONES",5)   !Set number of Ecut zones used
-        xe      = myenv("ION_ZONES",10)   !Set number of ionisation zones used
+        me      = myenv("MU_ZONES"  , 5 )     !Set number of mu_e zones used
+        ge      = myenv("ECUT_ZONES", 5 )   !Set number of Ecut zones used
+        xe      = myenv("ION_ZONES" , 50)   !Set number of ionisation zones used
 
-        write(*,*) '--------------', xe
         rnmax= 300.d0
 ! Set sensible distance for observer from the BH
         d = max( 1.0d4 , 2.0d2 * rnmax**2 )

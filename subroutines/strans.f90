@@ -353,17 +353,20 @@ subroutine radfunctions_dens(xe, rin, rnmax, logxip, lognep, spin, h, honr, rlp,
 
   
   !radius calculation 
-  do i = 1, xe
-     rad(i) = (rnmax/rin)**(real(i-1) / real(xe))
-     rad(i) = rad(i) + (rnmax/rin)**(real(i) / real(xe))
-     rad(i) = rad(i) * rin * 0.5
-     ! write(*,*) i, rad(i)
-  enddo
+  ! do i = 1, xe
+  !    rad(i) = (rnmax/rin)**(real(i-1) / real(xe))
+  !    rad(i) = rad(i) + (rnmax/rin)**(real(i) / real(xe))
+  !    rad(i) = rad(i) * rin * 0.5
+  !    ! write(*,*) i, rad(i)
+  ! enddo
   
   ! The loop calculates the raw xi and raw n_e.
   ! This means they are without normalization: only to find the maximum and the minimum. Remember that the max of the ionisation is not the same as the minumim in the density because the flux depends on r
   !The loops calculates also the correction factor mui 
   do i = 1, xe 
+     rad(i) = (rnmax/rin)**(real(i-1) / real(xe))
+     rad(i) = rad(i) + (rnmax/rin)**(real(i) / real(xe))
+     rad(i) = rad(i) * rin * 0.5
 
 !Now calculate the raw density (this matters only for high dens model reltransD)
      logner(i) = adensity * mylogne(rad(i), rin)
