@@ -2,7 +2,7 @@
       function myenv(name,default)
       implicit none
       integer myenv,stat,default
-      character (len=3) str
+      character (len=5) str
       character (len=*) name
       stat = 0        
       CALL get_environment_variable(trim(name),str)

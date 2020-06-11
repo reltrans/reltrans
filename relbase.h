@@ -13,7 +13,7 @@
    For a copy of the GNU General Public License see
    <http://www.gnu.org/licenses/>.
 
-    Copyright 2016 Thomas Dauser, Remeis Observatory & ECAP
+    Copyright 2019 Thomas Dauser, Remeis Observatory & ECAP
 */
 #ifndef RELBASE_H_
 #define RELBASE_H_
@@ -21,14 +21,13 @@
 #define _GNU_SOURCE
 
 #include "common.h"
-
 #include "fitsio.h"
-/* #include "/Data/adamingram/heasoft/heasoft-6.22.1/heacore/cfitsio/fitsio.h" */
-
+/* #include "/Users/gullo/Software/heasoft-6.26.1/heacore/cfitsio/fitsio.h" */
 #include "relutility.h"
 #include "reltable.h"
 #include "rellp.h"
 #include "xilltable.h"
+#include "relcache.h"
 
 
 /*********** DEFINE STATEMENTS *********/
@@ -36,11 +35,10 @@
 #define PARAM_DEFAULT 0.0
 
 #define version_major 1
-#define version_minor 1
-#define version_build 0
-#define version_dev "pre-6"
+#define version_minor 3
+#define version_build 5
+#define version_dev ""
 
-// TODO: allow to set it by an environment variable
 /** path to all RELXILL tables */
 #define RELXILL_TABLE_PATH "./"
 
@@ -63,7 +61,7 @@
 /** parameters for interpolation an interagration **/
 #define N_FRAD 1000      // values of radial bins (from rmin to rmax)
 #define N_ZONES 10       // number of radial zones (as each zone is convolved with the input spectrum N_ZONES < N_FRAD)
-#define N_ZONES_MAX 100  // maximal number of radial zones
+#define N_ZONES_MAX 50  // maximal number of radial zones
 
 /** parameters for the convolution **/
 #define N_ENER_CONV  4096  // number of bins for the convolution, not that it needs to follow 2^N because of the FFT
@@ -105,22 +103,6 @@ typedef struct{
 	double* gstar;
 } str_relb_func;
 
-typedef struct{
-	int n_ener;
-	double* ener;
-	double* flux;
-} out_spec;
-
-typedef struct{
-	int nzones;   // number of zones actually stored there
-	int n_cache;  // number of array (nzones <= n_cache !!)
-	int n_ener;
-	double*** fft_xill;  // dimensions [n_cache,2,n_ener]
-	double*** fft_rel;   // dimensions [n_cache,2,n_ener]
-	xill_spec** xill_spec;
-	out_spec* out_spec;
-} specCache;
-
 /****** FUNCTION DEFINITIONS ******/
 
 /* the relbase function calculating the basic relativistic line shape for a given parameter setup*/
@@ -141,6 +123,9 @@ void relxill_kernel(double* ener_inp, double* spec_inp, int n_ener_inp, xillPara
 
 void relconv_kernel(double* ener_inp, double* spec_inp, int n_ener_inp, relParam* rel_param, int* status );
 
+relSysPar* get_system_parameters(relParam* param, int* status);
+
+
 /** function adding a primary component with the proper norm to the flux **/
 void add_primary_component(double* ener, int n_ener, double* flu, relParam* rel_param, xillParam* xill_param, int* status);
 
@@ -153,11 +138,13 @@ void free_specCache(void);
 void free_fft_cache(double*** sp,int n1, int n2);
 void free_out_spec(out_spec* spec);
 out_spec* init_out_spec(int n_ener, double* ener, int* status);
-int redo_relbase_calc(relParam* param, relParam* ca_para);
+
 int redo_xillver_calc(relParam* rel_param, xillParam* xill_param, relParam* ca_rel, xillParam* ca_xill);
-int comp_xill_param(xillParam* cpar, xillParam* par);
-void set_cached_xill_param(xillParam* par,xillParam** ca_par, int* status);
+int redo_relbase_calc(relParam* rel_param, relParam* ca_rel_param);
+
 void set_cached_rel_param(relParam* par, relParam** ca_rel_param, int* status);
+
+int comp_xill_param(xillParam* cpar, xillParam* par);
 
 
 #endif /* RELBASE_H_ */

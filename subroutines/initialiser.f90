@@ -1,9 +1,11 @@
 !-----------------------------------------------------------------------
-subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,check&
+subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,check&
      ,nphi,nro,honr_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim,me,ge,xe)
 ! Initialises the model and writes the header
+  use conv_mod
+  use dyn_gr
       implicit none
-      integer nex,i,spin_dim,mu_dim,nphi,nro,nphi_grid,nro_grid,lrec,irec,check
+      integer i,spin_dim,mu_dim,nphi,nro,nphi_grid,nro_grid,lrec,irec,check
       integer me,ge,xe,myenv
       logical firstcall,needtrans
       real Emin,Emax,dloge,earx(0:nex)
@@ -11,17 +13,22 @@ subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,chec
       double precision :: d,rnmax,spin_start,spin_end,mu_start,mu_end
       character (len=500) gridname
       needtrans = .false.
-      call get_environment_variable("GRID",gridname,check)
-
+!      call get_environment_variable("GRID",gridname,check)
+      check = 0
+      
       if( firstcall )then
+
+        call init_fftw_allconv() !call the initializer of the fftw convolution
+         
         needtrans = .true.
         write(*,*)"----------------------------------------------------"
         write(*,*)"This is RELTRANS: a transfer function model for"
-        write(*,*)"X-ray reverberation mapping written by Adam Ingram."
-        write(*,*)"Please cite Ingram et al (2018)."
+        write(*,*)"X-ray reverberation mapping."
+        write(*,*)"Please cite Ingram et al (2019) MNRAS 488 p324-347."
         write(*,*)"----------------------------------------------------"
-        !Create *logarithmic* working energy grid
-        !Will need to evaluate xillver on this grid to use the FT convolution code 
+
+!Create *logarithmic* working energy grid
+!Will need to evaluate xillver on this grid to use the FT convolution code 
         Emax  = 1e3
         Emin  = 1e-1
         dloge = log10( Emax / Emin ) / float(nex)
@@ -31,49 +38,14 @@ subroutine initialiser(firstcall,Emin,Emax,nex,dloge,earx,rnmax,d,needtrans,chec
 
         nro   = 200    !resolution variables - these could be made parameters
         nphi  = 200    !  "
-        me      = myenv("MU_ZONES",5)     !Set number of mu_e zones used
-        ge      = myenv("ECUT_ZONES",5)   !Set number of Ecut zones used
-        xe      = myenv("ION_ZONES",10)   !Set number of ionisation zones used
+        me      = myenv("MU_ZONES"  , 5 )     !Set number of mu_e zones used
+        ge      = myenv("ECUT_ZONES", 5 )   !Set number of Ecut zones used
+        xe      = myenv("ION_ZONES" , 50)   !Set number of ionisation zones used
 
-        if (check .ne. 0) then 
-           write(*,*) 'This code uses a grid to compute the kernel trasfer funcion' 
-      
-!open the grid 
-           lrec = 8*nphi*nro         
-           open(98,file=gridname,access='direct',form='unformatted',status='old',recl=lrec)
-           irec = 1 
-           read(98,rec=1) rnmax,nphi_grid,nro_grid,honr_grid,rout_grid,d_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim
-!remember that rout_grid is the rout used to make the grid. It is not the same as param 5
-!         write(*,*) 'rout of the grid', rout_grid
-
-
-           
-! !check if the grid has the correct values 
-!            if (nphi_grid .ne. nphi .or. nro_grid .ne. nro) then
-!               write(*,*) 'Not compatible grid dimentions'
-!               stop
-!            endif
-
-!Define nphi and nro according to the grid
-           nphi = nphi_grid
-           nro = nro_grid
-           
-           
-! Set sensible distance for observer from the BH now that we took rnmax from the grid 
-           d = max( 1.0d4 , 2.0d2 * rnmax**2 )
-         
-!check if the grid distance has been calculated in the same way
-           if (d_grid .ne. d ) then
-              write(*,*) 'The distance has been computed differently in the grid'
-              stop
-           endif
-        else
-           rnmax= 300.d0
+        rnmax= 300.d0
 ! Set sensible distance for observer from the BH
-           d = max( 1.0d4 , 2.0d2 * rnmax**2 )
+        d = max( 1.0d4 , 2.0d2 * rnmax**2 )
            
-        endif
-
         firstcall = .false.
      end if
      return

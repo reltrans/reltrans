@@ -1,4 +1,19 @@
 
+module telematrix
+  !Module containing definitions needs to fold around the telescope
+  !response matrix
+  logical              :: needchans, needresp, arf
+  integer              :: nenerg, numchn, Ilo, Ihi, needEs
+  real                 :: Elo, Ehi
+  real,    allocatable :: En(:), resp(:,:), ECHN(:)
+  integer, allocatable :: NGRP(:), FCHAN(:,:), LCHAN(:,:), NCHAN(:,:)
+  character (len=500) respname, arfname
+  data needresp/.true./
+  data needchans/.true./
+end module telematrix
+
+
+  
 MODULE dyn_gr
 !---------------------------------------------------------------------
 !  Module containing definitions needed to dynamically allocate 
@@ -9,6 +24,185 @@ MODULE dyn_gr
     double precision,dimension(:,:),allocatable :: re1,taudo1,pem1
     save status_re_tau
 END MODULE dyn_gr
+
+
+
+module conv_mod
+  use, intrinsic :: iso_c_binding
+  implicit none
+  include 'fftw3.f03'
+
+  integer, parameter :: nex = 2**12, nex_conv = 4 * nex, nec = nex_conv/2 + 1
+  ! real   , dimension(2 * nex_conv) :: adata,bdata,cdata
+  ! complex, dimension(nex_conv) :: ac,bc,cc
+  
+  double precision, parameter :: nexm1 = 1. / real(nex_conv, kind(8))
+
+  type(C_ptr) :: plan1, plan2
+  real(   c_double), pointer, dimension(:) :: in,  out_conv
+  complex(c_double), pointer, dimension(:) :: out, in_conv
+  type(C_ptr) :: a1, a2, a3, a4
+
+
+contains
+  
+  subroutine init_fftw_allconv()
+    implicit none
+    integer(c_int) :: flags, i
+    integer, external :: omp_get_max_threads
+
+    !i = fftw_init_threads()
+    !call fftw_plan_with_nthreads(omp_get_max_threads())
+    !print*, "Using threads num:", omp_get_max_threads()
+
+    ! allocate
+    a1 = fftw_alloc_real(   int(nex_conv, c_size_t))
+    a2 = fftw_alloc_real(   int(nex_conv, c_size_t))
+    a3 = fftw_alloc_complex(int(nec     , c_size_t))
+    a4 = fftw_alloc_complex(int(nec     , c_size_t))
+
+
+    call c_f_pointer(a1, in      , [nex_conv])
+    call c_f_pointer(a2, out_conv, [nex_conv])
+    call c_f_pointer(a3, out     , [nec     ])
+    call c_f_pointer(a4, in_conv , [nec     ])
+
+
+ !   flags = 0 + FFTW_ESTIMATE
+    flags = 0 + FFTW_PATIENT
+
+    plan1 = fftw_plan_dft_r2c_1d(nex_conv,  in, out, flags)
+    plan2 = fftw_plan_dft_c2r_1d(nex_conv, in_conv, out_conv, flags)
+  end subroutine init_fftw_allconv
+
+
+ 
+  subroutine conv_all_FFTw(dyn, photarx, photarx_delta, reline , imline, reline_a , imline_a, & 
+photarx_dlogxi, ReW0_conv, ImW0_conv, ReW1_conv, ImW1_conv, ReW2_conv, ImW2_conv, ReW3_conv, ImW3_conv, DC)
+
+    implicit none
+    integer, intent(in) :: DC 
+    real                :: dyn
+    real, intent(in)    :: photarx(nex), photarx_delta(nex), &
+                           reline(nex), imline(nex), &
+                           reline_a(nex), imline_a(nex), photarx_dlogxi(nex)
+    real, intent(inout) :: ReW0_conv(nex), ImW0_conv(nex), &
+                           ReW1_conv(nex), ImW1_conv(nex), &
+                           ReW2_conv(nex), ImW2_conv(nex), &
+                           ReW3_conv(nex), ImW3_conv(nex)
+    complex :: conv(nec), padFT_photarx(nec), padFT_photarx_delta(nec), & 
+           padFT_photarx_dlogxi(nec), padFT_reline(nec), padFT_imline(nec), & 
+           padFT_reline_a(nec), padFT_imline_a(nec)
+    integer :: i
+    real    :: photmax, depad_conv(nex)
+
+    if (DC .eq. 1 ) then
+       call padding4FT(photarx       , padFT_photarx)
+       call padding4FT(reline        , padFT_reline)                        
+       conv = (padFT_photarx * padFT_reline) * nexm1
+       call de_paddingFT(dyn, conv, depad_conv)
+       ReW0_conv = ReW0_conv + depad_conv
+    else
+       
+       call padding4FT(photarx       , padFT_photarx)
+       call padding4FT(photarx_delta , padFT_photarx_delta)
+       call padding4FT(photarx_dlogxi, padFT_photarx_dlogxi)
+       call padding4FT(reline        , padFT_reline)
+       call padding4FT(imline        , padFT_imline)
+       call padding4FT(reline_a      , padFT_reline_a)
+       call padding4FT(imline_a      , padFT_imline_a)
+
+       conv = (padFT_photarx * padFT_reline) * nexm1
+       call de_paddingFT(dyn, conv, depad_conv)
+       ReW0_conv = ReW0_conv + depad_conv
+       
+       conv = (padFT_photarx * padFT_imline) * nexm1
+       call de_paddingFT(dyn, conv, depad_conv)
+       ImW0_conv = ImW0_conv + depad_conv
+
+       conv = (padFT_photarx * padFT_reline_a) * nexm1
+       call de_paddingFT(dyn, conv, depad_conv) 
+       ReW1_conv = ReW1_conv + depad_conv
+
+       conv = (padFT_photarx * padFT_imline_a) * nexm1
+       call de_paddingFT(dyn, conv, ImW1_conv)
+       ImW1_conv = ImW1_conv + depad_conv
+
+       conv = (padFT_photarx_delta * padFT_reline) * nexm1
+       call de_paddingFT(dyn, conv, depad_conv)
+       ReW2_conv = ReW2_conv + depad_conv
+
+       conv = (padFT_photarx_delta * padFT_imline) * nexm1
+       call de_paddingFT(dyn, conv, depad_conv)
+       ImW2_conv = ImW2_conv + depad_conv
+
+       conv = (padFT_photarx_dlogxi * padFT_reline) * nexm1
+       call de_paddingFT(dyn, conv, depad_conv)
+       ReW3_conv = ReW3_conv + depad_conv
+
+       conv = (padFT_photarx_dlogxi * padFT_imline) * nexm1
+       call de_paddingFT(dyn, conv, depad_conv)
+       ImW3_conv = ImW3_conv + depad_conv
+    endif
+    
+  end subroutine conv_all_FFTw
+
+   subroutine padding4FT(line, padFT_line)
+     implicit none 
+     real           , intent(in)  :: line(nex)
+     complex        , intent(out) :: padFT_line(nec)
+   
+     integer :: i 
+     
+     ! Fill padded arrays
+     in(1) = 0.0
+     do i = 1, nex
+        in(i+1) = line(i)
+     end do
+     do i = 2, 3 * nex
+        in(i + nex) = 0.
+     end do
+     
+     call fftw_execute_dft_r2c(plan1, in, out)
+     
+     padFT_line = out
+
+   end subroutine padding4FT
+
+
+   subroutine de_paddingFT(dyn, padFT_line, out_line)
+     implicit none 
+     real    , intent(in) :: dyn
+     complex , intent(in) :: padFT_line(nec)
+     real    , intent(out):: out_line(nex)
+
+     integer :: i 
+     real    :: photmax
+
+     in_conv = padFT_line
+
+     call fftw_execute_dft_c2r(plan2, in_conv, out_conv)
+
+     ! Populate output array
+     photmax = 0.0
+     do i = 1, nex
+        out_line(i) = out_conv(i + nex/2 + 1)
+        photmax = max( photmax , out_line(i) )
+     end do
+     ! Clean any residual edge effects
+     do i = 1, nex
+        if( abs(out_line(i)) .lt. abs(dyn * photmax) ) out_line(i) = 0.0
+     end do
+
+     return 
+   end subroutine de_paddingFT
+
+  ! subroutine init_fftw_allconv()
+  !   implicit none
+  !   print *, "Without FFTW"
+  ! end subroutine init_fftw_allconv
+
+end module conv_mod
 
 
 

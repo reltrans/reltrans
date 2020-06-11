@@ -1,3 +1,20 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 !-----------------------------------------------------------------------
       subroutine getrsp1(arf,NENMAX,CHNMAX,respname,arfname,NENERG,&
         En,RD,NGRP,FCHAN,LCHAN,NUMCHN,ECHN)

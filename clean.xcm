@@ -1,8 +1,0 @@
-rm *.mod
-rm exe
-rm *.o
-rm *Function*
-rm Makefile 
-rm libreltrans.dylib 
-rm *.cxx
-rm *.tcl
