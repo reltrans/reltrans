@@ -84,7 +84,7 @@ subroutine genreltransD(Cp,ear,ne,param,ifl,photar)
 !variable for non linear effects
   real :: photarx_1(nex),photarx_2(nex),photarx_delta(nex),Gamma1,Gamma2,DeltaGamma,DelAB,g
   real :: reline_a(nex),imline_a(nex),photarx_dlogxi(nex),dlogxi1,dlogxi2
-  integer ionvar,DC
+  integer ionvar, DC, ionvariation
       
   data firstcall /.true./
   data Cpsave/2/
@@ -302,6 +302,10 @@ subroutine genreltransD(Cp,ear,ne,param,ifl,photar)
      !Now reflection
      xillpar(7) = -1.0       !reflection fraction of 1             
 
+!Set the ion-variation to 1, there is an if inside the radial loop to check if either the ionvar is 0 or the logxi is 0 to set ionvariation to 0
+! it is important that ionvariation is different than ionvar because ionvar is used also later in rawS routine to calculate the cross-spectrum
+     ionvariation = 1
+
      !Loop over radius, emission angle and frequency
      do rbin = 1, xe  !Loop over radial zones
 
@@ -318,9 +322,10 @@ subroutine genreltransD(Cp,ear,ne,param,ifl,photar)
         end if
         
 !Avoid negative values of the ionisation parameter 
-        if (logxi0 .eq. 0.0) then
-           ionvar = 0.0
+        if (logxi0 .eq. 0.0 .or. ionvar .eq. 0) then
+           ionvariation = 0.0
         endif
+
         do mubin = 1,me      !loop over emission angle zones
            !Calculate input inclination angle
            mue = ( real(mubin) - 0.5 ) / real(me)
@@ -337,21 +342,21 @@ subroutine genreltransD(Cp,ear,ne,param,ifl,photar)
 !NON LINEAR EFFECTS
               !Gamma variations
               xillpar(1) = Gamma1
-              xillpar(4) = logxi0 + ionvar * dlogxi1
+              xillpar(4) = logxi0 + ionvariation * dlogxi1
               ! call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
               call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_1)
               xillpar(1) = Gamma2
-              xillpar(4) = logxi0 + ionvar * dlogxi2
+              xillpar(4) = logxi0 + ionvariation * dlogxi2
               ! call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
               call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_2)
               photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
               !xi variations
               xillpar(1) = real(Gamma)
-              xillpar(4) = logxi0 + ionvar * dlogxi1
+              xillpar(4) = logxi0 + ionvariation * dlogxi1
               ! call myxill(earx,nex,xillpar,ifl,Cp,photarx_1)
               call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_1)
               xillpar(1) = real(Gamma)
-              xillpar(4) = logxi0 + ionvar * dlogxi2
+              xillpar(4) = logxi0 + ionvariation * dlogxi2
               ! call myxill(earx,nex,xillpar,ifl,Cp,photarx_2)
               call myxill_hD(earx,nex,xillpar,ifl,Cp,photarx_2)
               photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
