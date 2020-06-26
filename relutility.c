@@ -319,7 +319,7 @@ void get_rzone_grid(double rmin, double rmax, double *rgrid, int nzones, double 
 char* get_relxill_table_path( void ){
 	char* path;
 	path = getenv("RELXILL_TABLE_PATH");
-	printf(" ***!!!!*******!*!*!*!*!*!*!*!  (%s)\n", path);
+	/* printf(" ***!!!!*******!*!*!*!*!*!*!*!  (%s)\n", path); */
 	if (path!=NULL){
 		return path;
 	} else {

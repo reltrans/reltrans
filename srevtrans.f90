@@ -66,7 +66,7 @@ subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
   integer, intent(inout) :: ifl  
   integer nro,nphi, i,nf,ne,ReIm,nfsave
   integer verbose,mubin,rbin
-  integer me,ge,xe,Cp,j
+  integer me,xe,Cp,j
   
   double precision a,h,Gamma,inc,rout,rmin,disco,muobs,rin
   double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,rnmax,d
@@ -104,7 +104,7 @@ subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
   data Cpsave/2/
   data nfsave /-1/
   save firstcall,Emax,Emin,dloge,earx
-  save lens,contx,me,ge,xe
+  save lens,contx,me,xe
   save paramsave,fhisave,flosave,nfsave,nro,nphi
   save frobs,frrel,Cpsave
   save transe, transea, logxir, gsdr, logner
@@ -126,7 +126,7 @@ subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
       
 ! Initialise
   call initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans&
-     ,nphi,nro,me,ge,xe)
+     ,nphi,nro,me,xe)
 
 !Allocate dynamically the array to calculate the trasfer function          
   if (.not. allocated(re1)) allocate(re1(nphi,nro))
@@ -316,6 +316,8 @@ subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
 ! it is important that ionvariation is different than ionvar because ionvar is used also later in rawS routine to calculate the cross-spectrum
      ionvariation = 1
 
+     write(*,*) 'RADIAL ZONES', xe
+     write(*,*) 'MU ZONES', me
      !Loop over radius, emission angle and frequency
      do rbin = 1, xe  !Loop over radial zones
 

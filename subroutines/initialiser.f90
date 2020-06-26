@@ -1,12 +1,12 @@
 !-----------------------------------------------------------------------
 subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans&
-     ,nphi,nro,me,ge,xe)
+     ,nphi,nro,me,xe)
 ! Initialises the model and writes the header
   use conv_mod
   use dyn_gr
       implicit none
       integer i, nphi, nro 
-      integer  me,ge,xe,myenv
+      integer  me,xe,myenv
       logical firstcall,needtrans
       real Emin,Emax,dloge,earx(0:nex)
       double precision :: d,rnmax
@@ -35,7 +35,6 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans&
         nro   = 200    !resolution variables - these could be made parameters
         nphi  = 200    !  "
         me      = myenv("MU_ZONES"  , 5 )     !Set number of mu_e zones used
-        ge      = myenv("ECUT_ZONES", 5 )   !Set number of Ecut zones used
         xe      = myenv("ION_ZONES" , 50)   !Set number of ionisation zones used
 
         rnmax= 300.d0
