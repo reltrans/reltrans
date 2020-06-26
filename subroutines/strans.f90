@@ -404,7 +404,7 @@ subroutine radfunctions_dens(xe, rin, rnmax, logxip, lognep, spin, h, honr, rlp,
 !Density profile 
      logner(i) = logner(i) - lognenorm + lognep
      logner(i) = max( logner(i) , 15.d0  )
-     logner(i) = min( logner(i) , 19.d0 )
+     logner(i) = min( logner(i) , 21.d0 )
 
      ! write(*,*) 'logxir, logner', i, rad(i), logxir(i), logner(i)
   enddo
