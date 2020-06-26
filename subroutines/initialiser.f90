@@ -1,20 +1,16 @@
 !-----------------------------------------------------------------------
-subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,check&
-     ,nphi,nro,honr_grid,spin_start,spin_end,mu_start,mu_end,spin_dim,mu_dim,me,ge,xe)
+subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans&
+     ,nphi,nro,me,ge,xe)
 ! Initialises the model and writes the header
   use conv_mod
   use dyn_gr
       implicit none
-      integer i,spin_dim,mu_dim,nphi,nro,nphi_grid,nro_grid,lrec,irec,check
-      integer me,ge,xe,myenv
+      integer i, nphi, nro 
+      integer  me,ge,xe,myenv
       logical firstcall,needtrans
       real Emin,Emax,dloge,earx(0:nex)
-      double precision :: honr_grid,rout_grid,d_grid
-      double precision :: d,rnmax,spin_start,spin_end,mu_start,mu_end
-      character (len=500) gridname
+      double precision :: d,rnmax
       needtrans = .false.
-!      call get_environment_variable("GRID",gridname,check)
-      check = 0
       
       if( firstcall )then
 

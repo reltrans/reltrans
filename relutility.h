@@ -13,7 +13,7 @@
    For a copy of the GNU General Public License see
    <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 Thomas Dauser, Remeis Observatory & ECAP
+    Copyright 2020 Thomas Dauser, Remeis Observatory & ECAP
 */
 #ifndef RELUTILITY_H_
 #define RELUTILITY_H_
@@ -24,20 +24,20 @@
 
 /****** DEFINE FUNCTION DEFINITIONS ******/
 
-#define RELXILL_ERROR(msg,status) (relxill_error(__func__, msg,status))
+#define RELXILL_ERROR(msg, status) (relxill_error(__func__, msg,status))
 
 #define CHECK_RELXILL_ERROR(msg,status) (check_relxill_error(__func__, msg,status))
 
 #define CHECK_RELXILL_DEFAULT_ERROR(status) (check_relxill_error(__func__, "function evaluation failed",status))
 
 #define CHECK_STATUS_RET(status, retval) \
-  if (EXIT_SUCCESS!=status) return(retval);
+ if (EXIT_SUCCESS!=status) return(retval);
 
-#define CHECK_STATUS_VOID(status) \
-  if (EXIT_SUCCESS!=status) return;
+#define CHECK_STATUS_VOID(status)  \
+ if (EXIT_SUCCESS!=status) return;
 
 #define CHECK_STATUS_BREAK(status) \
-  if (EXIT_SUCCESS!=status) break;
+ if (EXIT_SUCCESS!=status) break;
 
 #define CHECK_MALLOC_VOID_STATUS(a,status) \
 	if (NULL==a) { \
@@ -71,9 +71,6 @@ void get_log_grid(double* ener, int n_ener, double emin, double emax);
 /* get a logarithmic grid from emin to emax with n_ener bins  */
 void get_lin_grid(double* ener, int n_ener, double emin, double emax);
 
-/* get the current version number */
-void get_version_number(char** vstr, int* status);
-
 /* print relxill error message */
 void relxill_error(const char* const func, const char* const msg, int* status);
 
@@ -83,19 +80,19 @@ void relxill_warning(const char* const msg);
 /* check and print relxill error message */
 void check_relxill_error(const char* const func, const char* const msg, int* status);
 
-/* check and print relxill error message */
-void check_relxill_error(const char* const func, const char* const msg, int* status);
+/** check and report FITS error   */
+void relxill_check_fits_error(const int *status);
 
 /* inverse binary search */
-int inv_binary_search(double* arr,int n,double val);
+int inv_binary_search(const double *arr, int n, double val);
 
 /* inverse binary search */
-int inv_binary_search_float(float* arr,int n,float val);
+int inv_binary_search_float(const float *arr, int n, float val);
 
 /* binary search */
-int binary_search_float(float* arr,int n,float val);
+int binary_search_float(const float *arr, int n, float val);
 
-int binary_search(double* arr,int n,double val);
+int binary_search(const double *arr, int n, double val);
 
 /** calculate the reflection fraction **/
 lpReflFrac* calc_refl_frac(relSysPar* sysPar, relParam* param, int* status);
@@ -116,7 +113,7 @@ int is_relxill_model(int model_type);
 int is_debug_run( void );
 
 /** get a radial grid on the accretion disk in order to calculate a relline for each zone **/
-void get_rzone_grid(double rmin, double rmax, double* rgrid, int nzones, double h, int* status);
+void get_rzone_grid(double rmin, double rmax, double *rgrid, int nzones, double h);
 
 void get_rgrid(double* ener, int n_ener, double emin, double emax);
 
@@ -170,6 +167,7 @@ int is_iongrad_model(int ion_type, int ion_grad_type);
 
 void free_ion_grad(ion_grad* ion);
 ion_grad* new_ion_grad(double* r, int n, int* status);
+
 
 /** for x0 descending and xn ascending, calculate the mean at xn from y0 **/
 void inv_rebin_mean(double* x0, double* y0, int n0, double*  xn, double* yn, int nn, int* status);

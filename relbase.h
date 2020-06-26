@@ -13,7 +13,7 @@
    For a copy of the GNU General Public License see
    <http://www.gnu.org/licenses/>.
 
-    Copyright 2019 Thomas Dauser, Remeis Observatory & ECAP
+    Copyright 2020 Thomas Dauser, Remeis Observatory & ECAP
 */
 #ifndef RELBASE_H_
 #define RELBASE_H_
@@ -21,8 +21,7 @@
 #define _GNU_SOURCE
 
 #include "common.h"
-#include "fitsio.h"
-/* #include "/Users/gullo/Software/heasoft-6.26.1/heacore/cfitsio/fitsio.h" */
+
 #include "relutility.h"
 #include "reltable.h"
 #include "rellp.h"
@@ -36,7 +35,7 @@
 
 #define version_major 1
 #define version_minor 3
-#define version_build 5
+#define version_build 9
 #define version_dev ""
 
 /** path to all RELXILL tables */
@@ -105,6 +104,9 @@ typedef struct{
 
 /****** FUNCTION DEFINITIONS ******/
 
+/* get the current version number */
+void get_version_number(char** vstr, int* status);
+
 /* the relbase function calculating the basic relativistic line shape for a given parameter setup*/
 rel_spec* relbase(double* ener, const int n_ener,relParam* param, xillTable* xill_tab, int* status);
 
@@ -137,7 +139,8 @@ void init_specCache(specCache** spec, int* status);
 void free_specCache(void);
 void free_fft_cache(double*** sp,int n1, int n2);
 void free_out_spec(out_spec* spec);
-out_spec* init_out_spec(int n_ener, double* ener, int* status);
+
+out_spec *init_out_spec(int n_ener, const double *ener, int *status);
 
 int redo_xillver_calc(relParam* rel_param, xillParam* xill_param, relParam* ca_rel, xillParam* ca_xill);
 int redo_relbase_calc(relParam* rel_param, relParam* ca_rel_param);
@@ -146,5 +149,7 @@ void set_cached_rel_param(relParam* par, relParam** ca_rel_param, int* status);
 
 int comp_xill_param(xillParam* cpar, xillParam* par);
 
+/** free the CLI cache **/
+void free_cache( void );
 
 #endif /* RELBASE_H_ */
