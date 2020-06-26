@@ -316,8 +316,6 @@ subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
 ! it is important that ionvariation is different than ionvar because ionvar is used also later in rawS routine to calculate the cross-spectrum
      ionvariation = 1
 
-     write(*,*) 'RADIAL ZONES', xe
-     write(*,*) 'MU ZONES', me
      !Loop over radius, emission angle and frequency
      do rbin = 1, xe  !Loop over radial zones
 

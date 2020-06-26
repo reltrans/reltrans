@@ -36,6 +36,8 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans&
         nphi  = 200    !  "
         me      = myenv("MU_ZONES"  , 5 )     !Set number of mu_e zones used
         xe      = myenv("ION_ZONES" , 50)   !Set number of ionisation zones used
+        write(*,*) 'RADIAL ZONES', xe
+        write(*,*) 'ANGLE ZONES', me
 
         rnmax= 300.d0
 ! Set sensible distance for observer from the BH
