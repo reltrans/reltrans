@@ -55,24 +55,37 @@ subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
   !!! This routine calculates reltrans model starting form a pivoting
   !!! powerlaw and the rest-frame spectrum xillverDCp
 
-!!! Arg:
-  !!! 
-        
+!    Arg:
+! 
+
+  !  Internal variables:
+  !      constants:
+  !         pi: greek pi
+  !         rnmax: maximum radius to consider GR effects
+  !         nphi, rno: resolution variables, number of pixels on the observer's camera(b and phib)
+  !         Emax, Emin: minimum and maximum range of the internal energy grid which is different than the xspec one
+  !
+  
+  
   use dyn_gr
   use conv_mod
   implicit none
+!Constants
+  integer         , parameter :: nphi = 200, nro = 200
+  real            , parameter :: Emin = 1e-1, Emax = 1e3
+  double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0
 
-  double precision, parameter :: pi = acos(-1.d0)
-  integer, intent(inout) :: ifl  
-  integer nro,nphi, i,nf,ne,ReIm,nfsave
+  integer, intent(inout) :: ifl
+  
+  integer i,nf,ne,ReIm,nfsave
   integer verbose,mubin,rbin
   integer me,xe,Cp,j
   
   double precision a,h,Gamma,inc,rout,rmin,disco,muobs,rin
-  double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,rnmax,d
+  double precision Mass,flo,fhi,dlogf,dgsofac,zcos,frobs,honr,d
   double precision fhisave,flosave,rh,frrel,lens,fc
   real afac,param(20),ear(0:ne),gso
-  real Afe,Ecut_s,Ecut_obs,logxi,lognep, xillparDCp(8),E,dE,earx(0:nex),Emax,Emin,dloge, kTe, kTe_s
+  real Afe,Ecut_s,Ecut_obs,logxi,lognep, xillparDCp(8),E,dE,earx(0:nex),dloge, kTe, kTe_s
   real reline(nex),imline(nex),photarx(nex)
   real reconvmu(nex),imconvmu(nex),mue,gsd
   real phase,ReS(ne),ImS(ne),photar(ne)
@@ -103,12 +116,14 @@ subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
   data firstcall /.true./
   data Cpsave/2/
   data nfsave /-1/
-  save firstcall,Emax,Emin,dloge,earx
-  save lens,contx,me,xe
-  save paramsave,fhisave,flosave,nfsave,nro,nphi
+  
+!Save the first call variables
+  save firstcall, dloge, earx, me, xe, d
+
+  save lens,contx
+  save paramsave,fhisave,flosave,nfsave
   save frobs,frrel,Cpsave
   save transe, transea, logxir, gsdr, logner
-  save d,rnmax
   save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3
   save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
   
@@ -124,9 +139,8 @@ subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
 ! Call environment variables
   verbose = myenv("REV_VERB",0)     !Set verbose level
       
-! Initialise
-  call initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans&
-     ,nphi,nro,me,xe)
+! Initialise some parameters 
+  call initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe)
 
 !Allocate dynamically the array to calculate the trasfer function          
   if (.not. allocated(re1)) allocate(re1(nphi,nro))
