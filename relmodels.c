@@ -1186,6 +1186,15 @@ void tdxillver(const double* ener0, const int n_ener0, double* photar, const dou
 	xillver_base(ener0, n_ener0, photar, param_struct, status);
 }
 
+/** XSPEC XILLVER MODEL FUNCTION (intensity version)**/
+void i_tdxillver(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status){
+
+	xillParam* param_struct = init_par_xillver(parameter,n_parameter,status);
+    CHECK_STATUS_VOID(*status)
+
+	i_xillver_base(ener0, n_ener0, photar, param_struct, status);
+}
+
 /** XSPEC XILLVER NTHCOMP MODEL FUNCTION **/
 void tdxillver_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status){
 
@@ -1193,6 +1202,14 @@ void tdxillver_nthcomp(const double* ener0, const int n_ener0, double* photar, c
     CHECK_STATUS_VOID(*status)
 
 	xillver_base(ener0, n_ener0, photar, param_struct, status);
+}
+/** XSPEC XILLVER NTHCOMP MODEL FUNCTION (intensity version)**/
+void i_tdxillver_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status){
+
+	xillParam* param_struct = init_par_xillver_nthcomp(parameter,n_parameter,status);
+    CHECK_STATUS_VOID(*status)
+
+	i_xillver_base(ener0, n_ener0, photar, param_struct, status);
 }
 
 
@@ -1203,6 +1220,14 @@ void tdxillverdens(const double* ener0, const int n_ener0, double* photar, const
     CHECK_STATUS_VOID(*status)
 
 	xillver_base(ener0, n_ener0, photar, param_struct, status);
+}
+/** XSPEC XILLVER DENS MODEL FUNCTION (intensity version)**/
+void i_tdxillverdens(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status){
+
+	xillParam* param_struct = init_par_xillver_dens(parameter,n_parameter,status);
+    CHECK_STATUS_VOID(*status)
+
+	i_xillver_base(ener0, n_ener0, photar, param_struct, status);
 }
 
 /** XSPEC XILLVER NS MODEL FUNCTION **/
@@ -1628,6 +1653,16 @@ void lmodxillver(const double* ener0, const int n_ener0, const double* parameter
 	if (status!=EXIT_SUCCESS)
 	RELXILL_ERROR("evaluating xillver model failed",&status);
 }
+/** MODIFIED FOR FORTRAN CALL (Gullo) (spectrum is intensity and not flux) **/
+void lmodxillverf_(const double* ener0, const int *n_ener0, const double* parameter, int *ifl, double* photar, double* photer, const char* init){
+
+	const int n_parameter = 7;
+	int status = EXIT_SUCCESS;
+	i_tdxillver(ener0, *n_ener0, photar, parameter, n_parameter, &status);
+
+	if (status!=EXIT_SUCCESS)
+	RELXILL_ERROR("evaluating xillver model failed",&status);
+}
 
 
 /** XSPEC XILLVER MODEL FUNCTION **/
@@ -1636,6 +1671,16 @@ void lmodxillverdens(const double* ener0, const int n_ener0, const double* param
 	const int n_parameter = 7;
 	int status = EXIT_SUCCESS;
 	tdxillverdens(ener0, n_ener0, photar, parameter, n_parameter, &status);
+
+	if (status!=EXIT_SUCCESS)
+	RELXILL_ERROR("evaluating xillver model failed",&status);
+}
+/** MODIFIED FOR FORTRAN CALL (Gullo) (spectrum is intensity and not flux) **/
+void lmodxillverdensf_(const double* ener0, const int *n_ener0, const double* parameter, int *ifl, double* photar, double* photer, const char* init){
+
+	const int n_parameter = 7;
+	int status = EXIT_SUCCESS;
+	i_tdxillverdens(ener0, *n_ener0, photar, parameter, n_parameter, &status);
 
 	if (status!=EXIT_SUCCESS)
 	RELXILL_ERROR("evaluating xillver model failed",&status);
@@ -1684,6 +1729,16 @@ void lmodxillvernthcomp(const double* ener0, const int n_ener0, const double* pa
 	const int n_parameter = 7;
 	int status = EXIT_SUCCESS;
 	tdxillver_nthcomp(ener0, n_ener0, photar, parameter, n_parameter, &status);
+
+	if (status!=EXIT_SUCCESS)
+	RELXILL_ERROR("evaluating xillver model failed",&status);
+}
+/** MODIFIED FOR FORTRAN CALL (Gullo) (spectrum is intensity and not flux) **/
+void lmodxillvernthcompf_(const double* ener0, const int *n_ener0, const double* parameter, int *ifl, double* photar, double* photer, const char* init){
+
+	const int n_parameter = 7;
+	int status = EXIT_SUCCESS;
+	i_tdxillver_nthcomp(ener0, *n_ener0, photar, parameter, n_parameter, &status);
 
 	if (status!=EXIT_SUCCESS)
 	RELXILL_ERROR("evaluating xillver model failed",&status);
@@ -1769,7 +1824,6 @@ void lmodxillverdensnthcomp(const double* ener0, const int n_ener0, const double
   if (status!=EXIT_SUCCESS)
     RELXILL_ERROR("evaluating xillverDCp model failed",&status);
 }
-
 /** MODIFIED FOR FORTRAN CALL (Gullo) (spectrum is intensity and not flux) **/
 void lmodxillverdensnthcompf_(const double* ener0, const int* n_ener0, const double* parameter, int* ifl, double* photar, double* photer, const char* init){
 

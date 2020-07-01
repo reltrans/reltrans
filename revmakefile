@@ -11,7 +11,7 @@ optimization = -O3
 debug        = -Wall -pedantic
 
 # set compilers
-fcomp = gfortran $(optimization) $(debug) 
+fcomp = gfortran $(optimization) #$(debug) 
 ccomp = gcc      $(optimization) 
 
 # the files to compile 

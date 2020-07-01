@@ -18,6 +18,57 @@
     end subroutine myxillDCp
 !-----------------------------------------------------------------------
 
+
+!-----------------------------------------------------------------------
+    subroutine myxill(ear, ne, param7, param8, ifl, Cp, photar)
+!!! This routine calls the correct version of xillver based on the Cp !!!
+!!!   Arg:
+      !  ear: energy grid
+      !  ne: number of grid points
+      !  param7: array of xillver parameters for xillver,xillverD,xillverCp
+      !  param8: array of xillver parameters for xillverDCp
+      !  ifl : parameter to call xspec model
+      !  Cp : chooses xillver model
+      !      -1 xillver      1e15 density and powerlaw illumination  
+      !       1 xillverD     high density and powerlaw illumination
+      !      -2 xillverCp    1e15 density and nthcomp  illumination
+      !       2 xillverDCp   high density and nthcomp  illumination
+      ! photar: (output) xillver energy spectrum
+!!!   Internal variables:
+      !  
+
+!!! Last change: Gullo - 2020 Jul
+      
+      implicit none
+      integer, intent(in)  ::  ne, ifl, Cp
+      real   , intent(in)  ::  ear(0:ne), param7(7), param8(8)
+      real   , intent(out) :: photar(ne)
+
+      double precision    :: dxillpar7(7), dxillpar8(8)
+      double precision    :: dear(0:ne), dphotar(ne), dphoter(ne)
+      character (len=100) char
+      dear = dble( ear )      
+      if( Cp .eq. -1 )then
+         dxillpar7 = dble( param7 )
+         call lmodxillverf(dear, ne, dxillpar7, ifl, dphotar, dphoter, char)
+      else if ( Cp .eq. -2 )then
+         dxillpar7 = dble( param7 )
+         call lmodxillvercpf(dear, ne, dxillpar7, ifl, dphotar, dphoter, char)
+      else if( Cp .eq. 1 )then
+         dxillpar7 = dble( param7 )
+         call lmodxillverdensf(dear, ne, dxillpar7, ifl, dphotar, dphoter, char)
+      else if ( Cp .eq. 2 )then
+         dxillpar8 = dble( param8 )
+         call lmodxillverdensnthcompf(dear, ne, dxillpar8, ifl, dphotar, dphoter, char)
+      else
+         write(*,*) 'No xillver model available for this configuration'
+         stop 
+      end if
+      photar = sngl( dphotar )      
+      return
+      end subroutine myxill
+!-----------------------------------------------------------------------
+
 ! !-----------------------------------------------------------------------
 !       subroutine myxill_hD(ear, ne, param, ifl, Cp, photar)
 !       implicit none
@@ -44,26 +95,6 @@
 !       photar = sngl( dphotar )      
 !       return
 !     end subroutine myxill_hD
-! !-----------------------------------------------------------------------
-
-! !-----------------------------------------------------------------------
-!       subroutine myxill(ear,ne,param,ifl,Cp,photar)
-!       implicit none
-!       integer ne,ifl,Cp
-!       real ear(0:ne),param(7),photar(ne)
-!       double precision dxillpar(7),dear(0:ne),dphotar(ne)
-!       double precision dphoter(ne)
-!       character (len=100) char
-!       dxillpar = dble( param )
-!       dear = dble( ear )      
-!       if( Cp .eq. 0 )then
-!         call lmodxillverf(dear,ne,dxillpar,ifl,dphotar,dphoter,char)
-!       else
-!         call lmodxillvercpf(dear,ne,dxillpar,ifl,dphotar,dphoter,char)
-!       end if
-!       photar = sngl( dphotar )      
-!       return
-!       end subroutine myxill
 ! !-----------------------------------------------------------------------
 
 ! !-----------------------------------------------------------------------

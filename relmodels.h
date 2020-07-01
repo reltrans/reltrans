@@ -120,7 +120,7 @@ void tdrelxilllp(const double* ener0, const int n_ener0, double* photar, const d
 void tdrelxilllpion(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
 void tdxillver(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
 /** created by Adam to adjust the normalization with reltrans**/
-/* void i_tdxillver(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status); */
+void i_tdxillver(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
 void tdrelconv(const double* ener, const int n_ener, double* photar, const double* parameter, const int n_parameter, int* status);
 void tdrelconvlp(const double* ener, const int n_ener, double* photar, const double* parameter, const int n_parameter, int* status);
 void tdrelxilldens(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
@@ -136,7 +136,7 @@ void tdrelxilllp_nthcomp(const double* ener0, const int n_ener0, double* photar,
 void tdrelxilllpion_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
 void tdxillver_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
 /** created by Adam to adjust the normalization with reltrans**/
-/* void i_tdxillver_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status); */
+void i_tdxillver_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
 
 void tdxillverco(const double *ener0, const int n_ener0, double *photar, const double *parameter, const int n_parameter,
                  int *status);
@@ -178,6 +178,7 @@ void lmodrelconvlp(const double* ener0, const int n_ener0, const double* paramet
 
 void lmodrelxilldens(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
 void lmodrelxilllpdens(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
+
 void lmodxillverdens(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
 
 void lmodrelxillns(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
@@ -194,12 +195,17 @@ lmodrelxillco(const double *ener0, const int n_ener0, const double *parameter, i
 void lmodrelxillnthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
 void lmodrelxilllpnthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
 void lmodrelxilllpionnthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodxillvernthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
 
+void lmodxillvernthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
 void lmodxillverdensnthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-/**created by Gullo to call xillverDCp in reltrans fortran code**/
-void lmodxillverdensnthcompf_(const double* ener0, const int* n_ener0, const double* parameter, int* ifl, double* photar, double* photer, const char* init);
 void lmodrelxilllpdensnthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
 void lmodrelxilldensnthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
+
+
+/**created by Gullo to call xillverDCp in reltrans fortran code**/
+void lmodxillverf_(const double* ener0, const int* n_ener0, const double* parameter, int* ifl, double* photar, double* photer, const char* init);
+void lmodxillverdensf_(const double* ener0, const int* n_ener0, const double* parameter, int* ifl, double* photar, double* photer, const char* init);
+void lmodxillvernthcompf_(const double* ener0, const int* n_ener0, const double* parameter, int* ifl, double* photar, double* photer, const char* init);
+void lmodxillverdensnthcompf_(const double* ener0, const int* n_ener0, const double* parameter, int* ifl, double* photar, double* photer, const char* init);
 
 #endif /* MODELS_H_ */
