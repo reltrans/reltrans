@@ -1,12 +1,37 @@
-fortran:
-	gfortran -c amodules.f90 main_test.f90 srevtrans.f90
+main = main_test.f90
 
-C_code:
-	gcc -c relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c
+#lib and other stuff to include to the compiler 
+incs = -I /usr/local/Cellar/fftw/3.3.8_1/include/ -ffree-line-length-none
+libs = -L /usr/local/Cellar/fftw/3.3.8_1/lib/ -lfftw3_omp -lfftw3 -lm \
+       -L/Users/gullo/Software/heasoft-6.26.1/x86_64-apple-darwin18.7.0/lib/ \
+       -lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS
+       #-lwcs-5.16 -lCCfits_2.5 -lhdsp_2.9 -ltcl8.6 
 
-run: clean fortran C_code clean
-	gfortran -fbounds-check -L/Data/adamingram/heasoft/heasoft-6.22.1/x86_64-apple-darwin16.7.0/lib \
-	-lXSFunctions -lXSModel -lXSUtil -lXS -lCCfits_2.5 -lcfitsio.5 -o exe *.o
+optimization = -O3
+debug        = -Wall -pedantic
+
+# set compilers
+fcomp = gfortran $(optimization) $(debug) 
+ccomp = gcc      $(optimization) 
+
+# the files to compile 
+FCODE = $(main) srevtrans.f90
+CCODE = relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c relcache.c
+
+mod:
+	$(fcomp) $(incs) $(libs) -c amodules.f90
+fobj: $(FCODE)
+	$(fcomp) -c $(FCODE)
+cobj: 
+	$(ccomp) -c $(CCODE)
+
+compile: mod fobj cobj
+	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) $(libs) *.o -o reltrans
+
+run: clean compile cleanup
+
 
 clean:
-	rm -f *.o *.mod
+	rm -vf *.o *.mod *~ subroutines/*~
+cleanup:
+	rm -vf *.o *.mod *~ subroutines/*~
