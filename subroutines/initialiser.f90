@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, me, xe)
+subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, me, xe, verbose)
 !!!  Initialises the model and writes the header
 !!!------------------------------------------------------------------
   !    Args:
@@ -10,6 +10,8 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
   !        d, rnmax: distance of the source, max radius for which GR ray tracing is used
   !        needtrans: check if transfer function has to be calculated
   !        me, xe: number of angle and radial zones
+  !        verbose: check if the verbose env variable is active
+  !        nphi, nro: (constant) resolution variables, number of pixels on the observer's camera(b and phib)
 
   !    Internal variables:
   !        i: loop index
@@ -19,8 +21,9 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
   use conv_mod
   use dyn_gr
       implicit none
-      integer          , intent(out)   :: xe, me
-      real             , intent(in)    :: Emin, Emax
+      integer          , intent(out)   :: xe, me, verbose
+      ! integer          , intent(in)    :: nphi, nro !constant
+      real             , intent(in)    :: Emin, Emax ! constant
       real             , intent(out)   :: dloge, earx(0:nex)
       double precision , intent(in)    :: rnmax
       double precision , intent(out)   :: d
@@ -37,7 +40,7 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
          
         needtrans = .true.
         write(*,*)"----------------------------------------------------"
-        write(*,*)"This is RELTRANS: a transfer function model for"
+        write(*,*)"This is RELTRANS v0.5: a transfer function model for"
         write(*,*)"X-ray reverberation mapping."
         write(*,*)"Please cite Ingram et al (2019) MNRAS 488 p324-347."
         write(*,*)"----------------------------------------------------"
@@ -45,17 +48,22 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
 !Create *logarithmic* working energy grid
 !Will need to evaluate xillver on this grid to use the FT convolution code 
         dloge = log10( Emax / Emin ) / float(nex)
-        do i = 0,nex
+        do i = 0, nex
           earx(i) = Emin * (Emax/Emin)**(float(i)/float(nex))
         end do
 
         me      = myenv("MU_ZONES"  , 5 )   !Set number of mu_e zones used
         xe      = myenv("ION_ZONES" , 50)   !Set number of ionisation zones used
+! Call environment variables
+        verbose = myenv("REV_VERB",0)     !Set verbose level
+
         write(*,*) 'RADIAL ZONES', xe
         write(*,*) 'ANGLE ZONES', me
+        write(*,*) 'VERBOSE is ', verbose
 
 ! Set sensible distance for observer from the BH
         d = max( 1.0d4 , 2.0d2 * rnmax**2 )
+        
            
         firstcall = .false.
      end if
