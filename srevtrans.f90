@@ -7,50 +7,68 @@
 ! 5) The dependence on incident angle (mimicked by tweaking the ionization)
 
 !CURRENT BRANCH
-! This branch is adding the xillverDCp table to go even higher densities.
+! This branch is adding the multiple flavours to the reltrans model
   
-
+  !  Cp : chooses xillver model
+  !      -1 reltrans      1e15 density and powerlaw illumination  
+  !       1 reltransD     high density and powerlaw illumination
+  !      -2 reltransCp    1e15 density and nthcomp  illumination
+  !       2 reltransDCp   high density and nthcomp  illumination
+  
   
 include 'subroutines/header.h'
-
-
-! !-----------------------------------------------------------------------
-!       subroutine tdreltransD(ear,ne,param,ifl,photar)
-!       implicit none
-!       integer ne,ifl,Cp
-!       real ear(0:ne),param(19),photar(ne)
-!       Cp = 0
-!       call genreltransD(Cp,ear,ne,param,ifl,photar)
-!       return
-!     end subroutine tdreltransD
-! !-----------------------------------------------------------------------
-        
-! !-----------------------------------------------------------------------
-!       subroutine tdreltrans(ear,ne,param,ifl,photar)
-!       implicit none
-!       integer ne,ifl,Cp
-!       real ear(0:ne),param(19),photar(ne)
-!       Cp = 0
-!       call genreltrans(Cp,ear,ne,param,ifl,photar)
-!       return
-!     end subroutine tdreltrans
-! !-----------------------------------------------------------------------
+          
+!-----------------------------------------------------------------------
+      subroutine tdreltrans(ear,ne,param,ifl,photar)
+      implicit none
+      integer :: ne, ifl, Cp
+      real    :: ear(0:ne), param(19), photar(ne)
+      real    :: fake_param(20)
+      Cp = -1
+      call genreltrans(Cp, ear, ne, param, fake_param, ifl, photar)
+      return
+    end subroutine tdreltrans
+!-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-    subroutine tdreltransDCp(ear,ne,param,ifl,photar)
+      subroutine tdreltransD(ear, ne, param, ifl, photar)
+      implicit none
+      integer :: ne, ifl, Cp
+      real    :: ear(0:ne),param(19),photar(ne)
+      real    :: fake_param(20)
+      Cp = 1
+      call genreltrans(Cp, ear, ne, param, fake_param, ifl, photar)
+      return
+    end subroutine tdreltransD
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+      subroutine tdreltransCp(ear, ne, param, ifl, photar)
+      implicit none
+      integer :: ne, ifl, Cp
+      real    :: ear(0:ne), param(19), photar(ne)
+      real    :: fake_param(20)
+      Cp = -2
+      call genreltrans(Cp, ear, ne, param, fake_param, ifl, photar)
+      return
+    end subroutine tdreltrans
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+    subroutine tdreltransDCp(ear, ne, param, ifl, photar)
       implicit none
       integer :: ne, ifl, Cp
       real    :: ear(0:ne), param(20), photar(ne)
-      Cp = 1
-      call genreltransDCp(Cp,ear,ne,param,ifl,photar)
+      real    :: fake_param(19)
+      Cp = 2
+      call genreltransDCp(Cp, ear, ne, fake_param, param, ifl, photar)
       return
     end subroutine tdreltransDCp
 !-----------------------------------------------------------------------
 
 
-
 !-----------------------------------------------------------------------
-subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
+subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
 !!! ReltransD with xillverDCp
   !!! This routine calculates reltrans model starting form a pivoting
   !!! powerlaw and the rest-frame spectrum xillverDCp
@@ -81,7 +99,7 @@ subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
 !Args:
   integer, intent(inout) :: ifl
   integer, intent(in)    :: Cp, ne
-  real   , intent(in)    :: param(20)
+  real   , intent(in)    :: param19(19), param20(20)
   real   , intent(out)   :: photar(ne)
   
 !Variables of the subroutine
@@ -111,7 +129,7 @@ subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
   real   , dimension(:,:)    , allocatable :: ReW0, ImW0, ReW1, ImW1,&
        ReW2, ImW2, ReW3, ImW3, ReSraw, ImSraw, ReSrawa, ImSrawa,&
        ReGrawa, ImGrawa, ReG, ImG
-  double precision :: frobs, frrel  
+  double precision :: frobs, frrel  !reflection fraction variables (verbose)
 !Radial and angle profile 
   integer                       :: mubin, rbin
   double precision, allocatable :: logxir(:),gsdr(:), logner(:)
@@ -159,30 +177,10 @@ subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
   if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
   if (.not. allocated(pem1)) allocate(pem1(nphi,nro))
 
-! Parameters
-  h        = dble( param(1) )
-  a        = dble( param(2) )
-  inc      = dble( param(3) )
-  rin      = dble( param(4) )
-  rout     = dble( param(5) )
-  zcos     = dble( param(6) )
-  Gamma    = dble( param(7) )
-  logxi    = param(8)
-  Afe      = param(9)
-  lognep   = param(10)
-  kTe      = param(11)
-  Nh       = param(12)
-  afac     = param(13)
-  Mass     = dble( param(14) )
-  floHz    = param(15)
-  fhiHz    = param(16)
-  ReIm     = int( param(17) )
-  DelA     = param(18)
-  DelAB    = param(19)
-  g        = param(20)
+  call set_param(h, a, inc, rin, rout, zcos, Gamma, logxi, Afe,&
+       lognep, kTe, Ecut_obs, Nh, afac, Mass, floHz, fhiHz, ReIm, &
+       DelA, DelAB, g, param19, param20, Cp)
 
-
-  Ecut_obs = 2.5 * kTe !work out the energy cut off for the powerlaw starting form kTe because we are using xillverDCp but also cut-off powerlaw for the pivoting effects
   honr = 0.d0  !H over R, this could be a parameter of the model in the future
   muobs = cos( inc * pi / 180.d0 )
       
@@ -541,8 +539,125 @@ subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
   nfsave    = nf
   paramsave = param
    ! Cpsave    = Cp
-end subroutine genreltransDCp
+end subroutine genreltrans
 !-----------------------------------------------------------------------
+
+subroutine set_param(h, a, inc, rin, rout, zcos, Gamma, logxi, Afe, &
+     lognep, kTe, Ecut_obs, Nh, afac, Mass, floHz, fhiHz, ReIm,&
+     DelA, DelAB, g, par_reltrans19, par_reltrans20, Cp)
+!!! Sets the parameters of reltrans depending on the Cp variable
+  implicit none
+  double precision, intent(out) :: h, a, inc, rin, rout, zcos
+  double precision, intent(out) :: Gamma, honr, muobs
+  real            , intent(out) :: logxi, Afe, lognep, kTe, kTe_s, Ecut_obs
+  real            , intent(out) :: Ecut_s, Nh, afac, Mass, floHz, fhiHz
+  real            , intent(out) :: DelA, DelAB, g
+  integer         , intent(out) :: ReIm
+  integer         , intent(in)  :: Cp
+  real            , intent(in)  :: par_reltrans19(19), par_reltrans20(20)
+
+
+  if( Cp .eq. -1 )then       ! reltrans
+     h        = dble( par_reltrans19(1) )
+     a        = dble( par_reltrans19(2) )
+     inc      = dble( par_reltrans19(3) )
+     rin      = dble( par_reltrans19(4) )
+     rout     = dble( par_reltrans19(5) )
+     zcos     = dble( par_reltrans19(6) )
+     Gamma    = dble( par_reltrans19(7) )
+     logxi    =       par_reltrans19(8)
+     Afe      =       par_reltrans19(9)
+     Ecut_obs =       par_reltrans19(10)
+     Nh       =       par_reltrans19(11)
+     afac     =       par_reltrans19(12)
+     Mass     = dble( par_reltrans19(13) )
+     floHz    =       par_reltrans19(14)
+     fhiHz    =       par_reltrans19(15)
+     ReIm     =  int( par_reltrans19(16) )
+     DelA     =       par_reltrans19(17)
+     DelAB    =       par_reltrans19(18)
+     g        =       par_reltrans19(19)
+
+     kTe = Ecut_obs / 2.5
+
+  else if ( Cp .eq. -2 )then ! xillverCp
+     h        = dble( par_reltrans19(1) )
+     a        = dble( par_reltrans19(2) )
+     inc      = dble( par_reltrans19(3) )
+     rin      = dble( par_reltrans19(4) )
+     rout     = dble( par_reltrans19(5) )
+     zcos     = dble( par_reltrans19(6) )
+     Gamma    = dble( par_reltrans19(7) )
+     logxi    =       par_reltrans19(8)
+     Afe      =       par_reltrans19(9)
+     kTe      =       par_reltrans19(10)
+     Nh       =       par_reltrans19(11)
+     afac     =       par_reltrans19(12)
+     Mass     = dble( par_reltrans19(13) )
+     floHz    =       par_reltrans19(14)
+     fhiHz    =       par_reltrans19(15)
+     ReIm     =  int( par_reltrans19(16) )
+     DelA     =       par_reltrans19(17)
+     DelAB    =       par_reltrans19(18)
+     g        =       par_reltrans19(19)
+
+     Ecut_obs = 2.5 * kTe 
+  else if( Cp .eq. 1 )then   ! reltransD
+     h        = dble( par_reltrans19(1) )
+     a        = dble( par_reltrans19(2) )
+     inc      = dble( par_reltrans19(3) )
+     rin      = dble( par_reltrans19(4) )
+     rout     = dble( par_reltrans19(5) )
+     zcos     = dble( par_reltrans19(6) )
+     Gamma    = dble( par_reltrans19(7) )
+     logxi    =       par_reltrans19(8)
+     Afe      =       par_reltrans19(9)
+     lognep   =       par_reltrans19(10)
+     Nh       =       par_reltrans19(11)
+     afac     =       par_reltrans19(12)
+     Mass     = dble( par_reltrans19(13) )
+     floHz    =       par_reltrans19(14)
+     fhiHz    =       par_reltrans19(15)
+     ReIm     =  int( par_reltrans19(16) )
+     DelA     =       par_reltrans19(17)
+     DelAB    =       par_reltrans19(18)
+     g        =       par_reltrans19(19) 
+
+     Ecut_obs = 300.0    ! In this model the Ecut is fixed to 300
+     kTe = Ecut_obs / 2.5
+ 
+  else if ( Cp .eq. 2 )then  ! reltransDCp
+     h        = dble( par_reltrans20(1) )
+     a        = dble( par_reltrans20(2) )
+     inc      = dble( par_reltrans20(3) )
+     rin      = dble( par_reltrans20(4) )
+     rout     = dble( par_reltrans20(5) )
+     zcos     = dble( par_reltrans20(6) )
+     Gamma    = dble( par_reltrans20(7) )
+     logxi    =       par_reltrans20(8)
+     Afe      =       par_reltrans20(9)
+     lognep   =       par_reltrans20(10)
+     kTe      =       par_reltrans20(11)
+     Nh       =       par_reltrans20(12)
+     afac     =       par_reltrans20(13)
+     Mass     = dble( par_reltrans20(14) )
+     floHz    =       par_reltrans20(15)
+     fhiHz    =       par_reltrans20(16)
+     ReIm     =  int( par_reltrans20(17) )
+     DelA     =       par_reltrans20(18)
+     DelAB    =       par_reltrans20(19)
+     g        =       par_reltrans20(20)
+  
+     Ecut_obs = 2.5 * kTe !work out the energy cut off for the powerlaw starting form kTe because we are using xillverDCp but also cut-off powerlaw for the pivoting effects
+
+  else
+     write(*,*) 'No reltrans  model available for this configuration'
+     stop 
+  end if
+  return
+end subroutine set_param
+
+
 !-----------------------------------------------------------------------
 subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
 !!! ReltransD with xillverDCp
