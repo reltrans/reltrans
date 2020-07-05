@@ -17,7 +17,8 @@
 */
 
 #include "relutility.h"
-
+#include <stdio.h>
+#include <stdlib.h>
 
 /** linear interpolation in 1 dimension **/
 double interp_lin_1d(double ifac_r, double rlo, double rhi){

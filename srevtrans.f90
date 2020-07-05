@@ -51,7 +51,7 @@ include 'subroutines/header.h'
       Cp = -2
       call genreltrans(Cp, ear, ne, param, fake_param, ifl, photar)
       return
-    end subroutine tdreltrans
+    end subroutine tdreltransCp
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -61,7 +61,7 @@ include 'subroutines/header.h'
       real    :: ear(0:ne), param(20), photar(ne)
       real    :: fake_param(19)
       Cp = 2
-      call genreltransDCp(Cp, ear, ne, fake_param, param, ifl, photar)
+      call genreltrans(Cp, ear, ne, fake_param, param, ifl, photar)
       return
     end subroutine tdreltransDCp
 !-----------------------------------------------------------------------
@@ -99,13 +99,13 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
 !Args:
   integer, intent(inout) :: ifl
   integer, intent(in)    :: Cp, ne
-  real   , intent(in)    :: param19(19), param20(20)
+  real   , intent(inout) :: param19(19), param20(20)
   real   , intent(out)   :: photar(ne)
   
 !Variables of the subroutine
 !initializer
   integer          :: verbose, me, xe
-  logical          :: firstcall,needtrans, needconv
+  logical          :: firstcall, needtrans, needconv
   double precision :: d
 !Parameters of the model:
   double precision :: h, a, inc, rin, rout, zcos, Gamma, honr, muobs
@@ -145,8 +145,8 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
        dlogxi1, dlogxi2, Gamma1, Gamma2, DeltaGamma  
 !SAVE 
   integer          :: nfsave, Cpsave
-  real             :: paramsave(20)
-  double precision :: fhisave,flosave    
+  real             :: param19save(19), param20save(20)
+  double precision :: fhisave, flosave
 !Functions
   integer          :: i, j, myenv
   double precision :: disco, dgsofac
@@ -161,8 +161,8 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
   data nfsave /-1/  
 !Save the first call variables
   save firstcall, dloge, earx, me, xe, d, verbose
-  save paramsave, fhisave, flosave, nfsave
-  save frobs, frrel, lens, Cpsave
+  save param19save, param20save, fhisave, flosave, nfsave
+  save frobs, frrel, lens, Cpsave, needtrans
   save transe, transea, logxir, gsdr, logner
   save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,contx
   save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
@@ -240,16 +240,18 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
   end if
   
 !Determine if I need to calculate the kernel
-  if( .not. needtrans )then
-     do i = 1,8
-        if( abs( param(i) - paramsave(i) ) .gt. 1e-7 ) needtrans = .true.
-     end do
-     if( abs( param(10) - paramsave(10) ) .gt. 1e-7 )needtrans=.true.
-     ! if( abs( param(11) - paramsave(11) ) .gt. 1e-7 )needtrans=.true. 
-     if( nf .ne. nfsave ) needtrans = .true.
-     if( abs( fhi - fhisave ) .gt. 1e-7 ) needtrans = .true.
-     if( abs( flo - flosave ) .gt. 1e-7 ) needtrans = .true.
-   end if
+  call kernel_check(Cp, param19, param20, param19save, param20save, fhi, flo, fhisave, flosave, nf, nfsave, needtrans)
+  ! if( .not. needtrans )then
+  !    do i = 1,8
+  !      if( abs( param19(i) - param19save(i) ) .gt. 1e-7 ) needtrans = .true.
+  !      if( abs( param20(i) - param20save(i) ) .gt. 1e-7 ) needtrans = .true.
+  !    end do
+  !    if( abs( param19(10) - param19save(10) ) .gt. 1e-7 )needtrans=.true.
+  !    ! if( abs( param(11) - paramsave(11) ) .gt. 1e-7 )needtrans=.true. 
+  !    if( nf .ne. nfsave ) needtrans = .true.
+  !    if( abs( fhi - fhisave ) .gt. 1e-7 ) needtrans = .true.
+  !    if( abs( flo - flosave ) .gt. 1e-7 ) needtrans = .true.
+  !  end if
    
 ! Allocate arrays that depend on frequency
   if( nf .ne. nfsave )then
@@ -292,6 +294,7 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
   end if
      
   if( needtrans )then
+     write(*,*) 'new kernel'
      !Allocate arrays for kernels     
      if( .not. allocated(logxir) ) allocate( logxir(xe) )
      if( .not. allocated(gsdr)   ) allocate( gsdr  (xe) )
@@ -309,12 +312,22 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
 
 !Determine if I need to convolve with the restframe reflection spectrum
   needconv = .false.
-  if( needtrans ) needconv = .true.
-  if( abs( param(9) - paramsave(9) ) .gt. 1e-7 ) needconv = .true.
-  if( abs( param(11) - paramsave(11) ) .gt. 1e-7 ) needconv = .true.
-  ! if( Cp .ne. Cpsave ) needconv = .true.
+  if (needtrans) then
+     needconv = .true.
+  else
+     call conv_check(Cp, Cpsave,  param19, param20, param19save, param20save, needconv)
+  endif
+  ! if( needtrans ) then needconv = .true.
+  ! else if ( abs( param19(9) - param19save(9) ) .gt. 1e-7 ) then needconv = .true. ! Afe iron abundance 
+  ! else if ( abs( param20(9) - param20save(9) ) .gt. 1e-7 ) then needconv = .true. ! Afe iron abundance 
+  ! else if ( abs( param20(11) - param20save(11) ) .gt. 1e-7 ) then needconv = .true. ! Either kTe or Ecut
+  ! else if ( abs( param20(11) - param20save(11) ) .gt. 1e-7 ) then needconv = .true. ! Either kTe or Ecut
+  ! else if ( Cp .ne. Cpsave ) then needconv = .true.
+  ! end if
   
-  if( needconv )then     
+  if( needconv )then
+     write(*,*) 'new conv'
+     needtrans = .false.
      !Initialize arrays for transfer functions
      ReW0 = 0.0
      ImW0 = 0.0
@@ -329,7 +342,7 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
      Gamma2 = real(Gamma) + 0.5*DeltaGamma
 
      !Get continuum spectrum 
-     call getcont(nex, earx, Gamma, Afe, kTe, Ecut_obs, lognep, logxi, Cp, contx, xillpar, xillverDCp)
+     call getcont(nex, earx, Gamma, Afe, kTe, Ecut_obs, lognep, logxi, Cp, contx, xillpar, xillparDCp)
      ! call getcontDCp(nex, earx, Gamma, Afe, kTe, lognep, logxi, contx, xillparDCp)
      if( verbose .gt. 0 ) call sourcelum(nex,earx,contx,real(mass),gso,real(Gamma))
      
@@ -350,7 +363,7 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
 !Remember: xillparDCp(3) is kTe and the parameter 3 is different always 
         logxi0     = real( logxir(rbin) )
 
-        if (Cp .eq. 2) then      !xillparDCp
+        if (Cp .eq. 2) then      !xillverDCp
            xillparDCp(3) = real( gsdr(rbin) ) * kTe_s
            xillparDCp(4) = real( logner(rbin) )
            if( xe .eq. 1 )then
@@ -358,24 +371,28 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
               xillparDCp(4) = lognep
               logxi0     = logxi
            end if
+           write(*,*) 'xillverDCp', rbin, xillparDCp
         else if (Cp .eq. -1) then !xillver
            xillpar(3) = real( gsdr(rbin) ) * Ecut_s
            if( xe .eq. 1 )then
               xillpar(3) = Ecut_s
               logxi0     = logxi
            end if
+           write(*,*) 'xillver', rbin, xillpar
         else if (Cp .eq. -2) then  !xillverCp
            xillpar(3) = real( gsdr(rbin) ) * kTe_s
            if( xe .eq. 1 )then
               xillpar(3) = kTe_s
               logxi0     = logxi
            end if
+           write(*,*) 'xillverCp', rbin, xillpar
         else if (Cp .eq. 1) then  !xillverD
            xillpar(3) = real( logner(rbin) )
            if( xe .eq. 1 )then
               xillpar(3) = lognep 
               logxi0     = logxi
            end if
+           write(*,*) 'xillverD', rbin, xillpar
         endif
 
 
@@ -390,14 +407,25 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
            mue = ( real(mubin) - 0.5 ) / real(me)
            xillpar(6) = acos( mue ) * 180.0 / real(pi)
            xillparDCp(7) = acos( mue ) * 180.0 / real(pi)
-           if( me .eq. 1 ) xillparDCp(7) = real( inc )
+           if( me .eq. 1 ) then
+              xillpar(6)    = real( inc )
+              xillparDCp(7) = real( inc )
+           end if 
            !Call xillver
            xillpar(1) = real(Gamma)
            xillpar(4) = logxi0
            xillparDCp(1) = real(Gamma)
            xillparDCp(5) = logxi0
-           call myxill(earx, nex, xillparDCp, ifl, photarx)
+           write(*,*) 'After mubin: xillpar', xillpar
+           write(*,*) 'After mubin: xillparDCp', xillparDCp
+           call myxill(earx, nex, xillpar, xillparDCp, ifl, Cp, photarx)
            
+           ! do i = 1, nex
+           !    E = (ear(i) + ear(i-1)) * 0.5
+           !    dE = ear(i) - ear(i-1)
+           !    write(10,*) E, E**2 * photarx(i) / dE 
+           ! enddo
+
            if (DC .eq. 0) then 
 !NON LINEAR EFFECTS
               !Gamma variations
@@ -405,24 +433,24 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
               xillpar(4) = logxi0 + ionvariation * dlogxi1
               xillparDCp(1) = Gamma1
               xillparDCp(5) = logxi0 + ionvariation * dlogxi1
-              call myxill(earx,nex,xillparDCp,ifl,photarx_1)
+              call myxill(earx, nex, xillpar, xillparDCp, ifl, Cp,  photarx_1)
               xillpar(1) = Gamma2
               xillpar(4) = logxi0 + ionvariation * dlogxi2
               xillparDCp(1) = Gamma2
               xillparDCp(5) = logxi0 + ionvariation * dlogxi2
-              call myxill(earx,nex,xillparDCp,ifl,photarx_2)
+              call myxill(earx, nex, xillpar, xillparDCp, ifl, Cp, photarx_2)
               photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
               !xi variations
               xillpar(1) = real(Gamma)
               xillpar(4) = logxi0 + ionvariation * dlogxi1
               xillparDCp(1) = real(Gamma)
               xillparDCp(5) = logxi0 + ionvariation * dlogxi1
-              call myxill(earx,nex,xillparDCp,ifl,photarx_1)
+              call myxill(earx, nex, xillpar, xillparDCp, ifl, Cp, photarx_1)
               xillpar(1) = real(Gamma)
               xillpar(4) = logxi0 + ionvariation * dlogxi2
               xillparDCp(1) = real(Gamma)
               xillparDCp(5) = logxi0 + ionvariation * dlogxi2
-              call myxill(earx,nex,xillparDCp,ifl,photarx_2)
+              call myxill(earx, nex, xillpar, xillparDCp, ifl, Cp, photarx_2)
               photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
 
         endif
@@ -537,8 +565,9 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
   fhisave   = fhi
   flosave   = flo
   nfsave    = nf
-  paramsave = param
-   ! Cpsave    = Cp
+  param19save = param19
+  param20save = param20
+  Cpsave    = Cp
 end subroutine genreltrans
 !-----------------------------------------------------------------------
 
@@ -547,14 +576,13 @@ subroutine set_param(h, a, inc, rin, rout, zcos, Gamma, logxi, Afe, &
      DelA, DelAB, g, par_reltrans19, par_reltrans20, Cp)
 !!! Sets the parameters of reltrans depending on the Cp variable
   implicit none
-  double precision, intent(out) :: h, a, inc, rin, rout, zcos
-  double precision, intent(out) :: Gamma, honr, muobs
-  real            , intent(out) :: logxi, Afe, lognep, kTe, kTe_s, Ecut_obs
-  real            , intent(out) :: Ecut_s, Nh, afac, Mass, floHz, fhiHz
-  real            , intent(out) :: DelA, DelAB, g
-  integer         , intent(out) :: ReIm
-  integer         , intent(in)  :: Cp
-  real            , intent(in)  :: par_reltrans19(19), par_reltrans20(20)
+  double precision, intent(out)  :: h, a, inc, rin, rout, zcos, Gamma
+  real            , intent(out)  :: logxi, Afe, lognep, kTe, Ecut_obs
+  real            , intent(out)  :: Nh, afac, Mass, floHz, fhiHz
+  real            , intent(out)  :: DelA, DelAB, g
+  integer         , intent(out)  :: ReIm
+  integer         , intent(in)   :: Cp
+  real            , intent(inout):: par_reltrans19(19), par_reltrans20(20)
 
 
   if( Cp .eq. -1 )then       ! reltrans
@@ -579,6 +607,7 @@ subroutine set_param(h, a, inc, rin, rout, zcos, Gamma, logxi, Afe, &
      g        =       par_reltrans19(19)
 
      kTe = Ecut_obs / 2.5
+     par_reltrans20 = 0.0 !set paramters of reltransDCp to zero to avoid mistake in the check subroutine
 
   else if ( Cp .eq. -2 )then ! xillverCp
      h        = dble( par_reltrans19(1) )
@@ -602,6 +631,8 @@ subroutine set_param(h, a, inc, rin, rout, zcos, Gamma, logxi, Afe, &
      g        =       par_reltrans19(19)
 
      Ecut_obs = 2.5 * kTe 
+     par_reltrans20 = 0.0 !set paramters of reltransDCp to zero to avoid mistake in the check subroutine
+
   else if( Cp .eq. 1 )then   ! reltransD
      h        = dble( par_reltrans19(1) )
      a        = dble( par_reltrans19(2) )
@@ -625,7 +656,8 @@ subroutine set_param(h, a, inc, rin, rout, zcos, Gamma, logxi, Afe, &
 
      Ecut_obs = 300.0    ! In this model the Ecut is fixed to 300
      kTe = Ecut_obs / 2.5
- 
+      par_reltrans20 = 0.0 !set paramters of reltransDCp to zero to avoid mistake in the check subroutine
+
   else if ( Cp .eq. 2 )then  ! reltransDCp
      h        = dble( par_reltrans20(1) )
      a        = dble( par_reltrans20(2) )
@@ -649,6 +681,7 @@ subroutine set_param(h, a, inc, rin, rout, zcos, Gamma, logxi, Afe, &
      g        =       par_reltrans20(20)
   
      Ecut_obs = 2.5 * kTe !work out the energy cut off for the powerlaw starting form kTe because we are using xillverDCp but also cut-off powerlaw for the pivoting effects
+     par_reltrans19 = 0.0 !set paramters of reltrans, reltransD, reltransCp to zero to avoid mistake in the check subroutine
 
   else
      write(*,*) 'No reltrans  model available for this configuration'
@@ -656,465 +689,561 @@ subroutine set_param(h, a, inc, rin, rout, zcos, Gamma, logxi, Afe, &
   end if
   return
 end subroutine set_param
-
+!-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-subroutine genreltransDCp(Cp,ear,ne,param,ifl,photar)
-!!! ReltransD with xillverDCp
-  !!! This routine calculates reltrans model starting form a pivoting
-  !!! powerlaw and the rest-frame spectrum xillverDCp
+subroutine kernel_check(Cp, param19, param20, param19save, param20save, fhi, flo, fhisave, flosave, nf, nfsave, needtrans)
+!!! Checks if reltrans needs to calculate the kernel!!!
+!!! Arg:
+  !   Cp: variable to set which reltrans 
+  !   param19: parameter array for reltrans, reltransCp, reltransD
+  !   param20: parameter array for reltransDCp
+  !   param19save: saved array
+  !   param20save: saved array
+  !   fhi: high frequency range
+  !   flo: low frequency range
+  !   fhisave: saved frequency 
+  !   flosave: saved frequency 
+  !   nf: number of frequency bins
+  !   nfsave: saved number
+  !   (output) needtrans: logical variable to check the kernel calculation 
+  implicit none 
+  integer         , intent(in)  :: nf, nfsave, Cp
+  real            , intent(in)  :: param19(19), param20(20)
+  real            , intent(in)  :: param19save(19), param20save(20)
+  double precision, intent(in)  :: fhi, flo, fhisave, flosave
+  logical         , intent(out) :: needtrans
+  integer :: i
 
-!    Arg:
-! 
-
-  !  Internal variables:
-  !      constants:
-  !         pi: greek pi
-  !         rnmax: maximum radius to consider GR effects
-  !         nphi, rno: resolution variables, number of pixels on the observer's camera(b and phib)
-  !         Emax, Emin: minimum and maximum range of the internal energy grid which is different than the xspec one
-  !         dlogf: resolution parameter of the frequency grid
-  !         dyn:   limit to check the saved values
-  !         ionvar: sets the ionisation variation (1 = w/ ion var; 0 = w/o ion var)
-  
-  
-  use dyn_gr
-  use conv_mod
-  implicit none
-!Constants
-  integer         , parameter :: nphi = 200, nro = 200, ionvar = 1 
-  real            , parameter :: Emin = 1e-1, Emax = 1e3, dyn = 1e-7
-  double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0, &
-       dlogf = 0.09 !This is a resolution parameter (base 10)
-       
-!Args:
-  integer, intent(inout) :: ifl
-  integer, intent(in)    :: Cp, ne
-  real   , intent(in)    :: param(20)
-  real   , intent(out)   :: photar(ne)
-  
-!Variables of the subroutine
-!initializer
-  integer          :: verbose, me, xe
-  logical          :: firstcall,needtrans, needconv
-  double precision :: d
-!Parameters of the model:
-  double precision :: h, a, inc, rin, rout, zcos, Gamma, honr, muobs
-  real             :: logxi, Afe, lognep, kTe, kTe_s, Ecut_obs, Ecut_s&
-       , Nh, afac, Mass, floHz, fhiHz, DelA, DelAB, g
-  integer          :: ReIm
-!internal frequency grid
-  integer          :: nf 
-  real             :: f, fac
-  double precision :: fc, flo, fhi 
-! internal energy grid and xspec energy grid
-  real             :: E, dE, dloge
-  real             :: earx(0:nex)   
-  real             :: ear(0:ne)
-!relativistic parameters and limit on rin and h
-  real             :: gso, gsd
-  double precision :: rmin, rh, lens
-
-!TRANSFER FUNCTIONS and Cross spectrum dynamic allocation + variables
-  complex, dimension(:,:,:,:), allocatable :: transe, transea
-  real   , dimension(:,:)    , allocatable :: ReW0, ImW0, ReW1, ImW1,&
-       ReW2, ImW2, ReW3, ImW3, ReSraw, ImSraw, ReSrawa, ImSrawa,&
-       ReGrawa, ImGrawa, ReG, ImG
-  double precision :: frobs, frrel  
-!Radial and angle profile 
-  integer                       :: mubin, rbin
-  double precision, allocatable :: logxir(:),gsdr(:), logner(:)
-!Reflection + total corss spectrum
-  real    :: mue, logxi0, xillparDCp(8), reline(nex), imline(nex), &
-       photarx(nex), photerx(nex), absorbx(nex), &
-       contx(nex), ImGbar(nex), ReGbar(nex), ReGx(nex),ImGx(nex)
-  real    :: ReS(ne),ImS(ne)
-!variable for non linear effects
-  integer ::  DC, ionvariation
-  real    :: photarx_1(nex), photarx_2(nex), photarx_delta(nex), &
-       reline_a(nex),imline_a(nex),photarx_dlogxi(nex), &
-       dlogxi1, dlogxi2, Gamma1, Gamma2, DeltaGamma  
-!SAVE 
-  integer          :: nfsave, Cpsave
-  real             :: paramsave(20)
-  double precision :: fhisave,flosave    
-!Functions
-  integer          :: i, j, myenv
-  double precision :: disco, dgsofac
-
-  ! real reconvmu(nex),imconvmu(nex)
-  ! complex FTphotarx(4*nex),FTphotarx_delta(4*nex),FTreline(4*nex),FTimline(4*nex)
-  ! complex FTreline_a(4*nex),FTimline_a(4*nex),FTreconv(4*nex),FTimconv(4*nex)
-  ! complex FTphotarx_dlogxi(4*nex), sum
- 
-  data firstcall /.true./
-  data Cpsave/2/
-  data nfsave /-1/  
-!Save the first call variables
-  save firstcall, dloge, earx, me, xe, d, verbose
-  save paramsave, fhisave, flosave, nfsave
-  save frobs, frrel, lens, Cpsave
-  save transe, transea, logxir, gsdr, logner
-  save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,contx
-  save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
-  
-  ifl = 1
-
-  ! Initialise some parameters 
-  call initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, me, xe, verbose)
-
-!Allocate dynamically the array to calculate the trasfer function 
-  if (.not. allocated(re1)) allocate(re1(nphi,nro))
-  if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
-  if (.not. allocated(pem1)) allocate(pem1(nphi,nro))
-
-! Parameters
-  h        = dble( param(1) )
-  a        = dble( param(2) )
-  inc      = dble( param(3) )
-  rin      = dble( param(4) )
-  rout     = dble( param(5) )
-  zcos     = dble( param(6) )
-  Gamma    = dble( param(7) )
-  logxi    = param(8)
-  Afe      = param(9)
-  lognep   = param(10)
-  kTe      = param(11)
-  Nh       = param(12)
-  afac     = param(13)
-  Mass     = dble( param(14) )
-  floHz    = param(15)
-  fhiHz    = param(16)
-  ReIm     = int( param(17) )
-  DelA     = param(18)
-  DelAB    = param(19)
-  g        = param(20)
-
-
-  Ecut_obs = 2.5 * kTe !work out the energy cut off for the powerlaw starting form kTe because we are using xillverDCp but also cut-off powerlaw for the pivoting effects
-  honr = 0.d0  !H over R, this could be a parameter of the model in the future
-  muobs = cos( inc * pi / 180.d0 )
-      
-!Work out how many frequencies to average over
-  fc = 0.5d0 * ( floHz + fhiHz )
-  nf = ceiling( log10(fhiHz/floHz) / dlogf )
-  if( fhiHz .lt. tiny(fhiHz) .or. floHz .lt. tiny(floHz) )then
-    fhiHz = 0.d0
-    floHz = 0.d0
-    nf    = 1
-  end if
-      
-!Convert frequency bounds from Hz to c/Rg
-  fhi   = dble(fhiHz) * 4.916d-6 * Mass
-  flo   = dble(floHz) * 4.916d-6 * Mass
-
-!Decide if this is the DC component or not
-  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) )then
-     DC     = 1
-! ionvar = 0 This is not necessary because in rawS there is the cond 
-     g      = 0.0
-     DelAB  = 0.0
-     DelA   = 0.0
-     ReIm   = 1
-  else
-     DC     = 0
-  end if
-
-!this could go into a subroutine 
-!Set minimum r (ISCO) and convert rin and h to rg
-  if( abs(a) .gt. 0.999 ) a = sign(a,1.d0) * 0.999
-  rmin   = disco( a )
-  if( rin .lt. 0.d0 ) rin = abs(rin) * rmin
-  rh     = 1.d0+sqrt(1.d0-a**2)
-  if( h .lt. 0.d0 ) h = abs(h) * rh
-  if( verbose .gt. 0 ) write(*,*)"rin (Rg)=",rin
-  if( verbose .gt. 0 ) write(*,*)"h (Rg)=",h
-  if( rin .lt. rmin )then
-     write(*,*)"Warning! rin<ISCO! Set to ISCO"
-     rin = rmin
-  end if
-  if( h .lt. 1.5d0*rh )then
-     write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
-     h = 1.5d0 * rh
-  end if
-
-!Calculate source to observer g-factor and source frame Ecut
-  gso    = real( dgsofac(a,h) )
-  Ecut_s = real(1.d0+zcos) * Ecut_obs / gso
-  kTe_s = real(1.d0+zcos) * kTe / gso
-  ! if( verbose .gt. 0 )then
-  !    if( Cp .eq. 0 )then
-  !       write(*,*)"Ecut in source restframe (keV)=",Ecut_s
-  !    else
-  !       write(*,*)"kTe in source restframe (keV)=",Ecut_s
-  !    end if
-  ! end if
-  
-!Determine if I need to calculate the kernel
   if( .not. needtrans )then
+! loop to check the first 8 parameters which are the same for all reltrans
      do i = 1,8
-        if( abs( param(i) - paramsave(i) ) .gt. 1e-7 ) needtrans = .true.
-     end do
-     if( abs( param(10) - paramsave(10) ) .gt. 1e-7 )needtrans=.true.
-     ! if( abs( param(11) - paramsave(11) ) .gt. 1e-7 )needtrans=.true. 
-     if( nf .ne. nfsave ) needtrans = .true.
-     if( abs( fhi - fhisave ) .gt. 1e-7 ) needtrans = .true.
-     if( abs( flo - flosave ) .gt. 1e-7 ) needtrans = .true.
-   end if
-   
-! Allocate arrays that depend on frequency
-  if( nf .ne. nfsave )then
-     if( allocated(transe ) ) deallocate(transe )
-     if( allocated(transea) ) deallocate(transea)
-     allocate(  transe(nex,nf,me,xe) )
-     allocate( transea(nex,nf,me,xe) )
-     if( allocated(ReW0) ) deallocate(ReW0)
-     if( allocated(ImW0) ) deallocate(ImW0)
-     if( allocated(ReW1) ) deallocate(ReW1)
-     if( allocated(ImW1) ) deallocate(ImW1)
-     if( allocated(ReW2) ) deallocate(ReW2)
-     if( allocated(ImW2) ) deallocate(ImW2)
-     if( allocated(ReW3) ) deallocate(ReW3)
-     if( allocated(ImW3) ) deallocate(ImW3)
-     allocate( ReW0(nex,nf) )
-     allocate( ImW0(nex,nf) )
-     allocate( ReW1(nex,nf) )
-     allocate( ImW1(nex,nf) )
-     allocate( ReW2(nex,nf) )
-     allocate( ImW2(nex,nf) )
-     allocate( ReW3(nex,nf) )
-     allocate( ImW3(nex,nf) )
-     if( allocated(ReSraw) ) deallocate(ReSraw)
-     if( allocated(ImSraw) ) deallocate(ImSraw)
-     allocate( ReSraw(nex,nf) )
-     allocate( ImSraw(nex,nf) )
-     if( allocated(ReSrawa) ) deallocate(ReSrawa)
-     if( allocated(ImSrawa) ) deallocate(ImSrawa)
-     allocate( ReSrawa(nex,nf) )
-     allocate( ImSrawa(nex,nf) )
-     if( allocated(ReGrawa) ) deallocate(ReGrawa)
-     if( allocated(ImGrawa) ) deallocate(ImGrawa)
-     allocate( ReGrawa(nex,nf) )
-     allocate( ImGrawa(nex,nf) )
-     if( allocated(ReG) ) deallocate(ReG)
-     if( allocated(ImG) ) deallocate(ImG)
-     allocate( ReG(nex,nf) )
-     allocate( ImG(nex,nf) )
-  end if
-     
-  if( needtrans )then
-     !Allocate arrays for kernels     
-     if( .not. allocated(logxir) ) allocate( logxir(xe) )
-     if( .not. allocated(gsdr)   ) allocate( gsdr  (xe) )
-     if( .not. allocated(logner) ) allocate( logner(xe) )
-     !Calculate the Kernel for the given parameters
-     status_re_tau = .true.
-     call rtrans(a,h,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,nro,nphi,nex,dloge,&
-          nf,fhi,flo,me,xe,logxi, lognep, transe, transea, frobs, frrel, lens, logxir, gsdr, logner)
-  end if
-  
-  if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",afac*frobs
-  if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
-
-!Determine if I need to convolve with the restframe reflection spectrum
-  needconv = .false.
-  if( needtrans ) needconv = .true.
-  if( abs( param(9) - paramsave(9) ) .gt. 1e-7 ) needconv = .true.
-  if( abs( param(11) - paramsave(11) ) .gt. 1e-7 ) needconv = .true.
-  ! if( Cp .ne. Cpsave ) needconv = .true.
-  
-  if( needconv )then     
-     !Initialize arrays for transfer functions
-     ReW0 = 0.0
-     ImW0 = 0.0
-     ReW1 = 0.0
-     ImW1 = 0.0
-     ReW2 = 0.0
-     ImW2 = 0.0
-     ReW3 = 0.0
-     ImW3 = 0.0
-     DeltaGamma = 0.01
-     Gamma1 = real(Gamma) - 0.5*DeltaGamma
-     Gamma2 = real(Gamma) + 0.5*DeltaGamma
-
-     !Get continuum spectrum 
-!      call getcont(nex, earx, Gamma, Afe, Ecut_obs, logxi, Cp, contx, xillpar)
-     call getcontDCp(nex, earx, Gamma, Afe, kTe, lognep, logxi, contx, xillparDCp)
-     ! if( verbose .gt. 0 ) call sourcelum(nex,earx,contx,real(mass),gso,real(Gamma))
-     
-     !Get logxi values corresponding to Gamma1 and Gamma2
-     call xilimits(nex,earx,contx,DeltaGamma,gso,real(zcos),dlogxi1,dlogxi2)
-
-     !Now reflection
-     xillparDCp(8) = -1.0       !reflection fraction of 1             
-
-!Set the ion-variation to 1, there is an if inside the radial loop to check if either the ionvar is 0 or the logxi is 0 to set ionvariation to 0
-! it is important that ionvariation is different than ionvar because ionvar is used also later in rawS routine to calculate the cross-spectrum
-     ionvariation = 1
-
-     !Loop over radius, emission angle and frequency
-     do rbin = 1, xe  !Loop over radial zones
-
-!Remember: xillparDCp(3) is kTe so we need to convert the Ecut_s into kTe        
-        xillparDCp(3) = real( gsdr(rbin) ) * kTe_s
-        xillparDCp(4) = real( logner(rbin) )
-        logxi0     = real( logxir(rbin) )
-        if( xe .eq. 1 )then
-           xillparDCp(3) = kTe_s
-           xillparDCp(4) = lognep
-           logxi0     = logxi
+        if( abs( param19(i) - param19save(i) ) .gt. 1e-7 ) then
+           needtrans = .true.
+           goto 666
+        end if           
+        if( abs( param20(i) - param20save(i) ) .gt. 1e-7 ) then
+           needtrans = .true.
+           goto 666
         end if
-        
-!Avoid negative values of the ionisation parameter 
-        if (logxi0 .eq. 0.0 .or. ionvar .eq. 0) then
-           ionvariation = 0.0
-        endif
-
-        do mubin = 1, me      !loop over emission angle zones
-           !Calculate input inclination angle
-           mue = ( real(mubin) - 0.5 ) / real(me)
-           xillparDCp(7) = acos( mue ) * 180.0 / real(pi)
-           if( me .eq. 1 ) xillparDCp(7) = real( inc )
-           !Call xillver
-           xillparDCp(1) = real(Gamma)
-           xillparDCp(5) = logxi0
-           call myxillDCp(earx, nex, xillparDCp, ifl, photarx)
-           
-           if (DC .eq. 0) then 
-!NON LINEAR EFFECTS
-              !Gamma variations
-              xillparDCp(1) = Gamma1
-              xillparDCp(5) = logxi0 + ionvariation * dlogxi1
-              call myxillDCp(earx,nex,xillparDCp,ifl,photarx_1)
-              xillparDCp(1) = Gamma2
-              xillparDCp(5) = logxi0 + ionvariation * dlogxi2
-              call myxillDCp(earx,nex,xillparDCp,ifl,photarx_2)
-              photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
-              !xi variations
-              xillparDCp(1) = real(Gamma)
-              xillparDCp(5) = logxi0 + ionvariation * dlogxi1
-              call myxillDCp(earx,nex,xillparDCp,ifl,photarx_1)
-              xillparDCp(1) = real(Gamma)
-              xillparDCp(5) = logxi0 + ionvariation * dlogxi2
-              call myxillDCp(earx,nex,xillparDCp,ifl,photarx_2)
-              photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
-
-        endif
-        
-           !Loop through frequencies
-           do j = 1,nf
-                 do i = 1,nex
-                    reline(i)   = real(  transe(i,j,mubin,rbin) )
-                    imline(i)   = aimag( transe(i,j,mubin,rbin) )
-                    reline_a(i) = real(  transea(i,j,mubin,rbin) )
-                    imline_a(i) = aimag( transea(i,j,mubin,rbin) )
-                 end do
-              
-                 call conv_all_FFTw(dyn, photarx, photarx_delta, reline, imline, reline_a , imline_a,&
-                         photarx_dlogxi, ReW0(:,j), ImW0(:,j), ReW1(:,j), ImW1(:,j), &
-                         ReW2(:,j), ImW2(:,j), ReW3(:,j), ImW3(:,j), DC)
-                 
-                 end do !end of the frequency loop 
-
-              end do
-           end do
-
+     end do
+     if (Cp .eq. 1 .or. Cp .eq. 2) then ! if reltransD or reltransDCp
+        if( abs( param19(10) - param19save(10) ) .gt. 1e-7 ) then 
+           needtrans = .true. ! density (lognep) in reltransD
+           goto 666
         end if
-
-! Calculate raw FT of the full spectrum without absorption
-  call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
-                gso,real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
-
-
-! Calculate absorption and multiply by the raw FT
- ! call FNINIT
-
-  call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
-  
-  do j = 1, nf
-     do i = 1, nex
-        ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
-        ImSrawa(i,j) = ImSraw(i,j) * absorbx(i)
-     end do
-  end do
-
-! Average over the frequency range
-  if( DC .eq. 1 )then
-     do i = 1, nex
-        ReGbar(i) = ReSrawa(i,1)
-!        ImGbar(i) = ImSrawa(i,1)  !No need for the immaginary part in DC
-     end do
-  else
-
-     ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
-     if (ReIm .gt. 0.0) then
-        call propercross(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa)
-     else
-        call propercross_NOmatrix(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa)
+        if( abs( param20(10) - param20save(10) ) .gt. 1e-7 ) then 
+           needtrans = .true.  ! density (lognep) in reltransDCp
+           goto 666
+        end if
      endif
-     
-! Apply phase correction parameter to the cross-spectral model (for bad calibration)
-     do j = 1,nf
-        do i = 1,nex
-           ReG(i,j) = cos(DelA) * ReGrawa(i,j) - sin(DelA) * ImGrawa(i,j)
-           ImG(i,j) = cos(DelA) * ImGrawa(i,j) + sin(DelA) * ReGrawa(i,j)
-        end do
-     end do
 
-     ReGbar = 0.0
-     ImGbar = 0.0
-     fac = 2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf))
-     do j = 1,nf
-        f = floHz * (fhiHz/floHz)**(  (real(j)-0.5) / real(nf) )
-        do i = 1,nex
-           ReGbar(i) = ReGbar(i) + ReG(i,j) / f
-           ImGbar(i) = ImGbar(i) + ImG(i,j) / f
-        end do
-     end do
-     ReGbar = ReGbar * fac
-     ImGbar = ImGbar * fac
-  end if
+666  continue 
      
-! Write output depending on ReIm parameter
-!  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) ) ReIm = 1
-  if( abs(ReIm) .le. 4 )then
-     call crebin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS) !S is in photar form
-     if( abs(ReIm) .eq. 1 )then        !Real part
-        photar = ReS
-     else if( abs(ReIm) .eq. 2 )then   !Imaginary part
-        photar = ImS
-     else if( abs(ReIm) .eq. 3 )then   !Modulus
-        photar = sqrt( ReS**2 + ImS**2 )
-        write(*,*) "Warning ReIm=3 should not be used for fitting!"
-     else if( abs(ReIm) .eq. 4 )then   !Time lag (s)
-        do i = 1,ne
-           dE = ear(i) - ear(i-1)
-           photar(i) = atan2( ImS(i) , ReS(i) ) / ( 2.0*pi*fc ) * dE
-        end do
-        write(*,*)"Warning ReIm=4 should not be used for fitting!"
+!check if frequency range and frequency grid have changed 
+     if     ( abs( nf  - nfsave  ) .gt. 1e-7) then
+        needtrans = .true.
+     else if( abs( fhi - fhisave ) .gt. 1e-7) then
+        needtrans = .true.
+     else if( abs( flo - flosave ) .gt. 1e-7) then
+        needtrans = .true.
      end if
-  else
-     call cfoldandbin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS) !S is count rate
-     if( abs(ReIm) .eq. 5 )then        !Modulus
-        do i = 1, ne
-           dE = ear(i) - ear(i-1)
-           photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) * dE
-        end do
-     else if( abs(ReIm) .eq. 6 )then   !Time lag (s)
-        do i = 1, ne
-           dE = ear(i) - ear(i-1)
-           photar(i) = atan2( ImS(i) , ReS(i) ) / ( 2.0*pi*fc ) * dE
-        end do
-     end if
+
   end if
-  
-  fhisave   = fhi
-  flosave   = flo
-  nfsave    = nf
-  paramsave = param
-   ! Cpsave    = Cp
-end subroutine genreltransDCp
+end subroutine kernel_check
 !-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+subroutine conv_check(Cp, Cpsave, param19, param20, param19save, param20save, needconv)
+!!! Checks if reltrans needs to re-convolve !!!
+!!! Arg:
+  !   Cp: variable to set which reltrans 
+  !   param19: parameter array for reltrans, reltransCp, reltransD
+  !   param20: parameter array for reltransDCp
+  !   param19save: saved array
+  !   param20save: saved array
+  !   (output) needtrans: logical variable to check the kernel calculation 
+  implicit none
+  integer, intent(in)  :: Cp, Cpsave
+  real   , intent(in)  :: param19(19), param20(20)
+  real   , intent(in)  :: param19save(19), param20save(20)
+  logical, intent(out) :: needconv
+
+  if ( abs(Cp - Cpsave) .gt. 1e-7  ) then
+     needconv = .true.
+  else if ( abs( param19(9) - param19save(9) ) .gt. 1e-7 ) then
+     needconv = .true. ! Afe iron abundance 
+  else if ( abs( param20(9) - param20save(9) ) .gt. 1e-7 ) then
+     needconv = .true. ! Afe iron abundance 
+  else if ( abs( param19(10) - param19save(10) ) .gt. 1e-7 ) then
+     needconv = .true. ! Either kTe or Ecut (in reltransCp or reltrans)
+!     NOTE in the case of reltransD param19 is lognep which has been already checked before, so no problem 
+  else if ( abs( param20(11) - param20save(11) ) .gt. 1e-7 ) then
+     needconv = .true. ! kTe for reltransDCp 
+  end if
+
+
+end subroutine conv_check
+!-----------------------------------------------------------------------
+
+  
+! !-----------------------------------------------------------------------
+! subroutine genreltransDCp(Cp, ear, ne, param, ifl, photar)
+! !!! ReltransD with xillverDCp
+!   !!! This routine calculates reltrans model starting form a pivoting
+!   !!! powerlaw and the rest-frame spectrum xillverDCp
+
+! !    Arg:
+! ! 
+
+!   !  Internal variables:
+!   !      constants:
+!   !         pi: greek pi
+!   !         rnmax: maximum radius to consider GR effects
+!   !         nphi, rno: resolution variables, number of pixels on the observer's camera(b and phib)
+!   !         Emax, Emin: minimum and maximum range of the internal energy grid which is different than the xspec one
+!   !         dlogf: resolution parameter of the frequency grid
+!   !         dyn:   limit to check the saved values
+!   !         ionvar: sets the ionisation variation (1 = w/ ion var; 0 = w/o ion var)
+  
+  
+!   use dyn_gr
+!   use conv_mod
+!   implicit none
+! !Constants
+!   integer         , parameter :: nphi = 200, nro = 200, ionvar = 1 
+!   real            , parameter :: Emin = 1e-1, Emax = 1e3, dyn = 1e-7
+!   double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0, &
+!        dlogf = 0.09 !This is a resolution parameter (base 10)
+       
+! !Args:
+!   integer, intent(inout) :: ifl
+!   integer, intent(in)    :: Cp, ne
+!   real   , intent(in)    :: param(20)
+!   real   , intent(out)   :: photar(ne)
+  
+! !Variables of the subroutine
+! !initializer
+!   integer          :: verbose, me, xe
+!   logical          :: firstcall,needtrans, needconv
+!   double precision :: d
+! !Parameters of the model:
+!   double precision :: h, a, inc, rin, rout, zcos, Gamma, honr, muobs
+!   real             :: logxi, Afe, lognep, kTe, kTe_s, Ecut_obs, Ecut_s&
+!        , Nh, afac, Mass, floHz, fhiHz, DelA, DelAB, g
+!   integer          :: ReIm
+! !internal frequency grid
+!   integer          :: nf 
+!   real             :: f, fac
+!   double precision :: fc, flo, fhi 
+! ! internal energy grid and xspec energy grid
+!   real             :: E, dE, dloge
+!   real             :: earx(0:nex)   
+!   real             :: ear(0:ne)
+! !relativistic parameters and limit on rin and h
+!   real             :: gso, gsd
+!   double precision :: rmin, rh, lens
+
+! !TRANSFER FUNCTIONS and Cross spectrum dynamic allocation + variables
+!   complex, dimension(:,:,:,:), allocatable :: transe, transea
+!   real   , dimension(:,:)    , allocatable :: ReW0, ImW0, ReW1, ImW1,&
+!        ReW2, ImW2, ReW3, ImW3, ReSraw, ImSraw, ReSrawa, ImSrawa,&
+!        ReGrawa, ImGrawa, ReG, ImG
+!   double precision :: frobs, frrel  
+! !Radial and angle profile 
+!   integer                       :: mubin, rbin
+!   double precision, allocatable :: logxir(:),gsdr(:), logner(:)
+! !Reflection + total corss spectrum
+!   real    :: mue, logxi0, xillparDCp(8), reline(nex), imline(nex), &
+!        photarx(nex), photerx(nex), absorbx(nex), &
+!        contx(nex), ImGbar(nex), ReGbar(nex), ReGx(nex),ImGx(nex)
+!   real    :: ReS(ne),ImS(ne)
+! !variable for non linear effects
+!   integer ::  DC, ionvariation
+!   real    :: photarx_1(nex), photarx_2(nex), photarx_delta(nex), &
+!        reline_a(nex),imline_a(nex),photarx_dlogxi(nex), &
+!        dlogxi1, dlogxi2, Gamma1, Gamma2, DeltaGamma  
+! !SAVE 
+!   integer          :: nfsave, Cpsave
+!   real             :: paramsave(20)
+!   double precision :: fhisave,flosave    
+! !Functions
+!   integer          :: i, j, myenv
+!   double precision :: disco, dgsofac
+
+!   ! real reconvmu(nex),imconvmu(nex)
+!   ! complex FTphotarx(4*nex),FTphotarx_delta(4*nex),FTreline(4*nex),FTimline(4*nex)
+!   ! complex FTreline_a(4*nex),FTimline_a(4*nex),FTreconv(4*nex),FTimconv(4*nex)
+!   ! complex FTphotarx_dlogxi(4*nex), sum
+ 
+!   data firstcall /.true./
+!   data Cpsave/2/
+!   data nfsave /-1/  
+! !Save the first call variables
+!   save firstcall, dloge, earx, me, xe, d, verbose
+!   save paramsave, fhisave, flosave, nfsave
+!   save frobs, frrel, lens, Cpsave
+!   save transe, transea, logxir, gsdr, logner
+!   save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,contx
+!   save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
+  
+!   ifl = 1
+
+!   ! Initialise some parameters 
+!   call initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, me, xe, verbose)
+
+! !Allocate dynamically the array to calculate the trasfer function 
+!   if (.not. allocated(re1)) allocate(re1(nphi,nro))
+!   if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
+!   if (.not. allocated(pem1)) allocate(pem1(nphi,nro))
+
+! ! Parameters
+!   h        = dble( param(1) )
+!   a        = dble( param(2) )
+!   inc      = dble( param(3) )
+!   rin      = dble( param(4) )
+!   rout     = dble( param(5) )
+!   zcos     = dble( param(6) )
+!   Gamma    = dble( param(7) )
+!   logxi    = param(8)
+!   Afe      = param(9)
+!   lognep   = param(10)
+!   kTe      = param(11)
+!   Nh       = param(12)
+!   afac     = param(13)
+!   Mass     = dble( param(14) )
+!   floHz    = param(15)
+!   fhiHz    = param(16)
+!   ReIm     = int( param(17) )
+!   DelA     = param(18)
+!   DelAB    = param(19)
+!   g        = param(20)
+
+
+!   Ecut_obs = 2.5 * kTe !work out the energy cut off for the powerlaw starting form kTe because we are using xillverDCp but also cut-off powerlaw for the pivoting effects
+!   honr = 0.d0  !H over R, this could be a parameter of the model in the future
+!   muobs = cos( inc * pi / 180.d0 )
+      
+! !Work out how many frequencies to average over
+!   fc = 0.5d0 * ( floHz + fhiHz )
+!   nf = ceiling( log10(fhiHz/floHz) / dlogf )
+!   if( fhiHz .lt. tiny(fhiHz) .or. floHz .lt. tiny(floHz) )then
+!     fhiHz = 0.d0
+!     floHz = 0.d0
+!     nf    = 1
+!   end if
+      
+! !Convert frequency bounds from Hz to c/Rg
+!   fhi   = dble(fhiHz) * 4.916d-6 * Mass
+!   flo   = dble(floHz) * 4.916d-6 * Mass
+
+! !Decide if this is the DC component or not
+!   if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) )then
+!      DC     = 1
+! ! ionvar = 0 This is not necessary because in rawS there is the cond 
+!      g      = 0.0
+!      DelAB  = 0.0
+!      DelA   = 0.0
+!      ReIm   = 1
+!   else
+!      DC     = 0
+!   end if
+
+! !this could go into a subroutine 
+! !Set minimum r (ISCO) and convert rin and h to rg
+!   if( abs(a) .gt. 0.999 ) a = sign(a,1.d0) * 0.999
+!   rmin   = disco( a )
+!   if( rin .lt. 0.d0 ) rin = abs(rin) * rmin
+!   rh     = 1.d0+sqrt(1.d0-a**2)
+!   if( h .lt. 0.d0 ) h = abs(h) * rh
+!   if( verbose .gt. 0 ) write(*,*)"rin (Rg)=",rin
+!   if( verbose .gt. 0 ) write(*,*)"h (Rg)=",h
+!   if( rin .lt. rmin )then
+!      write(*,*)"Warning! rin<ISCO! Set to ISCO"
+!      rin = rmin
+!   end if
+!   if( h .lt. 1.5d0*rh )then
+!      write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
+!      h = 1.5d0 * rh
+!   end if
+
+! !Calculate source to observer g-factor and source frame Ecut
+!   gso    = real( dgsofac(a,h) )
+!   Ecut_s = real(1.d0+zcos) * Ecut_obs / gso
+!   kTe_s = real(1.d0+zcos) * kTe / gso
+!   ! if( verbose .gt. 0 )then
+!   !    if( Cp .eq. 0 )then
+!   !       write(*,*)"Ecut in source restframe (keV)=",Ecut_s
+!   !    else
+!   !       write(*,*)"kTe in source restframe (keV)=",Ecut_s
+!   !    end if
+!   ! end if
+  
+! !Determine if I need to calculate the kernel
+!   if( .not. needtrans )then
+!      do i = 1,8
+!         if( abs( param(i) - paramsave(i) ) .gt. 1e-7 ) needtrans = .true.
+!      end do
+!      if( abs( param(10) - paramsave(10) ) .gt. 1e-7 )needtrans=.true.
+!      ! if( abs( param(11) - paramsave(11) ) .gt. 1e-7 )needtrans=.true. 
+!      if( nf .ne. nfsave ) needtrans = .true.
+!      if( abs( fhi - fhisave ) .gt. 1e-7 ) needtrans = .true.
+!      if( abs( flo - flosave ) .gt. 1e-7 ) needtrans = .true.
+!    end if
+   
+! ! Allocate arrays that depend on frequency
+!   if( nf .ne. nfsave )then
+!      if( allocated(transe ) ) deallocate(transe )
+!      if( allocated(transea) ) deallocate(transea)
+!      allocate(  transe(nex,nf,me,xe) )
+!      allocate( transea(nex,nf,me,xe) )
+!      if( allocated(ReW0) ) deallocate(ReW0)
+!      if( allocated(ImW0) ) deallocate(ImW0)
+!      if( allocated(ReW1) ) deallocate(ReW1)
+!      if( allocated(ImW1) ) deallocate(ImW1)
+!      if( allocated(ReW2) ) deallocate(ReW2)
+!      if( allocated(ImW2) ) deallocate(ImW2)
+!      if( allocated(ReW3) ) deallocate(ReW3)
+!      if( allocated(ImW3) ) deallocate(ImW3)
+!      allocate( ReW0(nex,nf) )
+!      allocate( ImW0(nex,nf) )
+!      allocate( ReW1(nex,nf) )
+!      allocate( ImW1(nex,nf) )
+!      allocate( ReW2(nex,nf) )
+!      allocate( ImW2(nex,nf) )
+!      allocate( ReW3(nex,nf) )
+!      allocate( ImW3(nex,nf) )
+!      if( allocated(ReSraw) ) deallocate(ReSraw)
+!      if( allocated(ImSraw) ) deallocate(ImSraw)
+!      allocate( ReSraw(nex,nf) )
+!      allocate( ImSraw(nex,nf) )
+!      if( allocated(ReSrawa) ) deallocate(ReSrawa)
+!      if( allocated(ImSrawa) ) deallocate(ImSrawa)
+!      allocate( ReSrawa(nex,nf) )
+!      allocate( ImSrawa(nex,nf) )
+!      if( allocated(ReGrawa) ) deallocate(ReGrawa)
+!      if( allocated(ImGrawa) ) deallocate(ImGrawa)
+!      allocate( ReGrawa(nex,nf) )
+!      allocate( ImGrawa(nex,nf) )
+!      if( allocated(ReG) ) deallocate(ReG)
+!      if( allocated(ImG) ) deallocate(ImG)
+!      allocate( ReG(nex,nf) )
+!      allocate( ImG(nex,nf) )
+!   end if
+     
+!   if( needtrans )then
+!      !Allocate arrays for kernels     
+!      if( .not. allocated(logxir) ) allocate( logxir(xe) )
+!      if( .not. allocated(gsdr)   ) allocate( gsdr  (xe) )
+!      if( .not. allocated(logner) ) allocate( logner(xe) )
+!      !Calculate the Kernel for the given parameters
+!      status_re_tau = .true.
+!      call rtrans(a,h,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,nro,nphi,nex,dloge,&
+!           nf,fhi,flo,me,xe,logxi, lognep, transe, transea, frobs, frrel, lens, logxir, gsdr, logner)
+!   end if
+  
+!   if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",afac*frobs
+!   if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
+
+! !Determine if I need to convolve with the restframe reflection spectrum
+!   needconv = .false.
+!   if( needtrans ) needconv = .true.
+!   if( abs( param(9) - paramsave(9) ) .gt. 1e-7 ) needconv = .true.
+!   if( abs( param(11) - paramsave(11) ) .gt. 1e-7 ) needconv = .true.
+!   ! if( Cp .ne. Cpsave ) needconv = .true.
+  
+!   if( needconv )then     
+!      !Initialize arrays for transfer functions
+!      ReW0 = 0.0
+!      ImW0 = 0.0
+!      ReW1 = 0.0
+!      ImW1 = 0.0
+!      ReW2 = 0.0
+!      ImW2 = 0.0
+!      ReW3 = 0.0
+!      ImW3 = 0.0
+!      DeltaGamma = 0.01
+!      Gamma1 = real(Gamma) - 0.5*DeltaGamma
+!      Gamma2 = real(Gamma) + 0.5*DeltaGamma
+
+!      !Get continuum spectrum 
+! !      call getcont(nex, earx, Gamma, Afe, Ecut_obs, logxi, Cp, contx, xillpar)
+!      call getcontDCp(nex, earx, Gamma, Afe, kTe, lognep, logxi, contx, xillparDCp)
+!      ! if( verbose .gt. 0 ) call sourcelum(nex,earx,contx,real(mass),gso,real(Gamma))
+     
+!      !Get logxi values corresponding to Gamma1 and Gamma2
+!      call xilimits(nex,earx,contx,DeltaGamma,gso,real(zcos),dlogxi1,dlogxi2)
+
+!      !Now reflection
+!      xillparDCp(8) = -1.0       !reflection fraction of 1             
+
+! !Set the ion-variation to 1, there is an if inside the radial loop to check if either the ionvar is 0 or the logxi is 0 to set ionvariation to 0
+! ! it is important that ionvariation is different than ionvar because ionvar is used also later in rawS routine to calculate the cross-spectrum
+!      ionvariation = 1
+
+!      !Loop over radius, emission angle and frequency
+!      do rbin = 1, xe  !Loop over radial zones
+
+! !Remember: xillparDCp(3) is kTe so we need to convert the Ecut_s into kTe        
+!         xillparDCp(3) = real( gsdr(rbin) ) * kTe_s
+!         xillparDCp(4) = real( logner(rbin) )
+!         logxi0     = real( logxir(rbin) )
+!         if( xe .eq. 1 )then
+!            xillparDCp(3) = kTe_s
+!            xillparDCp(4) = lognep
+!            logxi0     = logxi
+!         end if
+        
+! !Avoid negative values of the ionisation parameter 
+!         if (logxi0 .eq. 0.0 .or. ionvar .eq. 0) then
+!            ionvariation = 0.0
+!         endif
+
+!         do mubin = 1, me      !loop over emission angle zones
+!            !Calculate input inclination angle
+!            mue = ( real(mubin) - 0.5 ) / real(me)
+!            xillparDCp(7) = acos( mue ) * 180.0 / real(pi)
+!            if( me .eq. 1 ) xillparDCp(7) = real( inc )
+!            !Call xillver
+!            xillparDCp(1) = real(Gamma)
+!            xillparDCp(5) = logxi0
+!            call myxillDCp(earx, nex, xillparDCp, ifl, photarx)
+           
+!            if (DC .eq. 0) then 
+! !NON LINEAR EFFECTS
+!               !Gamma variations
+!               xillparDCp(1) = Gamma1
+!               xillparDCp(5) = logxi0 + ionvariation * dlogxi1
+!               call myxillDCp(earx,nex,xillparDCp,ifl,photarx_1)
+!               xillparDCp(1) = Gamma2
+!               xillparDCp(5) = logxi0 + ionvariation * dlogxi2
+!               call myxillDCp(earx,nex,xillparDCp,ifl,photarx_2)
+!               photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
+!               !xi variations
+!               xillparDCp(1) = real(Gamma)
+!               xillparDCp(5) = logxi0 + ionvariation * dlogxi1
+!               call myxillDCp(earx,nex,xillparDCp,ifl,photarx_1)
+!               xillparDCp(1) = real(Gamma)
+!               xillparDCp(5) = logxi0 + ionvariation * dlogxi2
+!               call myxillDCp(earx,nex,xillparDCp,ifl,photarx_2)
+!               photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
+
+!         endif
+        
+!            !Loop through frequencies
+!            do j = 1,nf
+!                  do i = 1,nex
+!                     reline(i)   = real(  transe(i,j,mubin,rbin) )
+!                     imline(i)   = aimag( transe(i,j,mubin,rbin) )
+!                     reline_a(i) = real(  transea(i,j,mubin,rbin) )
+!                     imline_a(i) = aimag( transea(i,j,mubin,rbin) )
+!                  end do
+              
+!                  call conv_all_FFTw(dyn, photarx, photarx_delta, reline, imline, reline_a , imline_a,&
+!                          photarx_dlogxi, ReW0(:,j), ImW0(:,j), ReW1(:,j), ImW1(:,j), &
+!                          ReW2(:,j), ImW2(:,j), ReW3(:,j), ImW3(:,j), DC)
+                 
+!                  end do !end of the frequency loop 
+
+!               end do
+!            end do
+
+!         end if
+
+! ! Calculate raw FT of the full spectrum without absorption
+!   call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
+!                 gso,real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
+
+
+! ! Calculate absorption and multiply by the raw FT
+!  ! call FNINIT
+
+!   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
+  
+!   do j = 1, nf
+!      do i = 1, nex
+!         ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
+!         ImSrawa(i,j) = ImSraw(i,j) * absorbx(i)
+!      end do
+!   end do
+
+! ! Average over the frequency range
+!   if( DC .eq. 1 )then
+!      do i = 1, nex
+!         ReGbar(i) = ReSrawa(i,1)
+! !        ImGbar(i) = ImSrawa(i,1)  !No need for the immaginary part in DC
+!      end do
+!   else
+
+!      ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
+!      if (ReIm .gt. 0.0) then
+!         call propercross(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa)
+!      else
+!         call propercross_NOmatrix(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa)
+!      endif
+     
+! ! Apply phase correction parameter to the cross-spectral model (for bad calibration)
+!      do j = 1,nf
+!         do i = 1,nex
+!            ReG(i,j) = cos(DelA) * ReGrawa(i,j) - sin(DelA) * ImGrawa(i,j)
+!            ImG(i,j) = cos(DelA) * ImGrawa(i,j) + sin(DelA) * ReGrawa(i,j)
+!         end do
+!      end do
+
+!      ReGbar = 0.0
+!      ImGbar = 0.0
+!      fac = 2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf))
+!      do j = 1,nf
+!         f = floHz * (fhiHz/floHz)**(  (real(j)-0.5) / real(nf) )
+!         do i = 1,nex
+!            ReGbar(i) = ReGbar(i) + ReG(i,j) / f
+!            ImGbar(i) = ImGbar(i) + ImG(i,j) / f
+!         end do
+!      end do
+!      ReGbar = ReGbar * fac
+!      ImGbar = ImGbar * fac
+!   end if
+     
+! ! Write output depending on ReIm parameter
+! !  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) ) ReIm = 1
+!   if( abs(ReIm) .le. 4 )then
+!      call crebin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS) !S is in photar form
+!      if( abs(ReIm) .eq. 1 )then        !Real part
+!         photar = ReS
+!      else if( abs(ReIm) .eq. 2 )then   !Imaginary part
+!         photar = ImS
+!      else if( abs(ReIm) .eq. 3 )then   !Modulus
+!         photar = sqrt( ReS**2 + ImS**2 )
+!         write(*,*) "Warning ReIm=3 should not be used for fitting!"
+!      else if( abs(ReIm) .eq. 4 )then   !Time lag (s)
+!         do i = 1,ne
+!            dE = ear(i) - ear(i-1)
+!            photar(i) = atan2( ImS(i) , ReS(i) ) / ( 2.0*pi*fc ) * dE
+!         end do
+!         write(*,*)"Warning ReIm=4 should not be used for fitting!"
+!      end if
+!   else
+!      call cfoldandbin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS) !S is count rate
+!      if( abs(ReIm) .eq. 5 )then        !Modulus
+!         do i = 1, ne
+!            dE = ear(i) - ear(i-1)
+!            photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) * dE
+!         end do
+!      else if( abs(ReIm) .eq. 6 )then   !Time lag (s)
+!         do i = 1, ne
+!            dE = ear(i) - ear(i-1)
+!            photar(i) = atan2( ImS(i) , ReS(i) ) / ( 2.0*pi*fc ) * dE
+!         end do
+!      End If
+!   end if
+  
+!   fhisave   = fhi
+!   flosave   = flo
+!   nfsave    = nf
+!   paramsave = param
+!    ! Cpsave    = Cp
+! end subroutine genreltransDCp
+! !-----------------------------------------------------------------------
 
 
 !-----------------------------------------------------------------------
