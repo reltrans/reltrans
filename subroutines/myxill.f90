@@ -50,19 +50,19 @@
       dear = dble( ear )      
       if( Cp .eq. -1 )then         !xillver
          dxillpar7 = dble( param7 )
-         write(*,*) 'my xillver', dxillpar7
+         ! write(*,*) 'my xillver', dxillpar7
          call lmodxillverf(dear, ne, dxillpar7, ifl, dphotar, dphoter, char)
       else if ( Cp .eq. -2 )then   !xillverCp
          dxillpar7 = dble( param7 )
-         write(*,*) 'my xillverCp', dxillpar7
+         ! write(*,*) 'my xillverCp', dxillpar7
          call lmodxillvernthcompf(dear, ne, dxillpar7, ifl, dphotar, dphoter, char)
       else if( Cp .eq. 1 )then     !xillverD
          dxillpar7 = dble( param7 )
-         write(*,*) 'my xillverD', dxillpar7
+         ! write(*,*) 'my xillverD', dxillpar7
          call lmodxillverdensf(dear, ne, dxillpar7, ifl, dphotar, dphoter, char)
       else if ( Cp .eq. 2 )then    !xillverDCp
          dxillpar8 = dble( param8 )
-         write(*,*) 'my xillverDCp', dxillpar8
+         ! write(*,*) 'my xillverDCp', dxillpar8
          call lmodxillverdensnthcompf(dear, ne, dxillpar8, ifl, dphotar, dphoter, char)
       else
          write(*,*) 'No xillver model available for this configuration'

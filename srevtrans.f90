@@ -294,7 +294,7 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
   end if
      
   if( needtrans )then
-     write(*,*) 'new kernel'
+     ! write(*,*) 'new kernel'
      !Allocate arrays for kernels     
      if( .not. allocated(logxir) ) allocate( logxir(xe) )
      if( .not. allocated(gsdr)   ) allocate( gsdr  (xe) )
@@ -317,16 +317,9 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
   else
      call conv_check(Cp, Cpsave,  param19, param20, param19save, param20save, needconv)
   endif
-  ! if( needtrans ) then needconv = .true.
-  ! else if ( abs( param19(9) - param19save(9) ) .gt. 1e-7 ) then needconv = .true. ! Afe iron abundance 
-  ! else if ( abs( param20(9) - param20save(9) ) .gt. 1e-7 ) then needconv = .true. ! Afe iron abundance 
-  ! else if ( abs( param20(11) - param20save(11) ) .gt. 1e-7 ) then needconv = .true. ! Either kTe or Ecut
-  ! else if ( abs( param20(11) - param20save(11) ) .gt. 1e-7 ) then needconv = .true. ! Either kTe or Ecut
-  ! else if ( Cp .ne. Cpsave ) then needconv = .true.
-  ! end if
   
   if( needconv )then
-     write(*,*) 'new conv'
+     ! write(*,*) 'new conv'
      needtrans = .false.
      !Initialize arrays for transfer functions
      ReW0 = 0.0
@@ -371,28 +364,28 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
               xillparDCp(4) = lognep
               logxi0     = logxi
            end if
-           write(*,*) 'xillverDCp', rbin, xillparDCp
+           ! write(*,*) 'xillverDCp', rbin, xillparDCp
         else if (Cp .eq. -1) then !xillver
            xillpar(3) = real( gsdr(rbin) ) * Ecut_s
            if( xe .eq. 1 )then
               xillpar(3) = Ecut_s
               logxi0     = logxi
            end if
-           write(*,*) 'xillver', rbin, xillpar
+           ! write(*,*) 'xillver', rbin, xillpar
         else if (Cp .eq. -2) then  !xillverCp
            xillpar(3) = real( gsdr(rbin) ) * kTe_s
            if( xe .eq. 1 )then
               xillpar(3) = kTe_s
               logxi0     = logxi
            end if
-           write(*,*) 'xillverCp', rbin, xillpar
+           ! write(*,*) 'xillverCp', rbin, xillpar
         else if (Cp .eq. 1) then  !xillverD
            xillpar(3) = real( logner(rbin) )
            if( xe .eq. 1 )then
               xillpar(3) = lognep 
               logxi0     = logxi
            end if
-           write(*,*) 'xillverD', rbin, xillpar
+           ! write(*,*) 'xillverD', rbin, xillpar
         endif
 
 
@@ -416,8 +409,8 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
            xillpar(4) = logxi0
            xillparDCp(1) = real(Gamma)
            xillparDCp(5) = logxi0
-           write(*,*) 'After mubin: xillpar', xillpar
-           write(*,*) 'After mubin: xillparDCp', xillparDCp
+           ! write(*,*) 'After mubin: xillpar', xillpar
+           ! write(*,*) 'After mubin: xillparDCp', xillparDCp
            call myxill(earx, nex, xillpar, xillparDCp, ifl, Cp, photarx)
            
            ! do i = 1, nex
