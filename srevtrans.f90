@@ -418,6 +418,7 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
            !    dE = ear(i) - ear(i-1)
            !    write(10,*) E, E**2 * photarx(i) / dE 
            ! enddo
+           ! write(*,*) rbin, logxi0
 
            if (DC .eq. 0) then 
 !NON LINEAR EFFECTS

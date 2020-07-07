@@ -370,11 +370,20 @@ subroutine radfunctions_dens(xe, rin, rnmax, logxip, lognep, spin, h, honr, rlp,
 
 !Now calculate the raw density (this matters only for high dens model reltransD)
      logner(i) = adensity * mylogne(rad(i), rin)
-
-     !Now logxi(r)
+     
+!Now logxi(r)
      logxir(i) = logxiraw(rad(i),spin,h,honr,rlp,dcosdr,ndelta,rmin,npts,gsd)
      logxir(i) = logxir(i) - logner(i)
-!Also save gsd(r)
+
+!Calculate the incident angle for this bin
+     kk = get_index(rlp, ndelta, rad(i), rmin, npts)
+     mus = interper(rlp, cosd, ndelta, rad(i), kk)
+     if( kk .eq. npts ) mus = newtex(rlp, cosd, ndelta, rad(i), h, honr, kk)
+     mui = dinang(spin, rad(i), h, mus)
+!Correction to account for the radial dependence of incident angle
+     logxir(i) = logxir(i) - 0.1505 - log10(mui)
+
+     !Also save gsd(r)
      gsdr(i) = gsd
      ! write(*,*) 'logxir, logner', rad(i), logxir(i), logner(i)
   end do
@@ -385,30 +394,26 @@ subroutine radfunctions_dens(xe, rin, rnmax, logxip, lognep, spin, h, honr, rlp,
   ! write(*,*)'-----------------------'
   ! write(*,*) logxinorm, lognenorm  
   ! write(*,*)'-----------------------'
+  logxir = logxir - (logxinorm - logxip)
+  logner = logner - (lognenorm - lognep)
+!check max and min for both ionisation and density
+  logxir = max( logxir , 0.d0  )
+  logxir = min( logxir , 4.7d0 )
+  logner = max( logner , 15.d0  )
+  logner = min( logner , 20.d0 )
 
-  do i = 1, xe      
+!   do i = 1, xe      
+!      logxir(i) = logxir(i) - logxinorm + logxip
+!      ! Check if the density is in the limits
+!      logxir(i) = max( logxir(i) , 0.d0  )
+!      logxir(i) = min( logxir(i) , 4.7d0 )
+! !Density profile 
+!      logner(i) = logner(i) - lognenorm + lognep
+     ! logner(i) = max( logner(i) , 15.d0  )
+     ! logner(i) = min( logner(i) , 21.d0 )
+!      write(*,*) 'logxir, logner', i, rad(i), logxir(i), logner(i)
+!   enddo
 
- !Calculate the incident angle for this bin
-     kk = get_index(rlp, ndelta, rad(i), rmin, npts)
-     mus = interper(rlp, cosd, ndelta, rad(i), kk)
-     if( kk .eq. npts ) mus = newtex(rlp, cosd, ndelta, rad(i), h, honr, kk)
-     mui = dinang(spin, rad(i), h, mus)
-
-     logxir(i) = logxir(i) - logxinorm + logxip
-!Correction to account for the radial dependence of incident angle
-     logxir(i) = logxir(i) - 0.1505 - log10(mui)
-
-     ! Check if the density is in the limits
-     logxir(i) = max( logxir(i) , 0.d0  )
-     logxir(i) = min( logxir(i) , 4.7d0 )
-!Density profile 
-     logner(i) = logner(i) - lognenorm + lognep
-     logner(i) = max( logner(i) , 15.d0  )
-     logner(i) = min( logner(i) , 21.d0 )
-
-     ! write(*,*) 'logxir, logner', i, rad(i), logxir(i), logner(i)
-  enddo
-  
   deallocate(rad)
   return
 end subroutine radfunctions_dens
