@@ -400,7 +400,7 @@ subroutine radfunctions_dens(xe, rin, rnmax, logxip, lognep, spin, h, honr, rlp,
   logxir = max( logxir , 0.d0  )
   logxir = min( logxir , 4.7d0 )
   logner = max( logner , 15.d0  )
-  logner = min( logner , 20.d0 )
+  logner = min( logner , 22.d0 )
 
 !   do i = 1, xe      
 !      logxir(i) = logxir(i) - logxinorm + logxip
