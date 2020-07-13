@@ -33,3 +33,6 @@ include 'subroutines/myinterp_complex2.f90'
 include 'subroutines/rawS.f90'
 include 'subroutines/resproutines.f90'
 include 'subroutines/propercross.f90'
+include 'subroutines/set_param.f90'
+include 'subroutines/checks.f90'
+
