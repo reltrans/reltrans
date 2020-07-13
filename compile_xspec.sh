@@ -26,7 +26,7 @@ echo " lmod reltrans ." | xspec
 
 #cleaning up
 rm -vf *~ *.o
-rm -vf *FunctionMap.* lpack_* *tcl
+# rm -vf *FunctionMap.* lpack_* *tcl
 rm -vf *.mod
 rm -vf Makefile
 
