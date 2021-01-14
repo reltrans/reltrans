@@ -29,20 +29,17 @@
 #define MOD_TYPE_RELLINELP 2
 #define NUM_PARAM_RELLINELP 9
 
-
 #define MOD_TYPE_RELCONV 11
 #define NUM_PARAM_RELCONV 8
 
 #define MOD_TYPE_RELCONVLP 12
 #define NUM_PARAM_RELCONVLP 7
 
-
 #define MOD_TYPE_XILLVER 0
 #define NUM_PARAM_XILLVER 7
 
 #define MOD_TYPE_XILLVER_NTHCOMP 100
 #define NUM_PARAM_XILLVER_NTHCOMP 7
-
 
 #define MOD_TYPE_RELXILL -1
 #define NUM_PARAM_RELXILL 13
@@ -83,60 +80,130 @@
 #define MOD_TYPE_XILLVERDENS_NTHCOMP 1000
 #define NUM_PARAM_XILLVERDENS_NTHCOMP 8
 
-#define MOD_TYPE_RELXILLDENS_NTHCOMP -1000
+#define MOD_TYPE_RELXILLDENS_NTHCOMP -1001
 #define NUM_PARAM_RELXILLDENS_NTHCOMP 14
 
-#define MOD_TYPE_RELXILLLPDENS_NTHCOMP -1001
-#define NUM_PARAM_RELXILLLPDENS_NTHCOMP 13
+#define MOD_TYPE_RELXILLLPDENS_NTHCOMP -1002
+
+#define NUM_PARAM_RELXILLLPDENS_NTHCOMP 15
+
+// unpublished models
+#define MOD_TYPE_RELXILLBBRET -300
+#define MOD_TYPE_RELXILLLPRET -310
 
 /****  TYPE DEFINITIONS ****/
 
 
 /**** FUNCTION DEFINITIONS ****/
-relParam* init_par_relline(const double* inp_par, const int n_parameter, int* status);
-relParam* init_par_relline_lp(const double* inp_par, const int n_parameter, int* status);
-relParam* init_par_relconv(const double* inp_par, const int n_parameter, int* status);
-xillParam* init_par_xillver(const double* inp_par, const int n_parameter, int* status);
 
+void check_parameter_bounds(relParam *param, int *status);
+double *shift_energ_spec_1keV(const double *ener, const int n_ener, double line_energ, double z, int *status);
+
+relParam *init_par_relline(const double *inp_par, const int n_parameter, int *status);
+relParam *init_par_relline_lp(const double *inp_par, const int n_parameter, int *status);
+relParam *init_par_relconv(const double *inp_par, const int n_parameter, int *status);
+xillParam *init_par_xillver(const double *inp_par, const int n_parameter, int *status);
+xillParam *init_par_xillver_nthcomp(const double *inp_par, const int n_parameter, int *status);
 xillParam *init_par_xillver_ns(const double *inp_par, const int n_parameter, int *status);
-
 xillParam *init_par_xillver_co(const double *inp_par, const int n_parameter, int *status);
+xillParam *init_par_xillver_dens(const double *inp_par, const int n_parameter, int *status);
 
-void init_par_relxill(relParam** rel_param, xillParam** xill_param, const double* inp_par, const int n_parameter, int* status);
+void init_par_relxill(relParam **rel_param,
+                      xillParam **xill_param,
+                      const double *inp_par,
+                      const int n_parameter,
+                      int *status);
+
+void init_par_relxilllp(relParam** rel_param, xillParam** xill_param, const double* inp_par, const int n_parameter, int* status);
 
 /** basic xillver model function **/
-void xillver_base(const double* ener0, const int n_ener0, double* photar, xillParam* param_struct, int* status);
-
-/** INTENSITY VERSION OF BASIC XILLVER MODEL FUNCTION (created by Adam)**/
-void i_xillver_base(const double* ener0, const int n_ener0, double* photar, xillParam* param_struct, int* status);
-
-
+void xillver_base(const double *ener0, const int n_ener0, double *photar, xillParam *param_struct, int *status);
 
 /** internal MODEL FUNCTIONS **/
+
 void tdrelline(const double* ener, const int n_ener, double* photar, const double* parameter, const int n_parameter, int* status);
 void tdrellinelp(const double* ener, const int n_ener, double* photar, const double* parameter, const int n_parameter, int* status);
 void tdrelxill(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
 void tdrelxilllp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdrelxilllpion(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdxillver(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-/** created by Adam to adjust the normalization with reltrans**/
-void i_tdxillver(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdrelconv(const double* ener, const int n_ener, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdrelconvlp(const double* ener, const int n_ener, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdrelxilldens(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdrelxilllpdens(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdxillverdens(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdrelxillns(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdxillverns(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-/** created by Adam to adjust the normalization with reltrans**/
-void i_tdxillverdens(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
+void tdrelxilllpion(const double *ener0,
+                    const int n_ener0,
+                    double *photar,
+                    const double *parameter,
+                    const int n_parameter,
+                    int *status);
+void tdxillver(const double *ener0,
+               const int n_ener0,
+               double *photar,
+               const double *parameter,
+               const int n_parameter,
+               int *status);
+void tdrelconv(const double *ener,
+               const int n_ener,
+               double *photar,
+               const double *parameter,
+               const int n_parameter,
+               int *status);
+void tdrelconvlp(const double *ener,
+                 const int n_ener,
+                 double *photar,
+                 const double *parameter,
+                 const int n_parameter,
+                 int *status);
+void tdrelxilldens(const double *ener0,
+                   const int n_ener0,
+                   double *photar,
+                   const double *parameter,
+                   const int n_parameter,
+                   int *status);
+void tdrelxilllpdens(const double *ener0,
+                     const int n_ener0,
+                     double *photar,
+                     const double *parameter,
+                     const int n_parameter,
+                     int *status);
+void tdxillverdens(const double *ener0,
+                   const int n_ener0,
+                   double *photar,
+                   const double *parameter,
+                   const int n_parameter,
+                   int *status);
+void tdrelxillns(const double *ener0,
+                 const int n_ener0,
+                 double *photar,
+                 const double *parameter,
+                 const int n_parameter,
+                 int *status);
+void tdxillverns(const double *ener0,
+                 const int n_ener0,
+                 double *photar,
+                 const double *parameter,
+                 const int n_parameter,
+                 int *status);
 
-void tdrelxill_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdrelxilllp_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdrelxilllpion_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdxillver_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-/** created by Adam to adjust the normalization with reltrans**/
-void i_tdxillver_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
+void tdrelxill_nthcomp(const double *ener0,
+                       const int n_ener0,
+                       double *photar,
+                       const double *parameter,
+                       const int n_parameter,
+                       int *status);
+void tdrelxilllp_nthcomp(const double *ener0,
+                         const int n_ener0,
+                         double *photar,
+                         const double *parameter,
+                         const int n_parameter,
+                         int *status);
+void tdrelxilllpion_nthcomp(const double *ener0,
+                            const int n_ener0,
+                            double *photar,
+                            const double *parameter,
+                            const int n_parameter,
+                            int *status);
+void tdxillver_nthcomp(const double *ener0,
+                       const int n_ener0,
+                       double *photar,
+                       const double *parameter,
+                       const int n_parameter,
+                       int *status);
 
 void tdxillverco(const double *ener0, const int n_ener0, double *photar, const double *parameter, const int n_parameter,
                  int *status);
@@ -145,44 +212,142 @@ void tdrelxillco(const double *ener0, const int n_ener0, double *photar, const d
                  int *status);
 
 // Dens & Nthcomp Model
-xillParam* init_par_xillver_dens_nthcomp(const double* inp_par, const int n_parameter, int* status);
-void init_par_relxilldens_nthcomp(relParam** rel_param, xillParam** xill_param, const double* inp_par, const int n_parameter, int* status);
-void init_par_relxilllp_dens_nthcomp(relParam** rel_param, xillParam** xill_param, const double* inp_par, const int n_parameter, int* status);
-void tdrelxilldens_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdrelxilllpdens_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-void tdxillverdens_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
-/** created by Gullo to adjust the normalization with reltrans**/
-void i_tdxillverdens_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
+xillParam *init_par_xillver_dens_nthcomp(const double *inp_par, const int n_parameter, int *status);
+void init_par_relxilldens_nthcomp(relParam **rel_param,
+                                  xillParam **xill_param,
+                                  const double *inp_par,
+                                  const int n_parameter,
+                                  int *status);
+void init_par_relxilllp_dens_nthcomp(relParam **rel_param,
+                                     xillParam **xill_param,
+                                     const double *inp_par,
+                                     const int n_parameter,
+                                     int *status);
+void tdrelxilldens_nthcomp(const double *ener0,
+                           const int n_ener0,
+                           double *photar,
+                           const double *parameter,
+                           const int n_parameter,
+                           int *status);
+void tdrelxilllpdens_nthcomp(const double *ener0,
+                             const int n_ener0,
+                             double *photar,
+                             const double *parameter,
+                             const int n_parameter,
+                             int *status);
+void tdxillverdens_nthcomp(const double *ener0,
+                           const int n_ener0,
+                           double *photar,
+                           const double *parameter,
+                           const int n_parameter,
+                           int *status);
 
 /* get the version number text on the screen (if not already printed before */
-void print_version_number(int* status);
+void print_version_number(int *status);
 
 /* get a new relbase parameter structure and initialize it */
-relParam* new_relParam(int model_type, int emis_type, int* status);
+relParam *new_relParam(int model_type, int emis_type, int *status);
 
 /* free relbase parameter */
-void free_relParam(relParam*);
+void free_relParam(relParam *);
 
-xillParam* new_xillParam(int model_type, int prim_type, int* status);
-void free_xillParam(xillParam*);
+xillParam *new_xillParam(int model_type, int prim_type, int *status);
+void free_xillParam(xillParam *);
 
 /* xspec local model wrapper functions **/
-void lmodrelxill(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodrelxilllp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodrelxilllpion(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodxillver(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodrelline(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodrellinelp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodrelconv(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodrelconvlp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
+void lmodrelxill(const double *ener0,
+                 const int n_ener0,
+                 const double *parameter,
+                 int ifl,
+                 double *photar,
+                 double *photer,
+                 const char *init);
+void lmodrelxilllp(const double *ener0,
+                   const int n_ener0,
+                   const double *parameter,
+                   int ifl,
+                   double *photar,
+                   double *photer,
+                   const char *init);
+void lmodrelxilllpion(const double *ener0,
+                      const int n_ener0,
+                      const double *parameter,
+                      int ifl,
+                      double *photar,
+                      double *photer,
+                      const char *init);
+void lmodxillver(const double *ener0,
+                 const int n_ener0,
+                 const double *parameter,
+                 int ifl,
+                 double *photar,
+                 double *photer,
+                 const char *init);
+void lmodrelline(const double *ener0,
+                 const int n_ener0,
+                 const double *parameter,
+                 int ifl,
+                 double *photar,
+                 double *photer,
+                 const char *init);
+void lmodrellinelp(const double *ener0,
+                   const int n_ener0,
+                   const double *parameter,
+                   int ifl,
+                   double *photar,
+                   double *photer,
+                   const char *init);
+void lmodrelconv(const double *ener0,
+                 const int n_ener0,
+                 const double *parameter,
+                 int ifl,
+                 double *photar,
+                 double *photer,
+                 const char *init);
+void lmodrelconvlp(const double *ener0,
+                   const int n_ener0,
+                   const double *parameter,
+                   int ifl,
+                   double *photar,
+                   double *photer,
+                   const char *init);
 
-void lmodrelxilldens(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodrelxilllpdens(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
+void lmodrelxilldens(const double *ener0,
+                     const int n_ener0,
+                     const double *parameter,
+                     int ifl,
+                     double *photar,
+                     double *photer,
+                     const char *init);
+void lmodrelxilllpdens(const double *ener0,
+                       const int n_ener0,
+                       const double *parameter,
+                       int ifl,
+                       double *photar,
+                       double *photer,
+                       const char *init);
+void lmodxillverdens(const double *ener0,
+                     const int n_ener0,
+                     const double *parameter,
+                     int ifl,
+                     double *photar,
+                     double *photer,
+                     const char *init);
 
-void lmodxillverdens(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-
-void lmodrelxillns(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodxillverns(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
+void lmodrelxillns(const double *ener0,
+                   const int n_ener0,
+                   const double *parameter,
+                   int ifl,
+                   double *photar,
+                   double *photer,
+                   const char *init);
+void lmodxillverns(const double *ener0,
+                   const int n_ener0,
+                   const double *parameter,
+                   int ifl,
+                   double *photar,
+                   double *photer,
+                   const char *init);
 
 void
 lmodxillverco(const double *ener0, const int n_ener0, const double *parameter, int ifl, double *photar, double *photer,
@@ -192,14 +357,67 @@ void
 lmodrelxillco(const double *ener0, const int n_ener0, const double *parameter, int ifl, double *photar, double *photer,
               const char *init);
 
-void lmodrelxillnthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodrelxilllpnthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodrelxilllpionnthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
+void lmodrelxillnthcomp(const double *ener0,
+                        const int n_ener0,
+                        const double *parameter,
+                        int ifl,
+                        double *photar,
+                        double *photer,
+                        const char *init);
+void lmodrelxilllpnthcomp(const double *ener0,
+                          const int n_ener0,
+                          const double *parameter,
+                          int ifl,
+                          double *photar,
+                          double *photer,
+                          const char *init);
+void lmodrelxilllpionnthcomp(const double *ener0,
+                             const int n_ener0,
+                             const double *parameter,
+                             int ifl,
+                             double *photar,
+                             double *photer,
+                             const char *init);
+void lmodxillvernthcomp(const double *ener0,
+                        const int n_ener0,
+                        const double *parameter,
+                        int ifl,
+                        double *photar,
+                        double *photer,
+                        const char *init);
 
-void lmodxillvernthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodxillverdensnthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodrelxilllpdensnthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
-void lmodrelxilldensnthcomp(const double* ener0, const int n_ener0, const double* parameter, int ifl, double* photar, double* photer, const char* init);
+void lmodxillverdensnthcomp(const double *ener0,
+                            const int n_ener0,
+                            const double *parameter,
+                            int ifl,
+                            double *photar,
+                            double *photer,
+                            const char *init);
+void lmodrelxilllpdensnthcomp(const double *ener0,
+                              const int n_ener0,
+                              const double *parameter,
+                              int ifl,
+                              double *photar,
+                              double *photer,
+                              const char *init);
+void lmodrelxilldensnthcomp(const double *ener0,
+                            const int n_ener0,
+                            const double *parameter,
+                            int ifl,
+                            double *photar,
+                            double *photer,
+                            const char *init);
+
+/** INTENSITY VERSION OF BASIC XILLVER MODEL FUNCTION (created by Adam)**/
+void i_xillver_base(const double* ener0, const int n_ener0, double* photar, xillParam* param_struct, int* status);
+/** created by Adam to adjust the normalization with reltrans**/
+void i_tdxillver(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
+/** created by Adam to adjust the normalization with reltrans**/
+void i_tdxillverdens(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
+/** created by Adam to adjust the normalization with reltrans**/
+void i_tdxillver_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
+/** created by Gullo to adjust the normalization with reltrans**/
+void i_tdxillverdens_nthcomp(const double* ener0, const int n_ener0, double* photar, const double* parameter, const int n_parameter, int* status);
 
 
 /**created by Gullo to call xillverDCp in reltrans fortran code**/
@@ -207,5 +425,6 @@ void lmodxillverf_(const double* ener0, const int* n_ener0, const double* parame
 void lmodxillverdensf_(const double* ener0, const int* n_ener0, const double* parameter, int* ifl, double* photar, double* photer, const char* init);
 void lmodxillvernthcompf_(const double* ener0, const int* n_ener0, const double* parameter, int* ifl, double* photar, double* photer, const char* init);
 void lmodxillverdensnthcompf_(const double* ener0, const int* n_ener0, const double* parameter, int* ifl, double* photar, double* photer, const char* init);
+
 
 #endif /* MODELS_H_ */

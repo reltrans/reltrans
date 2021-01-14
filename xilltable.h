@@ -53,6 +53,7 @@
 #define XILLTABLE_FILENAME "xillver-a-Ec5.fits"
 #define XILLTABLE_DENS_FILENAME "xillverD-5.fits"
 #define XILLTABLE_NTHCOMP_FILENAME "xillverCp_v3.4.fits"
+#define XILLTABLE_NTHCOMP_FILENAME_OLD "xillver-comp.fits"
 #define XILLTABLE_NS_FILENAME "xillverNS-2.fits"
 #define XILLTABLE_CO_FILENAME "xillverCO.fits"
 
@@ -60,26 +61,30 @@
 xillTable *new_xillTable(int num_param, int *status);
 
 /* destroy the relline table structure */
-void free_xillTable(xillTable* tab);
+void free_xillTable(xillTable *tab);
 
 /** the main routine for the xillver table: returns a spectrum for the given parameters
  *  (decides if the table needs to be initialized and/or more data loaded          */
-xill_spec* get_xillver_spectra(xillParam* param, int* status);
+xill_spec *get_xillver_spectra(xillParam *param, int *status);
 
-xill_spec* new_xill_spec(int n_incl, int n_ener, int* status);
-void free_xill_spec(xill_spec* spec);
+xill_spec *new_xill_spec(int n_incl, int n_ener, int *status);
+void free_xill_spec(xill_spec *spec);
 
 void free_cached_xillTable(void);
 
 void init_xillver_table(char *filename, xillTable **inp_tab, xillParam *param, int *status);
 
-char* get_init_xillver_table(xillTable** tab, xillParam* param, int* status);
+char *get_init_xillver_table(xillTable **tab, xillParam *param, int *status);
 
 void print_xilltable_parameters(const xillTable *tab, char *const *xilltab_parname);
 
 void norm_xillver_spec(xill_spec *spec, double incl);
 
-fitsfile* open_fits_table_stdpath(char* filename, int* status);
+fitsfile *open_fits_table_stdpath(char *filename, int *status);
+
+int checkIfTableExists(char *filename, int *status);
+
+char *getXilltableNameUsingAlternativeIfNotExisting(char *stdname, char *altname, int *status);
 
 int is_6dim_table(int model_type);
 
