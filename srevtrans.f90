@@ -475,7 +475,7 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
 
 
 ! Calculate absorption and multiply by the raw FT
- ! call FNINIT
+ call FNINIT
 
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
   
