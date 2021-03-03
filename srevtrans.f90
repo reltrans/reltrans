@@ -207,6 +207,7 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
      ReIm   = 1
   else
      DC     = 0
+     afac  = abs(afac)
   end if
 
 !this could go into a subroutine 
@@ -447,7 +448,7 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
               call myxill(earx, nex, xillpar, xillparDCp, ifl, Cp, photarx_2)
               photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
 
-        endif
+           endif
         
            !Loop through frequencies
            do j = 1,nf
@@ -459,69 +460,69 @@ subroutine genreltrans(Cp, ear, ne, param19, param20, ifl, photar)
                  end do
               
                  call conv_all_FFTw(dyn, photarx, photarx_delta, reline, imline, reline_a , imline_a,&
-                         photarx_dlogxi, ReW0(:,j), ImW0(:,j), ReW1(:,j), ImW1(:,j), &
-                         ReW2(:,j), ImW2(:,j), ReW3(:,j), ImW3(:,j), DC)
+                      photarx_dlogxi, ReW0(:,j), ImW0(:,j), ReW1(:,j), ImW1(:,j), &
+                      ReW2(:,j), ImW2(:,j), ReW3(:,j), ImW3(:,j), DC)
                  
-                 end do !end of the frequency loop 
+              end do !end of the frequency loop 
 
-              end do
            end do
+        end do
 
-        end if
-
+     end if
+        
 ! Calculate raw FT of the full spectrum without absorption
-  call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
+     call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,afac,real(zcos),&
                 gso,real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
 
 
 ! Calculate absorption and multiply by the raw FT
  ! call FNINIT
 
-  call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
+     call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
   
-  do j = 1, nf
-     do i = 1, nex
-        ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
-        ImSrawa(i,j) = ImSraw(i,j) * absorbx(i)
+     do j = 1, nf
+        do i = 1, nex
+           ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
+           ImSrawa(i,j) = ImSraw(i,j) * absorbx(i)
+        end do
      end do
-  end do
 
 ! Average over the frequency range
-  if( DC .eq. 1 )then
-     do i = 1, nex
-        ReGbar(i) = ReSrawa(i,1)
-!        ImGbar(i) = ImSrawa(i,1)  !No need for the immaginary part in DC
-     end do
-  else
-
-     ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
-     if (ReIm .gt. 0.0) then
-        call propercross(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa)
+     if( DC .eq. 1 )then
+        do i = 1, nex
+           ReGbar(i) = ReSrawa(i,1)
+!   ImGbar(i) = ImSrawa(i,1)  !No need for the immaginary part in DC
+        end do
      else
-        call propercross_NOmatrix(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa)
-     endif
+
+! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
+        if (ReIm .gt. 0.0) then
+           call propercross(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa)
+        else
+           call propercross_NOmatrix(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa)
+        endif
      
 ! Apply phase correction parameter to the cross-spectral model (for bad calibration)
-     do j = 1,nf
-        do i = 1,nex
-           ReG(i,j) = cos(DelA) * ReGrawa(i,j) - sin(DelA) * ImGrawa(i,j)
-           ImG(i,j) = cos(DelA) * ImGrawa(i,j) + sin(DelA) * ReGrawa(i,j)
+        do j = 1,nf
+           do i = 1,nex
+              ReG(i,j) = cos(DelA) * ReGrawa(i,j) - sin(DelA) * ImGrawa(i,j)
+              ImG(i,j) = cos(DelA) * ImGrawa(i,j) + sin(DelA) * ReGrawa(i,j)
+           end do
         end do
-     end do
 
-     ReGbar = 0.0
-     ImGbar = 0.0
-     fac = 2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf))
-     do j = 1,nf
-        f = floHz * (fhiHz/floHz)**(  (real(j)-0.5) / real(nf) )
-        do i = 1,nex
-           ReGbar(i) = ReGbar(i) + ReG(i,j) / f
-           ImGbar(i) = ImGbar(i) + ImG(i,j) / f
+        ReGbar = 0.0
+        ImGbar = 0.0
+        fac = 2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf))
+        do j = 1,nf
+           f = floHz * (fhiHz/floHz)**(  (real(j)-0.5) / real(nf) )
+           do i = 1,nex
+              ReGbar(i) = ReGbar(i) + ReG(i,j) / f
+              ImGbar(i) = ImGbar(i) + ImG(i,j) / f
+           end do
         end do
-     end do
-     ReGbar = ReGbar * fac
-     ImGbar = ImGbar * fac
-  end if
+        ReGbar = ReGbar * fac
+        ImGbar = ImGbar * fac
+     end if
      
 ! Write output depending on ReIm parameter
 !  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) ) ReIm = 1

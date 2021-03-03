@@ -43,29 +43,40 @@ subroutine rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelA
   gsoz = gso / (1.0+z)       !blueshift corrected for expansion of the Universe
   corr = lens * gsoz**Gamma  !Correction factor for direct component
   !Now calculate the cross-spectrum (/complex covariance)
-  do j = 1,nf
-     do i = 1,nex
-        E   = 0.5 * ( earx(i) + earx(i-1) )
-        fac = log(gsoz/E)
-        !Multiply by boost parameter and group like terms
-        ReW0s = boost * ReW0(i,j)
-        ImW0s = boost * ImW0(i,j)
-        ReWbs = (1-DC) * boost * ( ReW1(i,j) + ReW2(i,j) )
-        ImWbs = (1-DC) * boost * ( ImW1(i,j) + ImW2(i,j) )
-        ReW3s = (1-DC) * ionvar * boost * ReW3(i,j)
-        ImW3s = (1-DC) * ionvar * boost * ImW3(i,j)
-        !Real part
-        ReGraw(i,j) = cosD * ( fac * corr * contx(i) + ReWbs )
-        ReGraw(i,j) = ReGraw(i,j) - sinD * ImWbs
-        ReGraw(i,j) = ReGraw(i,j) * g
-        ReGraw(i,j) = ReGraw(i,j) + corr * contx(i) + ReW0s + ReW3s
-        !Imaginary part
-        ImGraw(i,j) = sinD * ( fac*corr*contx(i) + ReWbs )
-        ImGraw(i,j) = ImGraw(i,j) + cosD * ImWbs
-        ImGraw(i,j) = ImGraw(i,j) * g
-        ImGraw(i,j) = ImGraw(i,j) + ImW0s + ImW3s
+
+  if (boost .lt. 0 .and. DC .eq. 1) then 
+     do j = 1,nf
+        do i = 1,nex
+           ReGraw(i,j) = ReW0(i,j)
+        enddo
+     enddo
+     
+  else
+     do j = 1,nf
+        do i = 1,nex
+           E   = 0.5 * ( earx(i) + earx(i-1) )
+           fac = log(gsoz/E)
+           !Multiply by boost parameter and group like terms
+           ReW0s = boost * ReW0(i,j)
+           ImW0s = boost * ImW0(i,j)
+           ReWbs = (1-DC) * boost * ( ReW1(i,j) + ReW2(i,j) )
+           ImWbs = (1-DC) * boost * ( ImW1(i,j) + ImW2(i,j) )
+           ReW3s = (1-DC) * ionvar * boost * ReW3(i,j)
+           ImW3s = (1-DC) * ionvar * boost * ImW3(i,j)
+           !Real part
+           ReGraw(i,j) = cosD * ( fac * corr * contx(i) + ReWbs )
+           ReGraw(i,j) = ReGraw(i,j) - sinD * ImWbs
+           ReGraw(i,j) = ReGraw(i,j) * g
+           ReGraw(i,j) = ReGraw(i,j) + corr * contx(i) + ReW0s + ReW3s
+           !Imaginary part
+           ImGraw(i,j) = sinD * ( fac*corr*contx(i) + ReWbs )
+           ImGraw(i,j) = ImGraw(i,j) + cosD * ImWbs
+           ImGraw(i,j) = ImGraw(i,j) * g
+           ImGraw(i,j) = ImGraw(i,j) + ImW0s + ImW3s
+        end do
      end do
-  end do
+
+  endif
   return
 end subroutine rawS
 
