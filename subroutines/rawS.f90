@@ -47,7 +47,7 @@ subroutine rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelA
   if (boost .lt. 0 .and. DC .eq. 1) then 
      do j = 1,nf
         do i = 1,nex
-           ReGraw(i,j) = ReW0(i,j)
+           ReGraw(i,j) = (-boost) * ReW0(i,j)
         enddo
      enddo
      
