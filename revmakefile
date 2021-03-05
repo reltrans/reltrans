@@ -1,9 +1,9 @@
 main = main_simple_call.f90
 # main_relt = main_test.f90
 # main_relt = main_fits_jingyi.f90
-main_relt = main_fits_jingyi_finalized.f90
-main_reflionx = main_test_reflionx.f90
-main_lag_freq = main_test_lag_vs_freq.f90
+# main_relt = main_fits_jingyi_finalized.f90
+# main_reflionx = main_test_reflionx.f90
+# main_lag_freq = main_test_lag_vs_freq.f90
 
 #lib and other stuff to include to the compiler 
 incs = -I /usr/local/Cellar/fftw/3.3.8_2/include/ -ffree-line-length-none

@@ -1,5 +1,5 @@
 !*****************************************************************************************************
-      subroutine getlens(a_spin,h,muobs,lens,delt)
+      subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
 ! Routine to calculate the lensing factor l=d\cos\delta/d\cos(i)
 ! and the source to observer time lag.
 ! Both calculations need us to know the delta value for the geodesic

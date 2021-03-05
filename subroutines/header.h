@@ -35,4 +35,5 @@ include 'subroutines/resproutines.f90'
 include 'subroutines/propercross.f90'
 include 'subroutines/set_param.f90'
 include 'subroutines/checks.f90'
-
+include 'subroutines/get_fcons.f90'
+include 'subroutines/Eintegrate.f90'
