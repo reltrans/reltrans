@@ -74,7 +74,7 @@ subroutine cfold(nex, earx, ReGx, ImGx, ReGtel, ImGtel)
      E2ImGx(i) = E**2 * ImGx(i) / dE
   end do
   
-  !Rebin input arrays onto interpal telescope energy grid
+  !Rebin input arrays onto internal telescope energy grid
   call rebinE(earx,E2ReGx,nex,En,ReGi,nenerg)
   call rebinE(earx,E2ImGx,nex,En,ImGi,nenerg)
   
@@ -92,7 +92,6 @@ subroutine cfold(nex, earx, ReGx, ImGx, ReGtel, ImGtel)
   do J = 1, NENERG
      do K = 1,NGRP(J)
         do I = FCHAN(J,K) + 1, LCHAN(J,K)
-           dE = En(J) - En(J-1) !I think this can be commented out
            ReGtel(I) = ReGtel(I) + ReGi(J) * RESP(I,J)
            ImGtel(I) = ImGtel(I) + ImGi(J) * RESP(I,J)
         end do

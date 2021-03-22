@@ -17,7 +17,7 @@ subroutine propercross(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
 !Allocate arrays
      if( .not. allocated(ReStel) ) allocate(ReStel(numchn))
      if( .not. allocated(ImStel) ) allocate(ImStel(numchn))
-
+     
 !Get energy bounds of the reference band
      if( needchans )then
         write(*,*)"Enter lower energy in reference band"
@@ -52,13 +52,14 @@ subroutine propercross(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
            reref = reref + ReStel(i)
            imref = imref + ImStel(i)
         end do
-
+        
         !Cross subject band with reference band
         do i = 1, nex
            ReGraw(i,j) = ReSraw(i,j) * reref + ImSraw(i,j) * imref
            ImGraw(i,j) = ImSraw(i,j) * reref - ReSraw(i,j) * imref
         end do
      end do
+     
   return
 end subroutine propercross
 !-----------------------------------------------------------------------

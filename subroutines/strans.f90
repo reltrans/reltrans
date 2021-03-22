@@ -414,10 +414,10 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
      mui         = dinang(spin, re, h, mus)
      logxieff(i) = logxir(i) - 0.1505 - log10(mui)
      
-     write(188,*)re,logxir(i),logxieff(i)
+!     write(188,*)re,logxir(i),logxieff(i)
      
   end do
-  write(188,*)"no no"
+!  write(188,*)"no no"
 
 !check max and min for both ionisation and density
   logxieff = max( logxieff , 0.d0  )

@@ -29,7 +29,14 @@
         b      = -2*x**2*sini*cosi*sintheta*costheta
         c      = x**2*sini**2*costheta**2-sintheta**2
         det    = b**2 - 4.d0 * a * c
-        if( det .lt. 0.d0 ) write(*,*)"determinant <0!!!"
+        if( det .lt. 0.d0 )then
+           write(*,*)"Error in drandphithick"
+           write(*,*)"determinant <0!!!"
+           write(*,*)"costheta=",costheta
+           write(*,*)"h/r=",costheta/sintheta
+           write(*,*)"cosi=",cosi
+           write(*,*)"alpha,beta=",alpha,beta
+        end if
         if( beta .gt. 0.d0 )then
           mu     = ( -b + sqrt( det ) ) / ( 2.d0 * a )
         else

@@ -190,7 +190,8 @@ end subroutine tdreltransDCp
 subroutine tdrtdist(ear, ne, param, ifl, photar)
   implicit none
   integer :: ne, ifl, Cp, dset
-  real    :: ear(0:ne), param(24), photar(ne), par(25)
+  real    :: ear(0:ne), param(24), photar(ne), par(25), getcountrate
+  double precision    :: honr,pi,cosi,cos0
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 1   !dset=1 means distance is set, logxi is calculated internally
@@ -220,12 +221,168 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
   par(23) = param(22)        !DelAB
   par(24) = param(23)        !g
   par(25) = param(24)        !Anorm
+! Check that we're not looking at the side of the disc
+  honr = par(16)
+  pi   = acos(-1.d0)
+  cosi = cos( par(3) * pi / 180.d0 )
+  cos0 = honr / sqrt( honr**2 + 1.d0  )  
 ! Call general code
-  call genreltrans(Cp, dset, ear, ne, par, ifl, photar)
+  if( cos0 .ge. cosi )then
+     photar = 0.0   !XSPEC *hates* this. Just do it with limits, and flag here.
+     write(*,*)"Warning! Disc thickness is too high for this inclinaiton!"
+     write(*,*)"Model output set to zero -- XSPEC *hates* this and may get lost"
+     write(*,*)"leading to crash and seg fault. Better to set hard max on inc, incmax"
+     write(*,*)"and set honr_max to cos(incmax)/sqrt(1-cos^2(incmax))."
+  else
+     call genreltrans(Cp, dset, ear, ne, par, ifl, photar)
+  end if
+  
   return
 end subroutine tdrtdist
 !-----------------------------------------------------------------------
 
+
+!-----------------------------------------------------------------------
+subroutine simrtdist(ear, ne, param, ifl, photar)
+  use telematrix
+  implicit none
+  integer :: ne, ifl, Cp, dset, i
+  real    :: ear(0:ne), param(26), photar(ne), par(25)
+  real    :: gammac2, Texp, E, dE, getcountrate
+  real    :: rephotar(ne), imphotar(ne)
+  real, parameter :: Emin = 1e-1, Emax = 300.0
+  integer, parameter :: nex=2**12
+  real :: earx(0:nex),photarx(nex),pow
+  real :: Pr,rephotarx(nex),imphotarx(nex),mur,mus
+  real :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,br,bs(ne)
+  real :: flo,fhi,fc,lag(ne),gasdev,lagsim(ne)
+  real, parameter :: pi = acos(-1.0)
+  integer idum, unit,xunit,status
+  data idum/-2851043/
+  save idum
+  character (len=200) command,flxlagfile,phalagfile,rsplagfile,lagfile,root
+! Settings
+  Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
+  dset = 1   !dset=1 means distance is set, logxi is calculated internally
+! Transfer to general parameter array
+  par(1)  = param(1)         !h
+  par(2)  = param(2)         !a
+  par(3)  = param(3)         !inc
+  par(4)  = param(4)         !rin
+  par(5)  = param(5)         !rout
+  par(6)  = param(6)         !zcos
+  par(7)  = param(7)         !Gamma
+  par(8)  = param(8)         !Dkpc
+  par(9)  = param(9)         !Afe
+  par(10) = param(10)        !lognep
+  par(11) = param(11)        !kTe
+  par(12) = param(12)        !Nh
+  par(13) = 1.0              !boost
+  par(14) = param(13)        !qboost
+  par(15) = param(14)        !Mass
+  par(16) = param(15)        !honr
+  par(17) = param(16)        !b1
+  par(18) = param(17)        !b2
+  par(19) = param(18)        !floHz
+  par(20) = param(19)        !fhiHz
+  gammac2 = param(20)        !squared coherence
+  par(22) = param(21)        !DelA
+  par(23) = param(22)        !DelAB
+  par(24) = param(23)        !g
+  par(25) = param(24)        !Anorm
+  Texp    = param(25)        !Texp (s)
+  pow     = param(26)        !power in [rms/mean]^2/Hz units (alpha(nu))
+  
+  flo = param(18)
+  fhi = param(19)
+  fc  = 0.5 * ( fhi + flo )
+  
+! Get `folded' lags
+  par(21) = 6.0   !ReIm
+  call genreltrans(Cp, dset, ear, ne, par, ifl, photar)
+  do i = 1,ne
+     lag(i) = photar(i) / ( ear(i) - ear(i-1) )
+  end do
+  
+! Set internal energy grid
+  do i = 0, nex
+     earx(i) = Emin * (Emax/Emin)**(float(i)/float(nex))
+  end do
+  
+! Calculate real and imaginary parts on the fine energy grid
+  par(21) = 1.0   !ReIm
+  call genreltrans(Cp, dset, earx, nex, par, ifl, rephotarx)
+  par(21) = 2.0   !ReIm
+  call genreltrans(Cp, dset, earx, nex, par, ifl, imphotarx)
+! Get DC component
+  par(19) = 0.0   !floHz
+  par(20) = 0.0   !fhiHz
+  par(21) = 1.0   !ReIm
+  call genreltrans(Cp, dset, earx, nex, par, ifl, photarx)
+! Will eventually need to read in background spectrum
+  br = 0.0
+  bs = 0.0  
+  
+! Calculate reference band power (in units of *absolute rms^2*)
+  Pr = pow * getcountrate(Elo,Ehi,nex,earx,rephotarx)
+! Calculate reference band Poisson noise (in *absolutem rms^2)
+  mur = getcountrate(Elo,Ehi,nex,earx,photarx)
+  Prnoise = 2.0 * ( br + mur )
+  write(*,*)"Pr (fractional rms)^2/Hz",Pr/mur**2
+  
+! Open file to write the lag simulation to
+  
+  write(*,*)"Enter root name of simulation products"
+  read(*,'(a)')root
+  lagfile = trim(root) // '.dat'
+  flxlagfile = 'x' // trim(root) // '.dat'
+  phalagfile = 'x' // trim(root) // '.pha'
+  rsplagfile = 'x' // trim(root) // '.rsp'
+  status = 0
+  call ftgiou(xunit,status)
+  open(xunit,file=flxlagfile)
+  call ftgiou(unit,status)
+  open(unit,file=lagfile)
+  
+! Loop through energy bins
+  write(unit,*)"skip on"
+  write(unit,*)"read serr 1 2"
+  do i = 1,ne
+     E  = 0.5 * ( ear(i) + ear(i-1) )
+     dE = ear(i) - ear(i-1)
+     mus = getcountrate(ear(i-1),ear(i),nex,earx,photarx)
+     Psnoise = 2.0 * ( mus + bs(i) )
+     ReG = getcountrate(ear(i-1),ear(i),nex,earx,rephotarx)
+     ImG = getcountrate(ear(i-1),ear(i),nex,earx,imphotarx)
+     G2  = pow**2 * ( ReG**2 + ImG**2 )
+     ! Can finally calculate error     
+     dlag(i) = 1.0 + Prnoise/Pr
+     dlag(i) = dlag(i) * ( G2*(1.0-gammac2) + Psnoise*Pr )
+     dlag(i) = dlag(i) / ( gammac2*G2 )
+     dlag(i) = dlag(i) / ( 2.0 * Texp * (fhi-flo) )
+     dlag(i) = sqrt( dlag(i) )
+     dlag(i) = dlag(i) / ( 2.0 * pi * fc )
+     !Now generate simulated data
+     lagsim(i) = lag(i) + gasdev(idum) * dlag(i)
+     !Write out
+     write(unit,*)E,0.5*dE,lagsim(i),dlag(i),lag(i)
+     write(xunit,*)ear(i-1),ear(i),dE*lagsim(i),dE*dlag(i)
+  end do
+  close(unit)
+  call ftfiou(unit,status)
+  close(xunit)
+  call ftfiou(xunit,status)
+ 
+  command = 'flx2xsp ' // trim(flxlagfile) // ' ' // trim(phalagfile)
+  command = trim(command) // ' ' // trim(rsplagfile)
+  write(*,*)"-----------------------------------------------"
+  write(*,*)"Outputs: ",trim(lagfile),', ',trim(flxlagfile)
+  write(*,*)"command: ",trim(command)
+  write(*,*)"-----------------------------------------------"
+ 
+  return
+end subroutine simrtdist
+!-----------------------------------------------------------------------
 
 
 !-----------------------------------------------------------------------
@@ -613,7 +770,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
 
 
 ! Calculate absorption and multiply by the raw FT
- call FNINIT
+!  call FNINIT
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
   
   do j = 1, nf
@@ -703,7 +860,28 @@ end subroutine genreltrans
 !-----------------------------------------------------------------------
 
 
-
+! reltransx   21        0.1      1e4      tdreltransx   add     0        1
+! h          Rg/Rh     6.0     1.3      1.3          1e3     1e4      0.1
+! a          " "       0.998    -0.998   -0.998       0.998   0.998    -1.0
+! inc        deg       30.0     1.0      5.0          80.0    89.0     1e-2
+! rin        Rg/ISCO   -1.0     -400.0   -400.0       400.0    400.0   1e-2
+! rout       Rg        1e3      400.0    500.0        1e5     1e5      -1.0
+! z          " "       0.0      0.0      0.0          10.0    10.0     -0.001
+! Gamma      " "       2.0      1.4      1.4          3.4     3.4      0.01
+! logxi      " "       3.0      0.0      0.0          4.7     4.7      0.01
+! Afe        " "       1.0      0.5      0.5          10.0    10.0     1e-2
+! logNe      " "       15.      15.      15.          22.     22.       0.01
+! kTe        keV       60.       5.       5.           500.    500.      0.01
+! kT_bb      keV       0.2     0.1       0.1         1.5      1.5      0.01
+! nH         10^22     0.       0.       0.           1E5     1E6      1E-3
+! boost      " "       1.0      1e-2     5e-2         10.0    10.0     -1e-2
+! Mass       Msun      4.6e7    1.0      1.0          1e11    1e11     -5e5
+! fmin       Hz        0.0      0.0      0.0          1e6     1e6      -1.0
+! fmax       Hz        0.0      0.0      0.0          1e6     1e6      -1.0
+! ReIm       " "       -1        -6       -6            6       6        -1
+! phiA       rad       0.0      -6.283   -6.283       6.283   6.283    -1
+! phiAB      rad       0.0      -6.283   -6.283       6.283   6.283    -1
+! g 	   " "       0.0      0.0      0.0          0.5     0.5       0.01
 
 ! !-----------------------------------------------------------------------
 ! subroutine tdreltransx(ear,ne,param,ifl,photar)
