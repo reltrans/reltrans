@@ -12,6 +12,7 @@ linear and quadratic coefficients of the mu=\cos\theta dependence and qboost
 skews the reltation. qboost = I(mu=-1)/I(mu=1). This new qboost parameter
 supersedes the old boost parameter.
 3) The disc scaleheight h/r is now a free parameter.
+4) simrtdist is a lag spectrum simulation tool to be used in xspec.
 
 --Use--
 
@@ -44,10 +45,12 @@ then to xspec.
 out)
 2) The g-factors currently still assume theta=pi/2. Should ideally be
 generalised. This affects gsd and gdo.
-3) NOTE: there are still write statements in the code, and FNINIT is called,
-so it is currently in a state to be called outside of XSPEC but ideally
-needs some small modifications before being used within XSPEC (certainly
-before being used in a fit loop, as this would create an enormous file!).
+3) Simulation tool ignores background.
+4) getcountrate() subroutine (mainly used in simulation tool) only adds
+up counts from full energy channels between the entered min and max
+energy. Could improve to also add up the fractions in the lowest and
+highest energy channel in the range. Only matters for fine energy bins,
+which we never use for lag vs energy spectrum.
 
 --Implementation--
 

@@ -480,6 +480,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
 
 ! New  
   double precision :: fcons,get_fcons,ell13pt6,lacc,get_lacc
+  character (len=200) path
  
   data firstcall /.true./
   data Cpsave/2/
@@ -493,7 +494,8 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
   
   ifl = 1
-
+  call FNINIT
+  
   ! Initialise some parameters 
   call initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, me, xe, verbose)
 
@@ -636,7 +638,15 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   
   if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",boost*frobs
   if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
-
+  
+! Play with reflionx model
+  call normreflionx(earx,nex,real(Gamma),Afe,lognep,Ecut_s,3.0,real(inc),photarx)
+  do i = 1,nex
+     E  = 0.5 * ( earx(i) + earx(i-1) )
+     dE = earx(i) - earx(i-1)
+    write(501,*)E,E**2*photarx(i)/dE
+  end do
+  write(501,*)"no no"
   
   if( needconv )then
      !needtrans = .false.
@@ -770,7 +780,6 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
 
 
 ! Calculate absorption and multiply by the raw FT
-!  call FNINIT
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
   
   do j = 1, nf

@@ -90,6 +90,65 @@
 
 
 !-----------------------------------------------------------------------
+function dglpfacthick(r,a,h,mu)
+! Calculates blue shift expreienced by a photon travelling from
+! an on-axis point source to a point on a Keplerian disk with constant
+! scaleheight (h/r=0 is mu=0)
+! Works for pro- and retrograde spins.
+  implicit none
+  double precision dglpfacthick,r,a,h,mu,gsd
+  double precision angvel,Dh,gphiphi,sindisk,mathcalA,Sig
+  angvel   = 1.0 / ( r**1.5 + abs(a) )
+  Dh       = h**2 - 2*h + a**2
+  sindisk  = sqrt( 1.d0 - mu**2 )
+  mathcalA = (r**2+a**2)**2 - (r**2-2.0*r+a**2)*a**2*sindisk
+  Sig      = r**2 + a**2 * mu**2
+  gphiphi  = mathcalA * sindisk**2 / Sig
+  gsd = 1.0-2.0*r/Sig + 4.0*a*r*sindisk**2/Sig*angvel - gphiphi*angvel**2
+  gsd = Dh/(h**2+a**2) / gsd
+  gsd = sqrt( gsd )
+  dglpfacthick = gsd
+  return
+end function dglpfacthick
+!-----------------------------------------------------------------------
+
+
+!-----------------------------------------------------------------------
+function dlgfacthick(a,mu0,alpha,r,mu)
+! Calculates g-factor for a photon travelling from disc to observer.
+! Disc has constant mu.
+  implicit none
+  double precision dlgfacthick,a,mu0,alpha,r,mu
+  double precision sin0,sindisk,angvel,mathcalA,Delta,Sig
+  double precision gtt,gtphi,gphiphi,pt,pphi,num,den
+! Useful factors
+  sin0     = sqrt( 1.0 - mu0**2 )      
+  sindisk  = sqrt( 1.d0 - mu**2 )
+  angvel   = 1.0 / ( r**1.5 + abs(a) )
+  mathcalA = (r**2+a**2)**2 - (r**2-2.0*r+a**2)*a**2*sindisk
+  Delta    = r**2 - 2*r + a**2    
+  Sig      = r**2 + a**2 * mu**2
+! Metric components
+  gtt      = -( 1.0 - 2.0*r / Sig )
+  gtphi    = -2.0*a*r*sindisk**2 / Sig
+  gphiphi  = mathcalA * sindisk**2 / Sig
+! 4-momentum
+  pt   = -a * ( alpha*sin0 + a*sindisk**2 )
+  pt   = pt + ( r**2 + a**2 ) * ( r**2 + a**2 + a*alpha*sin0 ) / Delta
+  pt   = pt / Sig
+  pphi = -alpha*sin0/sindisk**2 -a
+  pphi = pphi + a * ( r**2 + a**2 + a*alpha*sin0 ) / Delta
+  pphi = pphi / Sig
+! gdo calc
+  num = sqrt( -gtt - 2.0*gtphi*angvel - gphiphi*angvel**2 )
+  den = -gtt*pt - gtphi*(pt*angvel+pphi) - gphiphi*pphi*angvel
+  dlgfacthick = num / den
+  return
+end function dlgfacthick
+!-----------------------------------------------------------------------
+
+
+!-----------------------------------------------------------------------
       function dgsofac(a,h)
 ! Calculates blue shift expreienced by a photon travelling from
 ! an on-axis point source to a distant, stationary observer.
