@@ -23,13 +23,13 @@
 ! not support environment variables; in all other cases STATUS is zero.        
       implicit none
       character (len=500) strenv
-      character (len=7) name
+      character (len=200) name
       integer length,status
       status = 0
       !CALL get_environment_variable(trim(name),strenv)
       CALL GET_ENVIRONMENT_VARIABLE(trim(name),strenv,LENGTH,STATUS)
       if( status .ne. 0 .or. length .eq. 0 )then
-        strenv = 'none'
+         strenv = 'none'         
       end if
       return
       end function strenv

@@ -20,7 +20,7 @@ program main_simple_call
   dist_par(12) = 0.0     !Nh
   dist_par(13) = 1.0     !1onB  !(1/\mathcal{B}): "proper" boosting factor
   dist_par(14) = 1e7  !10.0  !M     !BH mass in solar masses
-  dist_par(15) = 0.1!0.01    !h/r   !Disc scaleheight
+  dist_par(15) = 0.1    !h/r   !Disc scaleheight
   dist_par(16) = 0.0 !0.429   !b1    !Linear term in angular emissivity function
   dist_par(17) = 0.0 !-2.0    !b2    !Quadratic term in angular emissivity function
   dist_par(18) = 3e-5 !30.0    !flo   !Lowest frequency in band (Hz)
@@ -54,21 +54,21 @@ program main_simple_call
   end do
   write(99,*)"no no" 
  
-! ! Write out DC component
-!   dist_par(18) = 0.0
-!   dist_par(19) = 0.0
-!   dist_par(20) = 1.0
-!   call tdrtdist(ear, ne, dist_par, ifl, photar)
-!   do i = 1,ne
-!      E  = 0.5 * ( ear(i) + ear(i-1) )
-!      dE = ear(i) - ear(i-1)
-!      if( dist_par(20) .gt. 3.5 .and. dist_par(20) .lt. 4.5 .or. dist_par(20) .gt. 5.5 )then
-!         write(99,*)E,photar(i)/dE
-!      else
-!         write(99,*)E,E**2*photar(i)/dE
-!      end if
-!   end do
-!   write(99,*)"no no" 
+! Write out DC component
+  dist_par(18) = 0.0
+  dist_par(19) = 0.0
+  dist_par(20) = 1.0
+  call tdrtdist(ear, ne, dist_par, ifl, photar)
+  do i = 1,ne
+     E  = 0.5 * ( ear(i) + ear(i-1) )
+     dE = ear(i) - ear(i-1)
+     if( dist_par(20) .gt. 3.5 .and. dist_par(20) .lt. 4.5 .or. dist_par(20) .gt. 5.5 )then
+        write(99,*)E,photar(i)/dE
+     else
+        write(99,*)E,E**2*photar(i)/dE
+     end if
+  end do
+  write(99,*)"no no" 
 !  
 ! ! Set broad energy grid for simulation
 !   Emax  = 10.0

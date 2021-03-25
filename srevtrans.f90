@@ -185,6 +185,47 @@ end subroutine tdreltransDCp
 !-----------------------------------------------------------------------
 
 
+!-----------------------------------------------------------------------
+subroutine tdreltransx(ear,ne,param,ifl,photar)
+  implicit none
+  integer :: ne, ifl, Cp, dset
+  real    :: ear(0:ne), param(20), photar(ne), par(25)
+! Settings
+  Cp   = 0   !Cp=0 means use the reflionx model with nthcomp and free density
+  dset = 0   !dset=0 means distance is not set, logxi set instead
+! Transfer to general parameter array
+  par(1)  = param(1)         !h
+  par(2)  = param(2)         !a
+  par(3)  = param(3)         !inc
+  par(4)  = param(4)         !rin
+  par(5)  = param(5)         !rout
+  par(6)  = param(6)         !zcos
+  par(7)  = param(7)         !Gamma
+  par(8)  = param(8)         !logxi
+  par(9)  = param(9)         !Afe
+  par(10) = param(10)        !lognep
+  par(11) = param(11)        !kTe
+  par(12) = param(12)        !Nh
+  par(13) = param(13)        !boost
+  par(14) = 1.0              !qboost
+  par(15) = param(14)        !Mass
+  par(16) = 0.0              !honr
+  par(17) = 0.0              !b1
+  par(18) = 0.0              !b2
+  par(19) = param(15)        !floHz
+  par(20) = param(16)        !fhiHz
+  par(21) = param(17)        !ReIm
+  par(22) = param(18)        !DelA
+  par(23) = param(19)        !DelAB
+  par(24) = param(20)        !g
+  par(25) = 1.0              !Anorm
+! Call general code
+  call genreltrans(Cp, dset, ear, ne, par, ifl, photar)
+  return
+end subroutine tdreltransx
+!-----------------------------------------------------------------------
+
+
 
 !-----------------------------------------------------------------------
 subroutine tdrtdist(ear, ne, param, ifl, photar)
@@ -239,6 +280,63 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
   
   return
 end subroutine tdrtdist
+!-----------------------------------------------------------------------
+
+
+
+!-----------------------------------------------------------------------
+subroutine tdrtdistX(ear, ne, param, ifl, photar)
+  implicit none
+  integer :: ne, ifl, Cp, dset
+  real    :: ear(0:ne), param(24), photar(ne), par(25), getcountrate
+  double precision    :: honr,pi,cosi,cos0
+! Settings
+  Cp   = 0   !Cp=0 means use the reflionx model with nthcomp and free density 
+  dset = 1   !dset=1 means distance is set, logxi is calculated internally
+! Transfer to general parameter array
+  par(1)  = param(1)         !h
+  par(2)  = param(2)         !a
+  par(3)  = param(3)         !inc
+  par(4)  = param(4)         !rin
+  par(5)  = param(5)         !rout
+  par(6)  = param(6)         !zcos
+  par(7)  = param(7)         !Gamma
+  par(8)  = param(8)         !Dkpc
+  par(9)  = param(9)         !Afe
+  par(10) = param(10)        !lognep
+  par(11) = param(11)        !kTe
+  par(12) = param(12)        !Nh
+  par(13) = 1.0              !boost
+  par(14) = param(13)        !qboost
+  par(15) = param(14)        !Mass
+  par(16) = param(15)        !honr
+  par(17) = param(16)        !b1
+  par(18) = param(17)        !b2
+  par(19) = param(18)        !floHz
+  par(20) = param(19)        !fhiHz
+  par(21) = param(20)        !ReIm
+  par(22) = param(21)        !DelA
+  par(23) = param(22)        !DelAB
+  par(24) = param(23)        !g
+  par(25) = param(24)        !Anorm
+! Check that we're not looking at the side of the disc
+  honr = par(16)
+  pi   = acos(-1.d0)
+  cosi = cos( par(3) * pi / 180.d0 )
+  cos0 = honr / sqrt( honr**2 + 1.d0  )  
+! Call general code
+  if( cos0 .ge. cosi )then
+     photar = 0.0   !XSPEC *hates* this. Just do it with limits, and flag here.
+     write(*,*)"Warning! Disc thickness is too high for this inclinaiton!"
+     write(*,*)"Model output set to zero -- XSPEC *hates* this and may get lost"
+     write(*,*)"leading to crash and seg fault. Better to set hard max on inc, incmax"
+     write(*,*)"and set honr_max to cos(incmax)/sqrt(1-cos^2(incmax))."
+  else
+     call genreltrans(Cp, dset, ear, ne, par, ifl, photar)
+  end if
+  
+  return
+end subroutine tdrtdistX
 !-----------------------------------------------------------------------
 
 
@@ -461,10 +559,9 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   integer                       :: mubin, rbin
   double precision, allocatable :: logxir(:),gsdr(:), logner(:)
 !Reflection + total corss spectrum
-  real    :: mue, logxi0, xillpar(7), xillparDCp(8), &
-       reline(nex), imline(nex), photarx(nex), photerx(nex), absorbx(nex),&
-       contx(nex), ImGbar(nex), ReGbar(nex), ReGx(nex),ImGx(nex)
-  real    :: ReS(ne),ImS(ne)
+  real    :: mue, logxi0, reline(nex), imline(nex), photarx(nex), photerx(nex)
+  real    :: absorbx(nex),contx(nex), ImGbar(nex), ReGbar(nex)
+  real    :: ReGx(nex),ImGx(nex),ReS(ne),ImS(ne)
 !variable for non linear effects
   integer ::  DC, ionvariation
   real    :: photarx_1(nex), photarx_2(nex), photarx_delta(nex), &
@@ -480,7 +577,8 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
 
 ! New  
   double precision :: fcons,get_fcons,ell13pt6,lacc,get_lacc
-  character (len=200) path
+  real             :: Gamma0,logne,Ecut0,thetae,logxiin
+  integer          :: Cp_cont
  
   data firstcall /.true./
   data Cpsave/2/
@@ -608,7 +706,9 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   end if
 
 ! Calculate continuum - so fast there is no need for an if statement
-  call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp, contx, xillpar, xillparDCp)
+  Cp_cont = Cp
+  if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
+  call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx)
      
   if( dset .eq. 1 )then
      fcons = get_fcons(h,a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)
@@ -638,16 +738,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   
   if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",boost*frobs
   if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
-  
-! Play with reflionx model
-  call normreflionx(earx,nex,real(Gamma),Afe,lognep,Ecut_s,3.0,real(inc),photarx)
-  do i = 1,nex
-     E  = 0.5 * ( earx(i) + earx(i-1) )
-     dE = earx(i) - earx(i-1)
-    write(501,*)E,E**2*photarx(i)/dE
-  end do
-  write(501,*)"no no"
-  
+
   if( needconv )then
      !needtrans = .false.
      !Initialize arrays for transfer functions
@@ -666,94 +757,48 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
      !Get logxi values corresponding to Gamma1 and Gamma2
      call xilimits(nex,earx,contx,DeltaGamma,gso,real(zcos),dlogxi1,dlogxi2)
 
-!Now reflection
-     xillpar(7)    = -1.0       !reflection fraction of 1 
-     xillparDCp(8) = -1.0       !reflection fraction of 1 
-
 !Set the ion-variation to 1, there is an if inside the radial loop to check if either the ionvar is 0 or the logxi is 0 to set ionvariation to 0
 ! it is important that ionvariation is different than ionvar because ionvar is used also later in rawS routine to calculate the cross-spectrum
      ionvariation = 1
 
      !Loop over radius, emission angle and frequency
      do rbin = 1, xe  !Loop over radial zones
-
-!Remember: xillparDCp(3) is kTe and the parameter 3 is different always 
-        logxi0     = real( logxir(rbin) )
-
-        if (Cp .eq. 2) then      !xillverDCp
-           xillparDCp(3) = real( gsdr(rbin) ) * Ecut_s
-           xillparDCp(4) = real( logner(rbin) )
-           if( xe .eq. 1 )then
-              xillparDCp(3) = Ecut_s
-              xillparDCp(4) = lognep
-              logxi0        = logxi
-           end if
-        else if (Cp .lt. 0) then !xillver
-           xillpar(3) = real( gsdr(rbin) ) * Ecut_s
-           if( xe .eq. 1 )then
-              xillpar(3) = Ecut_s
-              logxi0     = logxi
-           end if
-        else if (Cp .eq. 1) then  !xillverD
-           xillpar(3) = real( logner(rbin) )
-           if( xe .eq. 1 )then
-              xillpar(3) = lognep 
-              logxi0     = logxi
-           end if
-        endif
-
-
-        
-!Avoid negative values of the ionisation parameter 
+        !Set parameters with radial dependence
+        Gamma0 = real(Gamma)
+        logne  = logner(rbin)
+        Ecut0  = real( gsdr(rbin) ) * Ecut_s
+        logxi0 = real( logxir(rbin) )
+        if( xe .eq. 1 )then
+           Ecut0  = Ecut_s
+           logne  = lognep
+           logxi0 = logxi
+        end if
+        !Avoid negative values of the ionisation parameter 
         if (logxi0 .eq. 0.0 .or. ionvar .eq. 0) then
            ionvariation = 0.0
-        endif
-
+        end if
         do mubin = 1, me      !loop over emission angle zones
-           !Calculate input inclination angle
-           mue = ( real(mubin) - 0.5 ) / real(me)
-           xillpar(6) = acos( mue ) * 180.0 / real(pi)
-           xillparDCp(7) = acos( mue ) * 180.0 / real(pi)
-           if( me .eq. 1 ) then
-              xillpar(6)    = real( inc )
-              xillparDCp(7) = real( inc )
-           end if 
-           !Call xillver
-           xillpar(1) = real(Gamma)
-           xillpar(4) = logxi0
-           xillparDCp(1) = real(Gamma)
-           xillparDCp(5) = logxi0
-           call myxill(earx, nex, xillpar, xillparDCp, ifl, Cp, photarx)
-
+           !Calculate input emission angle
+           mue    = ( real(mubin) - 0.5 ) / real(me)
+           thetae = acos( mue ) * 180.0 / real(pi)
+           if( me .eq. 1 ) thetae = real(inc)
+           !Call restframe reflection model
+           call myreflect(earx,nex,Gamma0,Afe,logne,Ecut0,logxi0,thetae,Cp,photarx)
+           !NON LINEAR EFFECTS
            if (DC .eq. 0) then 
-!NON LINEAR EFFECTS
               !Gamma variations
-              xillpar(1) = Gamma1
-              xillpar(4) = logxi0 + ionvariation * dlogxi1
-              xillparDCp(1) = Gamma1
-              xillparDCp(5) = logxi0 + ionvariation * dlogxi1
-              call myxill(earx, nex, xillpar, xillparDCp, ifl, Cp,  photarx_1)
-              xillpar(1) = Gamma2
-              xillpar(4) = logxi0 + ionvariation * dlogxi2
-              xillparDCp(1) = Gamma2
-              xillparDCp(5) = logxi0 + ionvariation * dlogxi2
-              call myxill(earx, nex, xillpar, xillparDCp, ifl, Cp, photarx_2)
+              logxiin = logxi0 + ionvariation * dlogxi1
+              call myreflect(earx,nex,Gamma1,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_1)
+              logxiin = logxi0 + ionvariation * dlogxi2
+              call myreflect(earx,nex,Gamma2,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_2)
               photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
               !xi variations
-              xillpar(1) = real(Gamma)
-              xillpar(4) = logxi0 + ionvariation * dlogxi1
-              xillparDCp(1) = real(Gamma)
-              xillparDCp(5) = logxi0 + ionvariation * dlogxi1
-              call myxill(earx, nex, xillpar, xillparDCp, ifl, Cp, photarx_1)
-              xillpar(1) = real(Gamma)
-              xillpar(4) = logxi0 + ionvariation * dlogxi2
-              xillparDCp(1) = real(Gamma)
-              xillparDCp(5) = logxi0 + ionvariation * dlogxi2
-              call myxill(earx, nex, xillpar, xillparDCp, ifl, Cp, photarx_2)
+              logxiin = logxi0 + ionvariation * dlogxi1
+              call myreflect(earx,nex,Gamma0,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_1)
+              logxiin = logxi0 + ionvariation * dlogxi2
+              call myreflect(earx,nex,Gamma0,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_2)
               photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
-
-        endif
-        
+           end if
            !Loop through frequencies
            do j = 1,nf
                  do i = 1,nex
@@ -762,17 +807,14 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
                     reline_a(i) = real(  transea(i,j,mubin,rbin) )
                     imline_a(i) = aimag( transea(i,j,mubin,rbin) )
                  end do
-              
                  call conv_all_FFTw(dyn, photarx, photarx_delta, reline, imline, reline_a , imline_a,&
                          photarx_dlogxi, ReW0(:,j), ImW0(:,j), ReW1(:,j), ImW1(:,j), &
                          ReW2(:,j), ImW2(:,j), ReW3(:,j), ImW3(:,j), DC)
-                 
-                 end do !end of the frequency loop 
-
-              end do
            end do
+        end do
+     end do
 
-        end if
+  end if
 
 ! Calculate raw FT of the full spectrum without absorption
   call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,real(zcos),&

@@ -85,7 +85,7 @@
 
 
 !-----------------------------------------------------------------------
-      subroutine ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, dens, logxi, Cp, contx, xillpar, xillparDCp)
+      subroutine ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, dens, logxi, Cp, contx)
 !!! Calculates continuum spectrum and sets xillver parameters !!!
 !!!  Arg:
         !  earx: energy grid
@@ -97,14 +97,13 @@
         !  logxi: ionisation parameter (not important for the continuum)
         !  Cp: sets which xillver spectrum
         ! (output) contx: continuum spectrum
-        ! (output) xillpar: xillver parameters
-        ! (output) xillparDCp: xillverDCp parameters
 !!! Last change: Adam 2021 March; based on Gullo's getcont code from 2020 Jul
         !
       implicit none
       integer, intent(in)  :: nex, Cp
       real   , intent(in)  :: earx(0:nex), Afe, Ecut_obs, logxi, dens
-      real   , intent(out) :: contx(nex), xillpar(7), xillparDCp(8)
+      real   , intent(out) :: contx(nex)
+      real                 :: xillpar(7), xillparDCp(8)
       double precision , intent(in) :: Gamma
       integer :: ifl   
 !Set the parameters for the continuum and not only 

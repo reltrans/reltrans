@@ -339,10 +339,13 @@ subroutine initmatrix
   use telematrix
   implicit none
   character (len=500) strenv
-
+  character (len=200) rmfenv,arfenv
+!Set environment variable names
+  rmfenv = 'RMF_SET'
+  arfenv = 'ARF_SET'  
 !Get name of response file and arf file
-  respname = strenv('RMF_SET')
-  arfname  = strenv('ARF_SET')        
+  respname = strenv(rmfenv)
+  arfname  = strenv(arfenv)        
 !If this is not set, ask for it
   if( trim(respname) .eq. 'none' )then
      write(*,*)"Enter name of the response file (with full path)"
