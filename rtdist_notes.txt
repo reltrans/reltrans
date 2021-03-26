@@ -26,7 +26,7 @@ xillver table or the reflionx table. Reflionx is normalised such that
 it has the same 50-100 keV integral as the corresponding logne=15
 xillverDCp spectrum.
 
-reflionx model currently has kTbb hardwired to 0.05 keV. COuld change
+reflionx model currently has kTbb hardwired to 0.05 keV. Could change
 this in future by including kTbb as another parameter in the param()
 array that goes into genreltrans().
 
@@ -57,12 +57,12 @@ then to xspec.
 
 --Still to do--
 
-1) Bring back the reflionx version of the model (this is still commented
+1) DONE Bring back the reflionx version of the model (this is still commented
 out)
-2) The g-factors currently still assume theta=pi/2. Should ideally be
+2) DONE The g-factors currently still assume theta=pi/2. Should ideally be
 generalised. This affects gsd and gdo.
-3) Simulation tool ignores background.
-4) getcountrate() subroutine (mainly used in simulation tool) only adds
+3) DONE Simulation tool ignores background.
+4) IGNORED getcountrate() subroutine (mainly used in simulation tool) only adds
 up counts from full energy channels between the entered min and max
 energy. Could improve to also add up the fractions in the lowest and
 highest energy channel in the range. Only matters for fine energy bins,
