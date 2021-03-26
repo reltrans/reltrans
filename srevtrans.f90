@@ -355,7 +355,8 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   real :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,br,bs(ne)
   real :: flo,fhi,fc,lag(ne),gasdev,lagsim(ne)
   real, parameter :: pi = acos(-1.0)
-  integer idum, unit,xunit,status
+  integer idum, unit,xunit,status,j
+  real E1,E2,frac
   data idum/-2851043/
   save idum
   character (len=200) command,flxlagfile,phalagfile,rsplagfile,lagfile,root
@@ -417,15 +418,41 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   par(20) = 0.0   !fhiHz
   par(21) = 1.0   !ReIm
   call genreltrans(Cp, dset, earx, nex, par, ifl, photarx)
-! Will eventually need to read in background spectrum
+
+! Read in background array
+  if( needbkg )then
+     allocate(bkgcounts(1:numchn))
+     allocate(bkgrate(1:numchn))
+     call readinbkg
+     needbkg = .false.
+  end if
+
+! Calculate background in reference band
   br = 0.0
-  bs = 0.0  
+  do i = ilo,ihi
+     br = br + bkgrate(i)
+  end do
+
+! Calculate background in subject
+  do j = 1,ne
+     bs(j) = 0.0
+     do i = 1,numchn
+        if( ECHN(i) .gt. ear(j-1) .and. ECHN(i-1) .le. ear(j) )then
+           E1 = max( ear(j-1) , ECHN(i-1) )
+           E2 = min( ear(j)   , ECHN(i)   )
+           frac = ( E2-E1 ) / ( ECHN(i)-ECHN(i-1) )
+           bs(j) = bs(j) + frac * bkgrate(i)
+        end if
+     end do
+     E = 0.5 * ( ear(j) + ear(j-1) )
+  end do
   
 ! Calculate reference band power (in units of *absolute rms^2*)
   Pr = pow * getcountrate(Elo,Ehi,nex,earx,rephotarx)
 ! Calculate reference band Poisson noise (in *absolutem rms^2)
   mur = getcountrate(Elo,Ehi,nex,earx,photarx)
   Prnoise = 2.0 * ( br + mur )
+  write(*,*)"br,mur=",br,mur
   write(*,*)"Pr (fractional rms)^2/Hz",Pr/mur**2
   
 ! Open file to write the lag simulation to
@@ -516,7 +543,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   implicit none
 !Constants
   integer         , parameter :: nphi = 200, nro = 200, ionvar = 1 
-  real            , parameter :: Emin = 1e-1, Emax = 1e3, dyn = 1e-7
+  real            , parameter :: Emin = 13.6e-3, Emax = 1e3, dyn = 1e-7
   double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0, &
        dlogf = 0.09 !This is a resolution parameter (base 10)
        
@@ -592,11 +619,11 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
   
   ifl = 1
-!  call FNINIT
+  ! call FNINIT
   
   ! Initialise some parameters 
   call initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, me, xe, verbose)
-
+  
 !Allocate dynamically the array to calculate the trasfer function 
   if (.not. allocated(re1)) allocate(re1(nphi,nro))
   if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
