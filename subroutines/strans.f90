@@ -52,6 +52,8 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,&
   double precision pnorm,mus,ptf,pfunc_raw,cosdelta_obs,ang_fac
   integer nron,nphin,nrosav,nphisav,verbose
   double precision spinsav,musav,routsav,mudsav,rnn(nro),domegan(nro)
+  integer myenv
+  double precision lximax
   logical dotrace
   data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
   save nrosav,nphisav,spinsav,musav,routsav,mudsav
@@ -98,7 +100,7 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,&
      & logxir, gsdr, logner, pnorm)
   end if
   !Outputs: logxir(1:xe),gsdr(1:xe), logner(1:xe)
-     
+  
 ! Calculate 4pi p(theta0,phi0) = ang_fac
   ang_fac = 4.d0 * pi * pnorm * pfunc_raw(-cosdelta_obs,b1,b2,qboost)
 ! Adjust the lensing factor (easiest way to keep track)
@@ -146,6 +148,7 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,&
               odisc = 1
               taudo = taudo1(j,i)
               g     = dlgfacthick( spin,mu0,alpha,re,mudisk )
+              !g = dlgfac( spin,mu0,alpha,re )
               !Find the rlp bin that corresponds to re
               kk = get_index(rlp,ndelta,re,rmin,npts)
               !Interpolate (or extrapolate) the time function
@@ -163,6 +166,7 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,&
               ptf        = pnorm * pfunc_raw(-mus,b1,b2,qboost)
               !Calculate flux from pixel
               gsd        = dglpfacthick(re,spin,h,mudisk)
+              !gsd        = dglpfac(re,spin,h)
               emissivity = gsd**Gamma * 2.d0 * pi * ptf
               emissivity = emissivity * cosfac / dareafac(re,spin)
               dFe        = emissivity * g**3 * domega(i) / (1.d0+zcos)**3
@@ -200,6 +204,7 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,&
         !If the ray hits the disk, calculate flux and time lag
         if( re .gt. rin .and. re .lt. rout )then
            g = dlgfacthick( spin,mu0,alpha,re,mudisk )
+           !g = dlgfac( spin,mu0,alpha,re )
            !Find the rlp bin that corresponds to re
            kk = get_index(rlp,ndelta,re,rmin,npts)
            !Time lag
@@ -217,6 +222,7 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,&
            ptf        = pnorm * pfunc_raw(-mus,b1,b2,qboost)
            !Calculate flux from pixel
            gsd        = dglpfacthick(re,spin,h,mudisk)
+           !gsd        = dglpfac(re,spin,h)
            emissivity = gsd**Gamma * 2.d0 * pi * ptf
            emissivity = emissivity * cosfac / dareafac(re,spin)
            dFe        = emissivity * g**3 * domegan(i) / (1.d0+zcos)**3
@@ -374,11 +380,11 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
   double precision, intent(IN)   :: fcons, lognep, spin, h, honr
   double precision, intent(IN)   :: rlp(ndelta), dcosdr(ndelta), cosd(ndelta)
   double precision, intent(INOUT):: logxieff(xe), gsdr(xe), logner(xe)
-  integer          :: i, kk, get_index, myenv, adensity
-  double precision :: pnorm,re,zA_logne,cosfac,mus,interper,newtex,mudisk
+  integer          :: i, kk, get_index, myenv, adensity, verbose
+  double precision :: pnorm,re,re1(xe),zA_logne,cosfac,mus,interper,newtex,mudisk
   double precision, parameter :: pi = acos(-1.d0)
   double precision :: ptf,pfunc_raw,gsd,dglpfacthick,eps_bol,Fx,logxir(xe),mui,dinang
-  double precision :: pnormer,dareafac
+  double precision :: pnormer,dareafac,lximax
 ! Decide on zone a density profile or constant density profile
   adensity = myenv("A_DENSITY",1)
   adensity = min( adensity , 1 )
@@ -393,6 +399,7 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
      re     = (rnmax/rin)**(real(i-1) / real(xe))
      re     = re + (rnmax/rin)**(real(i) / real(xe))
      re     = re * rin * 0.5
+     re1(i) = re
      !Density
      logner(i) = zA_logne(re,rin,lognep)     
      !Interpolate functions from rpl grid
@@ -406,6 +413,7 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
      !Calculate 13.6 eV - 13.6 keV illuminating flux
      ptf     = pnorm * pfunc_raw(-mus,b1,b2,qboost)
      gsd     = dglpfacthick(re,spin,h,mudisk)
+     !gsd     = dglpfac(re,spin,h)
      gsdr(i) = gsd
      eps_bol = gsd**2 * 2.0 * pi * ptf
      eps_bol = eps_bol * cosfac / dareafac(re,spin)
@@ -420,7 +428,7 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
      
   end do
 !  write(188,*)"no no"
-
+  
 !check max and min for both ionisation and density
   logxieff = max( logxieff , 0.d0  )
   logxieff = min( logxieff , 4.7d0 )
@@ -428,6 +436,19 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
   ! logner   = min( logner , 22.d0 )
   !...no need to enforce limits on logne since this is done in myreflect()
   !This is needed because reflionx has a different maximum to xillverDCp
+
+  verbose = myenv("REV_VERB",0)
+  if( verbose .gt. 10 )then
+     !Write out logxir for plots
+     lximax = -huge(lximax)
+     do i = 1,xe
+        write(188,*)re1(i),logxir(i),logxieff(i)
+        lximax = max( lximax , logxieff(i) )
+     end do
+     write(188,*)"no no"
+     write(*,*)"MAX LOGXIeff = ",lximax
+  end if
+  
   return
 end subroutine radfuncs_dist  
 !-----------------------------------------------------------------------
@@ -583,6 +604,7 @@ function logxiraw(re,spin,h,honr,rlp,dcosdr,ndelta,rmin,npts,mudisk,gsd)
   double precision mudisk
   !Calculate source to disc blueshift at this radius
   gsd = dglpfacthick(re,spin,h,mudisk)
+  !gsd = dglpfac(re,spin,h)
   !Find the rlp bin that corresponds to re
   kk = get_index(rlp,ndelta,re,rmin,npts)
   !Interpolate to get |d\cos\delta/dr| at r=re

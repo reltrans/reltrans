@@ -70,42 +70,45 @@ program main_simple_call
   end do
   write(99,*)"no no" 
  
-! Set broad energy grid for simulation
-  Emax  = 10.0
-  Emin  = 0.3
-  do i = 0,neb
-    earb(i) = Emin * (Emax/Emin)**(real(i)/real(neb))
-  end do 
+! ! Set broad energy grid for simulation
+!   Emax  = 10.0
+!   Emin  = 0.3
+!   do i = 0,neb
+!     earb(i) = Emin * (Emax/Emin)**(real(i)/real(neb))
+!   end do 
  
-!----Parameters of simulation model-------------------
-  spar(1)  = 25.0     !h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
-  spar(2)  = 0.998     !a     !BH spin
-  spar(3)  = 37.0    !inc   !Inclination angle in degrees
-  spar(4)  = 1.87  !rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
-  spar(5)  = 20000.0 !rout  !Disk outer radius in Rg - will probably hardwire this
-  spar(6)  = 0.0!0.0247  !zcos  !Cosmological redshift
-  spar(7)  = 1.969     !Gamma !Photon index
-  spar(8)  = 8.6     !Dkpc  !Distance in kpc
-  spar(9)  = 0.644     !Afe   !Iron abundance
-  spar(10) = 18.927  !20.0  !logne !Log10 of minimum disc electron number density
-  spar(11) = 34.73   !kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
-  spar(12) = 8.0     !Nh
-  spar(13) = 3.55     !1onB  !(1/\mathcal{B}): "proper" boosting factor
-  spar(14) = 12.4  !M     !BH mass in solar masses
-  spar(15) = 0.054    !h/r   !Disc scaleheight
-  spar(16) = 0.0 !0.429   !b1    !Linear term in angular emissivity function
-  spar(17) = 0.0 !-2.0    !b2    !Quadratic term in angular emissivity function
-  spar(18) = 10.0!3e-5 !30.0    !flo   !Lowest frequency in band (Hz)
-  spar(19) = 30.0!1e-4 !100.0   !fhi   !Highest frequency in band (Hz)
-  spar(20) = 0.8      !gamma_c^2 -- squared cohenrence
-  spar(21) = 0.0     !DelA
-  spar(22) = 0.0     !DelAB
-  spar(23) = 0.0     !gamma
-  spar(24) = 2.40398E-02  !Anorm !Normalisation -- takes the place of the XSPEC norm (fix that to 1)
-  spar(25) = 130.0e3   !Exposure time (s)
-  spar(26) = 0.0025    !Power in [rms/mean]^2/Hz units ( |A(nu)|^2/A_0^2 )ss
-!--------------------------------- 
-  call simrtdist(earb, neb, spar, ifl, photar)
+! !----Parameters of simulation model-------------------
+!   spar(1)  = 25.0     !h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
+!   spar(2)  = 0.998     !a     !BH spin
+!   spar(3)  = 37.0    !inc   !Inclination angle in degrees
+!   spar(4)  = 1.87  !rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
+!   spar(5)  = 20000.0 !rout  !Disk outer radius in Rg - will probably hardwire this
+!   spar(6)  = 0.0!0.0247  !zcos  !Cosmological redshift
+!   spar(7)  = 1.969     !Gamma !Photon index
+!   spar(8)  = 8.6     !Dkpc  !Distance in kpc
+!   spar(9)  = 0.644     !Afe   !Iron abundance
+!   spar(10) = 18.927  !20.0  !logne !Log10 of minimum disc electron number density
+!   spar(11) = 34.73   !kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
+!   spar(12) = 8.0     !Nh
+!   spar(13) = 3.55     !1onB  !(1/\mathcal{B}): "proper" boosting factor
+!   spar(14) = 12.4  !M     !BH mass in solar masses
+!   spar(15) = 0.054    !h/r   !Disc scaleheight
+!   spar(16) = 0.0 !0.429   !b1    !Linear term in angular emissivity function
+!   spar(17) = 0.0 !-2.0    !b2    !Quadratic term in angular emissivity function
+!   spar(18) = 10.0!3e-5 !30.0    !flo   !Lowest frequency in band (Hz)
+!   spar(19) = 30.0!1e-4 !100.0   !fhi   !Highest frequency in band (Hz)
+!   spar(20) = 0.8      !gamma_c^2 -- squared cohenrence
+!   spar(21) = 0.0     !DelA
+!   spar(22) = 0.0     !DelAB
+!   spar(23) = 0.0     !gamma
+!   spar(24) = 2.40398E-02  !Anorm !Normalisation -- takes the place of the XSPEC norm (fix that to 1)
+!   spar(25) = 130.0e3   !Exposure time (s)
+!   spar(26) = 0.0025    !Power in [rms/mean]^2/Hz units ( |A(nu)|^2/A_0^2 )ss
+! !--------------------------------- 
+!   call simrtdist(earb, neb, spar, ifl, photar)
+
+
+
   
 !  
 ! !  !----Parameters-------------------

@@ -765,7 +765,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   
   if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",boost*frobs
   if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
-
+  
   if( needconv )then
      !needtrans = .false.
      !Initialize arrays for transfer functions
