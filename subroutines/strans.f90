@@ -383,7 +383,7 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
   integer          :: i, kk, get_index, myenv, adensity, verbose
   double precision :: pnorm,re,re1(xe),zA_logne,cosfac,mus,interper,newtex,mudisk
   double precision, parameter :: pi = acos(-1.d0)
-  double precision :: ptf,pfunc_raw,gsd,dglpfacthick,eps_bol,Fx,logxir(xe),mui,dinang
+  double precision :: ptf,pfunc_raw,gsd,dglpfacthick,eps_bol,Fx(xe),logxir(xe),mui,dinang
   double precision :: pnormer,dareafac,lximax
 ! Decide on zone a density profile or constant density profile
   adensity = myenv("A_DENSITY",1)
@@ -417,9 +417,9 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
      gsdr(i) = gsd
      eps_bol = gsd**2 * 2.0 * pi * ptf
      eps_bol = eps_bol * cosfac / dareafac(re,spin)
-     Fx      = fcons * 4.0 * pi * eps_bol
+     Fx(i)   = fcons * 4.0 * pi * eps_bol
      !Calculate logxi(r)
-     logxir(i) = log10( 4.0 * pi * Fx ) - logner(i)
+     logxir(i) = log10( 4.0 * pi * Fx(i) ) - logner(i)
      !Now adjust to effective ionization parameter
      mui         = dinang(spin, re, h, mus)
      logxieff(i) = logxir(i) - 0.1505 - log10(mui)
@@ -437,17 +437,17 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
   !...no need to enforce limits on logne since this is done in myreflect()
   !This is needed because reflionx has a different maximum to xillverDCp
 
-  verbose = myenv("REV_VERB",0)
-  if( verbose .gt. 10 )then
-     !Write out logxir for plots
-     lximax = -huge(lximax)
-     do i = 1,xe
-        write(188,*)re1(i),logxir(i),logxieff(i)
-        lximax = max( lximax , logxieff(i) )
-     end do
-     write(188,*)"no no"
-     write(*,*)"MAX LOGXIeff = ",lximax
-  end if
+  ! verbose = myenv("REV_VERB",0)
+  ! if( verbose .gt. 10 )then
+  !    !Write out logxir for plots
+  !    lximax = -huge(lximax)
+  !    do i = 1,xe
+  !       write(188,*)re1(i),Fx(i),logxir(i)
+  !       lximax = max( lximax , logxieff(i) )
+  !    end do
+  !    write(188,*)"no no"
+  !    write(*,*)"MAX LOGXIeff = ",lximax
+  ! end if
   
   return
 end subroutine radfuncs_dist  
