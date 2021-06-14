@@ -437,17 +437,17 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
   !...no need to enforce limits on logne since this is done in myreflect()
   !This is needed because reflionx has a different maximum to xillverDCp
 
-  ! verbose = myenv("REV_VERB",0)
-  ! if( verbose .gt. 10 )then
-  !    !Write out logxir for plots
-  !    lximax = -huge(lximax)
-  !    do i = 1,xe
-  !       write(188,*)re1(i),Fx(i),logxir(i)
-  !       lximax = max( lximax , logxieff(i) )
-  !    end do
-  !    write(188,*)"no no"
-  !    write(*,*)"MAX LOGXIeff = ",lximax
-  ! end if
+  verbose = myenv("REV_VERB",0)
+  if( verbose .gt. 10 )then
+     !Write out logxir for plots
+     lximax = -huge(lximax)
+     do i = 1,xe
+        write(188,*)re1(i),Fx(i),logxir(i)
+        lximax = max( lximax , logxieff(i) )
+     end do
+     write(188,*)"no no"
+     write(*,*)"MAX LOGXIeff = ",lximax
+  end if
   
   return
 end subroutine radfuncs_dist  
