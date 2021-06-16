@@ -12,4 +12,6 @@ libreltrans.so
 *~
 tables
 tables/*
+fftw
+fftw/*
 xillverCp_v3.5.fits
