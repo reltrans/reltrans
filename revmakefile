@@ -1,13 +1,8 @@
 main = main_simple_call.f90
-# main_relt = main_test.f90
-# main_relt = main_fits_jingyi.f90
-main_relt = main_fits_jingyi_finalized.f90
-main_reflionx = main_test_reflionx.f90
-main_lag_freq = main_test_lag_vs_freq.f90
 
 #lib and other stuff to include to the compiler 
-incs = -I /usr/local/Cellar/fftw/3.3.8_2/include/ -ffree-line-length-none
-libs = -L /usr/local/Cellar/fftw/3.3.8_2/lib/ -lfftw3_omp -lfftw3 -lm \
+incs = -I ./fftw/fftw_comp/include/ -ffree-line-length-none
+libs = -L ./fftw/fftw_comp/lib/ -lfftw3 -lm \
        -L/Users/gullo/Software/heasoft-6.28/x86_64-apple-darwin18.7.0/lib/ \
        -lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS
        #-lwcs-5.16 -lCCfits_2.5 -lhdsp_2.9 -ltcl8.6 
@@ -29,23 +24,13 @@ mod:
 	$(fcomp) $(incs) $(libs) -c amodules.f90
 fobj: $(FCODE)
 	$(fcomp) -c $(FCODE)
-fobj_relt: $(FCODE_RELT)
-	$(fcomp) -c $(FCODE_RELT)
-fobj_refl: $(FCODE_REFL)
-	$(fcomp) -c $(FCODE_REFL)
 cobj: 
 	$(ccomp) -c $(CCODE)
 
 compile: mod fobj cobj
 	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) $(libs) *.o -o   simple
-compile_reltrans: mod fobj_relt cobj
-	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) $(libs) *.o -o   reltrans_jingyi #reltrans
-compile_reflionx: mod fobj_refl cobj
-	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) $(libs) *.o -o reltransx
 
 simple: clean compile cleanup
-run: clean compile_reltrans cleanup
-reflionx: clean compile_reflionx cleanup
 
 
 clean:
