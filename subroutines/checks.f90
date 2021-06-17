@@ -46,9 +46,7 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
   end do
   i = 10
   if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
-  i = 14
-  if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
-  do i = 16,18
+  do i = 14,18
      if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
   end do
   i = 25
