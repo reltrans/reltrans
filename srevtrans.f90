@@ -543,7 +543,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   implicit none
 !Constants
   integer         , parameter :: nphi = 200, nro = 200, ionvar = 1 
-  real            , parameter :: Emin = 13.6e-3, Emax = 1e3, dyn = 1e-7
+  real            , parameter :: Emin = 1e-2, Emax = 3e3, dyn = 1e-7
   double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0, &
        dlogf = 0.09 !This is a resolution parameter (base 10)
        

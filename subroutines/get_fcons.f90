@@ -12,7 +12,7 @@ function get_fcons(h,spin,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,photarx,dlogE)
   double precision :: gso,dgsofac
   real             :: integral,Eintegrate 
   gso       = dgsofac(spin,h) / ( 1.0 + zcos )
-  integral  = Anorm * Eintegrate(13.6e-3,13.6,nex,earx,photarx,dlogE)
+  integral  = Anorm * Eintegrate(0.1,1e3,nex,earx,photarx,dlogE)
   get_fcons = 4.0 * pi * (Dkpc/Mass)**2 * gso**(Gamma-2.0)
   get_fcons = get_fcons * integral * 6.99367e+23
   !above constant is (1kpc/Rgsun)^2 * 1 keV in erg
