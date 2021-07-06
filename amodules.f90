@@ -8,9 +8,26 @@ module telematrix
   real,    allocatable :: En(:), resp(:,:), ECHN(:)
   integer, allocatable :: NGRP(:), FCHAN(:,:), LCHAN(:,:), NCHAN(:,:)
   character (len=500) respname, arfname
+
+
+
   data needresp/.true./
   data needchans/.true./
 end module telematrix
+
+module telematrix2
+  !Module containing definitions needs to fold around the telescope
+  !response matrix
+  logical              :: needchans2, needresp2, arf2
+  integer              :: nenerg2, numchn2, Ilo2, Ihi2, needEs2
+  real                 :: Elo2, Ehi2
+  real,    allocatable :: En2(:), resp2(:,:), ECHN2(:)
+  integer, allocatable :: NGRP2(:), FCHAN2(:,:), LCHAN2(:,:), NCHAN2(:,:)
+  character (len=500) respname2, arfname2
+
+  data needresp2/.true./
+  data needchans2/.true./
+end module telematrix2
 
 
   

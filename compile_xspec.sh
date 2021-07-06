@@ -22,7 +22,10 @@ rm -vf *~ *.o         #prepare for the next compilation
 
 echo "hmake \nexit" | xspec   #run the hmake in xspec with the makefile
 
-echo " lmod reltrans ." | xspec  
+echo " load ./libreltrans.dylib" | xspec  
+
+#For Linux users (comment line above, and use the following)
+# echo " lmod reltrans ." | xspec  
 
 #cleaning up
 rm -vf *~ *.o
