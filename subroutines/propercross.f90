@@ -14,15 +14,19 @@ subroutine propercross(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw, resp_matr)
 
   call response_and_energy_bounds(resp_matr)
 
-!Allocate arrays
-  if( .not. allocated(ReStel) ) allocate(ReStel(numchn))
-  if( .not. allocated(ImStel) ) allocate(ImStel(numchn))
   
   if (resp_matr .eq. 1) then 
+     !Allocate arrays
+     if( .not. allocated(ReStel) ) allocate(ReStel(numchn))
+     if( .not. allocated(ImStel) ) allocate(ImStel(numchn))
+
      !Calculate `raw' cross-spectrum
      do j = 1, nf
         !Fold around the response matrix
+
+        ! write(*,*) 'Folding the first matrix'
         call cfold(nex, earx, ReSraw(:,j), ImSraw(:,j), ReStel, ImStel)
+        ! write(*,*) 'finished'
         !Calcluate reference band
         reref = 0.0
         imref = 0.0
@@ -39,27 +43,33 @@ subroutine propercross(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw, resp_matr)
      end do
   endif
   
-!Allocate arrays
-     if( .not. allocated(ReStel2) ) allocate(ReStel2(numchn2))
-     if( .not. allocated(ImStel2) ) allocate(ImStel2(numchn2))
 
   if (resp_matr .eq. 2) then 
+     !Allocate arrays
+     if( .not. allocated(ReStel2) ) allocate(ReStel2(numchn2))
+     if( .not. allocated(ImStel2) ) allocate(ImStel2(numchn2))
      do j = 1, nf
  !Fold around the response matrix
+        ! write(*,*) 'Folding the second matrix'
         call cfold2(nex, earx, ReSraw(:,j), ImSraw(:,j), ReStel2, ImStel2)
+        ! write(*,*) 'finished'
         !Calcluate reference band
         reref = 0.0
         imref = 0.0
+        ! write(*,*) 'Calculating the refenrece band with the second matrix'
         do i = Ilo2, Ihi2
            reref = reref + ReStel2(i)
            imref = imref + ImStel2(i)
         end do
+        ! write(*,*) 'finished'
 
         !Cross subject band with reference band
+        ! write(*,*) 'Cross spectrum with the refence band (second matrix)'
         do i = 1, nex
            ReGraw(i,j) = ReSraw(i,j) * reref + ImSraw(i,j) * imref
            ImGraw(i,j) = ImSraw(i,j) * reref - ReSraw(i,j) * imref
         end do
+        ! write(*,*) 'finished'
      end do
   endif
   
@@ -78,13 +88,11 @@ subroutine response_and_energy_bounds(resp_matr)
   
   real     :: dum
   integer  :: i
-
-  write(*,*) 'value of the variable ', resp_matr
   
 !Read from response file
   if(resp_matr .eq. 1) then 
      if( needresp )then
-        write(*,*) 'calling intmatrix'
+        ! write(*,*) 'calling intmatrix'
         call initmatrix
      endif
      
@@ -113,7 +121,7 @@ subroutine response_and_energy_bounds(resp_matr)
 
   else if (resp_matr .eq. 2) then
      if( needresp2 )then
-        write(*,*) 'calling intmatrix2'
+        ! write(*,*) 'calling intmatrix2'
         call initmatrix2
      endif
 !second response matrix     

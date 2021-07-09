@@ -250,23 +250,32 @@ subroutine readinresp2
   call ftgkys(U1,'EXTNAME',EXNAME,comment,status)
   !Read in whatever this extension this is
   if( EXNAME .eq. 'EBOUNDS' )then     
-     call energyextension(U1)
+     ! write(*,*) ' call energyextension2 (second matrix)'
+     call energyextension2(U1)
+     ! write(*,*) 'out from energyextension2'
   else if(EXNAME.eq.'MATRIX'.or.EXNAME.eq.'SPECRESP MATRIX')then
-     call matrixextension(U1)
+     ! write(*,*) ' call matrixextension2 (second matrix)'
+     call matrixextension2(U1)
+     ! write(*,*) 'out from matrixextension2'
   end if
   !Shift to extension 2
   call ftmrhd(U1,1,hdutype,status)
   !Get the name of this extension
   call ftgkys(U1,'EXTNAME',EXNAME,comment,status)
   if( EXNAME .eq. 'EBOUNDS' )then     
-     call energyextension(U1)
+     ! write(*,*) ' call energyextension2 (second matrix)'
+     call energyextension2(U1)
+     ! write(*,*) 'out from energyextension2'
   else if(EXNAME.eq.'MATRIX'.or.EXNAME.eq.'SPECRESP MATRIX')then
-     call matrixextension(U1)
+     ! write(*,*) ' call matrixextension2 (second matrix)'
+    call matrixextension2(U1)
+     ! write(*,*) 'out from matrixextension2'
   end if
   !Close unit
   call ftclos(U1,status)
   call ftfiou(U1,status)
-  !-----------------------------------------------------------------
+  !----------------------------------------------------------------
+  
   !Read in the arf file if required
   if( ARF2 )then
      !Open file
@@ -599,17 +608,17 @@ subroutine initmatrix2
   character (len=500) strenv
 
 !Get name of response file and arf file
-  respname2 = strenv('RMF2_SET')
-  arfname2  = strenv('ARF2_SET')
-  write(*,*) 'name of the second response', respname2 
-  write(*,*) 'name of the second arf', arfname2
-  read(*,*) 
+  respname2 = strenv('RMF2SET')
+  arfname2  = strenv('ARF2SET')
+  ! write(*,*) 'name of the second response', trim(respname2) 
+  ! write(*,*) 'name of the second arf', trim(arfname2)
+  ! read(*,*) 
 !If this is not set, ask for it
   if( trim(respname2) .eq. 'none' )then
      write(*,*)"Enter name of the second response file (with full path)"
      read(*,'(a)') respname2
   end if
-!Check if I need the arf
+  !Check if I need the arf
   call arfcheck(respname2, arf2)
 !Look for arf
   if( arf2 )then
@@ -621,7 +630,9 @@ subroutine initmatrix2
   end if
 
 !Get the dimensions of the arrays in the matrix
+  ! write(*,*) ' Get the dimensions of the arrays in the matrix (second matrix)'
   call getdim(respname2, nenerg2, numchn2)
+  ! write(*,*) 'finished'
   
 !Allocate the arrays
   allocate( En2(0:nenerg2) )
@@ -633,7 +644,9 @@ subroutine initmatrix2
   allocate( nchan2(nenerg2,numchn2) )
   
 ! Read matrix to fill the arrays
+  ! write(*,*) ' Read matrix to fill the arrays (second matrix)'
   call readinresp2
+  ! write(*,*) 'finished'
 
   needresp2  = .false.
   needchans2 = .true.
