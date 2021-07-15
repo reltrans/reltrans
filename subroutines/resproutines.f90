@@ -74,7 +74,7 @@ subroutine cfold(nex, earx, ReGx, ImGx, ReGtel, ImGtel)
      E2ImGx(i) = E**2 * ImGx(i) / dE
   end do
   
-  !Rebin input arrays onto interpal telescope energy grid
+  !Rebin input arrays onto internal telescope energy grid
   call rebinE(earx,E2ReGx,nex,En,ReGi,nenerg)
   call rebinE(earx,E2ImGx,nex,En,ImGi,nenerg)
   
@@ -92,7 +92,6 @@ subroutine cfold(nex, earx, ReGx, ImGx, ReGtel, ImGtel)
   do J = 1, NENERG
      do K = 1,NGRP(J)
         do I = FCHAN(J,K) + 1, LCHAN(J,K)
-           dE = En(J) - En(J-1) !I think this can be commented out
            ReGtel(I) = ReGtel(I) + ReGi(J) * RESP(I,J)
            ImGtel(I) = ImGtel(I) + ImGi(J) * RESP(I,J)
         end do
@@ -560,10 +559,13 @@ subroutine initmatrix
   use telematrix
   implicit none
   character (len=500) strenv
-
+  character (len=200) rmfenv,arfenv
+!Set environment variable names
+  rmfenv = 'RMF_SET'
+  arfenv = 'ARF_SET'  
 !Get name of response file and arf file
-  respname = strenv('RMF_SET')
-  arfname  = strenv('ARF_SET')        
+  respname = strenv(rmfenv)
+  arfname  = strenv(arfenv)        
 !If this is not set, ask for it
   if( trim(respname) .eq. 'none' )then
      write(*,*)"Enter name of the response file (with full path)"

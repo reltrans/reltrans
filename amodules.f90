@@ -2,17 +2,17 @@
 module telematrix
   !Module containing definitions needs to fold around the telescope
   !response matrix
-  logical              :: needchans, needresp, arf
+  logical              :: needchans, needresp, arf, needbkg
   integer              :: nenerg, numchn, Ilo, Ihi, needEs
   real                 :: Elo, Ehi
   real,    allocatable :: En(:), resp(:,:), ECHN(:)
   integer, allocatable :: NGRP(:), FCHAN(:,:), LCHAN(:,:), NCHAN(:,:)
-  character (len=500) respname, arfname
-
-
-
+  integer, allocatable :: bkgcounts(:)
+  real, allocatable    :: bkgrate(:)
+  character (len=500) respname, arfname, bkgname
   data needresp/.true./
   data needchans/.true./
+  data needbkg/.true./
 end module telematrix
 
 module telematrix2
@@ -41,6 +41,7 @@ MODULE dyn_gr
     double precision,dimension(:,:),allocatable :: re1,taudo1,pem1
     save status_re_tau
 END MODULE dyn_gr
+
 
 
 

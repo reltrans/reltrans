@@ -1,0 +1,102 @@
+Notes
+
+--The Model--
+
+rtdist is the new reltrans model. It is essentially reltransDCp, with the
+following new features:
+1) logxi_p is no longer a parameter. Instead, the distance to the source is
+a parameter and the ionisation gradient is calculated self-consistently.
+2) The source is no longer assumed to be isotropic. Instead, the angular
+dependence is specified by the parameters b1, b2 and qboost. b1 and b2 are
+linear and quadratic coefficients of the mu=\cos\theta dependence and qboost
+skews the reltation. qboost = I(mu=-1)/I(mu=1). This new qboost parameter
+supersedes the old boost parameter.
+3) The disc scaleheight h/r is now a free parameter.
+4) simrtdist is a lag spectrum simulation tool to be used in xspec.
+
+I've worked the reflionx model back into the code. genreltrans now
+uses reflionx is Cp=0. Just about to write a proper model wrapper.
+The reflionx code looks for an environment variable:
+REFLIONX_FILE
+If this is not set, it instead asks the user and then saves it for the
+rest of the session (i.e. exactly the same setup as the response
+matrix files). The genreltrans routine is a little more streamlined
+now, calling myreflect(), which is a subroutine that uses either a
+xillver table or the reflionx table. Reflionx is normalised such that
+it has the same 50-100 keV integral as the corresponding logne=15
+xillverDCp spectrum.
+
+reflionx model currently has kTbb hardwired to 0.05 keV. Could change
+this in future by including kTbb as another parameter in the param()
+array that goes into genreltrans().
+
+--Use--
+
+The new model has 24 parameters, whereas reltransDCp has only 20. The new
+parameters are: Dkpc, qboost, honr, b1, b2, and Anorm and obsolete parameters
+are: logxi and boost, leaving net 4 new parameters. In reality, the xspec
+version of the model will only have 3 extra potentially free parameters
+(honr, b1 and b2), because Anorm takes the place of the xspec norm
+parameter. i.e. in xspec, reltransDCp has 21 parameters and rtdist has 25,
+but the 25th parameter of rtdist must *always* be frozen (see below).
+
+IMPORTANT!
+>For the DC component, the xspec norm parameter must be frozen to norm=1.
+>For the lag spectrum, the xspec norm parameter must (as usual) be frozen to
+norm=1.
+>For the Re/Im/amp spectra, the xspec norm becomes the average power in that
+frequency range in squared fractional rms units (this is the case if the
+data really are the cross-spectrum and not the complex covariance).
+
+The reason for this is that Anorm is A0 from the RELTRANS 2.0 paper.
+Previously, A0 was input as the norm parameter of the DC component. Now we
+need A0 for all calls because we use it to calculate logxi(r). It is
+therefore its own model parameter. The model therefore already multiplies
+the DC component by Anorm and the AC components by Anorm^2  before sending
+then to xspec.
+
+--Still to do--
+
+1) DONE Bring back the reflionx version of the model (this is still commented
+out)
+2) DONE The g-factors currently still assume theta=pi/2. Should ideally be
+generalised. This affects gsd and gdo.
+3) DONE Simulation tool ignores background.
+4) IGNORED getcountrate() subroutine (mainly used in simulation tool) only adds
+up counts from full energy channels between the entered min and max
+energy. Could improve to also add up the fractions in the lowest and
+highest energy channel in the range. Only matters for fine energy bins,
+which we never use for lag vs energy spectrum.
+
+--Implementation--
+
+The gentreltrans subroutine now accepts one parameter array, currently with
+25 parameters. Each individual reltrans model populates this array from its
+own parameter array, hardwiring any genreltrans parameters that are
+hardwired for that particular model flavour. Set_param then reads in this
+one parameter array. The logical variables needtrans and needconv are now
+set in one subroutine need_check(). I also deleted the kTe variable as this
+is not reuqired: Ecut is always used, and its meaning is either an
+exponential cut-off or an electron temperature. There is never any need for
+the variable to have a different name.
+
+Note on g-factors:
+
+gsd has been totally replaced with the new, more general expression.
+There is one remaining instance of the old gdo though, in demang.
+
+h/r > 0 is currently not in the calculation of mue and mui. These are
+the cosines of the angles between the incident/emitted ray and the
+z-axis, NOT the disc normal. In order to do this probly, I'd need to
+calculate a new normal vector to the disc.
+
+
+standard_outputs.qdp:
+
+Datagroups:
+1&2: lag & spec for "default" parameters before including myreflect()
+3&4: lag & spec for "default" parameters after including myreflect()
+5&6: lag & spec for "default" parameters but with h/r=0, before changing g-factor routines
+7&8: lag & spec for "default" parameters but with h/r=0, after changing g-factor routines
+9&10: lag & spec for "default" parameters, after changing g-factor routines
+...the new g-fac routines make next to n difference even for h/r=0.1.

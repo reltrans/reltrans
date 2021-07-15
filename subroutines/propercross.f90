@@ -142,6 +142,7 @@ subroutine response_and_energy_bounds(resp_matr)
            if( echn2(i) .lt. Elo2 ) Ilo2 = i
            if( echn2(i) .le. Ehi2 ) Ihi2 = i
         end do
+
         Ilo2 = Ilo2 + 1
         if( Ilo2 .gt. Ihi2 ) Ihi2 = Ilo2
         needchans2 = .false.
@@ -176,6 +177,19 @@ subroutine response_and_energy_bounds(resp_matr)
      end if
   endif
 
+! =======
+        
+!         !Cross subject band with reference band
+!         do i = 1, nex
+!            ReGraw(i,j) = ReSraw(i,j) * reref + ImSraw(i,j) * imref
+!            ImGraw(i,j) = ImSraw(i,j) * reref - ReSraw(i,j) * imref
+!         end do
+!      end do
+     
+!   return
+! end subroutine propercross
+! !-----------------------------------------------------------------------
+! >>>>>>> distance
 
   
   

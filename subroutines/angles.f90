@@ -31,8 +31,9 @@
 ! Calculates emission angle for the disk mid-plane
       implicit none
       double precision demang,a,mu0,r,alpha,beta,mue
-      double precision dlgfac
-      mue = dlgfac( a,mu0,alpha,r ) / r
+      double precision dlgfacthick
+      !mue = dlgfac( a,mu0,alpha,r ) / r
+      mue = dlgfacthick( a,mu0,alpha,r,0.0d0 ) / r
       mue = mue * sqrt( beta**2 + mu0**2 * (alpha**2-a**2) )
       demang = min( mue , 1.d0 )
 ! g = - (1+z)^-1 / [ pe_\mu U^\mu ]

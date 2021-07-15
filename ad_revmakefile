@@ -1,0 +1,37 @@
+main = main_simple_call.f90
+
+#lib and other stuff to include to the compiler 
+incs = -I/mnt/zfsusers/ingram/BHolD/UptoDateCode/reverberation_code/fftw/fftw_comp/include/ -ffree-line-length-none
+libs = -L/mnt/zfsusers/ingram/BHolD/UptoDateCode/reverberation_code/fftw/fftw_comp/lib/ -lfftw3_omp -lfftw3 -lm \
+	-L/usr/local/shared/heasoft-6.27/x86_64-pc-linux-gnu-libc2.27/lib/ \
+	-lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS -lCCfits_2.5 -lwcs -ltcl -lhdsp_6.27
+
+optimization = -O3
+debug        = -Wall #-pedantic
+
+# set compilers
+fcomp = gfortran $(optimization) #$(debug) 
+ccomp = gcc      $(optimization) 
+
+# the files to compile 
+FCODE = $(main) srevtrans.f90
+CCODE = relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c relcache.c
+
+mod:
+	$(fcomp) $(incs) $(libs) -c amodules.f90
+fobj: $(FCODE)
+	$(fcomp) -c $(FCODE)
+
+cobj: 
+	$(ccomp) -c $(CCODE)
+
+compile: mod fobj cobj
+	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) *.o -o simple $(libs)
+
+simple: clean compile cleanup
+
+
+clean:
+	rm -vf *.o *.mod *~ subroutines/*~
+cleanup:
+	rm -vf *.o *.mod *~ subroutines/*~

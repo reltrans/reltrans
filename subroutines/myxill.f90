@@ -1,23 +1,52 @@
+
 !-----------------------------------------------------------------------
-      subroutine myxillDCp(ear, ne, param, ifl, photar)
-      implicit none
-      integer, intent(in)  :: ne,ifl
-      real,    intent(in)  :: ear(0:ne), param(8)
-      real,    intent(out) :: photar(ne)
-      double precision     :: dxillpar(8), dear(0:ne), dphotar(ne)
-      double precision     :: dphoter(ne)
-      character (len=100)  :: char
-
-      dxillpar = dble( param )
-      dear = dble( ear )      
-
-      call lmodxillverdensnthcompf(dear, ne, dxillpar, ifl, dphotar, dphoter, char)
-
-      photar = sngl( dphotar )      
-      return
-    end subroutine myxillDCp
+subroutine myreflect(ear,ne,Gamma,Afe,logne,Ecut,logxi,thetae,Cp,photar)
+!
+!  Cp : chooses reflection model
+!      -1 xillver      1e15 density and powerlaw illumination  
+!       1 xillverD     high density and powerlaw illumination
+!      -2 xillverCp    1e15 density and nthcomp  illumination
+!       2 xillverDCp   high density and nthcomp  illumination
+!       0 reflionxDCp  reflionx high density and nthcomp  illumination
+!
+  implicit none
+  integer ne,Cp,ifl
+  real, intent(in)  :: ear(0:ne),Gamma,Afe,logne,Ecut,logxi,thetae
+  real, intent(out) :: photar(ne)
+  real              :: lognex,xillpar(7),xillparDCp(8)
+  if( Cp .ne. 0 )then
+     !The model is a xillver model
+     !Set density limits
+     lognex = min(logne,20.0)
+     !Fill parameter arrays
+     xillpar(1) = Gamma     !Power law index
+     xillpar(2) = Afe       !Iron abundance
+     xillpar(3) = Ecut      !Ecut or kTe
+     if( Cp .eq. 1 )then
+        xillpar(3) = lognex !logne
+     end if
+     xillpar(4) = logxi     !ionization par
+     xillpar(5) = 0.0       !redshift
+     xillpar(6) = thetae    !emission angle
+     xillpar(7) = -1.0      !refl_frac
+     xillparDCp(1) = Gamma  !photon index
+     xillparDCp(2) = Afe    !Afe
+     xillparDCp(3) = Ecut   !kTe
+     xillparDCp(4) = lognex !logne
+     xillparDCp(5) = logxi  !ionization par
+     xillparDCp(6) = 0.0    !redshift
+     xillparDCp(7) = thetae !emission angle
+     xillparDCp(8) = -1.0   !refl_frac  
+     call myxill(ear, ne, xillpar, xillparDCp, ifl, Cp, photar)
+  else
+     !The model is reflionx
+     !Set density limits
+     lognex = min(logne,22.0)
+     call normreflionx(ear,ne,Gamma,Afe,lognex,Ecut,logxi,thetae,photar)
+  end if
+  return
+end subroutine myreflect
 !-----------------------------------------------------------------------
-
 
 !-----------------------------------------------------------------------
     subroutine myxill(ear, ne, param7, param8, ifl, Cp, photar)
@@ -73,6 +102,29 @@
       end subroutine myxill
 !-----------------------------------------------------------------------
 
+
+!-----------------------------------------------------------------------
+      subroutine myxillDCp(ear, ne, param, ifl, photar)
+      implicit none
+      integer, intent(in)  :: ne,ifl
+      real,    intent(in)  :: ear(0:ne), param(8)
+      real,    intent(out) :: photar(ne)
+      double precision     :: dxillpar(8), dear(0:ne), dphotar(ne)
+      double precision     :: dphoter(ne)
+      character (len=100)  :: char
+
+      dxillpar = dble( param )
+      dear = dble( ear )      
+
+      call lmodxillverdensnthcompf(dear, ne, dxillpar, ifl, dphotar, dphoter, char)
+
+      photar = sngl( dphotar )      
+      return
+    end subroutine myxillDCp
+!-----------------------------------------------------------------------
+
+
+      
 ! !-----------------------------------------------------------------------
 !       subroutine myxill_hD(ear, ne, param, ifl, Cp, photar)
 !       implicit none
