@@ -193,7 +193,6 @@ Texp       s         130.e3   1e-10    1e-10        1e10    1e10      -1
 pow        rms^2/Hz  0.01     1e-10    1e-10        1e10    1e10      -1
 RESP       " "       1         1        1           2       2        -1
 
-
 xillver     7  0.         1.e20          c_lmodxillver     add  0
 gamma    " "    2.       1.0      1.0       3.4       3.4       0.01
 Afe      " "    1.       .5       .5       10.        10.       0.01

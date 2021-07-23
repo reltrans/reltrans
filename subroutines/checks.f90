@@ -1,25 +1,4 @@
 !-----------------------------------------------------------------------
-! <<<<<<< HEAD
-! subroutine kernel_check(Cp, param20, param21, param20save, param21save, fhi, flo, fhisave, flosave, nf, nfsave, needtrans)
-! !!! Checks if reltrans needs to calculate the kernel!!!
-! !!! Arg:
-!   !   Cp: variable to set which reltrans 
-!   !   param20: parameter array for reltrans, reltransCp, reltransD
-!   !   param21: parameter array for reltransDCp
-!   !   param20save: saved array
-!   !   param21save: saved array
-!   !   fhi: high frequency range
-!   !   flo: low frequency range
-!   !   fhisave: saved frequency 
-!   !   flosave: saved frequency 
-!   !   nf: number of frequency bins
-!   !   nfsave: saved number
-!   !   (output) needtrans: logical variable to check the kernel calculation 
-!   implicit none 
-!   integer         , intent(in)  :: nf, nfsave, Cp
-!   real            , intent(in)  :: param20(20), param21(21)
-!   real            , intent(in)  :: param20save(20), param21save(21)
-! =======
 subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsave,needtrans,needconv)
 !
 ! Checks if reltrans needs to calculate the kernel
@@ -79,7 +58,6 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
      needtrans = .true.
   else if( abs( flo - flosave ) .gt. dtol) then
      needtrans = .true.
->>>>>>> distance
   end if
 !Now for needconv
   if( needtrans ) needconv = .true.

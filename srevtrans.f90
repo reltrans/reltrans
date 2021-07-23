@@ -23,7 +23,7 @@ include 'subroutines/header.h'
 subroutine tdreltrans(ear,ne,param,ifl,photar)
   implicit none
   integer :: ne, ifl, Cp, dset
-  real    :: ear(0:ne), param(20), photar(ne), par(25)
+  real    :: ear(0:ne), param(20), photar(ne), par(26)
 ! Settings
   Cp   = -1  !|Cp|=1 means cut-off pl, Cp<1 means no density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
@@ -671,7 +671,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
      ReIm   = 1
   else
      DC     = 0
-     afac  = abs(afac)
+     boost  = abs(boost)
   end if
   
 !this could go into a subroutine 
@@ -877,12 +877,12 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
 ! Calculate absorption and multiply by the raw FT
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
   
-     do j = 1, nf
-        do i = 1, nex
-           ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
-           ImSrawa(i,j) = ImSraw(i,j) * absorbx(i)
-        end do
+  do j = 1, nf
+     do i = 1, nex
+        ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
+        ImSrawa(i,j) = ImSraw(i,j) * absorbx(i)
      end do
+  end do
 
 ! Average over the frequency range
 ! <<<<<<< HEAD
@@ -896,7 +896,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
      do i = 1, nex
         ReGbar(i) = Anorm * ReSrawa(i,1)
         !Norm is applied internally for DC component of dset=1
-!        ImGbar(i) = ImSrawa(i,1)  !No need for the immaginary part in DC
+        !        ImGbar(i) = ImSrawa(i,1)  !No need for the immaginary part in DC
      end do
   else
      ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
@@ -907,29 +907,28 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
      endif
      
 ! Apply phase correction parameter to the cross-spectral model (for bad calibration)
-        do j = 1,nf
-           do i = 1,nex
-              ReG(i,j) = cos(DelA) * ReGrawa(i,j) - sin(DelA) * ImGrawa(i,j)
-              ImG(i,j) = cos(DelA) * ImGrawa(i,j) + sin(DelA) * ReGrawa(i,j)
-           end do
+     do j = 1,nf
+        do i = 1,nex
+           ReG(i,j) = cos(DelA) * ReGrawa(i,j) - sin(DelA) * ImGrawa(i,j)
+           ImG(i,j) = cos(DelA) * ImGrawa(i,j) + sin(DelA) * ReGrawa(i,j)
         end do
+     end do
 
-        ReGbar = 0.0
-        ImGbar = 0.0
-        fac = 2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf))
-        do j = 1,nf
-           f = floHz * (fhiHz/floHz)**(  (real(j)-0.5) / real(nf) )
-           do i = 1,nex
-              ReGbar(i) = ReGbar(i) + ReG(i,j) / f
-              ImGbar(i) = ImGbar(i) + ImG(i,j) / f
-           end do
+     ReGbar = 0.0
+     ImGbar = 0.0
+     fac = 2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf))
+     do j = 1,nf
+        f = floHz * (fhiHz/floHz)**(  (real(j)-0.5) / real(nf) )
+        do i = 1,nex
+           ReGbar(i) = ReGbar(i) + ReG(i,j) / f
+           ImGbar(i) = ImGbar(i) + ImG(i,j) / f
         end do
      end do
      ReGbar = ReGbar * fac * Anorm**2  !This means that norm for the AC
      ImGbar = ImGbar * fac * Anorm**2  !components in the dset=1 model
-                !is power in squared fractional rms format
+     !is power in squared fractional rms format
   end if
-     
+  
 ! Write output depending on ReIm parameter
 !  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) ) ReIm = 1
   if( abs(ReIm) .le. 4 )then
@@ -998,4 +997,3 @@ subroutine xilimits(nex,earx,contx,DeltaGamma,gso,z,dlogxi1,dlogxi2)
 end subroutine xilimits
 !-----------------------------------------------------------------------  
       
->>>>>>> distance
