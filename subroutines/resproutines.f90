@@ -1,16 +1,22 @@
 !-----------------------------------------------------------------------
-subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG)
+subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
 ! Initmatrix must have alreadt been called
 ! Input:  {ReGx(nex),ImGx(nex)]: in units of photar; i.e. (dN/dE)*dE
 ! Output: {ReG(nex) ,ImG(nex) ]: in units of photar; i.e. (dN/dE)*dE
 ! G is folded around the instrument response and re-binned onto the
 ! input energy array ear(0:ne)
   use telematrix
+  use telematrix2
   implicit none
-  integer nex,ne,i,j,k
+  integer, intent(in) :: nex,ne,resp_matr
   real earx(0:nex),ReGx(nex),ImGx(nex),ear(0:ne),ReG(ne),ImG(ne)
-  real ReGi(nenerg),ImGi(nenerg),E,dE,E2ReGx(nex),E2ImGx(nex)
-  real ReGtel(numchn),ImGtel(numchn)
+  real E,dE,E2ReGx(nex),E2ImGx(nex)
+  ! real ReGi(nenerg),ImGi(nenerg)
+  ! real ReGtel(numchn),ImGtel(numchn)
+ 
+  real, allocatable :: ReGtel(:), ImGtel(:), ReGi(:), ImGi(:)
+
+  integer :: i,j,k
   
   !Convert to E^2*dN/dE for better accuracy
   do i = 1,nex
@@ -19,40 +25,147 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG)
      E2ReGx(i) = E**2 * ReGx(i) / dE
      E2ImGx(i) = E**2 * ImGx(i) / dE
   end do
-     
-  !Rebin input arrays onto interpal telescope energy grid
-  call rebinE(earx,E2ReGx,nex,En,ReGi,nenerg)
-  call rebinE(earx,E2ImGx,nex,En,ImGi,nenerg)
 
-  !Convert back to (dN/dE)*dE
-  do i = 1,nenerg
-     E  = 0.5 * ( En(i) + En(i-1) )
-     dE = En(i) - En(i-1)
-     ReGi(i) = ReGi(i) / E**2 * dE
-     ImGi(i) = ImGi(i) / E**2 * dE
-  end do
+  if (resp_matr .eq. 1) then 
+
+     allocate(ReGi(nenerg))
+     allocate(ImGi(nenerg))
+     allocate(ReGtel(numchn))
+     allocate(ImGtel(numchn))
      
-  !Fold around response
-  ReGtel = 0.0
-  ImGtel = 0.0
-  do J = 1,NENERG
-     do K = 1,NGRP(J)
-        do I = FCHAN(J,K)+1,LCHAN(J,K)
-           dE = En(J) - En(J-1)
-           ReGtel(I) = ReGtel(I) + ReGi(J) * RESP(I,J)
-           ImGtel(I) = ImGtel(I) + ImGi(J) * RESP(I,J)
+     !Rebin input arrays onto interpal telescope energy grid
+     call rebinE(earx,E2ReGx,nex,En,ReGi,nenerg)
+     call rebinE(earx,E2ImGx,nex,En,ImGi,nenerg)
+
+     !Convert back to (dN/dE)*dE
+     do i = 1,nenerg
+        E  = 0.5 * ( En(i) + En(i-1) )
+        dE = En(i) - En(i-1)
+        ReGi(i) = ReGi(i) / E**2 * dE
+        ImGi(i) = ImGi(i) / E**2 * dE
+     end do
+
+     !Fold around response
+     ReGtel = 0.0
+     ImGtel = 0.0
+     do J = 1,NENERG
+        do K = 1,NGRP(J)
+           do I = FCHAN(J,K)+1,LCHAN(J,K)
+              dE = En(J) - En(J-1)
+              ReGtel(I) = ReGtel(I) + ReGi(J) * RESP(I,J)
+              ImGtel(I) = ImGtel(I) + ImGi(J) * RESP(I,J)
+           end do
         end do
      end do
-  end do
 
-  !Rebin onto input energy grid
-  call rebinE(echn,ReGtel,numchn,ear,ReG,ne)
-  call rebinE(echn,ImGtel,numchn,ear,ImG,ne)
+     !Rebin onto input energy grid
+     call rebinE(echn,ReGtel,numchn,ear,ReG,ne)
+     call rebinE(echn,ImGtel,numchn,ear,ImG,ne)
+  endif
   
+  if (resp_matr .eq. 2) then 
+     
+     allocate(ReGi(nenerg2))
+     allocate(ImGi(nenerg2))
+     allocate(ReGtel(numchn2))
+     allocate(ImGtel(numchn2))
+
+     !Rebin input arrays onto interpal telescope energy grid
+     call rebinE(earx,E2ReGx,nex,En2,ReGi,nenerg2)
+     call rebinE(earx,E2ImGx,nex,En2,ImGi,nenerg2)
+
+     
+     !Convert back to (dN/dE)*dE
+     do i = 1,nenerg2
+        E  = 0.5 * ( En2(i) + En2(i-1) )
+        dE = En2(i) - En2(i-1)
+        ReGi(i) = ReGi(i) / E**2 * dE
+        ImGi(i) = ImGi(i) / E**2 * dE
+     end do
+     
+     !Fold around response
+     ReGtel = 0.0
+     ImGtel = 0.0
+     do J = 1,NENERG2
+        do K = 1,NGRP2(J)
+           do I = FCHAN2(J,K)+1,LCHAN2(J,K)
+              dE = En2(J) - En2(J-1)
+              ReGtel(I) = ReGtel(I) + ReGi(J) * RESP2(I,J)
+              ImGtel(I) = ImGtel(I) + ImGi(J) * RESP2(I,J)
+           end do
+        end do
+     end do
+
+     !Rebin onto input energy grid
+     call rebinE(echn2,ReGtel,numchn2,ear,ReG,ne)
+     call rebinE(echn2,ImGtel,numchn2,ear,ImG,ne)
+  
+  endif
+
+  deallocate(ReGi)
+  deallocate(ImGi)
+  deallocate(ReGtel)
+  deallocate(ImGtel)
+
   return
 end subroutine cfoldandbin
 !-----------------------------------------------------------------------
 
+
+! !-----------------------------------------------------------------------
+! subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG)
+! ! Initmatrix must have alreadt been called
+! ! Input:  {ReGx(nex),ImGx(nex)]: in units of photar; i.e. (dN/dE)*dE
+! ! Output: {ReG(nex) ,ImG(nex) ]: in units of photar; i.e. (dN/dE)*dE
+! ! G is folded around the instrument response and re-binned onto the
+! ! input energy array ear(0:ne)
+!   use telematrix
+!   implicit none
+!   integer nex,ne,i,j,k
+!   real earx(0:nex),ReGx(nex),ImGx(nex),ear(0:ne),ReG(ne),ImG(ne)
+!   real ReGi(nenerg),ImGi(nenerg),E,dE,E2ReGx(nex),E2ImGx(nex)
+!   real ReGtel(numchn),ImGtel(numchn)
+  
+!   !Convert to E^2*dN/dE for better accuracy
+!   do i = 1,nex
+!      E  = 0.5 * ( earx(i) + earx(i-1) )
+!      dE = earx(i) - earx(i-1)
+!      E2ReGx(i) = E**2 * ReGx(i) / dE
+!      E2ImGx(i) = E**2 * ImGx(i) / dE
+!   end do
+     
+!   !Rebin input arrays onto interpal telescope energy grid
+!   call rebinE(earx,E2ReGx,nex,En,ReGi,nenerg)
+!   call rebinE(earx,E2ImGx,nex,En,ImGi,nenerg)
+
+!   !Convert back to (dN/dE)*dE
+!   do i = 1,nenerg
+!      E  = 0.5 * ( En(i) + En(i-1) )
+!      dE = En(i) - En(i-1)
+!      ReGi(i) = ReGi(i) / E**2 * dE
+!      ImGi(i) = ImGi(i) / E**2 * dE
+!   end do
+     
+!   !Fold around response
+!   ReGtel = 0.0
+!   ImGtel = 0.0
+!   do J = 1,NENERG
+!      do K = 1,NGRP(J)
+!         do I = FCHAN(J,K)+1,LCHAN(J,K)
+!            dE = En(J) - En(J-1)
+!            ReGtel(I) = ReGtel(I) + ReGi(J) * RESP(I,J)
+!            ImGtel(I) = ImGtel(I) + ImGi(J) * RESP(I,J)
+!         end do
+!      end do
+!   end do
+
+!   !Rebin onto input energy grid
+!   call rebinE(echn,ReGtel,numchn,ear,ReG,ne)
+!   call rebinE(echn,ImGtel,numchn,ear,ImG,ne)
+  
+!   return
+! end subroutine cfoldandbin
+! !-----------------------------------------------------------------------
 
 
 !-----------------------------------------------------------------------

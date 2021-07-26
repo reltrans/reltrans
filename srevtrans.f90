@@ -884,14 +884,6 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
      end do
   end do
 
-! Average over the frequency range
-! <<<<<<< HEAD
-!      if( DC .eq. 1 )then
-!         do i = 1, nex
-!            ReGbar(i) = ReSrawa(i,1)
-! !   ImGbar(i) = ImSrawa(i,1)  !No need for the immaginary part in DC
-!         end do
-! =======
   if( DC .eq. 1 )then
      do i = 1, nex
         ReGbar(i) = Anorm * ReSrawa(i,1)
@@ -905,7 +897,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
      else
         call propercross_NOmatrix(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa)
      endif
-     
+
 ! Apply phase correction parameter to the cross-spectral model (for bad calibration)
      do j = 1,nf
         do i = 1,nex
@@ -928,7 +920,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
      ImGbar = ImGbar * fac * Anorm**2  !components in the dset=1 model
      !is power in squared fractional rms format
   end if
-  
+
 ! Write output depending on ReIm parameter
 !  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) ) ReIm = 1
   if( abs(ReIm) .le. 4 )then
@@ -948,7 +940,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
         write(*,*)"Warning ReIm=4 should not be used for fitting!"
      end if
   else
-     call cfoldandbin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS) !S is count rate
+     call cfoldandbin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS,resp_matr) !S is count rate
      if( abs(ReIm) .eq. 5 )then        !Modulus
         do i = 1, ne
            dE = ear(i) - ear(i-1)
