@@ -645,7 +645,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   call set_param(dset, param, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc, Afe, &
      lognep, Ecut_obs, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
      DelA, DelAB, g, Anorm, resp_matr)
-  
+     
   muobs = cos( inc * pi / 180.d0 )
       
 !Work out how many frequencies to average over
@@ -953,6 +953,20 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
         end do
      end if
   end if
+  
+  if (verbose .gt. 1 .and. abs(ReIm) .gt. 0) then
+  !this writes the individual components to file
+     call write_ComponentS(ne,ear,nex,earx,nf,contx,absorbx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,floHz,fhiHz,&
+                ReIm,DelA,DelAB,g,boost,real(zcos),gso,real(lens),real(Gamma),ionvar,resp_matr)
+     !this writes the full model as returned to Xspec 
+     !note that xspec gets output in e.g. lags*dE, and we want just the lags, so a factor dE needs to be included
+     open (unit = 14, file = 'Output/Total.dat', status='replace', action = 'write')
+     do i = 1,ne 
+        dE = ear(i) - ear(i-1)
+        write (14,*) (ear(i)+ear(i-1))/2., photar(i)/dE
+     end do 
+     close(14)  
+  endif 
   
   fhisave   = fhi
   flosave   = flo

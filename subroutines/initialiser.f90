@@ -55,7 +55,7 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
         me      = myenv("MU_ZONES"  , 5 )   !Set number of mu_e zones used
         xe      = myenv("ION_ZONES" , 50)   !Set number of ionisation zones used
 ! Call environment variables
-        verbose = myenv("REV_VERB",0)     !Set verbose level
+        verbose = myenv("REV_VERB",2)     !Set verbose level
 
         write(*,*) 'RADIAL ZONES', xe
         write(*,*) 'ANGLE ZONES', me

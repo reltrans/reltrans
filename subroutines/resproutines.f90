@@ -61,6 +61,11 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
      !Rebin onto input energy grid
      call rebinE(echn,ReGtel,numchn,ear,ReG,ne)
      call rebinE(echn,ImGtel,numchn,ear,ImG,ne)
+     
+     deallocate(ReGi)
+     deallocate(ImGi)
+     deallocate(ReGtel)
+     deallocate(ImGtel)
   endif
   
   if (resp_matr .eq. 2) then 
@@ -100,12 +105,11 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
      call rebinE(echn2,ReGtel,numchn2,ear,ReG,ne)
      call rebinE(echn2,ImGtel,numchn2,ear,ImG,ne)
   
+     deallocate(ReGi)
+     deallocate(ImGi)
+     deallocate(ReGtel)
+     deallocate(ImGtel)
   endif
-
-  deallocate(ReGi)
-  deallocate(ImGi)
-  deallocate(ReGtel)
-  deallocate(ImGtel)
 
   return
 end subroutine cfoldandbin
