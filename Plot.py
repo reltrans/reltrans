@@ -18,13 +18,13 @@ colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e3
 
 Input = np.genfromtxt("Input/ip.dat")
 
-if (np.abs(Input[16]) == 1):
+if (np.abs(Input[19]) == 1):
     label = "Real Comp"
-elif (np.abs(Input[16]) == 2):
+elif (np.abs(Input[19]) == 2):
     label = "Imaginary Comp"
-elif (np.abs(Input[16]) == 3 or np.abs(Input[16]) == 5):
+elif (np.abs(Input[19]) == 3 or np.abs(Input[19]) == 5):
     label = "Modulus"   
-elif (np.abs(Input[16]) == 4 or np.abs(Input[16]) == 6):
+elif (np.abs(Input[19]) == 4 or np.abs(Input[19]) == 6):
     label = "Lag(s)"    
 else:
     label = "Unclear"   
@@ -47,7 +47,10 @@ for i in range(len(Total.T[0])):
     if (Total.T[1][i] > max_y and Total.T[0][i] > min_x and Total.T[0][i] < max_x):
         max_y = Total.T[1][i]    
 
-min_y = 1.5*min_y
+if (min_y < 0):
+    min_y = 1.5*min_y
+else:
+    min_y = 0.5*min_y
 max_y = 1.5*max_y
 
 fig, (ax1) = plt.subplots(1,1,figsize=(7.5,4.5))

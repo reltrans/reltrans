@@ -1,11 +1,11 @@
 main = main_simple_call.f90
+test = test_reltrans.f90
 
 #lib and other stuff to include to the compiler 
 incs = -I ./fftw/fftw_comp/include/ -ffree-line-length-none
 libs = -L ./fftw/fftw_comp/lib/ -lfftw3 -lm \
-       -L/Users/gullo/Software/heasoft-6.28/x86_64-apple-darwin18.7.0/lib/ \
-       -lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS
-       #-lwcs-5.16 -lCCfits_2.5 -lhdsp_2.9 -ltcl8.6 
+       -L /home/matteo/Software/heasoft-6.28/x86_64-pc-linux-gnu-libc2.31/lib/ -lfftw3 -lm\
+       -lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS -lCCfits_2.5
 
 optimization = -O3
 debug        = -Wall -pedantic
@@ -16,22 +16,26 @@ ccomp = gcc      $(optimization)
 
 # the files to compile 
 FCODE = $(main) srevtrans.f90
-FCODE_RELT = $(main_relt) srevtrans.f90
-FCODE_REFL = $(main_reflionx) srevtrans.f90
 CCODE = relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c relcache.c
+FTEST = $(test) srevtrans.f90
 
 mod:
 	$(fcomp) $(incs) $(libs) -c amodules.f90
 fobj: $(FCODE)
 	$(fcomp) -c $(FCODE)
+ftest: $(FTEST)
+	$(fcomp) -c $(FTEST)
 cobj: 
 	$(ccomp) -c $(CCODE)
 
 compile: mod fobj cobj
-	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) $(libs) *.o -o   simple
+	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) *.o -o main $(libs)
+compile_test: mod ftest cobj
+	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) *.o -o test_reltrans $(libs)
 
 simple: clean compile cleanup
 
+test: clean compile_test cleanup
 
 clean:
 	rm -vf *.o *.mod *~ subroutines/*~

@@ -15,4 +15,6 @@ tables/*
 fftw
 fftw/*
 xillverCp_v3.5.fits
-simple
+main
+test_reltrans
+
