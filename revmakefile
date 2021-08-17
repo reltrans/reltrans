@@ -1,5 +1,4 @@
-main = main_simple_call.f90
-test = test_reltrans.f90
+main = main.f90
 
 #lib and other stuff to include to the compiler 
 incs = -I ./fftw/fftw_comp/include/ -ffree-line-length-none
@@ -30,12 +29,8 @@ cobj:
 
 compile: mod fobj cobj
 	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) *.o -o main $(libs)
-compile_test: mod ftest cobj
-	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) *.o -o test_reltrans $(libs)
 
-simple: clean compile cleanup
-
-test: clean compile_test cleanup
+main: clean compile cleanup
 
 clean:
 	rm -vf *.o *.mod *~ subroutines/*~
