@@ -89,6 +89,7 @@ contains
  !   flags = 0 + FFTW_ESTIMATE
     flags = 0 + FFTW_PATIENT
 
+! note: these two are what kill the runtime of this subroutine
     plan1 = fftw_plan_dft_r2c_1d(nex_conv,  in, out, flags)
     plan2 = fftw_plan_dft_c2r_1d(nex_conv, in_conv, out_conv, flags)
   end subroutine init_fftw_allconv

@@ -66,37 +66,3 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
   if( abs( param(10) - paramsave(10) ) .gt. tol ) needconv = .true.
 end subroutine need_check
 !-----------------------------------------------------------------------
-
-
-! !-----------------------------------------------------------------------
-! subroutine conv_check(Cp, Cpsave, param19, param20, param19save, param20save, needconv)
-! !!! Checks if reltrans needs to re-convolve !!!
-! !!! Arg:
-!   !   Cp: variable to set which reltrans 
-!   !   param19: parameter array for reltrans, reltransCp, reltransD
-!   !   param20: parameter array for reltransDCp
-!   !   param19save: saved array
-!   !   param20save: saved array
-!   !   (output) needtrans: logical variable to check the kernel calculation 
-!   implicit none
-!   integer, intent(in)  :: Cp, Cpsave
-!   real   , intent(in)  :: param19(19), param20(20)
-!   real   , intent(in)  :: param19save(19), param20save(20)
-!   logical, intent(out) :: needconv
-
-!   if ( abs(Cp - Cpsave) .gt. 1e-7  ) then
-!      needconv = .true.
-!   else if ( abs( param19(9) - param19save(9) ) .gt. 1e-7 ) then
-!      needconv = .true. ! Afe iron abundance 
-!   else if ( abs( param20(9) - param20save(9) ) .gt. 1e-7 ) then
-!      needconv = .true. ! Afe iron abundance 
-!   else if ( abs( param19(10) - param19save(10) ) .gt. 1e-7 ) then
-!      needconv = .true. ! Either kTe or Ecut (in reltransCp or reltrans)
-! !     NOTE in the case of reltransD param19 is lognep which has been already checked before, so no problem 
-!   else if ( abs( param20(11) - param20save(11) ) .gt. 1e-7 ) then
-!      needconv = .true. ! kTe for reltransDCp 
-!   end if
-
-
-! end subroutine conv_check
-! !-----------------------------------------------------------------------

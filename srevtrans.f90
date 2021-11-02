@@ -22,7 +22,7 @@ include 'subroutines/header.h'
 !-----------------------------------------------------------------------
 subroutine tdreltrans(ear,ne,param,ifl,photar)
   implicit none
-  integer :: ne, ifl, Cp, dset
+  integer :: ne, ifl, Cp, dset, nlp
   real    :: ear(0:ne), param(20), photar(ne), par(26)
 ! Settings
   Cp   = -1  !|Cp|=1 means cut-off pl, Cp<1 means no density parameter     
@@ -55,7 +55,8 @@ subroutine tdreltrans(ear,ne,param,ifl,photar)
   par(25) = 1.0              !Anorm
   par(26) = param(20)        !telescope response
   ! Call general code
-  call genreltrans(Cp, dset, ear, ne, par, ifl, photar)
+  nlp = 1
+  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)
   return
 end subroutine tdreltrans
 !-----------------------------------------------------------------------
@@ -65,7 +66,7 @@ end subroutine tdreltrans
 !-----------------------------------------------------------------------
 subroutine tdreltransD(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset
+  integer :: ne, ifl, Cp, dset, nlp
   real    :: ear(0:ne), param(20), photar(ne), par(26)
 ! Settings
   Cp   = 1   !|Cp|=1 means cut-off pl, Cp>1 means there is a density parameter     
@@ -98,7 +99,8 @@ subroutine tdreltransD(ear, ne, param, ifl, photar)
   par(25) = 1.0              !Anorm
   par(26) = param(20)        !telescope response
 ! Call general code
-  call genreltrans(Cp, dset, ear, ne, par, ifl, photar)
+  nlp = 1
+  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)
   return
 end subroutine tdreltransD
 !-----------------------------------------------------------------------
@@ -107,7 +109,7 @@ end subroutine tdreltransD
 !-----------------------------------------------------------------------
 subroutine tdreltransCp(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset
+  integer :: ne, ifl, Cp, dset, nlp
   real    :: ear(0:ne), param(20), photar(ne), par(26)
 ! Settings
   Cp   = -2  !|Cp|=2 means nthcomp, Cp<1 means no density parameter     
@@ -139,18 +141,19 @@ subroutine tdreltransCp(ear, ne, param, ifl, photar)
   par(24) = param(19)        !g
   par(25) = 1.0              !Anorm
   par(26) = param(20)        !telescope response
-! Call general code
-  call genreltrans(Cp, dset, ear, ne, par, ifl, photar)      
+  ! Call general code
+  nlp = 1
+  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)     
   return
 end subroutine tdreltransCp
 !-----------------------------------------------------------------------
 
-
+!subroutine tdreltransDCpT (t for two? -- need to also do this with/without density, for reflionx, with PL instead of nthcomp...)
 
 !-----------------------------------------------------------------------
 subroutine tdreltransDCp(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset
+  integer :: ne, ifl, Cp, dset, nlp
   real    :: ear(0:ne), param(21), photar(ne), par(26)
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
@@ -183,7 +186,8 @@ subroutine tdreltransDCp(ear, ne, param, ifl, photar)
   par(25) = 1.0              !Anorm
   par(26) = param(21)        !telescope response
 ! Call general code
-  call genreltrans(Cp, dset, ear, ne, par, ifl, photar)
+  nlp = 1
+  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   return
 end subroutine tdreltransDCp
 !-----------------------------------------------------------------------
@@ -192,7 +196,7 @@ end subroutine tdreltransDCp
 !-----------------------------------------------------------------------
 subroutine tdreltransx(ear,ne,param,ifl,photar)
   implicit none
-  integer :: ne, ifl, Cp, dset
+  integer :: ne, ifl, Cp, dset, nlp
   real    :: ear(0:ne), param(21), photar(ne), par(26)
 ! Settings
   Cp   = 0   !Cp=0 means use the reflionx model with nthcomp and free density
@@ -225,7 +229,8 @@ subroutine tdreltransx(ear,ne,param,ifl,photar)
   par(25) = 1.0              !Anorm
   par(26) = param(21)        !telescope response
 ! Call general code
-  call genreltrans(Cp, dset, ear, ne, par, ifl, photar)
+  nlp = 1
+  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   return
 end subroutine tdreltransx
 !-----------------------------------------------------------------------
@@ -235,7 +240,7 @@ end subroutine tdreltransx
 !-----------------------------------------------------------------------
 subroutine tdrtdist(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset
+  integer :: ne, ifl, Cp, dset, nlp
   real    :: ear(0:ne), param(25), photar(ne), par(26), getcountrate
   double precision    :: honr,pi,cosi,cos0
 ! Settings
@@ -281,7 +286,8 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
      write(*,*)"leading to crash and seg fault. Better to set hard max on inc, incmax"
      write(*,*)"and set honr_max to cos(incmax)/sqrt(1-cos^2(incmax))."
   else
-     call genreltrans(Cp, dset, ear, ne, par, ifl, photar)
+     nlp = 1
+     call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   end if
   
   return
@@ -293,7 +299,7 @@ end subroutine tdrtdist
 !-----------------------------------------------------------------------
 subroutine tdrtdistX(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset
+  integer :: ne, ifl, Cp, dset, nlp
   real    :: ear(0:ne), param(25), photar(ne), par(26), getcountrate
   double precision    :: honr,pi,cosi,cos0
 ! Settings
@@ -339,7 +345,8 @@ subroutine tdrtdistX(ear, ne, param, ifl, photar)
      write(*,*)"leading to crash and seg fault. Better to set hard max on inc, incmax"
      write(*,*)"and set honr_max to cos(incmax)/sqrt(1-cos^2(incmax))."
   else
-     call genreltrans(Cp, dset, ear, ne, par, ifl, photar)
+     nlp = 1
+     call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   end if
   
   return
@@ -350,7 +357,7 @@ end subroutine tdrtdistX
 subroutine simrtdist(ear, ne, param, ifl, photar)
   use telematrix
   implicit none
-  integer :: ne, ifl, Cp, dset, i
+  integer :: ne, ifl, Cp, dset, nlp, i
   real    :: ear(0:ne), param(27), photar(ne), par(26)
   real    :: gammac2, Texp, E, dE, getcountrate
   real    :: rephotar(ne), imphotar(ne)
@@ -405,7 +412,8 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   
 ! Get `folded' lags
   par(21) = 6.0   !ReIm
-  call genreltrans(Cp, dset, ear, ne, par, ifl, photar)
+  nlp = 1
+  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   do i = 1,ne
      lag(i) = photar(i) / ( ear(i) - ear(i-1) )
   end do
@@ -417,14 +425,14 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   
 ! Calculate real and imaginary parts on the fine energy grid
   par(21) = 1.0   !ReIm
-  call genreltrans(Cp, dset, earx, nex, par, ifl, rephotarx)
+  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   par(21) = 2.0   !ReIm
-  call genreltrans(Cp, dset, earx, nex, par, ifl, imphotarx)
+  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
 ! Get DC component
   par(19) = 0.0   !floHz
   par(20) = 0.0   !fhiHz
   par(21) = 1.0   !ReIm
-  call genreltrans(Cp, dset, earx, nex, par, ifl, photarx)
+  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
 
 ! Read in background array
   if( needbkg )then
@@ -518,7 +526,7 @@ end subroutine simrtdist
 
 
 !-----------------------------------------------------------------------
-subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
+subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 !
 ! All reltrans flavours are calculated in this subroutine.
 ! Cp and dset are the settings:
@@ -562,21 +570,15 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   
 !Variables of the subroutine
 !initializer
-  integer          :: verbose, me, xe
+  integer          :: verbose, me, xe, nlp, m
   logical          :: firstcall, needtrans, needconv
   double precision :: d
 !Parameters of the model:
-  double precision :: h, a, inc, rin, rout, zcos, Gamma, honr, muobs
-! <<<<<<< HEAD
-!   real             :: logxi, Afe, lognep, kTe, kTe_s, Ecut_obs, Ecut_s&
-!        , Nh, afac, Mass, floHz, fhiHz, DelA, DelAB, g
-!   integer          :: ReIm, resp_matr
-! =======
+  double precision :: h, a, inc, rin, rout, zcos, Gamma, honr, muobs !TBD MAKE THIS LESS BAD
   real             :: logxi, Afe, lognep, Ecut_obs, Ecut_s, Dkpc, Anorm
   real             :: Nh, boost, Mass, floHz, fhiHz, DelA, DelAB, g
   integer          :: ReIm, resp_matr
   double precision :: qboost,b1,b2
-! >>>>>>> distance
 !internal frequency grid
   integer          :: nf 
   real             :: f, fac
@@ -588,6 +590,8 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
 !relativistic parameters and limit on rin and h
   real             :: gso, gsd
   double precision :: rmin, rh, lens
+!bad implementation of other things for the double lampost -- MAKE THIS LESS BAD
+  double precision :: height(2),gso_lp(2),Ecut_s_lp(2),frrel_lp(2),frobs_lp(2)
 
 !TRANSFER FUNCTIONS and Cross spectrum dynamic allocation + variables
   complex, dimension(:,:,:,:), allocatable :: transe, transea
@@ -596,11 +600,11 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
        ReGrawa, ImGrawa, ReG, ImG
   double precision :: frobs, frrel  !reflection fraction variables (verbose)
 !Radial and angle profile 
-  integer                       :: mubin, rbin
+  integer                       :: mubin, rbin, ibin
   double precision, allocatable :: logxir(:),gsdr(:), logner(:)
 !Reflection + total corss spectrum
   real    :: mue, logxi0, reline(nex), imline(nex), photarx(nex), photerx(nex)
-  real    :: absorbx(nex),contx(nex), ImGbar(nex), ReGbar(nex)
+  real    :: absorbx(nex),contx(nex), contx_temp(nex), ImGbar(nex), ReGbar(nex)
   real    :: ReGx(nex),ImGx(nex),ReS(ne),ImS(ne)
 !variable for non linear effects
   integer ::  DC, ionvariation
@@ -632,7 +636,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
   
   ifl = 1
-  !call FNINIT
+  call FNINIT
   
   ! Initialise some parameters 
   call initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, me, xe, verbose)
@@ -641,11 +645,24 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   if (.not. allocated(re1)) allocate(re1(nphi,nro))
   if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
   if (.not. allocated(pem1)) allocate(pem1(nphi,nro))
-
-  call set_param(dset, param, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc, Afe, &
-     lognep, Ecut_obs, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
-     DelA, DelAB, g, Anorm, resp_matr)
-     
+  
+  !THIS IS A STUPID WAY OF SETTING THE HEIGHTS AND IT ASSUMES WE ONLY USE TWO -- FIX THIS WHEN THE NEW MODEL FLAVOUR
+  !IS SET UP PROPERLY IN SET_PARAM
+  nlp = 2
+  !Note: the two different calls are because for the double lP we set the temperature from the coronal frame(s), but for the single
+  !LP we use the temperature in the observer frame
+  if (nlp .eq. 1) then
+     call set_param(dset, param, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc, Afe, &
+        lognep, Ecut_obs, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
+        DelA, DelAB, g, Anorm, resp_matr)
+  else 
+     call set_param(dset, param, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc, Afe, &
+        lognep, Ecut_s, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
+        DelA, DelAB, g, Anorm, resp_matr) 
+  end if 
+  height(1) = h
+  height(2) = 10.*h  
+      
   muobs = cos( inc * pi / 180.d0 )
       
 !Work out how many frequencies to average over
@@ -656,7 +673,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
     floHz = 0.d0
     nf    = 1
   end if
-      
+ 
 !Convert frequency bounds from Hz to c/Rg (now being more accurate with constants)
   fhi   = dble(fhiHz) * 4.92695275718945d-06 * Mass !4.916d-6 * Mass
   flo   = dble(floHz) * 4.92695275718945d-06 * Mass !4.916d-6 * Mass
@@ -690,19 +707,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   if( h .lt. 1.5d0*rh )then
      write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
      h = 1.5d0 * rh
-  end if
-
-!Calculate source to observer g-factor and source frame Ecut
-  gso    = real( dgsofac(a,h) )
-  Ecut_s = real(1.d0+zcos) * Ecut_obs / gso
-  if( verbose .gt. 0 )then
-     if( abs(Cp) .eq. 1 )then
-        write(*,*)"Ecut in source restframe (keV)=",Ecut_s
-     else
-        write(*,*)"kTe in source restframe (keV)=", Ecut_s
-     end if
-  end if
-  
+  end if 
 !Determine if I need to calculate the kernel
   call need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsave,needtrans,needconv)
    
@@ -745,24 +750,68 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
      allocate( ReG(nex,nf) )
      allocate( ImG(nex,nf) )
   end if
-
-! Calculate continuum - so fast there is no need for an if statement
-  Cp_cont = Cp
-  if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
-  call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx)
-     
-  if( dset .eq. 1 )then
-     fcons = get_fcons(h,a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)
+  
+  !Depending on the number of LPs, we call the continuum differently  
+  !This can be done in a separate subroutine 
+  if (nlp .eq. 1) then  
+  !Calculate source to observer g-factor and source frame Ecut
+     gso    = real( dgsofac(a,h) )
+     Ecut_s = real(1.d0+zcos) * Ecut_obs / gso
      if( verbose .gt. 0 )then
-        lacc = get_lacc(h,a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)
-        write(*,*)"Lacc/Ledd=",lacc
-        ell13pt6 = fcons * Mass * 1.73152e-28
-        write(*,*)"13.6eV-13.6keV luminosity of single source=",ell13pt6
+        if( abs(Cp) .eq. 1 )then
+           write(*,*)"Ecut in source restframe (keV)=",Ecut_s
+        else
+           write(*,*)"kTe in source restframe (keV)=", Ecut_s
+        end if
      end if
+   ! Calculate continuum - so fast there is no need for an if statement
+     Cp_cont = Cp
+     if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
+     call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx)
+  else 
+  !in this case, we loop over all lampposts, calculate the appopropriate cutoffs, and then add up the array to the continuum
+     contx = 0.
+     do m=1,nlp
+        gso = real( dgsofac(a,height(m)) )
+        print*,"Height:", height(m), "gso:", gso
+        Ecut_obs = Ecut_s * gso / real(1.d0+zcos)
+        if( verbose .gt. 0 )then !TBD rewrite these statement thingies to avoid arrow code
+           if( abs(Cp) .eq. 1 )then
+              write(*,*)"Ecut observed from source #", m, "is (keV)=" ,Ecut_obs
+           else
+              write(*,*)"kTe observed from source #", m, "is (keV)=" ,Ecut_obs
+           end if
+        end if
+        Cp_cont = Cp 
+        if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
+        call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx_temp)
+        contx = contx + contx_temp
+     end do 
+  end if 
+    
+  !get fcons factors for distance model
+  if( dset .eq. 1 )then
+     fcons = get_fcons(h,a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
   else
-     fcons = 0.0 !this never gets used for dset=0
-     if( verbose .gt. 0 ) call sourcelum(nex,earx,contx,real(mass),gso,real(Gamma))
+     fcons = 0.0 !this never gets used for dset=0 - and therefore, implicitely, for multiple lampposts
   end if
+   
+  !TBD: make sure these luminosities are right with h/gso changes!
+  if( verbose .gt. 0 )then
+    if( dset .eq. 1 )then    
+      lacc = get_lacc(h,a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)
+      write(*,*)"Lacc/Ledd=",lacc
+      ell13pt6 = fcons * Mass * 1.73152e-28
+      write(*,*)"13.6eV-13.6keV luminosity of single source=",ell13pt6
+    else
+      call sourcelum(nex,earx,contx,real(mass),gso,real(Gamma))
+    end if 
+  end if
+  
+  !move lower and save this printy thing to a file, for large verbose as usual
+  !do ibin=1,nex
+  !  print*,earx(ibin),contx(ibin)
+  !end do 
   
   if( needtrans )then
      !Allocate arrays for kernels     
@@ -771,24 +820,14 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
      if( .not. allocated(logner) ) allocate( logner(xe) )
      !Calculate the Kernel for the given parameters
      status_re_tau = .true.
-     call rtrans(a, h, muobs, Gamma, rin, rout, honr, d, rnmax, zcos,&
-          b1,b2,qboost,dset,fcons,nro, nphi, nex, dloge, nf, fhi, flo, me, xe, &
-          logxi, lognep, transe, transea, frobs, frrel, &
-          lens, logxir, gsdr, logner)
+     call rtrans(a,height,nlp,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,dset,fcons,&
+                 nro,nphi,nex,dloge,nf,fhi,flo,me,xe,logxi,lognep,transe,transea,frobs,frrel,&
+                 lens,logxir,gsdr,logner)         
   end if
   
+  !do this for each lamp post, then find some sort of weird average?
   if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",boost*frobs
-  if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel
-
-
-! <<<<<<< HEAD
-! !Determine if I need to convolve with the restframe reflection spectrum
-!   needconv = .false.
-!   if (needtrans) then
-!      needconv = .true.
-!   else
-!      call conv_check(Cp, Cpsave,  param20, param21, param20save, param21save, needconv)
-!   endif
+  if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel  
   
   if( needconv )then
      !needtrans = .false.
@@ -818,7 +857,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
         Gamma0 = real(Gamma)
         logne  = logner(rbin)
         Ecut0  = real( gsdr(rbin) ) * Ecut_s
-        logxi0 = real( logxir(rbin) )
+        logxi0 = real( logxir(rbin) )    
         if( xe .eq. 1 )then
            Ecut0  = Ecut_s
            logne  = lognep
@@ -850,8 +889,6 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
               call myreflect(earx,nex,Gamma0,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_2)
               photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
            end if
-
-
            !Loop through frequencies
            do j = 1,nf
                  do i = 1,nex
@@ -866,13 +903,11 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
            end do
         end do
      end do
-
   end if
 
 ! Calculate raw FT of the full spectrum without absorption
   call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,real(zcos),&
                 gso,real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
-
 
 ! Calculate absorption and multiply by the raw FT
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
@@ -886,7 +921,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
 
   if( DC .eq. 1 )then
      do i = 1, nex
-        ReGbar(i) = Anorm * ReSrawa(i,1)
+        ReGbar(i) = (Anorm/real(nlp)) * ReSrawa(i,1)
         !Norm is applied internally for DC component of dset=1
         !        ImGbar(i) = ImSrawa(i,1)  !No need for the immaginary part in DC
      end do

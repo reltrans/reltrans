@@ -18,7 +18,9 @@ colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e3
 
 Input = np.genfromtxt("Input/ip.dat")
 
-if (np.abs(Input[19]) == 1):
+if(Input[18]==0):
+    label = "E*F(E)"
+elif (np.abs(Input[19]) == 1):
     label = "Real Comp"
 elif (np.abs(Input[19]) == 2):
     label = "Imaginary Comp"
@@ -45,29 +47,53 @@ for i in range(len(Total.T[0])):
     if (Total.T[1][i] < min_y and Total.T[0][i] > min_x and Total.T[0][i] < max_x):
         min_y = Total.T[1][i]
     if (Total.T[1][i] > max_y and Total.T[0][i] > min_x and Total.T[0][i] < max_x):
-        max_y = Total.T[1][i]    
+        max_y = Total.T[1][i]  
+for i in range(len(PivotingPL.T[0])):
+    if (PivotingPL.T[1][i] < min_y and PivotingPL.T[0][i] > min_x and PivotingPL.T[0][i] < max_x):
+        min_y = PivotingPL.T[1][i]
+    if (PivotingPL.T[1][i] > max_y and PivotingPL.T[0][i] > min_x and PivotingPL.T[0][i] < max_x):
+        max_y = PivotingPL.T[1][i]       
+for i in range(len(LightTravelTime .T[0])):
+    if (LightTravelTime .T[1][i] < min_y and LightTravelTime .T[0][i] > min_x and LightTravelTime .T[0][i] < max_x):
+        min_y = LightTravelTime .T[1][i]
+    if (LightTravelTime .T[1][i] > max_y and LightTravelTime .T[0][i] > min_x and LightTravelTime .T[0][i] < max_x):
+        max_y = LightTravelTime .T[1][i]   
+for i in range(len(PivotingReflection .T[0])):
+    if (PivotingReflection .T[1][i] < min_y and PivotingReflection .T[0][i] > min_x and PivotingReflection .T[0][i] < max_x):
+        min_y = PivotingReflection .T[1][i]
+    if (PivotingReflection .T[1][i] > max_y and PivotingReflection .T[0][i] > min_x and PivotingReflection .T[0][i] < max_x):
+        max_y = PivotingReflection .T[1][i]     
 
 if (min_y < 0):
     min_y = 1.5*min_y
 else:
     min_y = 0.5*min_y
-max_y = 1.5*max_y
+max_y = 1.2*max_y
 
 fig, (ax1) = plt.subplots(1,1,figsize=(7.5,4.5))
 
-ax1.plot(PivotingPL.T[0],PivotingPL.T[1],linewidth=2.5,label='Pivoting PL')
-ax1.plot(Total.T[0],Total.T[1],linewidth=2.5,label='Total')
-ax1.plot(PivotingReflection.T[0],PivotingReflection.T[1],linewidth=2.5,label='Pivoting Ref')
-ax1.plot(LightTravelTime.T[0],LightTravelTime.T[1],linewidth=2.5,label='Reverberation')
+dashed_line = np.zeros(50)
+line_array = np.logspace(np.log10(min_x),np.log10(max_x),50)
+
+
+if(Input[18] != 0):
+    ax1.plot(PivotingPL.T[0],PivotingPL.T[1],linewidth=2.5,label='Pivoting PL')
+    ax1.plot(Total.T[0],Total.T[1],linewidth=2.5,label='Total')
+    ax1.plot(PivotingReflection.T[0],PivotingReflection.T[1],linewidth=2.5,label='Pivoting Ref')
+    ax1.plot(LightTravelTime.T[0],LightTravelTime.T[1],linewidth=2.5,label='Reverberation')
+    ax1.plot(line_array,dashed_line,linestyle='dashed',linewidth=1.0,color='black')
+    ax1.legend(loc='best',fontsize=14)
+    ax1.set_xlim([min_x,max_x])
+    ax1.set_ylim([min_y,max_y])
+else:
+    ax1.plot(Total.T[0],Total.T[1]*(Total.T[0])**2,linewidth=2.5,label='Total')
+    ax1.set_yscale('log', base=10)
+    ax1.set_xlim([0.5,80.])
+    ax1.set_ylim([10.,200.]) #TBD - do this better
 
 ax1.set_xscale('log', base=10)
-ax1.set_xlim([min_x,max_x])
-ax1.set_ylim([min_y,max_y])
-
-#ax1.set_yscale('log', base=10)
 ax1.set_xlabel('Energy (kev)',fontsize=22)
 ax1.set_ylabel(label,fontsize=22)
-ax1.legend(loc='best',fontsize=14)
 
 plt.tight_layout()
 plt.show()

@@ -66,7 +66,6 @@
       end subroutine getlens
 !*****************************************************************************************************
 
-
 !-----------------------------------------------------------------------
       subroutine getlimits(sins,mus,a_spin,h,velocity,muobs,x1,x2)
 ! Minimisation routine will numerically calculate cosdelta for a given cosi.

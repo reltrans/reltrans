@@ -35,7 +35,7 @@ program relwrap
     !note that if you do run a test, the grid HAS to be 1000 in length and be defined between 0.1 and 200 keV for
     !the comparison with the benchmark lag-energy spectra to make sense. Also you need to set verbose to 2, mu_zones to 1, 
     !ion_zones to 20, and a_density to 1.
-    run_test = .true.
+    run_test = .false.
     
     if (run_test .eqv. .false.) then !run just a single iteration of the model    
         !set up energy and countrate arrays  

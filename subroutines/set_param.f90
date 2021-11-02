@@ -1,5 +1,5 @@
 subroutine set_param(dset, param, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc, Afe, &
-     lognep, Ecut_obs, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
+     lognep, Ecut, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
      DelA, DelAB, g, Anorm, resp)
 !!! Sets the parameters of reltrans depending on the Cp variable
   implicit none
@@ -7,7 +7,7 @@ subroutine set_param(dset, param, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc
   real            , intent(in)   :: param(26)
   double precision, intent(out)  :: h, a, inc, rin, rout, zcos, Gamma
   double precision, intent(out)  :: honr, b1, b2, qboost
-  real            , intent(out)  :: logxi, Afe, lognep, Ecut_obs
+  real            , intent(out)  :: logxi, Afe, lognep, Ecut
   real            , intent(out)  :: Nh, boost, Mass, floHz, fhiHz
   real            , intent(out)  :: DelA, DelAB, g, Anorm, Dkpc
   integer         , intent(out)  :: ReIm, resp
@@ -24,7 +24,7 @@ subroutine set_param(dset, param, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc
   logxi    = param(8)  ! or distance
   Afe      = param(9)
   lognep   = param(10) ! will just be a dummy variable for Cp<0
-  Ecut_obs = param(11) ! or kTe, but we never need to know the difference
+  Ecut     = param(11) ! or kTe, but we never need to know the difference. NOTE: this is the corona frame temperature/cutoff for the double LP model, and the observed one otherwise
   Nh       = param(12)
   boost    = param(13)
   qboost   = dble( param(14) )
