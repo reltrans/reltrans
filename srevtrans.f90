@@ -560,14 +560,12 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   integer         , parameter :: nphi = 200, nro = 200, ionvar = 1 
   real            , parameter :: Emin = 1e-2, Emax = 3e3, dyn = 1e-7
   double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0, &
-       dlogf = 0.09 !This is a resolution parameter (base 10)
-       
+       dlogf = 0.09 !This is a resolution parameter (base 10)       
 !Args:
   integer, intent(inout) :: ifl
   integer, intent(in)    :: Cp, dset, ne
   real   , intent(inout) :: param(26)
-  real   , intent(out)   :: photar(ne)
-  
+  real   , intent(out)   :: photar(ne)  
 !Variables of the subroutine
 !initializer
   integer          :: verbose, me, xe, nlp, m
@@ -588,11 +586,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   real             :: earx(0:nex)   
   real             :: ear(0:ne)
 !relativistic parameters and limit on rin and h
-  real             :: gso, gsd
-  double precision :: rmin, rh, lens
-!bad implementation of other things for the double lampost -- MAKE THIS LESS BAD
-  double precision :: height(2),gso_lp(2),Ecut_s_lp(2),frrel_lp(2),frobs_lp(2)
-
+  double precision :: rmin, rh  
+  double precision, allocatable :: gso(:),lens(:),tauso(:),cosdelta_obs(:),height(:),contx_int(:)!,Ecut_s_lp(:),frrel_lp(:),frobs_lp(:)
 !TRANSFER FUNCTIONS and Cross spectrum dynamic allocation + variables
   complex, dimension(:,:,:,:), allocatable :: transe, transea
   real   , dimension(:,:)    , allocatable :: ReW0, ImW0, ReW1, ImW1,&
@@ -602,9 +597,10 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 !Radial and angle profile 
   integer                       :: mubin, rbin, ibin
   double precision, allocatable :: logxir(:),gsdr(:), logner(:)
-!Reflection + total corss spectrum
+!Reflection + total corss spectrum SAME AS ABOVE, ALLOCATE STUFF FOR DOUBLE LP
+  real, allocatable :: contx(:,:)
   real    :: mue, logxi0, reline(nex), imline(nex), photarx(nex), photerx(nex)
-  real    :: absorbx(nex),contx(nex), contx_temp(nex), ImGbar(nex), ReGbar(nex)
+  real    :: absorbx(nex), ImGbar(nex), ReGbar(nex)!,contx(nex,nlp)
   real    :: ReGx(nex),ImGx(nex),ReS(ne),ImS(ne)
 !variable for non linear effects
   integer ::  DC, ionvariation
@@ -618,7 +614,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 !Functions
   integer          :: i, j, myenv
   double precision :: disco, dgsofac
-
+  real             :: Eintegrate
 ! New  
   double precision :: fcons,get_fcons,ell13pt6,lacc,get_lacc
   real             :: Gamma0,logne,Ecut0,thetae,logxiin
@@ -631,13 +627,14 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   save firstcall, dloge, earx, me, xe, d, verbose
   save paramsave, fhisave, flosave, nfsave
   save frobs, frrel, lens, Cpsave, needtrans
+  !save gso,lens,tauso,cosdelta_obs
   save transe, transea, logxir, gsdr, logner
-  save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,contx
+  save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3!,contx
   save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
   
   ifl = 1
   call FNINIT
-  
+  ! double precision, allocatable :: gso(:),lens(:),tauso(:),cosdelta_obs(:),height(:)
   ! Initialise some parameters 
   call initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, me, xe, verbose)
   
@@ -647,8 +644,18 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   if (.not. allocated(pem1)) allocate(pem1(nphi,nro))
   
   !THIS IS A STUPID WAY OF SETTING THE HEIGHTS AND IT ASSUMES WE ONLY USE TWO -- FIX THIS WHEN THE NEW MODEL FLAVOUR
-  !IS SET UP PROPERLY IN SET_PARAM
-  nlp = 2
+  !IS SET UP PROPERLY IN SET_PARAM 
+  !FIX ALLOCATIONS TOO, NOT ALWAYS NEEDED TO ALLOCATE/DEALLOCATE ALL THE THINGS
+  !THIS WILL BE DONE LAST AFTER CODING UP THE NEW FULL MODEL FLAVOUR
+  nlp = 2  
+  allocate(gso(nlp))
+  allocate(lens(nlp))
+  allocate(tauso(nlp))
+  allocate(cosdelta_obs(nlp))
+  allocate(height(nlp))
+  allocate(contx_int(nlp))
+  allocate(contx(nex,nlp))
+  
   !Note: the two different calls are because for the double lP we set the temperature from the coronal frame(s), but for the single
   !LP we use the temperature in the observer frame
   if (nlp .eq. 1) then
@@ -661,10 +668,12 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         DelA, DelAB, g, Anorm, resp_matr) 
   end if 
   height(1) = h
-  height(2) = 10.*h  
-      
+  if (nlp .eq. 2) then 
+     height(2) = 10.*h  
+     !print*,height,height(1),height(2),"Height test" 
+  end if    
   muobs = cos( inc * pi / 180.d0 )
-      
+        
 !Work out how many frequencies to average over
   fc = 0.5d0 * ( floHz + fhiHz )
   nf = ceiling( log10(fhiHz/floHz) / dlogf )
@@ -751,62 +760,59 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
      allocate( ImG(nex,nf) )
   end if
   
-  !Depending on the number of LPs, we call the continuum differently  
-  !This can be done in a separate subroutine 
-  if (nlp .eq. 1) then  
-  !Calculate source to observer g-factor and source frame Ecut
-     gso    = real( dgsofac(a,h) )
-     Ecut_s = real(1.d0+zcos) * Ecut_obs / gso
-     if( verbose .gt. 0 )then
+  do m=1,nlp
+     if (nlp .eq. 1) then 
+        gso(m) = real( dgsofac(a,height(m)) ) 
+        Ecut_s = real(1.d0+zcos) * Ecut_obs / gso(m)
+        call getlens(a,height(m),muobs,lens(m),tauso(m),cosdelta_obs(m))
+        if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
+        Cp_cont = Cp
+        if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
+        call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx)        
+        if( dset .eq. 1 )then
+           fcons = get_fcons(height(m),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
+        else
+           fcons = 0.0
+        end if         
+        if( verbose .gt. 0 )then
+           if( dset .eq. 1 )then    
+              lacc = get_lacc(height(m),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)
+              write(*,*)"Lacc/Ledd=",lacc
+              ell13pt6 = fcons * Mass * 1.73152e-28
+              write(*,*)"13.6eV-13.6keV luminosity of single source=",ell13pt6
+           else
+              call sourcelum(nex,earx,contx,real(mass),gso(m),real(Gamma))
+           end if   
+        end if         
         if( abs(Cp) .eq. 1 )then
            write(*,*)"Ecut in source restframe (keV)=",Ecut_s
         else
            write(*,*)"kTe in source restframe (keV)=", Ecut_s
-        end if
-     end if
-   ! Calculate continuum - so fast there is no need for an if statement
-     Cp_cont = Cp
-     if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
-     call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx)
-  else 
-  !in this case, we loop over all lampposts, calculate the appopropriate cutoffs, and then add up the array to the continuum
-     contx = 0.
-     do m=1,nlp
-        gso = real( dgsofac(a,height(m)) )
-        print*,"Height:", height(m), "gso:", gso
-        Ecut_obs = Ecut_s * gso / real(1.d0+zcos)
-        if( verbose .gt. 0 )then !TBD rewrite these statement thingies to avoid arrow code
+        end if 
+        contx_int = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 0
+        contx = lens(m) * (gso(m)/(real(1.d0+zcos))**Gamma) * contx        
+     else 
+        !here the observed cutoffs are set from the temperature in the source frame   
+        gso(m) = real( dgsofac(a,height(m)) )
+        Ecut_obs = Ecut_s * gso(m) / real(1.d0+zcos)
+        call getlens(a,height(m),muobs,lens(m),tauso(m),cosdelta_obs(m))
+        if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
+        Cp_cont = Cp 
+        if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
+        call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx(:,m))
+        if( verbose .gt. 0 )then
+           call sourcelum(nex,earx,contx(:,m),real(mass),gso(m),real(Gamma))
            if( abs(Cp) .eq. 1 )then
               write(*,*)"Ecut observed from source #", m, "is (keV)=" ,Ecut_obs
            else
               write(*,*)"kTe observed from source #", m, "is (keV)=" ,Ecut_obs
            end if
-        end if
-        Cp_cont = Cp 
-        if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
-        call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx_temp)
-        contx = contx + contx_temp
-     end do 
-  end if 
-    
-  !get fcons factors for distance model
-  if( dset .eq. 1 )then
-     fcons = get_fcons(h,a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
-  else
-     fcons = 0.0 !this never gets used for dset=0 - and therefore, implicitely, for multiple lampposts
-  end if
-   
-  !TBD: make sure these luminosities are right with h/gso changes!
-  if( verbose .gt. 0 )then
-    if( dset .eq. 1 )then    
-      lacc = get_lacc(h,a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)
-      write(*,*)"Lacc/Ledd=",lacc
-      ell13pt6 = fcons * Mass * 1.73152e-28
-      write(*,*)"13.6eV-13.6keV luminosity of single source=",ell13pt6
-    else
-      call sourcelum(nex,earx,contx,real(mass),gso,real(Gamma))
-    end if 
-  end if
+        end if  
+        !calculate integral here, then add factors
+        contx_int(m) = Eintegrate(0.1,1e3,nex,earx,contx(:,m),dlogE)                   
+        contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos))**Gamma) * contx(:,m)   
+     end if      
+  end do 
   
   !move lower and save this printy thing to a file, for large verbose as usual
   !do ibin=1,nex
@@ -820,9 +826,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
      if( .not. allocated(logner) ) allocate( logner(xe) )
      !Calculate the Kernel for the given parameters
      status_re_tau = .true.
-     call rtrans(a,height,nlp,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,dset,fcons,&
-                 nro,nphi,nex,dloge,nf,fhi,flo,me,xe,logxi,lognep,transe,transea,frobs,frrel,&
-                 lens,logxir,gsdr,logner)         
+     call rtrans(a,height,nlp,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,dset,fcons,contx_int,&
+                 tauso,lens,cosdelta_obs,nro,nphi,nex,dloge,nf,fhi,flo,me,xe,logxi,lognep,&
+                 transe,transea,frobs,frrel,logxir,gsdr,logner)         
   end if
   
   !do this for each lamp post, then find some sort of weird average?
@@ -845,7 +851,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
      Gamma2 = real(Gamma) + 0.5*DeltaGamma
      
      !Get logxi values corresponding to Gamma1 and Gamma2
-     call xilimits(nex,earx,contx,DeltaGamma,gso,real(zcos),dlogxi1,dlogxi2)
+     !for N lps: call for each LP and figure out what the limits are from there?
+     call xilimits(nex,earx,contx(:,1),DeltaGamma,real(gso(1)),real(zcos),dlogxi1,dlogxi2)
 
 !Set the ion-variation to 1, there is an if inside the radial loop to check if either the ionvar is 0 or the logxi is 0 to set ionvariation to 0
 ! it is important that ionvariation is different than ionvar because ionvar is used also later in rawS routine to calculate the cross-spectrum
@@ -906,8 +913,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   end if
 
 ! Calculate raw FT of the full spectrum without absorption
-  call rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,real(zcos),&
-                gso,real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
+  call rawS(nex,earx,nf,nlp,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,real(zcos),&
+                real(gso),real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
 
 ! Calculate absorption and multiply by the raw FT
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
@@ -991,8 +998,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   
   if (verbose .gt. 1 .and. abs(ReIm) .gt. 0) then
   !this writes the individual components to file
-     call write_ComponentS(ne,ear,nex,earx,nf,contx,absorbx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,floHz,fhiHz,&
-                ReIm,DelA,DelAB,g,boost,real(zcos),gso,real(lens),real(Gamma),ionvar,resp_matr)
+     call write_components(ne,ear,nex,earx,nf,nlp,contx,absorbx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,floHz,fhiHz,&
+                ReIm,DelA,DelAB,g,boost,real(zcos),real(gso),real(lens),real(Gamma),ionvar,resp_matr)
      !this writes the full model as returned to Xspec 
      !note that xspec gets output in e.g. lags*dE, and we want just the lags, so a factor dE needs to be included
      open (unit = 14, file = 'Output/Total.dat', status='replace', action = 'write')
@@ -1002,6 +1009,15 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
      end do 
      close(14)  
   endif 
+  
+  !PLACEHOLDER TO BE FIXED LATER
+  deallocate(gso)
+  deallocate(lens)
+  deallocate(tauso)
+  deallocate(cosdelta_obs)
+  deallocate(height)
+  deallocate(contx_int)
+  deallocate(contx)
   
   fhisave   = fhi
   flosave   = flo

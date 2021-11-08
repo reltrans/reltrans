@@ -77,10 +77,10 @@ line_array = np.logspace(np.log10(min_x),np.log10(max_x),50)
 
 
 if(Input[18] != 0):
-    ax1.plot(PivotingPL.T[0],PivotingPL.T[1],linewidth=2.5,label='Pivoting PL')
-    ax1.plot(Total.T[0],Total.T[1],linewidth=2.5,label='Total')
-    ax1.plot(PivotingReflection.T[0],PivotingReflection.T[1],linewidth=2.5,label='Pivoting Ref')
-    ax1.plot(LightTravelTime.T[0],LightTravelTime.T[1],linewidth=2.5,label='Reverberation')
+    ax1.plot(Total.T[0],Total.T[1],linewidth=2.5,label='Total',color=colors[1],zorder=2)
+    ax1.plot(PivotingPL.T[0],PivotingPL.T[1],linewidth=2.5,label='Pivoting PL',color=colors[0],zorder=1)
+    ax1.plot(PivotingReflection.T[0],PivotingReflection.T[1],linewidth=2.5,label='Pivoting Ref',color=colors[2],zorder=1)
+    ax1.plot(LightTravelTime.T[0],LightTravelTime.T[1],linewidth=2.5,label='Reverberation',color=colors[3],zorder=1)
     ax1.plot(line_array,dashed_line,linestyle='dashed',linewidth=1.0,color='black')
     ax1.legend(loc='best',fontsize=14)
     ax1.set_xlim([min_x,max_x])

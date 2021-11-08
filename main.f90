@@ -12,7 +12,7 @@ program relwrap
                                     
     real, dimension(:), allocatable      :: ear        !photon energy grid 
     real, dimension(:), allocatable      :: photar     !spectrum array
-    
+       
     real test_model                 !temporary value to test the model output
     real test_precision             !accuracy to which we want the tests to check the model; by default test_precision, ie 0.1% change will
                                     !be flagged as a failed test

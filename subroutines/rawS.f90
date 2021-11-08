@@ -1,4 +1,4 @@
-subroutine rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,z,gso,lens,&
+subroutine rawS(nex,earx,nf,nlp,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,z,gso,lens,&
      Gamma,ionvar,DC,ReGraw,ImGraw)
 ! Calculates the FT of the spectrum before multiplying by the absorption model
 !
@@ -23,7 +23,7 @@ subroutine rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelA
 ! boost                 The boost model parameter (named afac elsewhere in the code)
 ! z                     Cosmological redshift
 ! gso                   Blueshift travelling from source to observer
-! lens                  Lensing factor
+! lens                  Lensing factor -- note: not necessary if we do the correction directly when calling the continuum
 ! Gamma                 Photon index
 ! ionvar                Integer: ionvar=1 means include ionization variations, ionvar=0 means don't.
 ! DC                    Integer: DC=1 means this is the DC component, DC=0 means opposite.
@@ -32,16 +32,18 @@ subroutine rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelA
 ! ReGraw(1:nex,1:nf)    Real part of Sraw(E,nu)      - in specific photon flux (photar/dE)
 ! ImGraw(1:nex,1:nf)    Imaginary part of Sraw(E,nu) - in specific photon flux (photar/dE)
   implicit none
-  integer nex,nf,ionvar,DC
-  real earx(0:nex),corr,contx(nex),ReW0(nex,nf),ImW0(nex,nf)
+  integer nex,nf,ionvar,DC,nlp
+  real earx(0:nex),corr,contx(nex,nlp),cont_1(nex),cont_2(nex),ReW0(nex,nf),ImW0(nex,nf)
   real ReW1(nex,nf),ImW1(nex,nf),ReW2(nex,nf),ImW2(nex,nf),ReW3(nex,nf),ImW3(nex,nf)
-  real g,DelAB,boost,z,gso,lens,Gamma,ReGraw(nex,nf),ImGraw(nex,nf)
+  real g,DelAB,boost,z,gso(nlp),lens(nlp),Gamma,ReGraw(nex,nf),ImGraw(nex,nf)
   real sinD,cosD,E,fac,ReW0s,ImW0s,ReWbs,ImWbs,ReW3s,ImW3s,gsoz
-  integer i,j
+  integer i,j,m
   sinD = sin(DelAB)
   cosD = cos(DelAB)
-  gsoz = gso / (1.0+z)       !blueshift corrected for expansion of the Universe
-  corr = lens * gsoz**Gamma  !Correction factor for direct component
+  cont_1 = 0.
+  cont_2 = 0.
+  !gsoz = gso / (1.0+z)       !blueshift corrected for expansion of the Universe
+  !corr = 1.!lens * gsoz**Gamma  !Correction factor for direct component
   !Now calculate the cross-spectrum (/complex covariance)
 
   if (boost .lt. 0 .and. DC .eq. 1) then 
@@ -49,13 +51,17 @@ subroutine rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelA
         do i = 1,nex
            ReGraw(i,j) = (-boost) * ReW0(i,j)
         enddo
-     enddo
-     
+     enddo     
   else
      do j = 1,nf
         do i = 1,nex
+           !need to loop in here over all lamp posts - which means I need two contx arrays, and the gso and lens of each               
            E   = 0.5 * ( earx(i) + earx(i-1) )
-           fac = log(gsoz/E)
+           do m=1,nlp
+              fac = log(gso(m)/((1.0+z)*E)) !TBD ask about this factor!!!!
+              cont_1(i) = cont_1(i) + contx(i,m)
+              cont_2(i) = cont_2(i) + fac*contx(i,m)   
+           end do 
            !Multiply by boost parameter and group like terms
            ReW0s = boost * ReW0(i,j)
            ImW0s = boost * ImW0(i,j)
@@ -64,19 +70,19 @@ subroutine rawS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelA
            ReW3s = (1-DC) * ionvar * boost * ReW3(i,j)
            ImW3s = (1-DC) * ionvar * boost * ImW3(i,j)
            !Real part
-           ReGraw(i,j) = cosD * ( fac * corr * contx(i) + ReWbs )
+           ReGraw(i,j) = cosD * ( cont_2(i) + ReWbs )
            ReGraw(i,j) = ReGraw(i,j) - sinD * ImWbs
            ReGraw(i,j) = ReGraw(i,j) * g
-           ReGraw(i,j) = ReGraw(i,j) + corr * contx(i) + ReW0s + ReW3s
+           ReGraw(i,j) = ReGraw(i,j) + cont_1(i) + ReW0s + ReW3s
            !Imaginary part
-           ImGraw(i,j) = sinD * ( fac*corr*contx(i) + ReWbs )
+           ImGraw(i,j) = sinD * ( cont_2(i) + ReWbs )
            ImGraw(i,j) = ImGraw(i,j) + cosD * ImWbs
            ImGraw(i,j) = ImGraw(i,j) * g
            ImGraw(i,j) = ImGraw(i,j) + ImW0s + ImW3s
         end do
      end do
-
   endif
+  
   return
 end subroutine rawS
 

@@ -1,15 +1,15 @@
-subroutine write_ComponentS(ne,ear,nex,earx,nf,contx,absorbx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,floHz,fhiHz,&
-                       ReIm,DelA,DelAB,g,boost,z,gso,lens,Gamma,ionvar,resp_matr)                      
+subroutine write_components(ne,ear,nex,earx,nf,nlp,contx,absorbx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,floHz,fhiHz,&
+                            ReIm,DelA,DelAB,g,boost,z,gso,lens,Gamma,ionvar,resp_matr)                      
     !this subroutine separates the components from the model, calculates each cross spectrum including the effects of absorption,
     !folds the response matrix if desired, calls the phase correction, averages over frequnecy, and prints each different components
     !to a new file. This code repeats a lot and it's a bit of a monstrosity, mostly because it's annoying to separate the transfer
     !functions W0, W1 etc into model components easily. Apologies.
     
     implicit none
-    integer :: ne,nex,nf,ionvar,ReIm,resp_matr
-    real :: ear(0:ne),earx(0:nex),corr,contx(nex),absorbx(nex),ReW0(nex,nf),ImW0(nex,nf)
+    integer :: ne,nex,nf,nlp,ionvar,ReIm,resp_matr
+    real :: ear(0:ne),earx(0:nex),corr,contx(nex,nlp),absorbx(nex),ReW0(nex,nf),ImW0(nex,nf)
     real :: ReW1(nex,nf),ImW1(nex,nf),ReW2(nex,nf),ImW2(nex,nf),ReW3(nex,nf),ImW3(nex,nf)
-    real :: g,DelA,DelAB,boost,z,gso,lens,Gamma
+    real :: g,DelA,DelAB,boost,z,gso(nlp),lens(nlp),Gamma
     real :: fac,ReW0s,ImW0s,ReWbs,ImWbs,ReW3s,ImW3s
     real :: tempRe,tempIm,dE
     real :: f,floHz,fhiHz
@@ -47,7 +47,7 @@ subroutine write_ComponentS(ne,ear,nex,earx,nf,contx,absorbx,ReW0,ImW0,ReW1,ImW1
     
     !This stores each component contribution in the Re/Im matrices: PL includeds the continuum contributions, LT the light travel
     !time, PR the pivoting reflection, IV the ionization variations    
-    call ComponentS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,z,gso,lens,&
+    call components(nex,earx,nf,nlp,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,z,gso,lens,&
                Gamma,ionvar,ReSPL,ImSPL,ReSLT,ImSLT,ReSPR,ImSPR)    
     !Include the effects of absorption in each model component matrix              
     do j = 1, nf
@@ -174,7 +174,7 @@ subroutine write_ComponentS(ne,ear,nex,earx,nf,contx,absorbx,ReW0,ImW0,ReW1,ImW1
     close(12)
 end subroutine write_ComponentS
 
-subroutine ComponentS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,z,gso,lens,&
+subroutine components(nex,earx,nf,nlp,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,z,gso,lens,&
      Gamma,ionvar,ReSPL,ImSPL,ReSLT,ImSLT,ReSPR,ImSPR)
     ! Calculates the FT of the spectrum components before multiplying by the absorption model
     ! This is essentially the same as S, but it returns the FT for each component that contributes to the lags:
@@ -217,18 +217,20 @@ subroutine ComponentS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,
     ! ImSPR(1:nex,1:nf)    Imaginary part of S(E,nu) for the pivoting reflection only,  in specific photon flux (photar/dE)
 
     implicit none
-    integer nex,nf,ionvar
-    real earx(0:nex),corr,contx(nex),ReW0(nex,nf),ImW0(nex,nf)
+    integer nex,nf,ionvar,nlp
+    real earx(0:nex),corr,contx(nex,nlp),cont_1(nex),cont_2(nex),ReW0(nex,nf),ImW0(nex,nf)
     real ReW1(nex,nf),ImW1(nex,nf),ReW2(nex,nf),ImW2(nex,nf),ReW3(nex,nf),ImW3(nex,nf)
-    real g,DelAB,boost,z,gso,lens,Gamma
+    real g,DelAB,boost,z,gso(nlp),lens(nlp),Gamma
     real ReSPL(nex,nf),ImSPL(nex,nf),ReSLT(nex,nf),ImSLT(nex,nf)
     real ReSPR(nex,nf),ImSPR(nex,nf)
     real sinD,cosD,E,fac,ReW0s,ImW0s,ReWbs,ImWbs,ReW3s,ImW3s,gsoz
-    integer i,j
+    integer i,j,m
     sinD = sin(DelAB)
     cosD = cos(DelAB)
-    gsoz = gso / (1.0+z)       !blueshift corrected for expansion of the Universe
-    corr = lens * gsoz**Gamma  !Correction factor for direct component
+    cont_1 = 0.
+    cont_2 = 0.
+    !gsoz = gso / (1.0+z)       !blueshift corrected for expansion of the Universe
+    !corr = 1.!lens * gsoz**Gamma  !Correction factor for direct component
     
     !Now calculate the cross-spectrum (/complex covariance)
     !Redo with Gullo's convention: separate pivoting PL, pivoting reflection+light crossing time, light crossing time only.
@@ -236,7 +238,11 @@ subroutine ComponentS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,
     do j = 1,nf
         do i = 1,nex
             E   = 0.5 * ( earx(i) + earx(i-1) )
-            fac = log(gsoz/E)
+            do m=1,nlp
+                fac = log(gso(m)/((1.0+z)*E)) !TBD ask about this factor!!!!
+                cont_1(i) = cont_1(i) + contx(i,m)
+                cont_2(i) = cont_2(i) + fac*contx(i,m)   
+            end do 
             !Multiply by boost parameter and group like terms
             ReW0s = boost * ReW0(i,j)
             ImW0s = boost * ImW0(i,j)
@@ -245,11 +251,11 @@ subroutine ComponentS(nex,earx,nf,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,
             ReW3s = ionvar * boost * ReW3(i,j)
             ImW3s = ionvar * boost * ImW3(i,j)
             !Real part of all the components
-            ReSPL(i,j) = g * cosD * fac * corr * contx(i) + corr * contx(i)
-            ReSLT(i,j) = ReW0s + corr * contx(i) 
-            ReSPR(i,j) = g * (cosD * ReWbs - sinD * ImWbs) + ReW3s  + ReW0s + corr * contx(i)             
+            ReSPL(i,j) = g * cosD * cont_2(i) + cont_1(i)
+            ReSLT(i,j) = ReW0s + cont_1(i) 
+            ReSPR(i,j) = g * (cosD * ReWbs - sinD * ImWbs) + ReW3s  + ReW0s + cont_1(i)             
             !Imaginary part of all the components
-            ImSPL(i,j) = g * sinD * fac * corr * contx(i)
+            ImSPL(i,j) = g * sinD * cont_2(i)
             ImSLT(i,j) = ImW0s 
             ImSPR(i,j) = g * (sinD * ReWbs + cosD * ImWbs) + ImW3s + ImW0s
         end do

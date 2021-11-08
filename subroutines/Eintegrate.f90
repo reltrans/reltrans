@@ -26,4 +26,3 @@ function Eintegrate(Elo,Ehi,nex,earx,photarx,dlogE)
   return
 end function Eintegrate
 !-----------------------------------------------------------------------
-  

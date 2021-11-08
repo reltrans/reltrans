@@ -1,7 +1,7 @@
 !-----------------------------------------------------------------------
-subroutine rtrans(spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,&
-     &dset,fcons,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,rlxi,lognep,&
-     &transe,transe_a,frobs,frrel,lens,logxir,gsdr,logner)
+subroutine rtrans(spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,dset,fcons,contx_int,&
+     &tauso,lens,cosdelta_obs,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,rlxi,lognep,&
+     &transe,transe_a,frobs,frrel,logxir,gsdr,logner)
     ! Code to calculate the transfer function for an accretion disk.
     ! This code first does full GR ray tracing for a camera with impact parameters < bmax
     ! It then also does straight line ray tracing for impact parameters >bmax
@@ -34,15 +34,16 @@ subroutine rtrans(spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qbo
     use blcoordinate
     implicit none
     integer nro,nphi,ndelta,ne,nf,me,xe,dset,nlp
-    double precision spin,height(nlp),mu0,Gamma,rin,rout,zcos,fhi,flo,honr
+    double precision spin,mu0,Gamma,rin,rout,zcos,fhi,flo,honr
     double precision b1,b2,qboost
     double precision fcons,cosdout,logxir(xe),gsdr(xe),logner(xe)
     real rlxi, dloge, lognep
     complex cexp,transe(ne,nf,me,xe),transe_a(ne,nf,me,xe)
     integer i,npts,j,odisc,n,gbin,rbin,mubin,l,m,k
     parameter (ndelta=1000)
-    double precision domega(nro),d,taudo,g,dlgfacthick,dFe,lens,newtex
-    double precision tauso ,rlp_column(ndelta),dcosdr_column(ndelta),tlp_column(ndelta),cosd_column(ndelta)
+    double precision domega(nro),d,taudo,g,dlgfacthick,dFe,newtex
+    double precision height(nlp),tauso(nlp),lens(nlp),cosdelta_obs(nlp),contx_int(nlp)
+    double precision rlp_column(ndelta),dcosdr_column(ndelta),tlp_column(ndelta),cosd_column(ndelta)
     !TBD: double check this stuff for the double lp
     double precision rlp(ndelta,nlp),dcosdr(ndelta,nlp),tlp(ndelta,nlp),cosd(ndelta,nlp)
     double precision alpha,beta,cos0,sin0,phie,re,gsd
@@ -51,7 +52,7 @@ subroutine rtrans(spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qbo
     double precision rmin,disco,rfunc,scal,velocity(3),mudisk,sysfref
     double precision rnmax,rnmin,rn(nro),phin,mueff,dlogr,interper
     double precision fi(nf),dgsofac,sindisk,mue,demang,frobs,cosdin,frrel
-    double precision pnorm,pnormer,mus,ptf,pfunc_raw,cosdelta_obs,ang_fac
+    double precision pnorm,pnormer,mus,ptf,pfunc_raw,ang_fac
     integer nron,nphin,nrosav,nphisav,verbose
     double precision spinsav,musav,routsav,mudsav,rnn(nro),domegan(nro)
     integer myenv
@@ -132,14 +133,11 @@ subroutine rtrans(spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qbo
             tlp_column(l)=tlp(l,m)
             dcosdr_column(l)=dcosdr(l,m)
             cosd_column(l)=cosd(l,m)    
-        end do  
-        ! Calculate lensing factor "lens" and source to observer time lag "tauso"
-        call getlens(spin,height(m),mu0,lens,tauso,cosdelta_obs)
-        if( tauso .ne. tauso ) stop "tauso is NaN"
+        end do          
         ! Calculate 4pi p(theta0,phi0) = ang_fac
-        ang_fac = 4.d0 * pi * pnorm * pfunc_raw(-cosdelta_obs,b1,b2,qboost)
+        ang_fac = 4.d0 * pi * pnorm * pfunc_raw(-cosdelta_obs(m),b1,b2,qboost)
         ! Adjust the lensing factor (easiest way to keep track)
-        lens = lens * ang_fac                 
+        lens(m) = lens(m) * ang_fac                 
         ! Calculate the relxill reflection fraction for one column...need to do this for both
         frrel = sysfref(rin,rlp_column,cosd_column,ndelta,cosdout)    
         ! Construct the transfer function by summing over all pixels
@@ -163,7 +161,7 @@ subroutine rtrans(spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qbo
                         kk = get_index(rlp_column,ndelta,re,rmin,npts)
                         !Interpolate (or extrapolate) the time function
                         tausd = interper(rlp_column,tlp_column,ndelta,re,kk)
-                        tau   = (1.d0+zcos) * (tausd+taudo-tauso)           !This is the time lag between direct and reflected photons
+                        tau   = (1.d0+zcos) * (tausd+taudo-tauso(m))           !This is the time lag between direct and reflected photons
                         !Interpolate |dcos\delta/dr| function                  
                         cosfac = interper(rlp_column,dcosdr_column,ndelta,re,kk)
                         mus    = interper(rlp_column,cosd_column,ndelta,re,kk)
@@ -260,13 +258,13 @@ subroutine rtrans(spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qbo
             end do
         end do
         !Finish calculation of observer's reflection fraction - FIGURE OUT A WAY TO DO THIS FOR ALL LPS
-        frobs = frobs / dgsofac(spin,height(m)) / lens
+        frobs = frobs / dgsofac(spin,height(m)) / lens(m)
     end do 
 
     !calculate the ionization grid 
     if( dset .eq. 0 .or. size(height) .ge. 2) then
         call radfunctions_dens(xe,rin,rnmax,dble(rlxi),dble(lognep),spin,height,Gamma,honr,rlp,dcosdr&
-                               &,cosd,ndelta,nlp,rmin,npts,logxir,gsdr,logner)
+                               &,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner)
     else
         call radfuncs_dist(xe,rin,rnmax,b1,b2,qboost,fcons,&
                            & dble(lognep),spin,height(1),honr,rlp,dcosdr,cosd,ndelta,rmin,npts,&
@@ -445,19 +443,19 @@ end function pfunc_raw
 
 !-----------------------------------------------------------------------
 subroutine radfunctions_dens(xe,rin,rnmax,logxip,lognep,spin,height,Gamma,honr,rlp,dcosdr&
-     &,cosd,ndelta,nlp,rmin,npts,logxir,gsdr,logner)
+     &,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner)
     ! In  : xe,rin,rnmax,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
     ! Out : logxir(1:xe), gsdr(1:xe), logner(1:xe)
     implicit none
     integer         , intent(IN)   :: xe, ndelta, npts, nlp
     double precision, intent(IN)   :: rin, rmin, rnmax, logxip, lognep, spin, honr, Gamma
     real                           :: gso(nlp)
-    double precision, intent(IN)   :: rlp(ndelta,nlp), dcosdr(ndelta,nlp), cosd(ndelta,nlp), height(nlp)
+    double precision, intent(IN)   :: rlp(ndelta,nlp), dcosdr(ndelta,nlp), cosd(ndelta,nlp), height(nlp), contx_int(nlp)
     double precision :: rlp_column(ndelta),dcosdr_column(ndelta),cosd_column(ndelta), dgsofac
     double precision, intent(INOUT):: logxir(xe), gsdr(xe), logner(xe)
     integer          :: i, kk, get_index, myenv, adensity,l,m
     double precision :: rp, logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd(nlp), dglpfacthick
-    double precision :: xi_lp(xe,nlp), xitot, xiraw, mylogne, mudisk
+    double precision :: xi_lp(xe,nlp), xitot, xiraw, mylogne, mudisk, gsd_temp
     double precision, allocatable :: rad(:)
     
     !height(1) = h
@@ -468,6 +466,7 @@ subroutine radfunctions_dens(xe,rin,rnmax,logxip,lognep,spin,height,Gamma,honr,r
     adensity = max( adensity , 0 )
     ! Set disk opening angle
     mudisk   = honr / sqrt( honr**2 + 1.d0  )
+    
     allocate(rad(xe))
     !Now calculate logxi itself
     ! The loop calculates the raw xi and raw n_e.
@@ -480,6 +479,7 @@ subroutine radfunctions_dens(xe,rin,rnmax,logxip,lognep,spin,height,Gamma,honr,r
         rad(i) = rad(i) * rin * 0.5
         !Initialize total ionization tracker
         xitot = 0. 
+        gsd_temp = 0.
         !Now calculate the raw density (this matters only for high dens model reltransD)
         logner(i) = adensity * mylogne(rad(i), rin)
         do l=1,nlp
@@ -489,23 +489,20 @@ subroutine radfunctions_dens(xe,rin,rnmax,logxip,lognep,spin,height,Gamma,honr,r
                 dcosdr_column(m) = dcosdr(m,l)
                 cosd_column(m) = cosd(m,l)
             end do    
-            gso(l) = real( dgsofac(spin,height(l)) )     !this is a god awful implementation, just pass it as another argument if this turns out to be correct    
-            !logxir(i) = logxiraw(rad(i),spin,height(l),honr,rlp_column,dcosdr_column,ndelta,rmin,npts,mudisk,gsd)
-            xi_lp(i,l) = xiraw(rad(i),spin,height(l),honr,rlp_column,dcosdr_column,ndelta,rmin,npts,mudisk,gsd(nlp))
-            !xitot = xitot+ xiraw(rad(i),spin,height(l),honr,rlp_column,dcosdr_column,ndelta,rmin,npts,mudisk,gsd)            
+            gso(l) = real( dgsofac(spin,height(l)) )     
+            xi_lp(i,l) = xiraw(rad(i),spin,height(l),honr,rlp_column,dcosdr_column,ndelta,rmin,npts,mudisk,gsd(l))
             !Calculate the incident angle for this bin
             kk = get_index(rlp_column, ndelta, rad(i), rmin, npts)
             mus = interper(rlp_column, cosd_column, ndelta, rad(i), kk)
             if( kk .eq. npts ) mus = newtex(rlp_column, cosd_column, ndelta, rad(i), height(l), honr, kk)
             mui = dinang(spin, rad(i), height(l), mus)
             !Correction to account for the radial dependence of incident angle
-            !logxir(i) = logxir(i) - 0.1505 - log10(mui) !<--- this is 1/log10(cos(45deg)) = 1/sqrt(2)
             xi_lp(i,l) = xi_lp(i,l)/(sqrt(2.)*mui)*(gso(1)/gso(l))**(2-Gamma) !the last bit is for the multiple LP model, goes back to one for a single LP
             xitot = xitot + xi_lp(i,l)
+            gsd_temp = gsd_temp + gsd(l)*xi_lp(i,l)
         end do 
-        !Also save gsd(r) this needs to be fixed
-        !placeholder: average the cutoff energy, why not
-        gsdr(i) = sum(gsd)/nlp  
+        !This and the line above calculate the gsd factor along the disk, averaging over the flux the disk sees from each LP 
+        gsdr(i) = gsd_temp/xitot
         logxir(i) = log10(xitot)-logner(i)       
         !write(*,*) 'logxir, logner', rad(i), logxir(i), logner(i) !write this only for large verbose numbers
     end do
@@ -565,7 +562,6 @@ function xiraw(re,spin,h,honr,rlp,dcosdr,ndelta,rmin,npts,mudisk,gsd)
     double precision mudisk
     !Calculate source to disc blueshift at this radius
     gsd = dglpfacthick(re,spin,h,mudisk)
-    !gsd = dglpfac(re,spin,h)
     !Find the rlp bin that corresponds to re
     kk = get_index(rlp,ndelta,re,rmin,npts)
     !Interpolate to get |d\cos\delta/dr| at r=re
