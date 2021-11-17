@@ -940,11 +940,11 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
         write(*,*)"Warning ReIm=4 should not be used for fitting!"
      end if
   else
-     call cfoldandbin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS,resp_matr) !S is count rate
+     call cfoldandbin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS,resp_matr) !S is count rate in energy channel (photar)
      if( abs(ReIm) .eq. 5 )then        !Modulus
         do i = 1, ne
            dE = ear(i) - ear(i-1)
-           photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) * dE
+           photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 )
         end do
      else if( abs(ReIm) .eq. 6 )then   !Time lag (s)
         do i = 1, ne

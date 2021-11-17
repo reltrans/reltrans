@@ -33,7 +33,7 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
      allocate(ReGtel(numchn))
      allocate(ImGtel(numchn))
      
-     !Rebin input arrays onto interpal telescope energy grid
+     !Rebin input arrays onto internal telescope energy grid
      call rebinE(earx,E2ReGx,nex,En,ReGi,nenerg)
      call rebinE(earx,E2ImGx,nex,En,ImGi,nenerg)
 
@@ -58,10 +58,26 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
         end do
      end do
 
+     !Convert Gtel from photar to dN/dE
+     do I = 1,numchn
+        E  = 0.5 * ( ECHN(I) + ECHN(I-1) )
+        dE = ( ECHN(I) - ECHN(I-1) )
+        ReGtel(I) = ReGtel(I) / dE  !now dN/dE
+        ImGtel(I) = ImGtel(I) / dE  !now dN/dE        
+     end do
+     
      !Rebin onto input energy grid
      call rebinE(echn,ReGtel,numchn,ear,ReG,ne)
      call rebinE(echn,ImGtel,numchn,ear,ImG,ne)
-     
+
+     !Convert G from dN/dE to photar
+     do i = 1,ne
+        E  = 0.5 * ( ear(i) + ear(i-1) )
+        dE = ear(i) - ear(i-1)
+        ReG(i) = ReG(i) * dE  !now dN (photar)
+        ImG(i) = ImG(i) * dE  !now dN (photar)
+     end do
+        
      deallocate(ReGi)
      deallocate(ImGi)
      deallocate(ReGtel)
@@ -75,7 +91,7 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
      allocate(ReGtel(numchn2))
      allocate(ImGtel(numchn2))
 
-     !Rebin input arrays onto interpal telescope energy grid
+     !Rebin input arrays onto internal telescope energy grid
      call rebinE(earx,E2ReGx,nex,En2,ReGi,nenerg2)
      call rebinE(earx,E2ImGx,nex,En2,ImGi,nenerg2)
 
