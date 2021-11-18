@@ -40,7 +40,7 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
          
         needtrans = .true.
         write(*,*)"----------------------------------------------------"
-        write(*,*)"This is RELTRANS v0.8.3: a transfer function model for"
+        write(*,*)"This is RELTRANS v0.8.4: a transfer function model for"
         write(*,*)"X-ray reverberation mapping."
         write(*,*)"Please cite Ingram et al (2019) MNRAS 488 p324-347."
         write(*,*)"----------------------------------------------------"
