@@ -148,8 +148,6 @@ subroutine tdreltransCp(ear, ne, param, ifl, photar)
 end subroutine tdreltransCp
 !-----------------------------------------------------------------------
 
-!subroutine tdreltransDCpT (t for two? -- need to also do this with/without density, for reflionx, with PL instead of nthcomp...)
-
 !-----------------------------------------------------------------------
 subroutine tdreltransDCp(ear, ne, param, ifl, photar)
   implicit none
@@ -572,7 +570,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   logical          :: firstcall, needtrans, needconv
   double precision :: d
 !Parameters of the model:
-  double precision :: h, a, inc, rin, rout, zcos, Gamma, honr, muobs !TBD MAKE THIS LESS BAD
+  double precision :: h, a, inc, rin, rout, zcos, Gamma, honr, muobs 
   real             :: logxi, Afe, lognep, Ecut_obs, Ecut_s, Dkpc, Anorm
   real             :: Nh, boost, Mass, floHz, fhiHz, DelA, DelAB, g
   integer          :: ReIm, resp_matr
@@ -580,14 +578,14 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 !internal frequency grid
   integer          :: nf 
   real             :: f, fac
-  double precision :: fc, flo, fhi 
+  double precision :: fc, flo, fhi
 ! internal energy grid and xspec energy grid
   real             :: E, dE, dloge
   real             :: earx(0:nex)   
   real             :: ear(0:ne)
 !relativistic parameters and limit on rin and h
-  double precision :: rmin, rh  
-  double precision, allocatable :: gso(:),lens(:),tauso(:),cosdelta_obs(:),height(:),contx_int(:)!,Ecut_s_lp(:),frrel_lp(:),frobs_lp(:)
+  double precision :: rmin, rh 
+  double precision, allocatable :: gso(:),lens(:),tauso(:),cosdelta_obs(:),height(:),contx_int(:)
 !TRANSFER FUNCTIONS and Cross spectrum dynamic allocation + variables
   complex, dimension(:,:,:,:), allocatable :: transe, transea
   real   , dimension(:,:)    , allocatable :: ReW0, ImW0, ReW1, ImW1,&
@@ -597,10 +595,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 !Radial and angle profile 
   integer                       :: mubin, rbin, ibin
   double precision, allocatable :: logxir(:),gsdr(:), logner(:)
-!Reflection + total corss spectrum SAME AS ABOVE, ALLOCATE STUFF FOR DOUBLE LP
   real, allocatable :: contx(:,:)
   real    :: mue, logxi0, reline(nex), imline(nex), photarx(nex), photerx(nex)
-  real    :: absorbx(nex), ImGbar(nex), ReGbar(nex)!,contx(nex,nlp)
+  real    :: absorbx(nex), ImGbar(nex), ReGbar(nex)
   real    :: ReGx(nex),ImGx(nex),ReS(ne),ImS(ne)
 !variable for non linear effects
   integer ::  DC, ionvariation
@@ -616,7 +613,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   double precision :: disco, dgsofac
   real             :: Eintegrate
 ! New  
-  double precision :: fcons,get_fcons,ell13pt6,lacc,get_lacc
+  double precision :: fcons,get_fcons,ell13pt6,lacc,get_lacc,contx_temp
   real             :: Gamma0,logne,Ecut0,thetae,logxiin
   integer          :: Cp_cont
  
@@ -634,7 +631,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   
   ifl = 1
   call FNINIT
-  ! double precision, allocatable :: gso(:),lens(:),tauso(:),cosdelta_obs(:),height(:)
+  
   ! Initialise some parameters 
   call initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, me, xe, verbose)
   
@@ -647,7 +644,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   !IS SET UP PROPERLY IN SET_PARAM 
   !FIX ALLOCATIONS TOO, NOT ALWAYS NEEDED TO ALLOCATE/DEALLOCATE ALL THE THINGS
   !THIS WILL BE DONE LAST AFTER CODING UP THE NEW FULL MODEL FLAVOUR
-  nlp = 2  
+  nlp = 1  
   allocate(gso(nlp))
   allocate(lens(nlp))
   allocate(tauso(nlp))
@@ -669,8 +666,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   end if 
   height(1) = h
   if (nlp .eq. 2) then 
-     height(2) = 10.*h  
-     !print*,height,height(1),height(2),"Height test" 
+     height(2) = 50.*h  
+     print*,"LP heights: ",height(1),height(2) 
   end if    
   muobs = cos( inc * pi / 180.d0 )
         
@@ -690,7 +687,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 !Decide if this is the DC component or not
   if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) )then
      DC     = 1
-! ionvar = 0 This is not necessary because in rawS there is the cond 
      g      = 0.0
      DelAB  = 0.0
      DelA   = 0.0
@@ -760,48 +756,49 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
      allocate( ImG(nex,nf) )
   end if
   
-  do m=1,nlp
-     if (nlp .eq. 1) then 
-        gso(m) = real( dgsofac(a,height(m)) ) 
-        Ecut_s = real(1.d0+zcos) * Ecut_obs / gso(m)
-        call getlens(a,height(m),muobs,lens(m),tauso(m),cosdelta_obs(m))
-        if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
-        Cp_cont = Cp
-        if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
-        call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx)        
-        if( dset .eq. 1 )then
-           fcons = get_fcons(height(m),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
+  if (nlp .eq. 1) then 
+     gso(1) = real( dgsofac(a,height(1)) ) 
+     Ecut_s = real(1.d0+zcos) * Ecut_obs / gso(1)
+     call getlens(a,height(1),muobs,lens(1),tauso(1),cosdelta_obs(1))
+     if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"
+     Cp_cont = Cp
+     if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
+     call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx)        
+     if( dset .eq. 1 )then
+        fcons = get_fcons(height(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
+     else
+        fcons = 0.0
+     end if         
+     if( verbose .gt. 0 )then
+        if( dset .eq. 1 )then    
+           lacc = get_lacc(height(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)
+           write(*,*)"Lacc/Ledd=",lacc
+           ell13pt6 = fcons * Mass * 1.73152e-28
+           write(*,*)"13.6eV-13.6keV luminosity of single source=",ell13pt6
         else
-           fcons = 0.0
-        end if         
-        if( verbose .gt. 0 )then
-           if( dset .eq. 1 )then    
-              lacc = get_lacc(height(m),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)
-              write(*,*)"Lacc/Ledd=",lacc
-              ell13pt6 = fcons * Mass * 1.73152e-28
-              write(*,*)"13.6eV-13.6keV luminosity of single source=",ell13pt6
-           else
-              call sourcelum(nex,earx,contx,real(mass),gso(m),real(Gamma))
-           end if   
-        end if         
-        if( abs(Cp) .eq. 1 )then
-           write(*,*)"Ecut in source restframe (keV)=",Ecut_s
-        else
-           write(*,*)"kTe in source restframe (keV)=", Ecut_s
-        end if 
-        contx_int = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 0
-        contx = lens(m) * (gso(m)/(real(1.d0+zcos))**Gamma) * contx        
-     else 
+           call sourcelum(nex,earx,contx,real(mass),real(gso(1)),real(Gamma))
+        end if   
+     end if         
+     if( abs(Cp) .eq. 1 )then
+        write(*,*)"Ecut in source restframe (keV)=",Ecut_s
+     else
+        write(*,*)"kTe in source restframe (keV)=", Ecut_s
+     end if 
+     contx_int = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1
+     contx = lens(1) * (gso(1)/(real(1.d0+zcos))**Gamma) * contx          
+  else 
+     do m=1,nlp   
         !here the observed cutoffs are set from the temperature in the source frame   
         gso(m) = real( dgsofac(a,height(m)) )
-        Ecut_obs = Ecut_s * gso(m) / real(1.d0+zcos)
         call getlens(a,height(m),muobs,lens(m),tauso(m),cosdelta_obs(m))
         if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
+        Ecut_obs = Ecut_s * gso(m) / real(1.d0+zcos)
         Cp_cont = Cp 
-        if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
+        if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx        
         call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx(:,m))
+        !TODO fix this section 
         if( verbose .gt. 0 )then
-           call sourcelum(nex,earx,contx(:,m),real(mass),gso(m),real(Gamma))
+           call sourcelum(nex,earx,contx(:,m),real(mass),real(gso(m)),real(Gamma))
            if( abs(Cp) .eq. 1 )then
               write(*,*)"Ecut observed from source #", m, "is (keV)=" ,Ecut_obs
            else
@@ -809,16 +806,12 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
            end if
         end if  
         !calculate integral here, then add factors
-        contx_int(m) = Eintegrate(0.1,1e3,nex,earx,contx(:,m),dlogE)                   
+        contx_int(m) = Eintegrate(0.1,1e3,nex,earx,contx(:,m),dlogE)               
         contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos))**Gamma) * contx(:,m)   
-     end if      
-  end do 
-  
-  !move lower and save this printy thing to a file, for large verbose as usual
-  !do ibin=1,nex
-  !  print*,earx(ibin),contx(ibin)
-  !end do 
-  
+     end do  
+  end if   
+ 
+ 
   if( needtrans )then
      !Allocate arrays for kernels     
      if( .not. allocated(logxir) ) allocate( logxir(xe) )
@@ -826,8 +819,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
      if( .not. allocated(logner) ) allocate( logner(xe) )
      !Calculate the Kernel for the given parameters
      status_re_tau = .true.
-     call rtrans(a,height,nlp,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,dset,fcons,contx_int,&
-                 tauso,lens,cosdelta_obs,nro,nphi,nex,dloge,nf,fhi,flo,me,xe,logxi,lognep,&
+     call rtrans(verbose,dset,a,height,nlp,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,fcons,&
+                 contx_int,tauso,lens,cosdelta_obs,nro,nphi,nex,dloge,nf,fhi,flo,me,xe,logxi,lognep,&
                  transe,transea,frobs,frrel,logxir,gsdr,logner)         
   end if
   
@@ -851,8 +844,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
      Gamma2 = real(Gamma) + 0.5*DeltaGamma
      
      !Get logxi values corresponding to Gamma1 and Gamma2
-     !for N lps: call for each LP and figure out what the limits are from there?
-     call xilimits(nex,earx,contx(:,1),DeltaGamma,real(gso(1)),real(zcos),dlogxi1,dlogxi2)
+     call xilimits(nex,earx,nlp,contx,DeltaGamma,real(gso),real(lens),real(zcos),dlogxi1,dlogxi2)
 
 !Set the ion-variation to 1, there is an if inside the radial loop to check if either the ionvar is 0 or the logxi is 0 to set ionvariation to 0
 ! it is important that ionvariation is different than ionvar because ionvar is used also later in rawS routine to calculate the cross-spectrum
@@ -918,7 +910,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 
 ! Calculate absorption and multiply by the raw FT
   call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
-  
+
   do j = 1, nf
      do i = 1, nex
         ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
@@ -1002,15 +994,32 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                 ReIm,DelA,DelAB,g,boost,real(zcos),real(gso),real(lens),real(Gamma),ionvar,resp_matr)
      !this writes the full model as returned to Xspec 
      !note that xspec gets output in e.g. lags*dE, and we want just the lags, so a factor dE needs to be included
-     open (unit = 14, file = 'Output/Total.dat', status='replace', action = 'write')
+     open (unit = 14, file = 'Output/Total.dat', status='replace', action = 'write')     
      do i = 1,ne 
         dE = ear(i) - ear(i-1)
-        write (14,*) (ear(i)+ear(i-1))/2., photar(i)/dE
+        write (14,*) (ear(i)+ear(i-1))/2., photar(i)/dE        
      end do 
      close(14)  
+
+     !print continuum for both single and multiple LPs REDO THIS 
+     open (unit = 24, file = 'Output/Continuum_spec.dat', status='replace', action = 'write')
+     do i=1,nex
+        dE = earx(i) - earx(i-1)
+        if( nlp .eq. 1 ) then
+            contx_temp = contx(i,1)/dE
+        else
+           contx_temp = 0.
+           do m=1,nlp 
+              contx_temp = contx_temp + contx(i,m)
+           end do
+           contx_temp =  contx_temp/(nlp*dE)      
+        end if
+        write (24,*) (earx(i)+earx(i-1))/2., contx_temp
+     end do
+     close(24)
   endif 
   
-  !PLACEHOLDER TO BE FIXED LATER
+  !PLACEHOLDER TO BE FIXED LATER?
   deallocate(gso)
   deallocate(lens)
   deallocate(tauso)
@@ -1028,29 +1037,48 @@ end subroutine genreltrans
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-subroutine xilimits(nex,earx,contx,DeltaGamma,gso,z,dlogxi1,dlogxi2)
+subroutine xilimits(nex,earx,nlp,contx,DeltaGamma,gso,lens,z,dlogxi1,dlogxi2)
 ! Inputs: nex,earx,contx,DeltaGamma,gso
 ! Outputs: dlogxi1,dlogxi2
 ! logxi1 = logxi0 + dlogxi1
-  implicit none
-  integer nex,i
-  real earx(0:nex),contx(nex),DeltaGamma,gso,z,dlogxi1,dlogxi2
-  real num1,num2,den,logS1,logS2,gsoz,E
-  gsoz = gso / (1.0+z)
-  num1 = 0.0
-  num2 = 0.0
-  den = 0.0
-  do i = 1,nex
-     E   = 0.5 * ( earx(i) + earx(i-1) )
-     num2 = num2 + E**(1.0-0.5*DeltaGamma) * contx(i)
-     num1 = num1 + E**(1.0+0.5*DeltaGamma) * contx(i)
-     den  = den  + E * contx(i)
-  end do
-  logS1 = log10(num1/den)
-  logS2 = log10(num2/den)
-  dlogxi1 = -0.5*DeltaGamma * log10(gsoz) + logS1
-  dlogxi2 =  0.5*DeltaGamma * log10(gsoz) + logS2
-  return
+    implicit none
+    integer nex,i,m,nlp
+    real earx(0:nex),contx(nex,nlp),contx_sum(nex),DeltaGamma,gso(nlp),lens(nlp),z,dlogxi1,dlogxi2
+    real num1,num2,den,logS1,logS2,gsoz,E,gso_avg
+
+    !before calculating the differential of the ionisation, set up the arrays properly depending on the number of lampposts
+    !note: if we have multiple LPs we have to a) calculate an effective gso factor by averaging over the lensing factor (ie, how
+    !luminous each LP appears given their height) and b) get a total continuum flux by summing over each LPs array.
+    !for a single lamp posts there is no need to do all this stuff, but we need to read in the contx/gso factors properly to be
+    !able to call the following code in the same way
+    if(nlp .eq. 1 ) then
+        contx_sum = contx(:,1)
+        gso_avg = gso(1)
+    else
+        contx_sum = 0.
+        gso_avg = 0.
+        do m=1,nlp
+            contx_sum = contx_sum + contx(:,m)
+            gso_avg = gso_avg + lens(m)*gso(m)
+        end do
+        gso_avg = gso_avg/sum(lens)
+    end if
+
+    gsoz = gso_avg / (1.0+z)
+    num1 = 0.0
+    num2 = 0.0
+    den = 0.0
+    do i = 1,nex
+        E   = 0.5 * ( earx(i) + earx(i-1) )
+        num2 = num2 + E**(1.0-0.5*DeltaGamma) * contx_sum(i)
+        num1 = num1 + E**(1.0+0.5*DeltaGamma) * contx_sum(i)
+        den  = den  + E * contx_sum(i)
+    end do
+    logS1 = log10(num1/den)
+    logS2 = log10(num2/den)
+    dlogxi1 = -0.5*DeltaGamma * log10(gsoz) + logS1
+    dlogxi2 =  0.5*DeltaGamma * log10(gsoz) + logS2
+    return
 end subroutine xilimits
 !-----------------------------------------------------------------------  
       

@@ -35,6 +35,7 @@ Total = np.genfromtxt("Output/Total.dat")
 PivotingPL = np.genfromtxt("Output/PivotingPL.dat")
 LightTravelTime = np.genfromtxt("Output/LightTravelTime.dat")
 PivotingReflection = np.genfromtxt("Output/PivotingReflection.dat")
+Continuum = np.genfromtxt("Output/Continuum_spec.dat")
 
 min_x = 0.5
 max_x = 10.
@@ -87,9 +88,11 @@ if(Input[18] != 0):
     ax1.set_ylim([min_y,max_y])
 else:
     ax1.plot(Total.T[0],Total.T[1]*(Total.T[0])**2,linewidth=2.5,label='Total')
+    ax1.plot(Continuum.T[0],Continuum.T[1]*(Continuum.T[0])**2,linewidth=2.5,label='Continuum')
     ax1.set_yscale('log', base=10)
     ax1.set_xlim([0.5,80.])
-    ax1.set_ylim([10.,200.]) #TBD - do this better
+    ax1.set_ylim([30.,120.]) #TBD - do this better
+    ax1.legend(loc='best',fontsize=14)
 
 ax1.set_xscale('log', base=10)
 ax1.set_xlabel('Energy (kev)',fontsize=22)
