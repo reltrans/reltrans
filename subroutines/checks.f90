@@ -4,16 +4,16 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
 ! Checks if reltrans needs to calculate the kernel
 !
 ! Parameters that rtrans() is sensitive to:
-! (1-8):   h,a,inc,rin,rout,zcos,Gamma,logxi/Dkpc
-! (10):    lognep
-! (14):    qboost
-! (16-18): honr,b1,b2
-! (20):    Anorm
+! (1-9):   h1,h2,a,inc,rin,rout,zcos,Gamma,logxi/Dkpc
+! (11):    lognep
+! (15):    qboost
+! (17-19): honr,b1,b2
+! (21):    Anorm
 ! Also need to check if the frequency range changes
 !
 ! Parameters the restframe spec is sensitive to
-! (9):     Afe
-! (10):    Ecut/kTe  
+! (10):     Afe
+! (12):    Ecut/kTe  
   
 !!! Arg:
   ! INPUTS
@@ -32,7 +32,7 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
   !   neecconv:  if true, we must do the convolution
   implicit none 
   integer         , intent(in)  :: Cp, Cpsave, nf, nfsave
-  real            , intent(in)  :: param(25), paramsave(25)
+  real            , intent(in)  :: param(26), paramsave(26)
   real            , parameter   :: tol = 1e-7
   double precision, intent(in)  :: fhi, flo, fhisave, flosave
   double precision, parameter   :: dtol = 1e-10
@@ -41,15 +41,15 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
   needtrans = .false.
   needconv  = .false.
 ! First check the parameter entries
-  do i = 1,8
+  do i = 1,9
      if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
   end do
-  i = 10
+  i = 11
   if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
-  do i = 14,18
+  do i = 15,19
      if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
   end do
-  i = 25
+  i = 26
   if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
 ! Now check if frequency range and frequency grid have changed 
   if( nf .ne. nfsave ) then
@@ -62,7 +62,7 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
 !Now for needconv
   if( needtrans ) needconv = .true.
   if( Cp .ne. Cpsave ) needconv = .true.
-  if( abs( param(9) - paramsave(9) ) .gt. tol ) needconv = .true.
   if( abs( param(10) - paramsave(10) ) .gt. tol ) needconv = .true.
+  if( abs( param(12) - paramsave(12) ) .gt. tol ) needconv = .true.
 end subroutine need_check
 !-----------------------------------------------------------------------

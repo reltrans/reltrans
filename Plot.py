@@ -18,15 +18,15 @@ colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e3
 
 Input = np.genfromtxt("Input/ip.dat")
 
-if(Input[18]==0):
+if(Input[19]==0):
     label = "E*F(E)"
-elif (np.abs(Input[19]) == 1):
+elif (np.abs(Input[20]) == 1):
     label = "Real Comp"
-elif (np.abs(Input[19]) == 2):
+elif (np.abs(Input[20]) == 2):
     label = "Imaginary Comp"
-elif (np.abs(Input[19]) == 3 or np.abs(Input[19]) == 5):
+elif (np.abs(Input[20]) == 3 or np.abs(Input[20]) == 5):
     label = "Modulus"   
-elif (np.abs(Input[19]) == 4 or np.abs(Input[19]) == 6):
+elif (np.abs(Input[20]) == 4 or np.abs(Input[20]) == 6):
     label = "Lag(s)"    
 else:
     label = "Unclear"   
@@ -77,7 +77,7 @@ dashed_line = np.zeros(50)
 line_array = np.logspace(np.log10(min_x),np.log10(max_x),50)
 
 
-if(Input[18] != 0):
+if(Input[19] != 0):
     ax1.plot(Total.T[0],Total.T[1],linewidth=2.5,label='Total',color=colors[1],zorder=2)
     ax1.plot(PivotingPL.T[0],PivotingPL.T[1],linewidth=2.5,label='Pivoting PL',color=colors[0],zorder=1)
     ax1.plot(PivotingReflection.T[0],PivotingReflection.T[1],linewidth=2.5,label='Pivoting Ref',color=colors[2],zorder=1)

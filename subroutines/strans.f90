@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-subroutine rtrans(verbose,dset,spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,fcons,&
+subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,fcons,&
                   contx_int,tauso,lens,cosdelta_obs,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,rlxi,lognep,&
                   transe,transe_a,frobs,frrel,logxir,gsdr,logner)
     ! Code to calculate the transfer function for an accretion disk.
@@ -7,9 +7,10 @@ subroutine rtrans(verbose,dset,spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,z
     ! It then also does straight line ray tracing for impact parameters >bmax
     ! It adds both up to produce a transfer function for a disk extending from rin to rout
     ! INPUT
-    !verbose                Decides whether to print radial scalings to file or not
+    ! verbose               Decides whether to print radial scalings to file or not
     ! dset                  dset=1 means calculate ionization from distance, dset=0 means ignore distance
-    ! spin,h,mu0,Gamma      Physical parameters (spin, source height, cos(inclination), photon index)
+    ! nlp                   number of lamp post height considered
+    ! spin,h,mu0,Gamma      Physical parameters (spin, source height(S), cos(inclination), photon index)
     ! nlp                   Number of lampposts considered (for now either 1 or 2)
     ! rin,rout,honr         Physical parameters (disk inner radius, outer radius & scaleheight)
     ! d,rnmax               Physical parameters (distance of the source, max radius for which GR ray tracing is used)
@@ -38,7 +39,7 @@ subroutine rtrans(verbose,dset,spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,z
     use blcoordinate
     implicit none
     integer nro,nphi,ndelta,ne,nf,me,xe,dset,nlp
-    double precision spin,mu0,Gamma,rin,rout,zcos,fhi,flo,honr
+    double precision spin,h(nlp),mu0,Gamma,rin,rout,zcos,fhi,flo,honr
     double precision b1,b2,qboost
     double precision fcons,cosdout,logxir(xe),gsdr(xe),logner(xe),dfer_arr(xe)
     real rlxi, dloge, lognep
@@ -46,7 +47,7 @@ subroutine rtrans(verbose,dset,spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,z
     integer i,npts,j,odisc,n,gbin,rbin,mubin,l,m,k
     parameter (ndelta=1000)
     double precision domega(nro),d,taudo,g,dlgfacthick,dFe,newtex
-    double precision height(nlp),tauso(nlp),lens(nlp),cosdelta_obs(nlp),contx_int(nlp)
+    double precision tauso(nlp),lens(nlp),cosdelta_obs(nlp),contx_int(nlp)
     double precision rlp_column(ndelta),dcosdr_column(ndelta),tlp_column(ndelta),cosd_column(ndelta)
     !TBD: double check this stuff for the double lp
     double precision rlp(ndelta,nlp),dcosdr(ndelta,nlp),tlp(ndelta,nlp),cosd(ndelta,nlp)
@@ -115,7 +116,7 @@ subroutine rtrans(verbose,dset,spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,z
     frobs    = 0.0 !Initialised observer's reflection fraction
 
     ! Calculate dcos/dr and time lags vs r for the lamppost model
-    call getdcos(spin,height,mudisk,ndelta,nlp,rout,npts,rlp,dcosdr,tlp,cosd,cosdout) 
+    call getdcos(spin,h,mudisk,ndelta,nlp,rout,npts,rlp,dcosdr,tlp,cosd,cosdout) 
 
     if( dset .eq. 0 )then
         pnorm = 1.d0 / ( 4.d0 * pi )
@@ -164,13 +165,13 @@ subroutine rtrans(verbose,dset,spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,z
                         mus    = interper(rlp_column,cosd_column,ndelta,re,kk)
                         !Extrapolate to Newtonian if needs be
                         if( kk .eq. npts )then
-                            cosfac = newtex(rlp_column,dcosdr_column,ndelta,re,height(m),honr,kk)
-                            mus    = newtex(rlp_column,cosd_column,ndelta,re,height(m),honr,kk)
+                            cosfac = newtex(rlp_column,dcosdr_column,ndelta,re,h(m),honr,kk)
+                            mus    = newtex(rlp_column,cosd_column,ndelta,re,h(m),honr,kk)
                         end if
                         !Calculate angular emissivity
                         ptf        = pnorm * pfunc_raw(-mus,b1,b2,qboost)
                         !Calculate flux from pixel
-                        gsd        = dglpfacthick(re,spin,height(m),mudisk)  !source to disk g factor
+                        gsd        = dglpfacthick(re,spin,h(m),mudisk)  !source to disk g factor
                         emissivity = gsd**Gamma * 2.d0 * pi * ptf
                         emissivity = emissivity * cosfac / dareafac(re,spin)                  
                         dFe        = emissivity * g**3 * domega(i) / (1.d0+zcos)**3
@@ -217,20 +218,20 @@ subroutine rtrans(verbose,dset,spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,z
                     !Find the rlp bin that corresponds to re
                     kk = get_index(rlp_column,ndelta,re,rmin,npts)
                     !Time lag
-                    tau = sqrt(re**2+(height(m)-honr*re)**2) - re*(sin0*sindisk*cos(phie)+mu0*mudisk ) + height(m)*mu0
+                    tau = sqrt(re**2+(h(m)-honr*re)**2) - re*(sin0*sindisk*cos(phie)+mu0*mudisk ) + h(m)*mu0
                     tau = (1.d0+zcos) * tau
                     !Interpolate |dcos\delta/dr| function
                     cosfac = interper(rlp_column,dcosdr_column,ndelta,re,kk)
                     mus    = interper(rlp_column,cosd_column,ndelta,re,kk)
                     !Extrapolate to Newtonian if needs be
                     if( kk .eq. npts )then
-                        cosfac = newtex(rlp_column,dcosdr_column,ndelta,re,height(m),honr,kk)
-                        mus    = newtex(rlp_column,cosd_column,ndelta,re,height(m),honr,kk)
+                        cosfac = newtex(rlp_column,dcosdr_column,ndelta,re,h(m),honr,kk)
+                        mus    = newtex(rlp_column,cosd_column,ndelta,re,h(m),honr,kk)
                     end if
                     !Calculate angular emissivity
                     ptf        = pnorm * pfunc_raw(-mus,b1,b2,qboost)
                     !Calculate flux from pixel
-                    gsd        = dglpfacthick(re,spin,height(m),mudisk)
+                    gsd        = dglpfacthick(re,spin,h(m),mudisk)
                     emissivity = gsd**Gamma * 2.d0 * pi * ptf
                     emissivity = emissivity * cosfac / dareafac(re,spin)
                     dFe        = emissivity * g**3 * domegan(i) / (1.d0+zcos)**3
@@ -259,16 +260,16 @@ subroutine rtrans(verbose,dset,spin,height,nlp,mu0,Gamma,rin,rout,honr,d,rnmax,z
             end do
         end do
         !Finish calculation of observer's reflection fraction - FIGURE OUT A WAY TO DO THIS FOR ALL LPS
-        frobs = frobs / dgsofac(spin,height(m)) / lens(m)
+        frobs = frobs / dgsofac(spin,h(m)) / lens(m)
     end do 
 
     !calculate the ionization grid 
-    if( dset .eq. 0 .or. size(height) .ge. 2) then
-        call radfunctions_dens(verbose,xe,rin,rnmax,dble(rlxi),dble(lognep),spin,height,Gamma,honr,rlp,dcosdr&
+    if( dset .eq. 0 .or. size(h) .ge. 2) then
+        call radfunctions_dens(verbose,xe,rin,rnmax,dble(rlxi),dble(lognep),spin,h,Gamma,honr,rlp,dcosdr&
                                &,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
     else
         call radfuncs_dist(xe,rin,rnmax,b1,b2,qboost,fcons,&
-                           & dble(lognep),spin,height(1),honr,rlp,dcosdr,cosd,ndelta,rmin,npts,&
+                           & dble(lognep),spin,h(1),honr,rlp,dcosdr,cosd,ndelta,rmin,npts,&
                            & logxir,gsdr,logner,pnorm)
     end if
     !Outputs: logxir(1:xe),gsdr(1:xe), logner(1:xe)
@@ -443,24 +444,22 @@ end function pfunc_raw
 
 
 !-----------------------------------------------------------------------
-subroutine radfunctions_dens(verbose,xe,rin,rnmax,logxip,lognep,spin,height,Gamma,honr,rlp,dcosdr&
+subroutine radfunctions_dens(verbose,xe,rin,rnmax,logxip,lognep,spin,h,Gamma,honr,rlp,dcosdr&
      &,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
     ! In  : xe,rin,rnmax,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
     ! Out : logxir(1:xe), gsdr(1:xe), logner(1:xe)
     implicit none
     integer         , intent(IN)   :: xe, ndelta, npts, nlp
-    double precision, intent(IN)   :: rin, rmin, rnmax, logxip, lognep, spin, honr, Gamma, dfer_arr(xe)
+    double precision, intent(IN)   :: rin, rmin, rnmax, logxip, lognep, spin, h(nlp), honr, Gamma, dfer_arr(xe)
     real                           :: gso(nlp)
-    double precision, intent(IN)   :: rlp(ndelta,nlp), dcosdr(ndelta,nlp), cosd(ndelta,nlp), height(nlp), contx_int(nlp)
+    double precision, intent(IN)   :: rlp(ndelta,nlp), dcosdr(ndelta,nlp), cosd(ndelta,nlp), contx_int(nlp)
     double precision :: rlp_column(ndelta),dcosdr_column(ndelta),cosd_column(ndelta), dgsofac
     double precision, intent(INOUT):: logxir(xe), gsdr(xe), logner(xe)
     integer          :: i, kk, get_index, myenv, adensity, l, m, verbose
     double precision :: rp, logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd(nlp), dglpfacthick
     double precision :: xi_lp(xe,nlp), logxi_lp(xe,nlp), logxip_lp(nlp), xitot, xiraw, mylogne, mudisk, gsd_temp
     double precision, allocatable :: rad(:)
-    
-    !height(1) = h
-    !height(2) = 5.*h   
+
     !Decide on zone a density profile or constant density profile
     adensity = myenv("A_DENSITY",1)
     adensity = min( adensity , 1 )
@@ -489,13 +488,13 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,logxip,lognep,spin,height,Gamm
                 dcosdr_column(l) = dcosdr(l,m)
                 cosd_column(l) = cosd(l,m)
             end do    
-            gso(m) = real( dgsofac(spin,height(m)) )     
-            xi_lp(i,m) = xiraw(rad(i),spin,height(m),honr,rlp_column,dcosdr_column,ndelta,rmin,npts,mudisk,gsd(m))
+            gso(m) = real( dgsofac(spin,h(m)) )     
+            xi_lp(i,m) = xiraw(rad(i),spin,h(m),honr,rlp_column,dcosdr_column,ndelta,rmin,npts,mudisk,gsd(m))
             !Calculate the incident angle for this bin
             kk = get_index(rlp_column, ndelta, rad(i), rmin, npts)
             mus = interper(rlp_column, cosd_column, ndelta, rad(i), kk)
-            if( kk .eq. npts ) mus = newtex(rlp_column, cosd_column, ndelta, rad(i), height(m), honr, kk)
-            mui = dinang(spin, rad(i), height(m), mus)
+            if( kk .eq. npts ) mus = newtex(rlp_column, cosd_column, ndelta, rad(i), h(m), honr, kk)
+            mui = dinang(spin, rad(i), h(m), mus)
             !Correction to account for the radial dependence of incident angle, and for the g factors
             xi_lp(i,m) = xi_lp(i,m)/(sqrt(2.)*mui)*contx_int(m)*(gso(m))**(Gamma-2)             
             xitot = xitot + xi_lp(i,m)
