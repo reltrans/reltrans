@@ -37,44 +37,60 @@ LightTravelTime = np.genfromtxt("Output/LightTravelTime.dat")
 PivotingReflection = np.genfromtxt("Output/PivotingReflection.dat")
 Continuum = np.genfromtxt("Output/Continuum_spec.dat")
 
-min_x = 0.5
-max_x = 10.
+min_x_timing = 0.5
+max_x_timing = 10.
 
-max_y = -1e20
-min_y= 1e20
+min_x_spectrum = 0.5
+max_x_spectrum = 80.
 
-#this looks for the maximum/minimum values of the total output of the code in the x-axis interval selected
+max_y_timing = -1e20
+min_y_timing= 1e20
+
+max_y_spectrum = -1e20
+min_y_spectrum = 1e20
+
+#this looks for the maximum/minimum values of the model output of the code in the x-axis interval selected, for the timing modes
 for i in range(len(Total.T[0])):
-    if (Total.T[1][i] < min_y and Total.T[0][i] > min_x and Total.T[0][i] < max_x):
-        min_y = Total.T[1][i]
-    if (Total.T[1][i] > max_y and Total.T[0][i] > min_x and Total.T[0][i] < max_x):
-        max_y = Total.T[1][i]  
+    if (Total.T[1][i] < min_y_timing and Total.T[0][i] > min_x_timing and Total.T[0][i] < max_x_timing):
+        min_y_timing = Total.T[1][i]
+    if (Total.T[1][i] > max_y_timing and Total.T[0][i] > min_x_timing and Total.T[0][i] < max_x_timing):
+        max_y_timing = Total.T[1][i]  
 for i in range(len(PivotingPL.T[0])):
-    if (PivotingPL.T[1][i] < min_y and PivotingPL.T[0][i] > min_x and PivotingPL.T[0][i] < max_x):
-        min_y = PivotingPL.T[1][i]
-    if (PivotingPL.T[1][i] > max_y and PivotingPL.T[0][i] > min_x and PivotingPL.T[0][i] < max_x):
-        max_y = PivotingPL.T[1][i]       
+    if (PivotingPL.T[1][i] < min_y_timing and PivotingPL.T[0][i] > min_x_timing and PivotingPL.T[0][i] < max_x_timing):
+        min_y_timing = PivotingPL.T[1][i]
+    if (PivotingPL.T[1][i] > max_y_timing and PivotingPL.T[0][i] > min_x_timing and PivotingPL.T[0][i] < max_x_timing):
+        max_y_timing = PivotingPL.T[1][i]       
 for i in range(len(LightTravelTime .T[0])):
-    if (LightTravelTime .T[1][i] < min_y and LightTravelTime .T[0][i] > min_x and LightTravelTime .T[0][i] < max_x):
-        min_y = LightTravelTime .T[1][i]
-    if (LightTravelTime .T[1][i] > max_y and LightTravelTime .T[0][i] > min_x and LightTravelTime .T[0][i] < max_x):
-        max_y = LightTravelTime .T[1][i]   
+    if (LightTravelTime .T[1][i] < min_y_timing and LightTravelTime .T[0][i] > min_x_timing and LightTravelTime .T[0][i] < max_x_timing):
+        min_y_timing = LightTravelTime .T[1][i]
+    if (LightTravelTime .T[1][i] > max_y_timing and LightTravelTime .T[0][i] > min_x_timing and LightTravelTime .T[0][i] < max_x_timing):
+        max_y_timing = LightTravelTime .T[1][i]   
 for i in range(len(PivotingReflection .T[0])):
-    if (PivotingReflection .T[1][i] < min_y and PivotingReflection .T[0][i] > min_x and PivotingReflection .T[0][i] < max_x):
-        min_y = PivotingReflection .T[1][i]
-    if (PivotingReflection .T[1][i] > max_y and PivotingReflection .T[0][i] > min_x and PivotingReflection .T[0][i] < max_x):
-        max_y = PivotingReflection .T[1][i]     
-
-if (min_y < 0):
-    min_y = 1.5*min_y
+    if (PivotingReflection .T[1][i] < min_y_timing and PivotingReflection .T[0][i] > min_x_timing and PivotingReflection .T[0][i] < max_x_timing):
+        min_y_timing = PivotingReflection .T[1][i]
+    if (PivotingReflection .T[1][i] > max_y_timing and PivotingReflection .T[0][i] > min_x_timing and PivotingReflection .T[0][i] < max_x_timing):
+        max_y_timing = PivotingReflection .T[1][i] 
+ 
+if (min_y_timing < 0):
+    min_y_timing = 1.5*min_y_timing
 else:
-    min_y = 0.5*min_y
-max_y = 1.2*max_y
+    min_y_timing = 0.5*min_y_timing
+max_y_timing = 1.2*max_y_timing 
+        
+#same but for the spectra:
+for i in range(len(Total.T[0])):
+    if (Total.T[1][i]*(Total.T[0][i])**2 < min_y_spectrum and Total.T[0][i] > min_x_spectrum and Total.T[0][i] < max_x_spectrum):
+        min_y_spectrum = Total.T[1][i]*(Total.T[0][i])**2
+    if (Total.T[1][i]*(Total.T[0][i])**2 > max_y_spectrum and Total.T[0][i] > min_x_spectrum and Total.T[0][i] < max_x_spectrum):
+        max_y_spectrum = Total.T[1][i]*(Total.T[0][i])**2      
+
+min_y_spectrum = min_y_spectrum/1.5
+max_y_spectrum = 1.5*max_y_spectrum 
 
 fig, (ax1) = plt.subplots(1,1,figsize=(7.5,4.5))
 
 dashed_line = np.zeros(50)
-line_array = np.logspace(np.log10(min_x),np.log10(max_x),50)
+line_array = np.logspace(np.log10(min_x_timing),np.log10(max_x_timing),50)
 
 
 if(Input[19] != 0):
@@ -84,14 +100,14 @@ if(Input[19] != 0):
     ax1.plot(LightTravelTime.T[0],LightTravelTime.T[1],linewidth=2.5,label='Reverberation',color=colors[3],zorder=1)
     ax1.plot(line_array,dashed_line,linestyle='dashed',linewidth=1.0,color='black')
     ax1.legend(loc='best',fontsize=14)
-    ax1.set_xlim([min_x,max_x])
-    ax1.set_ylim([min_y,max_y])
+    ax1.set_xlim([min_x_timing,max_x_timing])
+    ax1.set_ylim([min_y_timing,max_y_timing])
 else:
     ax1.plot(Total.T[0],Total.T[1]*(Total.T[0])**2,linewidth=2.5,label='Total')
     ax1.plot(Continuum.T[0],Continuum.T[1]*(Continuum.T[0])**2,linewidth=2.5,label='Continuum')
     ax1.set_yscale('log', base=10)
-    ax1.set_xlim([0.5,80.])
-    ax1.set_ylim([30.,120.]) #TBD - do this better
+    ax1.set_xlim([min_x_spectrum,max_x_spectrum])
+    ax1.set_ylim([min_y_spectrum,max_y_spectrum]) 
     ax1.legend(loc='best',fontsize=14)
 
 ax1.set_xscale('log', base=10)

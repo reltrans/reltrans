@@ -625,6 +625,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   real             :: Nh, boost, Mass, floHz, fhiHz, DelA, DelAB, g
   integer          :: ReIm, resp_matr
   double precision :: qboost,b1,b2
+  double precision :: lumratio
 !internal frequency grid
   integer          :: nf 
   real             :: f, fac
@@ -702,6 +703,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         lognep, Ecut_s, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
         DelA, DelAB, g, Anorm, resp_matr) 
   end if 
+  !placeholder for different luminosities in each LPs
+  lumratio = 1.0
    
   muobs = cos( inc * pi / 180.d0 )
         
@@ -848,7 +851,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
            end if
         end if  
         !calculate integral here, then add factors
-        contx_int(m) = Eintegrate(0.1,1e3,nex,earx,contx(:,m),dlogE)               
+        contx_int(m) = Eintegrate(0.1,1e3,nex,earx,contx(:,m),dlogE)  
+        if (m .gt. 1) contx(:,m) = lumratio*contx(:,m)             
         contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos))**Gamma) * contx(:,m)   
      end do  
   end if   
@@ -861,8 +865,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
      if( .not. allocated(logner) ) allocate( logner(xe) )
      !Calculate the Kernel for the given parameters
      status_re_tau = .true.
-     call rtrans(verbose,dset,nlp,a,h,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,fcons,&
-                 contx_int,tauso,lens,cosdelta_obs,nro,nphi,nex,dloge,nf,fhi,flo,me,xe,logxi,lognep,&
+     call rtrans(verbose,dset,nlp,a,h,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,lumratio,&
+                 fcons,contx_int,tauso,lens,cosdelta_obs,nro,nphi,nex,dloge,nf,fhi,flo,me,xe,logxi,lognep,&
                  transe,transea,frobs,frrel,logxir,gsdr,logner)         
   end if
   
@@ -891,7 +895,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 !Set the ion-variation to 1, there is an if inside the radial loop to check if either the ionvar is 0 or the logxi is 0 to set ionvariation to 0
 ! it is important that ionvariation is different than ionvar because ionvar is used also later in rawS routine to calculate the cross-spectrum
      ionvariation = 1
-
+    
      !Loop over radius, emission angle and frequency
      do rbin = 1, xe  !Loop over radial zones
         !Set parameters with radial dependence
@@ -962,7 +966,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 
   if( DC .eq. 1 )then
      do i = 1, nex
-        ReGbar(i) = (Anorm/real(nlp)) * ReSrawa(i,1)
+        ReGbar(i) = (Anorm/real(1.+lumratio)) * ReSrawa(i,1)
         !Norm is applied internally for DC component of dset=1
         !        ImGbar(i) = ImSrawa(i,1)  !No need for the immaginary part in DC
      end do
@@ -1054,7 +1058,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
            do m=1,nlp 
               contx_temp = contx_temp + contx(i,m)
            end do
-           contx_temp =  contx_temp/(nlp*dE)      
+           contx_temp =  contx_temp/((1.+lumratio)*dE)      
         end if
         write (24,*) (earx(i)+earx(i-1))/2., contx_temp
      end do

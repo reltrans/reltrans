@@ -1,6 +1,6 @@
 !-----------------------------------------------------------------------
-subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,fcons,&
-                  contx_int,tauso,lens,cosdelta_obs,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,rlxi,lognep,&
+subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,lumratio,&
+                  fcons,contx_int,tauso,lens,cosdelta_obs,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,rlxi,lognep,&
                   transe,transe_a,frobs,frrel,logxir,gsdr,logner)
     ! Code to calculate the transfer function for an accretion disk.
     ! This code first does full GR ray tracing for a camera with impact parameters < bmax
@@ -44,12 +44,11 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     double precision fcons,cosdout,logxir(xe),gsdr(xe),logner(xe),dfer_arr(xe)
     real rlxi, dloge, lognep
     complex cexp,transe(ne,nf,me,xe),transe_a(ne,nf,me,xe)
-    integer i,npts,j,odisc,n,gbin,rbin,mubin,l,m,k
+    integer i,npts(nlp),j,odisc,n,gbin,rbin,mubin,l,m,k
     parameter (ndelta=1000)
     double precision domega(nro),d,taudo,g,dlgfacthick,dFe,newtex
     double precision tauso(nlp),lens(nlp),cosdelta_obs(nlp),contx_int(nlp)
     double precision rlp_column(ndelta),dcosdr_column(ndelta),tlp_column(ndelta),cosd_column(ndelta)
-    !TBD: double check this stuff for the double lp
     double precision rlp(ndelta,nlp),dcosdr(ndelta,nlp),tlp(ndelta,nlp),cosd(ndelta,nlp)
     double precision alpha,beta,cos0,sin0,phie,re,gsd
     double precision tau,tausd,emissivity,cosfac,dglpfacthick,dareafac
@@ -62,11 +61,18 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     double precision spinsav,musav,routsav,mudsav,rnn(nro),domegan(nro)
     integer myenv
     double precision lximax
+    double precision lumratio 
     logical dotrace
+    
+    !arrays to save the transfer function
+    integer, parameter :: nt = 2**9
+    integer            :: tbin
+    double precision   :: tmin, tmax, sumresp, tar(0:nt), dlogt, dg, E
+    double precision, allocatable :: resp(:,:)
 
     data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
     save nrosav,nphisav,spinsav,musav,routsav,mudsav
-    
+       
     ! Settings 
     nron     = 100
     nphin    = 100
@@ -76,6 +82,21 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     mudisk   = honr / sqrt( honr**2 + 1.d0  )
     sindisk  = sqrt( 1.d0 - mudisk**2 )
     dfer_arr = 0.
+    
+    !set up saving the impulse response function if user desieres
+    if (verbose .gt. 1) then
+        if (.not. allocated(resp)) allocate(resp(ne, nt))
+        resp = 0.0
+        !add files to be printed here
+        open (unit = 102, file = 'Output/Impulse_ReTau.dat', status='replace', action = 'write')
+        open (unit = 104, file = 'Output/Impulse_2dImpulse.dat', status='replace', action = 'write')
+        open (unit = 103, file = 'Output/Impulse_1dImpulseVsTime.dat', status='replace', action = 'write')
+        open (unit = 105, file = 'Output/Impulse_1dImpulseVsEnergy.dat', status='replace', action = 'write')
+        open (unit = 201, file = 'Output/Impulse_Integrated1.dat', status='replace', action = 'write')
+        open (unit = 200, file = 'Output/Impulse_Integrated2.dat', status='replace', action = 'write')
+        open (unit = 202, file = 'Output/Impulse_Integrated3.dat', status='replace', action = 'write')
+    endif 
+    
     ! Set up observer's camera ( alpha = rn sin(phin), beta = mueff rn cos(phin) )
     ! to do full GR ray tracing with      
     mueff  = max( mu0 , 0.3d0 )
@@ -85,7 +106,8 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     !Grid for Newtonian approximation
     call getrgrid(rnmax,rout,mueff,nron,nphin,rnn,domegan)
 
-    ! Trace rays in full GR for the small camera (ie with relativistic effects) from the osberver to the disk, which is why it doesnt depend on h
+    ! Trace rays in full GR for the small camera (ie with relativistic effects) from the osberver to the disk,
+    !which is why it doesnt depend on h
     if(status_re_tau) then !Only if the geodesics grid isn't loaded
         dotrace = .false.
         if( abs(spinsav-spin)  .gt. tiny(spin)   ) dotrace = .true.
@@ -118,22 +140,28 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     ! Calculate dcos/dr and time lags vs r for the lamppost model
     call getdcos(spin,h,mudisk,ndelta,nlp,rout,npts,rlp,dcosdr,tlp,cosd,cosdout) 
 
+    !set continuum normalisations depending on model flavour 
     if( dset .eq. 0 )then
         pnorm = 1.d0 / ( 4.d0 * pi )
     else
         pnorm = pnormer(b1,b2,qboost)  
     end if
 
+    !loop over all lmaposts (m), photon directions (l), disk radii (i), disk azimuth (j), and calculate the contribution to the
+    !transfer function/convolution kernel in energy (gbin), frequency (fbin), emission angle (mubin), disk radialb in (rbin)
     do m=1,nlp
-        !get appropriate arrays for rlp/tlp/dcosdr/cosd 
+        !set normalisation of second LP wrt to first
+        if (m .gt. 1) pnorm = lumratio*pnorm
+        !get appropriate arrays for rlp/tlp/dcosdr/cosd                 
         do l=1,ndelta
             rlp_column(l)=rlp(l,m)
             tlp_column(l)=tlp(l,m)
             dcosdr_column(l)=dcosdr(l,m)
             cosd_column(l)=cosd(l,m)    
-        end do          
+        end do     
         ! Calculate 4pi p(theta0,phi0) = ang_fac
         ang_fac = 4.d0 * pi * pnorm * pfunc_raw(-cosdelta_obs(m),b1,b2,qboost)
+        !to do luminosity ratio between LPs: include factor in front of pnorm here.
         ! Adjust the lensing factor (easiest way to keep track)
         lens(m) = lens(m) * ang_fac                 
         ! Calculate the relxill reflection fraction for one column...need to do this for both
@@ -156,7 +184,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                         taudo = taudo1(j,i)           
                         g     = dlgfacthick( spin,mu0,alpha,re,mudisk )     !this is disk to observer g factor                                               
                         !Find the rlp bin that corresponds to re
-                        kk = get_index(rlp_column,ndelta,re,rmin,npts)
+                        kk = get_index(rlp_column,ndelta,re,rmin,npts(m))
                         !Interpolate (or extrapolate) the time function
                         tausd = interper(rlp_column,tlp_column,ndelta,re,kk)
                         tau   = (1.d0+zcos) * (tausd+taudo-tauso(m))           !This is the time lag between direct and reflected photons
@@ -164,7 +192,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                         cosfac = interper(rlp_column,dcosdr_column,ndelta,re,kk)
                         mus    = interper(rlp_column,cosd_column,ndelta,re,kk)
                         !Extrapolate to Newtonian if needs be
-                        if( kk .eq. npts )then
+                        if( kk .eq. npts(m) )then
                             cosfac = newtex(rlp_column,dcosdr_column,ndelta,re,h(m),honr,kk)
                             mus    = newtex(rlp_column,cosd_column,ndelta,re,h(m),honr,kk)
                         end if
@@ -175,9 +203,6 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                         emissivity = gsd**Gamma * 2.d0 * pi * ptf
                         emissivity = emissivity * cosfac / dareafac(re,spin)                  
                         dFe        = emissivity * g**3 * domega(i) / (1.d0+zcos)**3
-                        !if (j .eq. 1) then
-                        !print*, re,ptf,gsd,emissivity,cosfac,dareafac(re,spin),domega(i),g
-                        !end if 
                         !Add to reflection fraction
                         frobs      = frobs + 2.0 * g**3 * gsd * cosfac/dareafac(re,spin) * domega(i)
                         !Work out energy bin
@@ -194,12 +219,24 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                         mue   = demang(spin,mu0,re,alpha,beta)
                         mubin = ceiling( mue * dble(me) )
                         !Add to the transfer function integral
-                        !gbin: energy; fbin: Fourier frequency bin; mubin: emission angle bin; rbin: radial ionization bin
                         do fbin = 1,nf
                             cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
                             transe(gbin,fbin,mubin,rbin)   = transe(gbin,fbin,mubin,rbin)                  + real(dFe) * cexp
                             transe_a(gbin,fbin,mubin,rbin) = transe_a(gbin,fbin,mubin,rbin) + real(log(g)) * real(dFe) * cexp
                         end do
+                        !if large verbose, start saving the impulse response function to file 
+                        if( verbose .gt. 1 ) then
+                            !find the appropriate energy and time bins
+                            gbin = ceiling(g/dg) 
+                            gbin = MAX( 1    , gbin  )
+                            gbin = MIN( gbin , ne    )
+                            tbin = ceiling( log10( tau / tar(0) ) / dlogt )
+                            write(102,*)re,tau,log10( tau / tar(0) ) / dlogt
+                            tbin = MAX( 1    , tbin )
+                            tbin = MIN( tbin , nt   )
+                            ! kernel of the impulse response function              
+                            resp(gbin,tbin) = resp(gbin,tbin) + dFe  
+                        end if
                     end if
                 end if                
             end do
@@ -216,7 +253,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                 if( re .gt. rin .and. re .lt. rout )then
                     g = dlgfacthick( spin,mu0,alpha,re,mudisk )
                     !Find the rlp bin that corresponds to re
-                    kk = get_index(rlp_column,ndelta,re,rmin,npts)
+                    kk = get_index(rlp_column,ndelta,re,rmin,npts(m))
                     !Time lag
                     tau = sqrt(re**2+(h(m)-honr*re)**2) - re*(sin0*sindisk*cos(phie)+mu0*mudisk ) + h(m)*mu0
                     tau = (1.d0+zcos) * tau
@@ -224,7 +261,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                     cosfac = interper(rlp_column,dcosdr_column,ndelta,re,kk)
                     mus    = interper(rlp_column,cosd_column,ndelta,re,kk)
                     !Extrapolate to Newtonian if needs be
-                    if( kk .eq. npts )then
+                    if( kk .eq. npts(m) )then
                         cosfac = newtex(rlp_column,dcosdr_column,ndelta,re,h(m),honr,kk)
                         mus    = newtex(rlp_column,cosd_column,ndelta,re,h(m),honr,kk)
                     end if
@@ -256,23 +293,82 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                         transe(gbin,fbin,mubin,rbin)   = transe(gbin,fbin,mubin,rbin)                  + real(dFe) * cexp
                         transe_a(gbin,fbin,mubin,rbin) = transe_a(gbin,fbin,mubin,rbin) + real(log(g)) * real(dFe) * cexp
                     end do
+                    !if large verbose, start saving the impulse response function to file 
+                    if( verbose .gt. 1 ) then
+                        !find the appropriate energy and time bins
+                        gbin = ceiling(g/dg) 
+                        gbin = MAX( 1    , gbin  )
+                        gbin = MIN( gbin , ne    )
+                        tbin = ceiling( log10( tau / tar(0) ) / dlogt )
+                        write(102,*)re,tau,log10( tau / tar(0) ) / dlogt
+                        tbin = MAX( 1    , tbin )
+                        tbin = MIN( tbin , nt   )
+                        ! kernel of the impulse response function              
+                        resp(gbin,tbin) = resp(gbin,tbin) + dFe  
+                    end if
                 end if
             end do
         end do
         !Finish calculation of observer's reflection fraction - FIGURE OUT A WAY TO DO THIS FOR ALL LPS
         frobs = frobs / dgsofac(spin,h(m)) / lens(m)
     end do 
+    
+    !finish saving the impulse response function to file
+    if( verbose .gt. 1 ) then
+        ! Deal with edge effects
+        do tbin = 1,nt
+            resp(1,tbin)  = 0.0
+            resp(ne,tbin) = 0.0
+        end do
+        do gbin = 1,ne
+            resp(gbin,1)  = 0.0
+            resp(gbin,nt) = 0.0
+        end do          
+        do tbin = 1,nt
+            sumresp = 0.0
+            do gbin = 1,ne
+                sumresp = sumresp + resp(gbin,tbin)
+                E = gbin*dg  !10**( float(gbin-ne/2) * dloge )
+                write(104,*)0.5*(tar(tbin)+tar(tbin-1)),E,resp(gbin,tbin)
+            end do
+            write(103,*)0.5*(tar(tbin)+tar(tbin-1)),sumresp
+            write(201, *) sumresp
+        end do
 
-    !calculate the ionization grid 
-    if( dset .eq. 0 .or. size(h) .ge. 2) then
-        call radfunctions_dens(verbose,xe,rin,rnmax,dble(rlxi),dble(lognep),spin,h,Gamma,honr,rlp,dcosdr&
-                               &,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
+        do gbin = 1,ne
+            sumresp = 0.0
+            do tbin = 1,nt
+                sumresp = sumresp + resp(gbin,tbin)
+            end do
+            write(105,*)gbin*dg,sumresp
+            write(202, *) sumresp
+        end do
+
+        do gbin = 1,ne
+            write(200,*) resp(gbin, :)
+        enddo
+    end if    
+
+    !calculate the ionization/density/gsd radial profiles 
+    if( dset .eq. 0 .or. size(h) .eq. 2) then
+        call radfunctions_dens(verbose,xe,rin,rnmax,lumratio,dble(rlxi),dble(lognep),spin,h,Gamma,honr,rlp&
+                               &,dcosdr,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
     else
         call radfuncs_dist(xe,rin,rnmax,b1,b2,qboost,fcons,&
-                           & dble(lognep),spin,h(1),honr,rlp,dcosdr,cosd,ndelta,rmin,npts,&
+                           & dble(lognep),spin,h(1),honr,rlp,dcosdr,cosd,ndelta,rmin,npts(1),&
                            & logxir,gsdr,logner,pnorm)
     end if
     !Outputs: logxir(1:xe),gsdr(1:xe), logner(1:xe)
+
+    if (verbose .gt. 1) then
+        close(102)
+        close(103)
+        close(104)
+        close(105)
+        close(200)
+        close(201)
+        close(202)
+    endif 
 
     return
 end subroutine rtrans
@@ -383,7 +479,7 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
   !This is needed because reflionx has a different maximum to xillverDCp
 
   verbose = myenv("REV_VERB",0)
-  if( verbose .gt. 10 )then
+  if( verbose .gt. 2 )then
      !Write out logxir for plots
      lximax = -huge(lximax)
      do i = 1,xe
@@ -444,13 +540,13 @@ end function pfunc_raw
 
 
 !-----------------------------------------------------------------------
-subroutine radfunctions_dens(verbose,xe,rin,rnmax,logxip,lognep,spin,h,Gamma,honr,rlp,dcosdr&
+subroutine radfunctions_dens(verbose,xe,rin,rnmax,lumratio,logxip,lognep,spin,h,Gamma,honr,rlp,dcosdr&
      &,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
-    ! In  : xe,rin,rnmax,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
+    ! In  : xe,rin,rnmax,lumratio,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
     ! Out : logxir(1:xe), gsdr(1:xe), logner(1:xe)
     implicit none
-    integer         , intent(IN)   :: xe, ndelta, npts, nlp
-    double precision, intent(IN)   :: rin, rmin, rnmax, logxip, lognep, spin, h(nlp), honr, Gamma, dfer_arr(xe)
+    integer         , intent(IN)   :: xe, ndelta, nlp, npts(nlp)
+    double precision, intent(IN)   :: rin,rmin,rnmax,lumratio,logxip,lognep,spin,h(nlp),honr,Gamma,dfer_arr(xe)
     real                           :: gso(nlp)
     double precision, intent(IN)   :: rlp(ndelta,nlp), dcosdr(ndelta,nlp), cosd(ndelta,nlp), contx_int(nlp)
     double precision :: rlp_column(ndelta),dcosdr_column(ndelta),cosd_column(ndelta), dgsofac
@@ -473,6 +569,7 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,logxip,lognep,spin,h,Gamma,hon
     ! This means they are without normalization: only to find the maximum and the minimum. Remember that the max of the ionisation is not the same as the minumim in the density because the flux depends on r
     !The loops calculates also the correction factor mui
 
+    !TBD: include luminosity ratio between LPs 
     do i = 1, xe        
         rad(i) = (rnmax/rin)**(real(i-1) / real(xe))
         rad(i) = rad(i) + (rnmax/rin)**(real(i) / real(xe))
@@ -489,14 +586,15 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,logxip,lognep,spin,h,Gamma,hon
                 cosd_column(l) = cosd(l,m)
             end do    
             gso(m) = real( dgsofac(spin,h(m)) )     
-            xi_lp(i,m) = xiraw(rad(i),spin,h(m),honr,rlp_column,dcosdr_column,ndelta,rmin,npts,mudisk,gsd(m))
+            xi_lp(i,m) = xiraw(rad(i),spin,h(m),honr,rlp_column,dcosdr_column,ndelta,rmin,npts(m),mudisk,gsd(m))            
+            if (m .eq. 2) xi_lp(i,m) = lumratio*xi_lp(i,m)
             !Calculate the incident angle for this bin
-            kk = get_index(rlp_column, ndelta, rad(i), rmin, npts)
+            kk = get_index(rlp_column, ndelta, rad(i), rmin, npts(m))
             mus = interper(rlp_column, cosd_column, ndelta, rad(i), kk)
-            if( kk .eq. npts ) mus = newtex(rlp_column, cosd_column, ndelta, rad(i), h(m), honr, kk)
+            if( kk .eq. npts(m) ) mus = newtex(rlp_column, cosd_column, ndelta, rad(i), h(m), honr, kk)
             mui = dinang(spin, rad(i), h(m), mus)
             !Correction to account for the radial dependence of incident angle, and for the g factors
-            xi_lp(i,m) = xi_lp(i,m)/(sqrt(2.)*mui)*contx_int(m)*(gso(m))**(Gamma-2)             
+            xi_lp(i,m) = xi_lp(i,m)/(sqrt(2.)*mui)*contx_int(m)*(gso(m))**(Gamma-2)  
             xitot = xitot + xi_lp(i,m)
             gsd_temp = gsd_temp + gsd(m)*xi_lp(i,m)
         end do 
@@ -522,7 +620,7 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,logxip,lognep,spin,h,Gamma,hon
     !note that we need to do this before the ionisation array is set to have a minimum of 0, in order
     !to recover the correct scaling of the emissivity at large radii
     !TBD: figure out the ionisation contribution from each LP to do a better comparison
-    if( verbose .gt. 0 ) then
+    if( verbose .gt. 1 ) then
         print*, "Peak ionisations from each LP: first " , logxip_lp(1), " second ", logxip_lp(2)
         open (unit = 27, file = 'Output/RadialScalings.dat', status='replace', action = 'write')
             do i = 1, xe

@@ -2,7 +2,7 @@ program relwrap
     implicit none
 
     real    :: params_file(26)      !fulll list of all model parameters, indipendent of model flavour
-    real    :: params_reltrans(22)       !stuff to be used from the parameters in reltransDCp
+    real    :: params_reltrans(22)  !stuff to be used from the parameters in reltransDbl
     real    :: emin, emax           !minimum, maximum energy and increment to set model grid
     integer :: ne                   !energy grid resolution
     integer :: ifl                  !weird integer thing that equals 1 for some reason I don't understand. Just pass it to wrapper and
