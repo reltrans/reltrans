@@ -945,13 +945,14 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         end do
     end if
 
+    ! Calculate absorption 
+    call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
+
     !Calculate raw FT of the full spectrum without absorption
     call rawS(nex,earx,nf,nlp,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,real(zcos),&
                 real(gso),real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
 
-    ! Calculate absorption and multiply by the raw FT
-    call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
-
+    !Include absorption in the model
     do j = 1, nf
         do i = 1, nex
             ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
