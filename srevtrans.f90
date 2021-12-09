@@ -601,475 +601,469 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 !         dyn:   limit to check the saved values
 !         ionvar: sets the ionisation variation (1 = w/ ion var; 0 = w/o ion var)
   
-  use dyn_gr
-  use conv_mod
-  implicit none
-!Constants
-  integer         , parameter :: nphi = 200, nro = 200, ionvar = 1 
-  real            , parameter :: Emin = 1e-2, Emax = 3e3, dyn = 1e-7
-  double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0, &
-       dlogf = 0.09 !This is a resolution parameter (base 10)       
-!Args:
-  integer, intent(inout) :: ifl
-  integer, intent(in)    :: Cp, dset, ne, nlp
-  real   , intent(inout) :: param(27)
-  real   , intent(out)   :: photar(ne)  
-!Variables of the subroutine
-!initializer
-  integer          :: verbose, me, xe, m
-  logical          :: firstcall, needtrans, needconv
-  double precision :: d
-!Parameters of the model:
-  double precision :: h(nlp), a, inc, rin, rout, zcos, Gamma, honr, muobs 
-  real             :: logxi, Afe, lognep, Ecut_obs, Ecut_s, Dkpc, Anorm
-  real             :: Nh, boost, Mass, floHz, fhiHz, DelA, DelAB, g
-  integer          :: ReIm, resp_matr
-  double precision :: qboost,b1,b2
-  double precision :: lumratio
-!internal frequency grid
-  integer          :: nf 
-  real             :: f, fac
-  double precision :: fc, flo, fhi
-! internal energy grid and xspec energy grid
-  real             :: E, dE, dloge
-  real             :: earx(0:nex)   
-  real             :: ear(0:ne)
-!relativistic parameters and limit on rin and h
-  double precision :: rmin, rh 
-  double precision :: gso(nlp),tauso(nlp),cosdelta_obs(nlp),height(nlp),contx_int(nlp)
-  !note: lens needs to be allocatable to save it. Unclear why only this quantity is saved though....
-  double precision, allocatable :: lens(:)
-!TRANSFER FUNCTIONS and Cross spectrum dynamic allocation + variables
-  complex, dimension(:,:,:,:), allocatable :: transe, transea
-  real   , dimension(:,:)    , allocatable :: ReW0, ImW0, ReW1, ImW1,&
-       ReW2, ImW2, ReW3, ImW3, ReSraw, ImSraw, ReSrawa, ImSrawa,&
-       ReGrawa, ImGrawa, ReG, ImG
-  double precision :: frobs, frrel  !reflection fraction variables (verbose)
-!Radial and angle profile 
-  integer                       :: mubin, rbin, ibin
-  double precision, allocatable :: logxir(:),gsdr(:), logner(:)
-  real    :: contx(nex,nlp)
-  real    :: mue, logxi0, reline(nex), imline(nex), photarx(nex), photerx(nex)
-  real    :: absorbx(nex), ImGbar(nex), ReGbar(nex)
-  real    :: ReGx(nex),ImGx(nex),ReS(ne),ImS(ne)
-!variable for non linear effects
-  integer ::  DC, ionvariation
-  real    :: photarx_1(nex), photarx_2(nex), photarx_delta(nex), &
-       reline_a(nex),imline_a(nex),photarx_dlogxi(nex), &
-       dlogxi1, dlogxi2, Gamma1, Gamma2, DeltaGamma  
-!SAVE 
-  integer          :: nfsave, Cpsave
-  real             :: paramsave(27)
-  double precision :: fhisave, flosave
-!Functions
-  integer          :: i, j, myenv
-  double precision :: disco, dgsofac
-  real             :: Eintegrate
-! New  
-  double precision :: fcons,get_fcons,ell13pt6,lacc,get_lacc,contx_temp
-  real             :: Gamma0,logne,Ecut0,thetae,logxiin
-  integer          :: Cp_cont
+    use dyn_gr
+    use conv_mod
+    implicit none
+    !Constants
+    integer         , parameter :: nphi = 200, nro = 200, ionvar = 1 
+    real            , parameter :: Emin = 1e-2, Emax = 3e3, dyn = 1e-7
+    double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0, &
+                                   dlogf = 0.09 !This is a resolution parameter (base 10)       
+    !Args:
+    integer, intent(inout) :: ifl
+    integer, intent(in)    :: Cp, dset, ne, nlp
+    real   , intent(inout) :: param(27)
+    real   , intent(out)   :: photar(ne)  
+    !Variables of the subroutine
+    !initializer
+    integer          :: verbose, me, xe, m
+    logical          :: firstcall, needtrans, needconv
+    double precision :: d
+    !Parameters of the model:
+    double precision :: h(nlp), a, inc, rin, rout, zcos, Gamma, honr, muobs 
+    real             :: logxi, Afe, lognep, Ecut_obs, Ecut_s, Dkpc, Anorm
+    real             :: Nh, boost, Mass, floHz, fhiHz, DelA, DelAB, g
+    integer          :: ReIm, resp_matr
+    double precision :: qboost,b1,b2
+    double precision :: lumratio
+    !internal frequency grid
+    integer          :: nf 
+    real             :: f, fac
+    double precision :: fc, flo, fhi
+    ! internal energy grid (nex) and output/xspec (ne) energy grid
+    real             :: E, dE, dloge
+    real             :: earx(0:nex)   
+    real             :: ear(0:ne)
+    !relativistic parameters and limit on rin and h
+    double precision :: rmin, rh 
+    double precision :: gso(nlp),tauso(nlp),cosdelta_obs(nlp),height(nlp),contx_int(nlp)
+    !note: lens needs to be allocatable to save it. Unclear why only this quantity is saved though....
+    double precision, allocatable :: lens(:)
+    !TRANSFER FUNCTIONS and Cross spectrum dynamic allocation + variables
+    complex, dimension(:,:,:,:), allocatable :: transe, transea
+    real   , dimension(:,:)    , allocatable :: ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
+                                                ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG                                                
+    double precision :: frobs, frrel  !reflection fraction variables (verbose)
+    !Radial and angle profile 
+    integer                       :: mubin, rbin, ibin
+    double precision, allocatable :: logxir(:),gsdr(:), logner(:)
+    real    :: contx(nex,nlp)
+    real    :: mue, logxi0, reline(nex), imline(nex), photarx(nex), photerx(nex)
+    real    :: absorbx(nex), ImGbar(nex), ReGbar(nex)
+    real    :: ReGx(nex),ImGx(nex),ReS(ne),ImS(ne)
+    !variable for non linear effects
+    integer ::  DC, ionvariation
+    real    :: photarx_1(nex), photarx_2(nex), photarx_delta(nex), &
+               reline_a(nex),imline_a(nex),photarx_dlogxi(nex), &
+               dlogxi1, dlogxi2, Gamma1, Gamma2, DeltaGamma  
+    !SAVE 
+    integer          :: nfsave, Cpsave
+    real             :: paramsave(27)
+    double precision :: fhisave, flosave
+    !Functions
+    integer          :: i, j, myenv
+    double precision :: disco, dgsofac
+    real             :: Eintegrate
+    ! New  
+    double precision :: fcons,get_fcons,ell13pt6,lacc,get_lacc,contx_temp
+    real             :: Gamma0,logne,Ecut0,thetae,logxiin
+    integer          :: Cp_cont
  
-  data firstcall /.true./
-  data Cpsave/2/
-  data nfsave /-1/  
-!Save the first call variables
-  save firstcall, dloge, earx, me, xe, d, verbose
-  save paramsave, fhisave, flosave, nfsave
-  save frobs, frrel, Cpsave, needtrans, lens
-  save transe, transea, logxir, gsdr, logner
-  save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3
-  save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
-  
-  ifl = 1
-  call FNINIT
-  
-  ! Initialise some parameters 
-  call initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, me, xe, verbose)
-  
-!Allocate dynamically the array to calculate the trasfer function 
-  if (.not. allocated(re1)) allocate(re1(nphi,nro))
-  if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
-  if (.not. allocated(pem1)) allocate(pem1(nphi,nro))
+    data firstcall /.true./
+    data Cpsave/2/
+    data nfsave /-1/  
+    !Save the first call variables
+    save firstcall, dloge, earx, me, xe, d, verbose
+    save paramsave, fhisave, flosave, nfsave
+    save frobs, frrel, Cpsave, needtrans, lens
+    save transe, transea, logxir, gsdr, logner
+    save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3
+    save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
 
-  !Note: the two different calls are because for the double lP we set the temperature from the coronal frame(s), but for the single
-  !LP we use the temperature in the observer frame
-  if (nlp .eq. 1) then
-     call set_param(dset, param, nlp, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc, Afe, &
+    ifl = 1
+    call FNINIT
+
+    ! Initialise some parameters 
+    call initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, me, xe, verbose)
+
+    !Allocate dynamically the array to calculate the trasfer function 
+    if (.not. allocated(re1)) allocate(re1(nphi,nro))
+    if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
+    if (.not. allocated(pem1)) allocate(pem1(nphi,nro))
+
+    !Note: the two different calls are because for the double lP we set the temperature from the coronal frame(s), but for the single
+    !LP we use the temperature in the observer frame
+    if (nlp .eq. 1) then
+        call set_param(dset, param, nlp, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc, Afe, &
         lognep, Ecut_obs, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
         DelA, DelAB, g, Anorm, resp_matr)
-  else 
-     call set_param(dset, param, nlp, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc, Afe, &
+    else 
+        call set_param(dset, param, nlp, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc, Afe, &
         lognep, Ecut_s, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
         DelA, DelAB, g, Anorm, resp_matr) 
-  end if 
-  !placeholder for different luminosities in each LPs
-  lumratio = 1.0
-   
-  muobs = cos( inc * pi / 180.d0 )
-        
-!Work out how many frequencies to average over
-  fc = 0.5d0 * ( floHz + fhiHz )
-  nf = ceiling( log10(fhiHz/floHz) / dlogf )
-  if( fhiHz .lt. tiny(fhiHz) .or. floHz .lt. tiny(floHz) )then
-    fhiHz = 0.d0
-    floHz = 0.d0
-    nf    = 1
-  end if
+    end if 
+    !placeholder for different luminosities in each LPs DO BETTER
+    lumratio = 1.
+
+    muobs = cos( inc * pi / 180.d0 )
+
+    !Work out how many frequencies to average over
+    fc = 0.5d0 * ( floHz + fhiHz )
+    nf = ceiling( log10(fhiHz/floHz) / dlogf )
+    if( fhiHz .lt. tiny(fhiHz) .or. floHz .lt. tiny(floHz) )then
+        fhiHz = 0.d0
+        floHz = 0.d0
+        nf    = 1
+    end if
  
-!Convert frequency bounds from Hz to c/Rg (now being more accurate with constants)
-  fhi   = dble(fhiHz) * 4.92695275718945d-06 * Mass !4.916d-6 * Mass
-  flo   = dble(floHz) * 4.92695275718945d-06 * Mass !4.916d-6 * Mass
+    !Convert frequency bounds from Hz to c/Rg (now being more accurate with constants)
+    fhi   = dble(fhiHz) * 4.92695275718945d-06 * Mass !4.916d-6 * Mass
+    flo   = dble(floHz) * 4.92695275718945d-06 * Mass !4.916d-6 * Mass
 
-!Decide if this is the DC component or not
-  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) )then
-     DC     = 1
-     g      = 0.0
-     DelAB  = 0.0
-     DelA   = 0.0
-     ReIm   = 1
-  else
-     DC     = 0
-     boost  = abs(boost)
-  end if
+    !Decide if this is the DC component or not
+    if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) )then
+        DC     = 1
+        g      = 0.0
+        DelAB  = 0.0
+        DelA   = 0.0
+        ReIm   = 1
+    else
+        DC     = 0
+        boost  = abs(boost)
+    end if
   
-!this could go into a subroutine 
-!Set minimum r (ISCO) and convert rin and h to rg
-  if( abs(a) .gt. 0.999 ) a = sign(a,1.d0) * 0.999
-  rmin   = disco( a )
-  if( rin .lt. 0.d0 ) rin = abs(rin) * rmin
-  rh     = 1.d0+sqrt(1.d0-a**2)
-  if( verbose .gt. 0 ) write(*,*)"rin (Rg)=",rin
-  if( rin .lt. rmin )then
-     write(*,*)"Warning! rin<ISCO! Set to ISCO"
-     rin = rmin
-  end if
-  do m=1,nlp 
-     if( h(m) .lt. 0.d0 ) h(m) = abs(h(m)) * rh
-     if( verbose .gt. 0 ) write(*,*)"h (Rg)=",h(m)
-     if( h(m) .lt. 1.5d0*rh )then
-        write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
-        h(m) = 1.5d0 * rh
-     end if 
-  end do
+    !this could go into a subroutine 
+    !Set minimum r (ISCO) and convert rin and h to rg
+    if( abs(a) .gt. 0.999 ) a = sign(a,1.d0) * 0.999
+    rmin   = disco( a )
+    if( rin .lt. 0.d0 ) rin = abs(rin) * rmin
+    rh     = 1.d0+sqrt(1.d0-a**2)
+    if( verbose .gt. 0 ) write(*,*)"rin (Rg)=",rin
+    if( rin .lt. rmin )then
+        write(*,*)"Warning! rin<ISCO! Set to ISCO"
+        rin = rmin
+    end if
+    do m=1,nlp 
+        if( h(m) .lt. 0.d0 ) h(m) = abs(h(m)) * rh
+        if( verbose .gt. 0 ) write(*,*)"h (Rg)=",h(m)
+        if( h(m) .lt. 1.5d0*rh )then
+            write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
+            h(m) = 1.5d0 * rh
+        end if 
+    end do
 
-!Determine if I need to calculate the kernel
-  call need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsave,needtrans,needconv)
+    !Determine if I need to calculate the kernel
+    call need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsave,needtrans,needconv)
    
-! Allocate arrays that depend on frequency
-  if( nf .ne. nfsave )then
-     if( allocated(transe ) ) deallocate(transe )
-     if( allocated(transea) ) deallocate(transea)
-     allocate(  transe(nex,nf,me,xe) )
-     allocate( transea(nex,nf,me,xe) )
-     if( allocated(ReW0) ) deallocate(ReW0)
-     if( allocated(ImW0) ) deallocate(ImW0)
-     if( allocated(ReW1) ) deallocate(ReW1)
-     if( allocated(ImW1) ) deallocate(ImW1)
-     if( allocated(ReW2) ) deallocate(ReW2)
-     if( allocated(ImW2) ) deallocate(ImW2)
-     if( allocated(ReW3) ) deallocate(ReW3)
-     if( allocated(ImW3) ) deallocate(ImW3)
-     allocate( ReW0(nex,nf) )
-     allocate( ImW0(nex,nf) )
-     allocate( ReW1(nex,nf) )
-     allocate( ImW1(nex,nf) )
-     allocate( ReW2(nex,nf) )
-     allocate( ImW2(nex,nf) )
-     allocate( ReW3(nex,nf) )
-     allocate( ImW3(nex,nf) )
-     if( allocated(ReSraw) ) deallocate(ReSraw)
-     if( allocated(ImSraw) ) deallocate(ImSraw)
-     allocate( ReSraw(nex,nf) )
-     allocate( ImSraw(nex,nf) )
-     if( allocated(ReSrawa) ) deallocate(ReSrawa)
-     if( allocated(ImSrawa) ) deallocate(ImSrawa)
-     allocate( ReSrawa(nex,nf) )
-     allocate( ImSrawa(nex,nf) )
-     if( allocated(ReGrawa) ) deallocate(ReGrawa)
-     if( allocated(ImGrawa) ) deallocate(ImGrawa)
-     allocate( ReGrawa(nex,nf) )
-     allocate( ImGrawa(nex,nf) )
-     if( allocated(ReG) ) deallocate(ReG)
-     if( allocated(ImG) ) deallocate(ImG)
-     allocate( ReG(nex,nf) )
-     allocate( ImG(nex,nf) )
-  end if
+    ! Allocate arrays that depend on frequency
+    if( nf .ne. nfsave )then
+        if( allocated(transe ) ) deallocate(transe )
+        if( allocated(transea) ) deallocate(transea)
+        allocate(  transe(nex,nf,me,xe) )
+        allocate( transea(nex,nf,me,xe) )
+        if( allocated(ReW0) ) deallocate(ReW0)
+        if( allocated(ImW0) ) deallocate(ImW0)
+        if( allocated(ReW1) ) deallocate(ReW1)
+        if( allocated(ImW1) ) deallocate(ImW1)
+        if( allocated(ReW2) ) deallocate(ReW2)
+        if( allocated(ImW2) ) deallocate(ImW2)
+        if( allocated(ReW3) ) deallocate(ReW3)
+        if( allocated(ImW3) ) deallocate(ImW3)
+        allocate( ReW0(nex,nf) )
+        allocate( ImW0(nex,nf) )
+        allocate( ReW1(nex,nf) )
+        allocate( ImW1(nex,nf) )
+        allocate( ReW2(nex,nf) )
+        allocate( ImW2(nex,nf) )
+        allocate( ReW3(nex,nf) )
+        allocate( ImW3(nex,nf) )
+        if( allocated(ReSraw) ) deallocate(ReSraw)
+        if( allocated(ImSraw) ) deallocate(ImSraw)
+        allocate( ReSraw(nex,nf) )
+        allocate( ImSraw(nex,nf) )
+        if( allocated(ReSrawa) ) deallocate(ReSrawa)
+        if( allocated(ImSrawa) ) deallocate(ImSrawa)
+        allocate( ReSrawa(nex,nf) )
+        allocate( ImSrawa(nex,nf) )
+        if( allocated(ReGrawa) ) deallocate(ReGrawa)
+        if( allocated(ImGrawa) ) deallocate(ImGrawa)
+        allocate( ReGrawa(nex,nf) )
+        allocate( ImGrawa(nex,nf) )
+        if( allocated(ReG) ) deallocate(ReG)
+        if( allocated(ImG) ) deallocate(ImG)
+        allocate( ReG(nex,nf) )
+        allocate( ImG(nex,nf) )
+    end if
   
-  !allocate lensing array if necessary
-  if( needtrans ) then
-      if( .not. allocated(lens) ) allocate( lens(nlp) )
-  end if
+    !allocate lensing array if necessary
+    if( needtrans ) then
+        if( .not. allocated(lens) ) allocate( lens(nlp) )
+    end if
   
-  if (nlp .eq. 1) then 
-     gso(1) = real( dgsofac(a,h(1)) ) 
-     Ecut_s = real(1.d0+zcos) * Ecut_obs / gso(1)
-     call getlens(a,h(1),muobs,lens(1),tauso(1),cosdelta_obs(1))
-     if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"
-     Cp_cont = Cp
-     if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
-     call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx)        
-     if( dset .eq. 1 )then
-        fcons = get_fcons(h(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
-     else
-        fcons = 0.0
-     end if         
-     if( verbose .gt. 0 )then
-        if( dset .eq. 1 )then    
-           lacc = get_lacc(h(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)
-           write(*,*)"Lacc/Ledd=",lacc
-           ell13pt6 = fcons * Mass * 1.73152e-28
-           write(*,*)"13.6eV-13.6keV luminosity of single source=",ell13pt6
+    if (nlp .eq. 1) then 
+        gso(1) = real( dgsofac(a,h(1)) ) 
+        Ecut_s = real(1.d0+zcos) * Ecut_obs / gso(1)
+        call getlens(a,h(1),muobs,lens(1),tauso(1),cosdelta_obs(1))
+        if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"
+        Cp_cont = Cp
+        if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
+        call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx)        
+        if( dset .eq. 1 )then
+            fcons = get_fcons(h(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
         else
-           call sourcelum(nex,earx,contx,real(mass),real(gso(1)),real(Gamma))
-        end if   
-     end if         
-     if( abs(Cp) .eq. 1 )then
-        write(*,*)"Ecut in source restframe (keV)=",Ecut_s
-     else
-        write(*,*)"kTe in source restframe (keV)=", Ecut_s
-     end if 
-     contx_int = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1
-     contx = lens(1) * (gso(1)/(real(1.d0+zcos))**Gamma) * contx          
-  else 
-     do m=1,nlp   
-        !here the observed cutoffs are set from the temperature in the source frame   
-        gso(m) = real( dgsofac(a,h(m)) )
-        call getlens(a,h(m),muobs,lens(m),tauso(m),cosdelta_obs(m))
-        if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
-        Ecut_obs = Ecut_s * gso(m) / real(1.d0+zcos)
-        Cp_cont = Cp 
-        if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx        
-        call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx(:,m))
-        !TODO fix this section 
+            fcons = 0.0
+        end if         
         if( verbose .gt. 0 )then
-           call sourcelum(nex,earx,contx(:,m),real(mass),real(gso(m)),real(Gamma))
-           if( abs(Cp) .eq. 1 )then
-              write(*,*)"Ecut observed from source #", m, "is (keV)=" ,Ecut_obs
-           else
-              write(*,*)"kTe observed from source #", m, "is (keV)=" ,Ecut_obs
-           end if
-        end if  
-        !calculate integral here, then add factors
-        contx_int(m) = Eintegrate(0.1,1e3,nex,earx,contx(:,m),dlogE)  
-        if (m .gt. 1) contx(:,m) = lumratio*contx(:,m)             
-        contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos))**Gamma) * contx(:,m)   
-     end do  
-  end if   
+            if( dset .eq. 1 )then    
+                lacc = get_lacc(h(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)
+                write(*,*)"Lacc/Ledd=",lacc
+                ell13pt6 = fcons * Mass * 1.73152e-28
+                write(*,*)"13.6eV-13.6keV luminosity of single source=",ell13pt6
+            else
+                call sourcelum(nex,earx,contx,real(mass),real(gso(1)),real(Gamma))
+            end if   
+        end if         
+        if( abs(Cp) .eq. 1 )then
+            write(*,*)"Ecut in source restframe (keV)=",Ecut_s
+        else
+            write(*,*)"kTe in source restframe (keV)=", Ecut_s
+        end if 
+        contx_int = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1
+        contx = lens(1) * (gso(1)/(real(1.d0+zcos))**Gamma) * contx          
+    else 
+        do m=1,nlp   
+            !here the observed cutoffs are set from the temperature in the source frame   
+            gso(m) = real( dgsofac(a,h(m)) )
+            call getlens(a,h(m),muobs,lens(m),tauso(m),cosdelta_obs(m))
+            if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
+            Ecut_obs = Ecut_s * gso(m) / real(1.d0+zcos)
+            Cp_cont = Cp 
+            if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx        
+            call ad_getcont(nex, earx, Gamma, Afe, Ecut_obs, lognep, logxi, Cp_cont, contx(:,m))
+            if (m .gt. 1) contx(:,m) = lumratio*contx(:,m)  
+            !TODO fix this section, calculate luminosities better
+            if( verbose .gt. 0 )then
+                call sourcelum(nex,earx,contx(:,m),real(mass),real(gso(m)),real(Gamma))
+                if( abs(Cp) .eq. 1 )then
+                    write(*,*)"Ecut observed from source #", m, "is (keV)=" ,Ecut_obs
+                else
+                    write(*,*)"kTe observed from source #", m, "is (keV)=" ,Ecut_obs
+                end if
+            end if  
+            contx_int(m) = Eintegrate(0.1,1e3,nex,earx,contx(:,m),dlogE)             
+            contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos))**Gamma) * contx(:,m)   
+        end do  
+    end if  
  
- 
-  if( needtrans )then
-     !Allocate arrays for kernels     
-     if( .not. allocated(logxir) ) allocate( logxir(xe) )
-     if( .not. allocated(gsdr)   ) allocate( gsdr  (xe) )
-     if( .not. allocated(logner) ) allocate( logner(xe) )
-     !Calculate the Kernel for the given parameters
-     status_re_tau = .true.
-     call rtrans(verbose,dset,nlp,a,h,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,lumratio,&
-                 fcons,contx_int,tauso,lens,cosdelta_obs,nro,nphi,nex,dloge,nf,fhi,flo,me,xe,logxi,lognep,&
-                 transe,transea,frobs,frrel,logxir,gsdr,logner)         
-  end if
+    if( needtrans )then
+        !Allocate arrays for kernels     
+        if( .not. allocated(logxir) ) allocate( logxir(xe) )
+        if( .not. allocated(gsdr)   ) allocate( gsdr  (xe) )
+        if( .not. allocated(logner) ) allocate( logner(xe) )
+        !Calculate the Kernel for the given parameters
+        status_re_tau = .true.
+        call rtrans(verbose,dset,nlp,a,h,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,lumratio,&
+                    fcons,contx_int,tauso,lens,cosdelta_obs,nro,nphi,nex,dloge,nf,fhi,flo,me,xe,logxi,lognep,&
+                    transe,transea,frobs,frrel,logxir,gsdr,logner)         
+    end if
   
-  !do this for each lamp post, then find some sort of weird average?
-  if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",boost*frobs
-  if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel  
+    !do this for each lamp post, then find some sort of weird average?
+    if( verbose .gt. 0 ) write(*,*)"Observer's reflection fraction=",boost*frobs
+    if( verbose .gt. 0 ) write(*,*)"Relxill reflection fraction=",frrel  
   
-  if( needconv )then
-     !needtrans = .false.
-     !Initialize arrays for transfer functions
-     ReW0 = 0.0
-     ImW0 = 0.0
-     ReW1 = 0.0
-     ImW1 = 0.0
-     ReW2 = 0.0
-     ImW2 = 0.0
-     ReW3 = 0.0
-     ImW3 = 0.0
-     DeltaGamma = 0.01
-     Gamma1 = real(Gamma) - 0.5*DeltaGamma
-     Gamma2 = real(Gamma) + 0.5*DeltaGamma
-     
-     !Get logxi values corresponding to Gamma1 and Gamma2
-     call xilimits(nex,earx,nlp,contx,DeltaGamma,real(gso),real(lens),real(zcos),dlogxi1,dlogxi2)
-
-!Set the ion-variation to 1, there is an if inside the radial loop to check if either the ionvar is 0 or the logxi is 0 to set ionvariation to 0
-! it is important that ionvariation is different than ionvar because ionvar is used also later in rawS routine to calculate the cross-spectrum
-     ionvariation = 1
-    
-     !Loop over radius, emission angle and frequency
-     do rbin = 1, xe  !Loop over radial zones
-        !Set parameters with radial dependence
-        Gamma0 = real(Gamma)
-        logne  = logner(rbin)
-        Ecut0  = real( gsdr(rbin) ) * Ecut_s
-        logxi0 = real( logxir(rbin) )    
-        if( xe .eq. 1 )then
-           Ecut0  = Ecut_s
-           logne  = lognep
-           logxi0 = logxi
-        end if
-        !Avoid negative values of the ionisation parameter 
-        if (logxi0 .eq. 0.0 .or. ionvar .eq. 0) then
-           ionvariation = 0.0
-        end if
-        do mubin = 1, me      !loop over emission angle zones
-           !Calculate input emission angle
-           mue    = ( real(mubin) - 0.5 ) / real(me)
-           thetae = acos( mue ) * 180.0 / real(pi)
-           if( me .eq. 1 ) thetae = real(inc)
-           !Call restframe reflection model
-           call myreflect(earx,nex,Gamma0,Afe,logne,Ecut0,logxi0,thetae,Cp,photarx)
-           !NON LINEAR EFFECTS
-           if (DC .eq. 0) then 
-              !Gamma variations
-              logxiin = logxi0 + ionvariation * dlogxi1
-              call myreflect(earx,nex,Gamma1,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_1)
-              logxiin = logxi0 + ionvariation * dlogxi2
-              call myreflect(earx,nex,Gamma2,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_2)
-              photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
-              !xi variations
-              logxiin = logxi0 + ionvariation * dlogxi1
-              call myreflect(earx,nex,Gamma0,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_1)
-              logxiin = logxi0 + ionvariation * dlogxi2
-              call myreflect(earx,nex,Gamma0,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_2)
-              photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
-           end if
-           !Loop through frequencies
-           do j = 1,nf
-                 do i = 1,nex
-                    reline(i)   = real(  transe(i,j,mubin,rbin) )
-                    imline(i)   = aimag( transe(i,j,mubin,rbin) )
-                    reline_a(i) = real(  transea(i,j,mubin,rbin) )
-                    imline_a(i) = aimag( transea(i,j,mubin,rbin) )
-                 end do
-                 call conv_all_FFTw(dyn, photarx, photarx_delta, reline, imline, reline_a , imline_a,&
+    if( needconv )then
+        !needtrans = .false.
+        !Initialize arrays for transfer functions
+        ReW0 = 0.0
+        ImW0 = 0.0
+        ReW1 = 0.0
+        ImW1 = 0.0
+        ReW2 = 0.0
+        ImW2 = 0.0
+        ReW3 = 0.0
+        ImW3 = 0.0
+        DeltaGamma = 0.01
+        Gamma1 = real(Gamma) - 0.5*DeltaGamma
+        Gamma2 = real(Gamma) + 0.5*DeltaGamma
+        !Get logxi values corresponding to Gamma1 and Gamma2
+        call xilimits(nex,earx,nlp,contx,DeltaGamma,real(gso),real(lens),real(zcos),dlogxi1,dlogxi2)
+        !Set the ion-variation to 1, there is an if inside the radial loop to check if either the ionvar is 0 or the logxi is 0 to
+        !set ionvariation to 0  it is important that ionvariation is different than ionvar because ionvar  is used also later in
+        !the rawS subroutine to calculate the cross-spectrum
+        ionvariation = 1
+        !Loop over radius, emission angle and frequency
+        do rbin = 1, xe  !Loop over radial zones
+            !Set parameters with radial dependence
+            Gamma0 = real(Gamma)
+            logne  = logner(rbin)
+            Ecut0  = real( gsdr(rbin) ) * Ecut_s
+            logxi0 = real( logxir(rbin) )    
+            if( xe .eq. 1 )then
+                Ecut0  = Ecut_s
+                logne  = lognep
+                logxi0 = logxi
+            end if
+            !Avoid negative values of the ionisation parameter 
+            if (logxi0 .eq. 0.0 .or. ionvar .eq. 0) then
+                ionvariation = 0.0
+            end if
+            do mubin = 1, me      !loop over emission angle zones
+                !Calculate input emission angle
+                mue    = ( real(mubin) - 0.5 ) / real(me)
+                thetae = acos( mue ) * 180.0 / real(pi)
+                if( me .eq. 1 ) thetae = real(inc)
+                !Call restframe reflection model
+                call myreflect(earx,nex,Gamma0,Afe,logne,Ecut0,logxi0,thetae,Cp,photarx)
+                !NON LINEAR EFFECTS
+                if (DC .eq. 0) then 
+                    !Gamma variations
+                    logxiin = logxi0 + ionvariation * dlogxi1
+                    call myreflect(earx,nex,Gamma1,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_1)
+                    logxiin = logxi0 + ionvariation * dlogxi2
+                    call myreflect(earx,nex,Gamma2,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_2)
+                    photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
+                    !xi variations
+                    logxiin = logxi0 + ionvariation * dlogxi1
+                    call myreflect(earx,nex,Gamma0,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_1)
+                    logxiin = logxi0 + ionvariation * dlogxi2
+                    call myreflect(earx,nex,Gamma0,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_2)
+                    photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
+                end if
+                !Loop through frequencies
+                do j = 1,nf
+                    do i = 1,nex
+                        reline(i)   = real(  transe(i,j,mubin,rbin) )
+                        imline(i)   = aimag( transe(i,j,mubin,rbin) )
+                        reline_a(i) = real(  transea(i,j,mubin,rbin) )
+                        imline_a(i) = aimag( transea(i,j,mubin,rbin) )
+                    end do
+                    call conv_all_FFTw(dyn, photarx, photarx_delta, reline, imline, reline_a , imline_a,&
                          photarx_dlogxi, ReW0(:,j), ImW0(:,j), ReW1(:,j), ImW1(:,j), &
                          ReW2(:,j), ImW2(:,j), ReW3(:,j), ImW3(:,j), DC)
-           end do
+                end do
+            end do
         end do
-     end do
-  end if
+    end if
 
-! Calculate raw FT of the full spectrum without absorption
-  call rawS(nex,earx,nf,nlp,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,real(zcos),&
+    !Calculate raw FT of the full spectrum without absorption
+    call rawS(nex,earx,nf,nlp,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,real(zcos),&
                 real(gso),real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
 
-! Calculate absorption and multiply by the raw FT
-  call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
+    ! Calculate absorption and multiply by the raw FT
+    call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
 
-  do j = 1, nf
-     do i = 1, nex
-        ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
-        ImSrawa(i,j) = ImSraw(i,j) * absorbx(i)
-     end do
-  end do
+    do j = 1, nf
+        do i = 1, nex
+            ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
+            ImSrawa(i,j) = ImSraw(i,j) * absorbx(i)
+        end do
+    end do
 
-  if( DC .eq. 1 )then
-     do i = 1, nex
-        ReGbar(i) = (Anorm/real(1.+lumratio)) * ReSrawa(i,1)
+    if( DC .eq. 1 )then
         !Norm is applied internally for DC component of dset=1
-        !        ImGbar(i) = ImSrawa(i,1)  !No need for the immaginary part in DC
-     end do
-  else
-     ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
-     if (ReIm .gt. 0.0) then
-        call propercross(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa, resp_matr)
-     else
-        call propercross_NOmatrix(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa)
-     endif
-
-! Apply phase correction parameter to the cross-spectral model (for bad calibration)
-     do j = 1,nf
-        do i = 1,nex
-           ReG(i,j) = cos(DelA) * ReGrawa(i,j) - sin(DelA) * ImGrawa(i,j)
-           ImG(i,j) = cos(DelA) * ImGrawa(i,j) + sin(DelA) * ReGrawa(i,j)
+        !No need for the immaginary part in DC
+        do i = 1, nex
+            ReGbar(i) = (Anorm/real(1.+lumratio)) * ReSrawa(i,1)
         end do
-     end do
-
-     ReGbar = 0.0
-     ImGbar = 0.0
-     fac = 2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf))
-     do j = 1,nf
-        f = floHz * (fhiHz/floHz)**(  (real(j)-0.5) / real(nf) )
-        do i = 1,nex
-           ReGbar(i) = ReGbar(i) + ReG(i,j) / f
-           ImGbar(i) = ImGbar(i) + ImG(i,j) / f
-        end do
-     end do
-     ReGbar = ReGbar * fac * Anorm**2  !This means that norm for the AC
-     ImGbar = ImGbar * fac * Anorm**2  !components in the dset=1 model
-     !is power in squared fractional rms format
-  end if
-
-! Write output depending on ReIm parameter
-!  if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) ) ReIm = 1
-  if( abs(ReIm) .le. 4 )then
-     call crebin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS) !S is in photar form
-     if( abs(ReIm) .eq. 1 )then        !Real part
-        photar = ReS
-     else if( abs(ReIm) .eq. 2 )then   !Imaginary part
-        photar = ImS
-     else if( abs(ReIm) .eq. 3 )then   !Modulus
-        photar = sqrt( ReS**2 + ImS**2 )
-        write(*,*) "Warning ReIm=3 should not be used for fitting!"
-     else if( abs(ReIm) .eq. 4 )then   !Time lag (s)
-        do i = 1,ne
-           dE = ear(i) - ear(i-1)
-           photar(i) = atan2( ImS(i) , ReS(i) ) / ( 2.0*pi*fc ) * dE
-        end do
-        write(*,*)"Warning ReIm=4 should not be used for fitting!"
-     end if
-  else
-     call cfoldandbin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS,resp_matr) !S is count rate
-     if( abs(ReIm) .eq. 5 )then        !Modulus
-        do i = 1, ne
-           dE = ear(i) - ear(i-1)
-           photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) * dE
-        end do
-     else if( abs(ReIm) .eq. 6 )then   !Time lag (s)
-        do i = 1, ne
-           dE = ear(i) - ear(i-1)
-           photar(i) = atan2( ImS(i) , ReS(i) ) / ( 2.0*pi*fc ) * dE
-        end do
-     end if
-  end if
-  
-  if (verbose .gt. 1 .and. abs(ReIm) .gt. 0) then
-  !this writes the individual components to file
-     call write_components(ne,ear,nex,earx,nf,nlp,contx,absorbx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,floHz,fhiHz,&
-                ReIm,DelA,DelAB,g,boost,real(zcos),real(gso),real(lens),real(Gamma),ionvar,resp_matr)
-     !this writes the full model as returned to Xspec 
-     !note that xspec gets output in e.g. lags*dE, and we want just the lags, so a factor dE needs to be included
-     open (unit = 14, file = 'Output/Total.dat', status='replace', action = 'write')     
-     do i = 1,ne 
-        dE = ear(i) - ear(i-1)
-        write (14,*) (ear(i)+ear(i-1))/2., photar(i)/dE        
-     end do 
-     close(14)  
-
-     !print continuum for both single and multiple LPs REDO THIS 
-     open (unit = 24, file = 'Output/Continuum_spec.dat', status='replace', action = 'write')
-     do i=1,nex
-        dE = earx(i) - earx(i-1)
-        if( nlp .eq. 1 ) then
-            contx_temp = contx(i,1)/dE
+    else
+        !Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
+        if (ReIm .gt. 0.0) then
+            call propercross(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa, resp_matr)
         else
-           contx_temp = 0.
-           do m=1,nlp 
-              contx_temp = contx_temp + contx(i,m)
-           end do
-           contx_temp =  contx_temp/((1.+lumratio)*dE)      
+            call propercross_NOmatrix(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa)
+        endif
+        !Apply phase correction parameter to the cross-spectral model (for bad calibration)
+        do j = 1,nf
+            do i = 1,nex
+                ReG(i,j) = cos(DelA) * ReGrawa(i,j) - sin(DelA) * ImGrawa(i,j)
+                ImG(i,j) = cos(DelA) * ImGrawa(i,j) + sin(DelA) * ReGrawa(i,j)
+            end do
+        end do
+        ReGbar = 0.0
+        ImGbar = 0.0
+        fac = 2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf))
+        do j = 1,nf
+            f = floHz * (fhiHz/floHz)**(  (real(j)-0.5) / real(nf) )
+            do i = 1,nex
+                ReGbar(i) = ReGbar(i) + ReG(i,j) / f
+                ImGbar(i) = ImGbar(i) + ImG(i,j) / f
+            end do
+        end do
+        !This means that norm for the AC components in the dset=1 model is power in squared fractional rms format
+        ReGbar = ReGbar * fac * Anorm**2  
+        ImGbar = ImGbar * fac * Anorm**2  
+    end if
+
+    !Write output depending on ReIm parameter
+    !if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) ) ReIm = 1
+    if( abs(ReIm) .le. 4 )then
+        call crebin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS) !S is in photar form
+        if( abs(ReIm) .eq. 1 )then        !Real part
+            photar = ReS
+        else if( abs(ReIm) .eq. 2 )then   !Imaginary part
+            photar = ImS
+        else if( abs(ReIm) .eq. 3 )then   !Modulus
+            photar = sqrt( ReS**2 + ImS**2 )
+            write(*,*) "Warning ReIm=3 should not be used for fitting!"
+        else if( abs(ReIm) .eq. 4 )then   !Time lag (s)
+            do i = 1,ne
+                dE = ear(i) - ear(i-1)
+                photar(i) = atan2( ImS(i) , ReS(i) ) / ( 2.0*pi*fc ) * dE
+            end do
+            write(*,*)"Warning ReIm=4 should not be used for fitting!"
         end if
-        write (24,*) (earx(i)+earx(i-1))/2., contx_temp
-     end do
-     close(24)
-  endif 
+    else
+        call cfoldandbin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS,resp_matr) !S is count rate
+        if( abs(ReIm) .eq. 5 )then        !Modulus
+            do i = 1, ne
+                dE = ear(i) - ear(i-1)
+                photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) * dE
+            end do
+        else if( abs(ReIm) .eq. 6 )then   !Time lag (s)
+            do i = 1, ne
+                dE = ear(i) - ear(i-1)
+                photar(i) = atan2( ImS(i) , ReS(i) ) / ( 2.0*pi*fc ) * dE
+            end do
+        end if
+    end if
   
-  fhisave   = fhi
-  flosave   = flo
-  nfsave    = nf
-  paramsave = param
-  Cpsave    = Cp
+    !TBD: benchmark how long this loop takes
+    if (verbose .gt. 1 .and. abs(ReIm) .gt. 0) then
+        !this writes the individual components to file
+        call write_components(ne,ear,nex,earx,nf,nlp,contx,absorbx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,floHz,fhiHz,&
+                              ReIm,DelA,DelAB,g,boost,real(zcos),real(gso),real(lens),real(Gamma),ionvar,resp_matr)
+        !this writes the full model as returned to Xspec 
+        !note that xspec gets output in e.g. lags*dE, and we want just the lags, so a factor dE needs to be included
+        open (unit = 14, file = 'Output/Total.dat', status='replace', action = 'write')     
+        do i = 1,ne 
+            dE = ear(i) - ear(i-1)
+            write (14,*) (ear(i)+ear(i-1))/2., photar(i)/dE        
+        end do 
+        close(14)  
+        !print continuum for both single and multiple LPs REDO THIS 
+        open (unit = 24, file = 'Output/Continuum_spec.dat', status='replace', action = 'write')
+        do i=1,nex
+            dE = earx(i) - earx(i-1)
+            if( nlp .eq. 1 ) then
+                contx_temp = contx(i,1)/dE
+            else
+                contx_temp = 0.
+                do m=1,nlp 
+                    contx_temp = contx_temp + contx(i,m)
+                end do
+                contx_temp =  contx_temp/((1.+lumratio)*dE)      
+            end if
+            write (24,*) (earx(i)+earx(i-1))/2., contx_temp
+        end do
+        close(24)
+    endif 
+  
+    fhisave   = fhi
+    flosave   = flo
+    nfsave    = nf
+    paramsave = param
+    Cpsave    = Cp
+  
 end subroutine genreltrans
 !-----------------------------------------------------------------------
 

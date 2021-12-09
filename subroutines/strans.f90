@@ -84,17 +84,29 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     dfer_arr = 0.
     
     !set up saving the impulse response function if user desieres
-    if (verbose .gt. 1) then
+!note: the ideal parameters to plot the transfer function are nro~=7000,nphi~=7000,nt~=2e9,nex~=2e10
+    if (verbose .gt. 1) then    
+        ! Create time grid in units of Rg
+        tmin = 1.0
+        tmax = 2.0e3
+        dlogt = log10( tmax/tmin ) / float(nt)
+        do i = 0,nt
+            tar(i) = tmin * 10.0**( i * dlogt )
+        end do
+        ! Create energy grid optimised for plotting the transfer function (linear)
+        dg = 2.0 / float(ne)
+        !allocate and initialize impulse response function    
         if (.not. allocated(resp)) allocate(resp(ne, nt))
         resp = 0.0
         !add files to be printed here
-        open (unit = 102, file = 'Output/Impulse_ReTau.dat', status='replace', action = 'write')
-        open (unit = 104, file = 'Output/Impulse_2dImpulse.dat', status='replace', action = 'write')
+        !open (unit = 102, file = 'Output/Impulse_ReTau.dat', status='replace', action = 'write')
+        !open (unit = 104, file = 'Output/Impulse_2dImpulse.dat', status='replace', action = 'write')
         open (unit = 103, file = 'Output/Impulse_1dImpulseVsTime.dat', status='replace', action = 'write')
         open (unit = 105, file = 'Output/Impulse_1dImpulseVsEnergy.dat', status='replace', action = 'write')
-        open (unit = 201, file = 'Output/Impulse_Integrated1.dat', status='replace', action = 'write')
-        open (unit = 200, file = 'Output/Impulse_Integrated2.dat', status='replace', action = 'write')
-        open (unit = 202, file = 'Output/Impulse_Integrated3.dat', status='replace', action = 'write')
+        !note: integrated1 is a fucking bad name
+        open (unit = 200, file = 'Output/Impulse_Integrated1.dat', status='replace', action = 'write')
+        !open (unit = 201, file = 'Output/Impulse_Integrated2.dat', status='replace', action = 'write')
+        !open (unit = 202, file = 'Output/Impulse_Integrated3.dat', status='replace', action = 'write')
     endif 
     
     ! Set up observer's camera ( alpha = rn sin(phin), beta = mueff rn cos(phin) )
@@ -312,6 +324,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
         !Finish calculation of observer's reflection fraction - FIGURE OUT A WAY TO DO THIS FOR ALL LPS
         frobs = frobs / dgsofac(spin,h(m)) / lens(m)
     end do 
+
     
     !finish saving the impulse response function to file
     if( verbose .gt. 1 ) then
@@ -329,10 +342,10 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
             do gbin = 1,ne
                 sumresp = sumresp + resp(gbin,tbin)
                 E = gbin*dg  !10**( float(gbin-ne/2) * dloge )
-                write(104,*)0.5*(tar(tbin)+tar(tbin-1)),E,resp(gbin,tbin)
+                !write(104,*)0.5*(tar(tbin)+tar(tbin-1)),E,resp(gbin,tbin)
             end do
             write(103,*)0.5*(tar(tbin)+tar(tbin-1)),sumresp
-            write(201, *) sumresp
+            !write(201, *) sumresp
         end do
 
         do gbin = 1,ne
@@ -341,9 +354,9 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                 sumresp = sumresp + resp(gbin,tbin)
             end do
             write(105,*)gbin*dg,sumresp
-            write(202, *) sumresp
+            !write(202, *) sumresp
         end do
-
+        
         do gbin = 1,ne
             write(200,*) resp(gbin, :)
         enddo
@@ -361,13 +374,13 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     !Outputs: logxir(1:xe),gsdr(1:xe), logner(1:xe)
 
     if (verbose .gt. 1) then
-        close(102)
+        !close(102)
         close(103)
-        close(104)
+        !close(104)
         close(105)
         close(200)
-        close(201)
-        close(202)
+        !close(201)
+        !close(202)
     endif 
 
     return
@@ -612,14 +625,14 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,lumratio,logxip,lognep,spin,h,
         do i=1,xe
             logxi_lp(i,m) = log10(xi_lp(i,m)) - logner(i) - lognenorm - logxinorm + lognep + logxip        
         end do
-        logxip_lp(m) = maxval(logxi_lp(:,m))
+        logxip_lp(m) = max(maxval(logxi_lp(:,m)),0.)
     end do
     
     !Write radii, ionisation (for both and each LP), gamma factors, and log(xi(r))+log(ne(r)) (which is nearly the same as
     !epsilon(r) for identical coronal spectrra and gamma=2) to file. 
-    !note that we need to do this before the ionisation array is set to have a minimum of 0, in order
+    !note 1) we need to do this before the ionisation array is set to have a minimum of 0, in order
     !to recover the correct scaling of the emissivity at large radii
-    !TBD: figure out the ionisation contribution from each LP to do a better comparison
+    !2) in order to correctly compare the dfer_arr array with the single LP case, it has to be renormalized by (1+lumratio)
     if( verbose .gt. 1 ) then
         print*, "Peak ionisations from each LP: first " , logxip_lp(1), " second ", logxip_lp(2)
         open (unit = 27, file = 'Output/RadialScalings.dat', status='replace', action = 'write')

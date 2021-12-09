@@ -55,6 +55,7 @@ program relwrap
         read(1,*) params_file
         close(1)
         
+        !Call double LP model
         params_reltrans(1) = params_file(1)
         params_reltrans(2) = params_file(2)
         params_reltrans(3) = params_file(3)
@@ -77,6 +78,29 @@ program relwrap
         params_reltrans(20) = params_file(23)
         params_reltrans(21) = params_file(24)
         params_reltrans(22) = params_file(26)
+       
+        !call single LP model
+        !params_reltrans(1)  = params_file(1)
+        !params_reltrans(2)  = params_file(3)
+        !params_reltrans(3)  = params_file(4)
+        !params_reltrans(4)  = params_file(5)
+        !params_reltrans(5)  = params_file(6)
+        !params_reltrans(6)  = params_file(7)
+        !params_reltrans(7)  = params_file(8)
+        !params_reltrans(8)  = params_file(9)
+        !params_reltrans(9)  = params_file(10)
+        !params_reltrans(10) = params_file(11)
+        !params_reltrans(11) = params_file(12)
+        !params_reltrans(12) = params_file(13)
+        !params_reltrans(13) = params_file(14)
+        !params_reltrans(14) = params_file(15)
+        !params_reltrans(15) = params_file(19)
+        !params_reltrans(16) = params_file(20)
+        !params_reltrans(17) = params_file(21)
+        !params_reltrans(18) = params_file(22)
+        !params_reltrans(19) = params_file(23)
+        !params_reltrans(20) = params_file(24)
+        !params_reltrans(21) = params_file(26)      
         
         print *, "Height 1: ", params_reltrans(1)
         print *, "Height 2: ", params_reltrans(2)
@@ -102,7 +126,8 @@ program relwrap
         print *, "# of rsp:", params_reltrans(22) 
         
         call CPU_TIME (time_start)
-        call tdreltransDbl(ear,ne,params_reltrans,ifl,photar)
+        call tdreltransDbl(ear,ne,params_reltrans,ifl,photar)        
+        !call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)   
         call CPU_TIME (time_end)
         print *, 'Call runtime: ', time_end - time_start, ' seconds'
         print *,"--------------------------------------------------------------------------------------------------------------"
