@@ -128,10 +128,10 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
         if( abs(mudsav-mudisk) .gt. tiny(mudisk) ) dotrace = .true.         
         if( dotrace )then
             call GRtrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
-        spinsav = spin
-        musav   = mu0
-        routsav = rout
-        mudsav  = mudisk
+            spinsav = spin
+            musav   = mu0
+            routsav = rout
+            mudsav  = mudisk
         end if
     end if
 

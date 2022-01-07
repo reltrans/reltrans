@@ -1,12 +1,12 @@
 subroutine set_param(dset, param, nlp, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc, Afe, &
-     lognep, Ecut, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
+     lognep, Ecut, lumratio, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
      DelA, DelAB, g, Anorm, resp)
 !!! Sets the parameters of reltrans depending on the Cp variable
   implicit none
   integer         , intent(in)   :: dset, nlp
-  real            , intent(in)   :: param(27)
+  real            , intent(in)   :: param(28)
   double precision, intent(out)  :: h(nlp), a, inc, rin, rout, zcos, Gamma
-  double precision, intent(out)  :: honr, b1, b2, qboost
+  double precision, intent(out)  :: honr, b1, b2, qboost, lumratio
   real            , intent(out)  :: logxi, Afe, lognep, Ecut
   real            , intent(out)  :: Nh, boost, Mass, floHz, fhiHz
   real            , intent(out)  :: DelA, DelAB, g, Anorm, Dkpc
@@ -30,21 +30,22 @@ subroutine set_param(dset, param, nlp, h, a, inc, rin, rout, zcos, Gamma, logxi,
   Afe      = param(10)
   lognep   = param(11) ! will just be a dummy variable for Cp<0
   Ecut     = param(12) ! or kTe, but we never need to know the difference. NOTE: this is the corona frame temperature/cutoff for the double LP model, and the observed one otherwise
-  Nh       = param(13)
-  boost    = param(14)
-  qboost   = dble( param(15) )
-  Mass     = dble( param(16) )
-  honr     = dble( param(17) )
-  b1       = dble( param(18) )
-  b2       = dble( param(19) )
-  floHz    = param(20)
-  fhiHz    = param(21)
-  ReIm     = int( param(22) )
-  DelA     = param(23)
-  DelAB    = param(24)
-  g        = param(25)
-  Anorm    = param(26)
-  resp     = param(27)
+  lumratio = param(13)
+  Nh       = param(14)
+  boost    = param(15)
+  qboost   = dble( param(16) )
+  Mass     = dble( param(17) )
+  honr     = dble( param(18) )
+  b1       = dble( param(19) )
+  b2       = dble( param(20) )
+  floHz    = param(21)
+  fhiHz    = param(22)
+  ReIm     = int( param(23) )
+  DelA     = param(24)
+  DelAB    = param(25)
+  g        = param(26)
+  Anorm    = param(27)
+  resp     = param(28)
 
   if( dset .eq. 1 )then
      Dkpc = param(9)

@@ -1,8 +1,8 @@
 program relwrap
     implicit none
 
-    real    :: params_file(26)      !fulll list of all model parameters, indipendent of model flavour
-    real    :: params_reltrans(22)  !stuff to be used from the parameters in reltransDbl
+    real    :: params_file(27)      !fulll list of all model parameters, indipendent of model flavour
+    real    :: params_reltrans(23)  !stuff to be used from the parameters in reltransDbl
     real    :: emin, emax           !minimum, maximum energy and increment to set model grid
     integer :: ne                   !energy grid resolution
     integer :: ifl                  !weird integer thing that equals 1 for some reason I don't understand. Just pass it to wrapper and
@@ -71,36 +71,31 @@ program relwrap
         params_reltrans(13) = params_file(13)
         params_reltrans(14) = params_file(14)
         params_reltrans(15) = params_file(15)
-        params_reltrans(16) = params_file(19)
+        params_reltrans(16) = params_file(16)
         params_reltrans(17) = params_file(20)
         params_reltrans(18) = params_file(21)
         params_reltrans(19) = params_file(22)
         params_reltrans(20) = params_file(23)
         params_reltrans(21) = params_file(24)
-        params_reltrans(22) = params_file(26)
-       
-        !call single LP model
-        !params_reltrans(1)  = params_file(1)
-        !params_reltrans(2)  = params_file(3)
-        !params_reltrans(3)  = params_file(4)
-        !params_reltrans(4)  = params_file(5)
-        !params_reltrans(5)  = params_file(6)
-        !params_reltrans(6)  = params_file(7)
-        !params_reltrans(7)  = params_file(8)
-        !params_reltrans(8)  = params_file(9)
-        !params_reltrans(9)  = params_file(10)
-        !params_reltrans(10) = params_file(11)
-        !params_reltrans(11) = params_file(12)
-        !params_reltrans(12) = params_file(13)
-        !params_reltrans(13) = params_file(14)
-        !params_reltrans(14) = params_file(15)
-        !params_reltrans(15) = params_file(19)
-        !params_reltrans(16) = params_file(20)
-        !params_reltrans(17) = params_file(21)
-        !params_reltrans(18) = params_file(22)
-        !params_reltrans(19) = params_file(23)
-        !params_reltrans(20) = params_file(24)
-        !params_reltrans(21) = params_file(26)      
+        params_reltrans(22) = params_file(25)
+        params_reltrans(23) = params_file(27)
+        
+        !set up frequency array appropriately if using lag/frequency spectra, depending on BH mass:
+        if( params_reltrans(18) .eq. 7 ) then
+            if( params_reltrans(15) .gt. 1.e4 ) then
+                emin = 1.e-4
+                emax = 3.e-2
+                do i=0,ne
+                    ear(i) = emin * (emax/emin)**(real(i)/real(ne))
+                end do    
+            else
+                emin = 0.1
+                emax = 300.
+                do i=0,ne
+                    ear(i) = emin * (emax/emin)**(real(i)/real(ne))
+                end do   
+            end if
+        end if
         
         print *, "Height 1: ", params_reltrans(1)
         print *, "Height 2: ", params_reltrans(2)
@@ -114,16 +109,17 @@ program relwrap
         print *, "Afe: ", params_reltrans(10)
         print *, "Log ne: ", params_reltrans(11)
         print *, "Ecut/Te: ", params_reltrans(12)
-        print *, "Nh: ", params_reltrans(13)
-        print *, "boost: ", params_reltrans(14)
-        print *, "Mass: ", params_reltrans(15)
-        print *, "flo: ", params_reltrans(16)
-        print *, "fhi: ", params_reltrans(17)
-        print *, "ReIm: ", params_reltrans(18)
-        print *, "DelA: ", params_reltrans(19)
-        print *, "DelAB: ", params_reltrans(20)
-        print *, "g: ", params_reltrans(21)   
-        print *, "# of rsp:", params_reltrans(22) 
+        print *, "Lumratio:", params_reltrans(13)
+        print *, "Nh: ", params_reltrans(14)
+        print *, "boost: ", params_reltrans(15)
+        print *, "Mass: ", params_reltrans(16)
+        print *, "flo: ", params_reltrans(17)
+        print *, "fhi: ", params_reltrans(18)
+        print *, "ReIm: ", params_reltrans(19)
+        print *, "DelA: ", params_reltrans(20)
+        print *, "DelAB: ", params_reltrans(21)
+        print *, "g: ", params_reltrans(22)   
+        print *, "# of rsp:", params_reltrans(23) 
         
         call CPU_TIME (time_start)
         call tdreltransDbl(ear,ne,params_reltrans,ifl,photar)        

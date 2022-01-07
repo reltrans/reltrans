@@ -55,10 +55,10 @@ subroutine rawS(nex,earx,nf,nlp,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,
   else
      do j = 1,nf
         do i = 1,nex
-           !need to loop in here over all lamp posts - which means I need two contx arrays, and the gso and lens of each               
+           !need to loop in here over all lamp posts - which means we need two contx arrays, and the gso and lens of each               
            E   = 0.5 * ( earx(i) + earx(i-1) )
            do m=1,nlp
-              fac = log(gso(m)/((1.0+z)*E)) !TBD ask about this factor!!!!
+              fac = log(gso(m)/((1.0+z)*E))
               cont_1(i) = cont_1(i) + contx(i,m)
               cont_2(i) = cont_2(i) + fac*contx(i,m)   
            end do 
@@ -85,4 +85,3 @@ subroutine rawS(nex,earx,nf,nlp,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,
   
   return
 end subroutine rawS
-

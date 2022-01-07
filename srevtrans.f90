@@ -23,7 +23,7 @@ include 'subroutines/header.h'
 subroutine tdreltrans(ear,ne,param,ifl,photar)
   implicit none
   integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(20), photar(ne), par(27)
+  real    :: ear(0:ne), param(20), photar(ne), par(28)
 ! Settings
   Cp   = -1  !|Cp|=1 means cut-off pl, Cp<1 means no density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
@@ -41,21 +41,22 @@ subroutine tdreltrans(ear,ne,param,ifl,photar)
   par(10)  = param(9)        !Afe
   par(11) = 15.0             !lognep
   par(12) = param(10)        !Ecut_obs
-  par(13) = param(11)        !Nh
-  par(14) = param(12)        !boost
-  par(15) = 1.0              !qboost
-  par(16) = param(13)        !Mass
-  par(17) = 0.0              !honr
-  par(18) = 0.0              !b1
-  par(19) = 0.0              !b2
-  par(20) = param(14)        !floHz
-  par(21) = param(15)        !fhiHz
-  par(22) = param(16)        !ReIm
-  par(23) = param(17)        !DelA
-  par(24) = param(18)        !DelAB
-  par(25) = param(19)        !g
-  par(26) = 1.0              !Anorm
-  par(27) = param(20)        !telescope response
+  par(13) = 0.               !lumratio
+  par(14) = param(11)        !Nh
+  par(15) = param(12)        !boost
+  par(16) = 1.0              !qboost
+  par(17) = param(13)        !Mass
+  par(18) = 0.0              !honr
+  par(19) = 0.0              !b1
+  par(20) = 0.0              !b2
+  par(21) = param(14)        !floHz
+  par(22) = param(15)        !fhiHz
+  par(23) = param(16)        !ReIm
+  par(24) = param(17)        !DelA
+  par(25) = param(18)        !DelAB
+  par(26) = param(19)        !g
+  par(27) = 1.0              !Anorm
+  par(28) = param(20)        !telescope response
   ! Call general code
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)
   return
@@ -63,12 +64,11 @@ end subroutine tdreltrans
 !-----------------------------------------------------------------------
 
 
-
 !-----------------------------------------------------------------------
 subroutine tdreltransD(ear, ne, param, ifl, photar)
   implicit none
   integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(20), photar(ne), par(27)
+  real    :: ear(0:ne), param(20), photar(ne), par(28)
 ! Settings
   Cp   = 1   !|Cp|=1 means cut-off pl, Cp>1 means there is a density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
@@ -86,21 +86,22 @@ subroutine tdreltransD(ear, ne, param, ifl, photar)
   par(10) = param(9)         !Afe
   par(11) = param(10)        !lognep
   par(12) = 300.0            !Ecut_obs
-  par(13) = param(11)        !Nh
-  par(14) = param(12)        !boost
-  par(15) = 1.0              !qboost
-  par(16) = param(13)        !Mass
-  par(17) = 0.0              !honr
-  par(18) = 0.0              !b1
-  par(19) = 0.0              !b2
-  par(20) = param(14)        !floHz
-  par(21) = param(15)        !fhiHz
-  par(22) = param(16)        !ReIm
-  par(23) = param(17)        !DelA
-  par(24) = param(18)        !DelAB
-  par(25) = param(19)        !g
-  par(26) = 1.0              !Anorm
-  par(27) = param(20)        !telescope response
+  par(13) = 0.               !lumratio
+  par(14) = param(11)        !Nh
+  par(15) = param(12)        !boost
+  par(16) = 1.0              !qboost
+  par(17) = param(13)        !Mass
+  par(18) = 0.0              !honr
+  par(19) = 0.0              !b1
+  par(20) = 0.0              !b2
+  par(21) = param(14)        !floHz
+  par(22) = param(15)        !fhiHz
+  par(23) = param(16)        !ReIm
+  par(24) = param(17)        !DelA
+  par(25) = param(18)        !DelAB
+  par(26) = param(19)        !g
+  par(27) = 1.0              !Anorm
+  par(28) = param(20)        !telescope response
 ! Call general code
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)
   return
@@ -112,7 +113,7 @@ end subroutine tdreltransD
 subroutine tdreltransCp(ear, ne, param, ifl, photar)
   implicit none
   integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(20), photar(ne), par(27)
+  real    :: ear(0:ne), param(20), photar(ne), par(28)
 ! Settings
   Cp   = -2  !|Cp|=2 means nthcomp, Cp<1 means no density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
@@ -130,32 +131,34 @@ subroutine tdreltransCp(ear, ne, param, ifl, photar)
   par(10) = param(9)         !Afe
   par(11) = 15.0             !lognep
   par(12) = param(10)        !kTe
-  par(13) = param(11)        !Nh
-  par(14) = param(12)        !boost
-  par(15) = 1.0              !qboost
-  par(16) = param(13)        !Mass
-  par(17) = 0.0              !honr
-  par(18) = 0.0              !b1
-  par(19) = 0.0              !b2
-  par(20) = param(14)        !floHz
-  par(21) = param(15)        !fhiHz
-  par(22) = param(16)        !ReIm
-  par(23) = param(17)        !DelA
-  par(24) = param(18)        !DelAB
-  par(25) = param(19)        !g
-  par(26) = 1.0              !Anorm
-  par(27) = param(20)        !telescope response
+  par(13) = 0.               !lumratio
+  par(14) = param(11)        !Nh
+  par(15) = param(12)        !boost
+  par(16) = 1.0              !qboost
+  par(17) = param(13)        !Mass
+  par(18) = 0.0              !honr
+  par(19) = 0.0              !b1
+  par(20) = 0.0              !b2
+  par(21) = param(14)        !floHz
+  par(22) = param(15)        !fhiHz
+  par(23) = param(16)        !ReIm
+  par(24) = param(17)        !DelA
+  par(25) = param(18)        !DelAB
+  par(26) = param(19)        !g
+  par(27) = 1.0              !Anorm
+  par(28) = param(20)        !telescope response
   ! Call general code
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)     
   return
 end subroutine tdreltransCp
 !-----------------------------------------------------------------------
 
+
 !-----------------------------------------------------------------------
 subroutine tdreltransDCp(ear, ne, param, ifl, photar)
   implicit none
   integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(21), photar(ne), par(27)
+  real    :: ear(0:ne), param(21), photar(ne), par(28)
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
@@ -173,21 +176,22 @@ subroutine tdreltransDCp(ear, ne, param, ifl, photar)
   par(10) = param(9)         !Afe
   par(11) = param(10)        !lognep
   par(12) = param(11)        !kTe
-  par(13) = param(12)        !Nh
-  par(14) = param(13)        !boost
-  par(15) = 1.0              !qboost
-  par(16) = param(14)        !Mass
-  par(17) = 0.0              !honr
-  par(18) = 0.0              !b1
-  par(19) = 0.0              !b2
-  par(20) = param(15)        !floHz
-  par(21) = param(16)        !fhiHz
-  par(22) = param(17)        !ReIm
-  par(23) = param(18)        !DelA
-  par(24) = param(19)        !DelAB
-  par(25) = param(20)        !g
-  par(26) = 1.0              !Anorm
-  par(27) = param(21)        !telescope response
+  par(13) = 0.               !lumratio
+  par(14) = param(12)        !Nh
+  par(15) = param(13)        !boost
+  par(16) = 1.0              !qboost
+  par(17) = param(14)        !Mass
+  par(18) = 0.0              !honr
+  par(19) = 0.0              !b1
+  par(20) = 0.0              !b2
+  par(21) = param(15)        !floHz
+  par(22) = param(16)        !fhiHz
+  par(23) = param(17)        !ReIm
+  par(24) = param(18)        !DelA
+  par(25) = param(19)        !DelAB
+  par(26) = param(20)        !g
+  par(27) = 1.0              !Anorm
+  par(28) = param(21)        !telescope response
 ! Call general code
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   return
@@ -199,7 +203,7 @@ end subroutine tdreltransDCp
 subroutine tdreltransx(ear,ne,param,ifl,photar)
   implicit none
   integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(21), photar(ne), par(27)
+  real    :: ear(0:ne), param(21), photar(ne), par(28)
 ! Settings
   Cp   = 0   !Cp=0 means use the reflionx model with nthcomp and free density
   dset = 0   !dset=0 means distance is not set, logxi set instead
@@ -217,21 +221,22 @@ subroutine tdreltransx(ear,ne,param,ifl,photar)
   par(10) = param(9)         !Afe
   par(11) = param(10)        !lognep
   par(12) = param(11)        !kTe
-  par(13) = param(12)        !Nh
-  par(14) = param(13)        !boost
-  par(15) = 1.0              !qboost
-  par(16) = param(14)        !Mass
-  par(17) = 0.0              !honr
-  par(18) = 0.0              !b1
-  par(19) = 0.0              !b2
-  par(20) = param(15)        !floHz
-  par(21) = param(16)        !fhiHz
-  par(22) = param(17)        !ReIm
-  par(23) = param(18)        !DelA
-  par(24) = param(19)        !DelAB
-  par(25) = param(20)        !g
-  par(26) = 1.0              !Anorm
-  par(27) = param(21)        !telescope response
+  par(13) = 0.               !lumratio
+  par(14) = param(12)        !Nh
+  par(15) = param(13)        !boost
+  par(16) = 1.0              !qboost
+  par(17) = param(14)        !Mass
+  par(18) = 0.0              !honr
+  par(19) = 0.0              !b1
+  par(20) = 0.0              !b2
+  par(21) = param(15)        !floHz
+  par(22) = param(16)        !fhiHz
+  par(23) = param(17)        !ReIm
+  par(24) = param(18)        !DelA
+  par(25) = param(19)        !DelAB
+  par(26) = param(20)        !g
+  par(27) = 1.0              !Anorm
+  par(28) = param(21)        !telescope response
 ! Call general code
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   return
@@ -239,12 +244,11 @@ end subroutine tdreltransx
 !-----------------------------------------------------------------------
 
 
-
 !-----------------------------------------------------------------------
 subroutine tdreltransDbl(ear, ne, param, ifl, photar)
   implicit none
   integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(22), photar(ne), par(27)
+  real    :: ear(0:ne), param(23), photar(ne), par(28)
 !Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
@@ -262,21 +266,22 @@ subroutine tdreltransDbl(ear, ne, param, ifl, photar)
   par(10) = param(10)        !Afe
   par(11) = param(11)        !lognep
   par(12) = param(12)        !kTe
-  par(13) = param(13)        !Nh
-  par(14) = param(14)        !boost
-  par(15) = 1.0              !qboost
-  par(16) = param(15)        !Mass
-  par(17) = 0.0              !honr
-  par(18) = 0.0              !b1
-  par(19) = 0.0              !b2
-  par(20) = param(16)        !floHz
-  par(21) = param(17)        !fhiHz
-  par(22) = param(18)        !ReIm
-  par(23) = param(19)        !DelA
-  par(24) = param(20)        !DelAB
-  par(25) = param(21)        !g
-  par(26) = 1.0              !Anorm
-  par(27) = param(22)        !telescope response
+  par(13) = param(13)        !lumratio
+  par(14) = param(14)        !Nh
+  par(15) = param(15)        !boost
+  par(16) = 1.0              !qboost
+  par(17) = param(16)        !Mass
+  par(18) = 0.0              !honr
+  par(19) = 0.0              !b1
+  par(20) = 0.0              !b2
+  par(21) = param(17)        !floHz
+  par(22) = param(18)        !fhiHz
+  par(23) = param(19)        !ReIm
+  par(24) = param(20)        !DelA
+  par(25) = param(21)        !DelAB
+  par(26) = param(22)        !g
+  par(27) = 1.0              !Anorm
+  par(28) = param(23)        !telescope response
 ! Call general code
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   return
@@ -284,12 +289,11 @@ end subroutine tdreltransDbl
 !-----------------------------------------------------------------------
 
 
-
 !-----------------------------------------------------------------------
 subroutine tdrtdist(ear, ne, param, ifl, photar)
   implicit none
   integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(25), photar(ne), par(27), getcountrate
+  real    :: ear(0:ne), param(25), photar(ne), par(28), getcountrate
   double precision    :: honr,pi,cosi,cos0
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
@@ -308,21 +312,22 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
   par(10)  = param(9)         !Afe
   par(11) = param(10)        !lognep
   par(12) = param(11)        !kTe
-  par(13) = param(12)        !Nh
-  par(14) = 1.0              !boost
-  par(15) = param(13)        !qboost
-  par(16) = param(14)        !Mass
-  par(17) = param(15)        !honr
-  par(18) = param(16)        !b1
-  par(19) = param(17)        !b2
-  par(20) = param(18)        !floHz
-  par(21) = param(19)        !fhiHz
-  par(22) = param(20)        !ReIm
-  par(23) = param(21)        !DelA
-  par(24) = param(22)        !DelAB
-  par(25) = param(23)        !g
-  par(26) = param(24)        !Anorm
-  par(27) = param(25)        !telescope response
+  par(13) = 0.               !lumratio
+  par(14) = param(12)        !Nh
+  par(15) = 1.0              !boost
+  par(16) = param(13)        !qboost
+  par(17) = param(14)        !Mass
+  par(18) = param(15)        !honr
+  par(19) = param(16)        !b1
+  par(20) = param(17)        !b2
+  par(21) = param(18)        !floHz
+  par(22) = param(19)        !fhiHz
+  par(23) = param(20)        !ReIm
+  par(24) = param(21)        !DelA
+  par(25) = param(22)        !DelAB
+  par(26) = param(23)        !g
+  par(27) = param(24)        !Anorm
+  par(28) = param(25)        !telescope response
 ! Check that we're not looking at the side of the disc
   honr = par(17)
   pi   = acos(-1.d0)
@@ -349,7 +354,7 @@ end subroutine tdrtdist
 subroutine tdrtdistX(ear, ne, param, ifl, photar)
   implicit none
   integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(25), photar(ne), par(27), getcountrate
+  real    :: ear(0:ne), param(25), photar(ne), par(28), getcountrate
   double precision    :: honr,pi,cosi,cos0
 ! Settings
   Cp   = 0   !Cp=0 means use the reflionx model with nthcomp and free density 
@@ -365,24 +370,25 @@ subroutine tdrtdistX(ear, ne, param, ifl, photar)
   par(7)  = param(6)         !zcos
   par(8)  = param(7)         !Gamma
   par(9)  = param(8)         !Dkpc
-  par(10)  = param(9)        !Afe
+  par(10)  = param(9)         !Afe
   par(11) = param(10)        !lognep
   par(12) = param(11)        !kTe
-  par(13) = param(12)        !Nh
-  par(14) = 1.0              !boost
-  par(15) = param(13)        !qboost
-  par(16) = param(14)        !Mass
-  par(17) = param(15)        !honr
-  par(18) = param(16)        !b1
-  par(19) = param(17)        !b2
-  par(20) = param(18)        !floHz
-  par(21) = param(19)        !fhiHz
-  par(22) = param(20)        !ReIm
-  par(23) = param(21)        !DelA
-  par(24) = param(22)        !DelAB
-  par(25) = param(23)        !g
-  par(26) = param(24)        !Anorm
-  par(27) = param(25)        !telescope response
+  par(13) = 0.               !lumratio
+  par(14) = param(12)        !Nh
+  par(15) = 1.0              !boost
+  par(16) = param(13)        !qboost
+  par(17) = param(14)        !Mass
+  par(18) = param(15)        !honr
+  par(19) = param(16)        !b1
+  par(20) = param(17)        !b2
+  par(21) = param(18)        !floHz
+  par(22) = param(19)        !fhiHz
+  par(23) = param(20)        !ReIm
+  par(24) = param(21)        !DelA
+  par(25) = param(22)        !DelAB
+  par(26) = param(23)        !g
+  par(27) = param(24)        !Anorm
+  par(28) = param(25)        !telescope response
 ! Check that we're not looking at the side of the disc
   honr = par(17)
   pi   = acos(-1.d0)
@@ -408,7 +414,7 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   use telematrix
   implicit none
   integer :: ne, ifl, Cp, dset, nlp, i
-  real    :: ear(0:ne), param(27), photar(ne), par(27)
+  real    :: ear(0:ne), param(27), photar(ne), par(28)
   real    :: gammac2, Texp, E, dE, getcountrate
   real    :: rephotar(ne), imphotar(ne)
   real, parameter :: Emin = 1e-1, Emax = 300.0
@@ -440,30 +446,31 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   par(10)  = param(9)        !Afe
   par(11) = param(10)        !lognep
   par(12) = param(11)        !kTe
-  par(13) = param(12)        !Nh
-  par(14) = 1.0              !boost
-  par(15) = param(13)        !qboost
-  par(16) = param(14)        !Mass
-  par(17) = param(15)        !honr
-  par(18) = param(16)        !b1
-  par(19) = param(17)        !b2
-  par(20) = param(18)        !floHz
-  par(21) = param(19)        !fhiHz
+  par(13) = 0.               !lumratio
+  par(14) = param(12)        !Nh
+  par(15) = 1.0              !boost
+  par(16) = param(13)        !qboost
+  par(17) = param(14)        !Mass
+  par(18) = param(15)        !honr
+  par(19) = param(16)        !b1
+  par(20) = param(17)        !b2
+  par(21) = param(18)        !floHz
+  par(22) = param(19)        !fhiHz
   gammac2 = param(20)        !squared coherence
-  par(23) = param(21)        !DelA
-  par(24) = param(22)        !DelAB
-  par(25) = param(23)        !g
-  par(26) = param(24)        !Anorm
+  par(24) = param(21)        !DelA
+  par(25) = param(22)        !DelAB
+  par(26) = param(23)        !g
+  par(27) = param(24)        !Anorm
   Texp    = param(25)        !Texp (s)
   pow     = param(26)        !power in [rms/mean]^2/Hz units (alpha(nu))
-  par(27) = param(27)        !telescope response
+  par(28) = param(27)        !telescope response
   
-  flo = param(19)
-  fhi = param(20)
+  flo = param(21)
+  fhi = param(22)
   fc  = 0.5 * ( fhi + flo )
   
 ! Get `folded' lags
-  par(22) = 6.0   !ReIm
+  par(23) = 6.0   !ReIm
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   do i = 1,ne
      lag(i) = photar(i) / ( ear(i) - ear(i-1) )
@@ -475,14 +482,14 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   end do
   
 ! Calculate real and imaginary parts on the fine energy grid
-  par(22) = 1.0   !ReIm
+  par(23) = 1.0   !ReIm
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
-  par(22) = 2.0   !ReIm
+  par(23) = 2.0   !ReIm
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
 ! Get DC component
-  par(20) = 0.0   !floHz
-  par(21) = 0.0   !fhiHz
-  par(22) = 1.0   !ReIm
+  par(21) = 0.0   !floHz
+  par(22) = 0.0   !fhiHz
+  par(23) = 1.0   !ReIm
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
 
 ! Read in background array
@@ -612,7 +619,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     !Args:
     integer, intent(inout) :: ifl
     integer, intent(in)    :: Cp, dset, ne, nlp
-    real   , intent(inout) :: param(27)
+    real   , intent(inout) :: param(28)
     real   , intent(out)   :: photar(ne)  
     !Variables of the subroutine
     !initializer
@@ -624,8 +631,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     real             :: logxi, Afe, lognep, Ecut_obs, Ecut_s, Dkpc, Anorm
     real             :: Nh, boost, Mass, floHz, fhiHz, DelA, DelAB, g
     integer          :: ReIm, resp_matr
-    double precision :: qboost,b1,b2
-    double precision :: lumratio
+    double precision :: qboost,b1,b2, lumratio
     !internal frequency grid
     integer          :: nf 
     real             :: f, fac
@@ -634,6 +640,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     real             :: E, dE, dloge
     real             :: earx(0:nex)   
     real             :: ear(0:ne)
+    ! internal frequency grid, for when we do lag/frequency spectra
+    integer           :: fbinx 
+    real, allocatable :: fix(:)
     !relativistic parameters and limit on rin and h
     double precision :: rmin, rh 
     double precision :: gso(nlp),tauso(nlp),cosdelta_obs(nlp),height(nlp),contx_int(nlp)
@@ -658,7 +667,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                dlogxi1, dlogxi2, Gamma1, Gamma2, DeltaGamma  
     !SAVE 
     integer          :: nfsave, Cpsave
-    real             :: paramsave(27)
+    real             :: paramsave(28)
     double precision :: fhisave, flosave
     !Functions
     integer          :: i, j, myenv
@@ -695,32 +704,54 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     !LP we use the temperature in the observer frame
     if (nlp .eq. 1) then
         call set_param(dset, param, nlp, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc, Afe, &
-        lognep, Ecut_obs, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
+        lognep, Ecut_obs, lumratio, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
         DelA, DelAB, g, Anorm, resp_matr)
     else 
         call set_param(dset, param, nlp, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc, Afe, &
-        lognep, Ecut_s, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
+        lognep, Ecut_s, lumratio, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,  &
         DelA, DelAB, g, Anorm, resp_matr) 
     end if 
-    !placeholder for different luminosities in each LPs DO BETTER
-    lumratio = 1.
+    !placeholder for different luminosities in each LPs DO BETTER - input parameter for double LP 
+    !lumratio = 1.
 
     muobs = cos( inc * pi / 180.d0 )
 
-    !Work out how many frequencies to average over
-    fc = 0.5d0 * ( floHz + fhiHz )
-    nf = ceiling( log10(fhiHz/floHz) / dlogf )
-    if( fhiHz .lt. tiny(fhiHz) .or. floHz .lt. tiny(floHz) )then
-        fhiHz = 0.d0
-        floHz = 0.d0
-        nf    = 1
-    end if
- 
-    !Convert frequency bounds from Hz to c/Rg (now being more accurate with constants)
-    fhi   = dble(fhiHz) * 4.92695275718945d-06 * Mass !4.916d-6 * Mass
-    flo   = dble(floHz) * 4.92695275718945d-06 * Mass !4.916d-6 * Mass
+    !this needs to go in a subroutine 
+    !rework this logic so that low frequencies always result in time independent spectrum, not just for reim<7
+    if( ReIm .eq. 7 .and. fhiHz .gt. tiny(fhiHz) .and. floHz .gt. tiny(floHz)) then
+        !set up frequency grid in Hz if using lag frequency mode, depending on whether we're looking at AGN or XRBs
+        if( Mass .gt. 1000 ) then
+            floHz = 1.e-5
+            fhiHz = 5.e-2 
+        else
+            floHz = 0.07
+            fhiHz = 700.
+        end if
+        !Convert frequency bounds from Hz to c/Rg (now being more accurate with constants)
+        fhi   = dble(fhiHz) * 4.92695275718945d-06 * Mass
+        flo   = dble(floHz) * 4.92695275718945d-06 * Mass
+        !Note that the frequency grid is using a higher resolution since it's what we care about in this mode 
+        !TBD: find a way to reduce energy resolution since we don't need it, otherwise the runtime is insanely slow  
+        nf = ceiling( log10(fhiHz/floHz) / 0.01 )
+        allocate(fix(0:nf))
+        do fbinx = 0, nf 
+            fix(fbinx) = floHz * (fhiHz / floHz)**( real(fbinx) / real(nf) )
+        end do
+    else 
+        !if doing lag-energy spectra, just work out how many frequencies to average over 
+        fc = 0.5d0 * ( floHz + fhiHz )
+        nf = ceiling( log10(fhiHz/floHz) / dlogf )
+        if( fhiHz .lt. tiny(fhiHz) .or. floHz .lt. tiny(floHz) )then
+            fhiHz = 0.d0
+            floHz = 0.d0
+            nf    = 1
+        end if
+        !Convert frequency bounds from Hz to c/Rg (now being more accurate with constants)
+        fhi   = dble(fhiHz) * 4.92695275718945d-06 * Mass
+        flo   = dble(floHz) * 4.92695275718945d-06 * Mass
+    end if   
 
-    !Decide if this is the DC component or not
+    !Decide if this is the DC component/time averaged spectrum or not
     if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) )then
         DC     = 1
         g      = 0.0
@@ -732,7 +763,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         boost  = abs(boost)
     end if
   
-    !this could go into a subroutine 
+    !this could go into a subroutine -- just put it in set_params?
     !Set minimum r (ISCO) and convert rin and h to rg
     if( abs(a) .gt. 0.999 ) a = sign(a,1.d0) * 0.999
     rmin   = disco( a )
@@ -800,6 +831,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         if( .not. allocated(lens) ) allocate( lens(nlp) )
     end if
   
+    !this desperately needs to be its own subroutine 
     if (nlp .eq. 1) then 
         gso(1) = real( dgsofac(a,h(1)) ) 
         Ecut_s = real(1.d0+zcos) * Ecut_obs / gso(1)
@@ -850,7 +882,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                     write(*,*)"kTe observed from source #", m, "is (keV)=" ,Ecut_obs
                 end if
             end if  
-            contx_int(m) = Eintegrate(0.1,1e3,nex,earx,contx(:,m),dlogE)             
+            contx_int(m) = Eintegrate(Emin,Emax,nex,earx,contx(:,m),dlogE)             
             contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos))**Gamma) * contx(:,m)   
         end do  
     end if  
@@ -948,25 +980,35 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! Calculate absorption 
     call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
 
-    !Calculate raw FT of the full spectrum without absorption
-    call rawS(nex,earx,nf,nlp,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,real(zcos),&
-                real(gso),real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
-
-    !Include absorption in the model
-    do j = 1, nf
-        do i = 1, nex
-            ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
-            ImSrawa(i,j) = ImSraw(i,j) * absorbx(i)
-        end do
-    end do
-
+    !change logic - always do if Reim = 7, else DC, else ReIm <=6
+    if( ReIm .eq. 7 ) then
+        call lag_freq(nlp,nex,earx,contx,absorbx,Emin,Emax,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&    
+                      g,DelAB,nf,fix,boost,real(zcos),real(gso),real(lens),real(Gamma),ionvar,ReGbar,ImGbar)
+    else
+        !Calculate raw FT of the full spectrum without absorption
+        call rawS(nex,earx,nf,nlp,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,boost,real(zcos),&
+                  real(gso),real(lens),real(Gamma),ionvar,DC,ReSraw,ImSraw)
+        !Include absorption in the model
+        do j = 1, nf
+            do i = 1, nex
+                ReSrawa(i,j) = ReSraw(i,j) * absorbx(i)
+                ImSrawa(i,j) = ImSraw(i,j) * absorbx(i)
+            end do
+        end do        
+    end if
+    
     if( DC .eq. 1 )then
-        !Norm is applied internally for DC component of dset=1
+        !Norm is applied internally for DC/time averaged spectrum component of dset=1
         !No need for the immaginary part in DC
         do i = 1, nex
             ReGbar(i) = (Anorm/real(1.+lumratio)) * ReSrawa(i,1)
         end do
-    else
+    else if (ReIm .eq. 7) then     
+        !if calculating the lag-frequency spectrum, just rebin the arrays
+        call rebinE(fix, ReGbar, nf, ear, ReS, ne)
+        call rebinE(fix, ImGbar, nf, ear, ImS, ne)     
+    else 
+        !In this case, calculate the lag-energy spectrum
         !Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band parameters
         if (ReIm .gt. 0.0) then
             call propercross(nex, nf, earx, ReSrawa, ImSrawa, ReGrawa, ImGrawa, resp_matr)
@@ -991,13 +1033,18 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             end do
         end do
         !This means that norm for the AC components in the dset=1 model is power in squared fractional rms format
-        ReGbar = ReGbar * fac * Anorm**2  
-        ImGbar = ImGbar * fac * Anorm**2  
+        !note: unsure if the lumratio factor in the normalisation here is correct or not
+        ReGbar = ReGbar * fac * (Anorm/real(1.+lumratio))**2  
+        ImGbar = ImGbar * fac * (Anorm/real(1.+lumratio))**2  
     end if
 
     !Write output depending on ReIm parameter
-    !if( flo .lt. tiny(flo) .or. fhi .lt. tiny(fhi) ) ReIm = 1
-    if( abs(ReIm) .le. 4 )then
+    if( ReIm .eq. 7 ) then
+        do i=1,ne 
+            dE = ear(i) - ear(i-1)     
+            photar(i) = atan2(ImS(i),ReS(i))/(pi*(ear(i) + ear(i-1)))*dE
+        end do
+    else if( abs(ReIm) .le. 4 )then
         call crebin(nex,earx,ReGbar,ImGbar,ne,ear,ReS,ImS) !S is in photar form
         if( abs(ReIm) .eq. 1 )then        !Real part
             photar = ReS
@@ -1028,13 +1075,13 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         end if
     end if
   
-    !TBD: benchmark how long this loop takes
-    if (verbose .gt. 1 .and. abs(ReIm) .gt. 0) then
+    if (verbose .gt. 1 .and. abs(ReIm) .gt. 0 .and. ReIm .lt. 7) then
         !this writes the individual components to file
         call write_components(ne,ear,nex,earx,nf,nlp,contx,absorbx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,floHz,fhiHz,&
                               ReIm,DelA,DelAB,g,boost,real(zcos),real(gso),real(lens),real(Gamma),ionvar,resp_matr)
         !this writes the full model as returned to Xspec 
         !note that xspec gets output in e.g. lags*dE, and we want just the lags, so a factor dE needs to be included
+        !add writing of components for lag frequency spectrum 
         open (unit = 14, file = 'Output/Total.dat', status='replace', action = 'write')     
         do i = 1,ne 
             dE = ear(i) - ear(i-1)
@@ -1057,8 +1104,15 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             write (24,*) (earx(i)+earx(i-1))/2., contx_temp
         end do
         close(24)
+    else if (ReIm .eq. 7) then
+        open (unit = 14, file = 'Output/Total.dat', status='replace', action = 'write')     
+        do i = 1,ne 
+            dE = ear(i) - ear(i-1)
+            write (14,*) (ear(i)+ear(i-1))/2., photar(i)/dE        
+        end do 
+        close(14)
     endif 
-  
+    
     fhisave   = fhi
     flosave   = flo
     nfsave    = nf
