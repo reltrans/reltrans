@@ -50,7 +50,7 @@ module conv_mod
   implicit none
   include 'fftw3.f03'
 
-  integer, parameter :: nex = 2**12, nex_conv = 4 * nex, nec = nex_conv/2 + 1
+  integer, parameter :: nex = 2**8, nex_conv = 4 * nex, nec = nex_conv/2 + 1
   ! real   , dimension(2 * nex_conv) :: adata,bdata,cdata
   ! complex, dimension(nex_conv) :: ac,bc,cc
   

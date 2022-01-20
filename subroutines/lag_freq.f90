@@ -46,9 +46,9 @@ subroutine lag_freq(nlp,nex,earx,contx,absorbx,Emin,Emax,ReW0,ImW0,ReW1,ImW1,ReW
     real   , intent(in) :: ReW0(nex,nf),ImW0(nex,nf),ReW1(nex,nf),ImW1(nex,nf),&
                            ReW2(nex,nf),ImW2(nex,nf),ReW3(nex,nf),ImW3(nex,nf)                          
     real,    intent(out):: ReGraw(nf),ImGraw(nf)
-    real                :: contx_1(nex),contx_2(nex)
+    real                :: cont_1(nex),cont_2(nex)
     real                :: ReGrawEa,ImGrawEa,ReGrawEb,ImGrawEb
-    real                :: sinD,cosD,E,fac,gsoz
+    real                :: sinD,cosD,E,fac,TempG
     real                :: ReW0s,ImW0s,ReWbs,ImWbs,ReW3s,ImW3s 
     real                :: f,DelAB_nu,g_nu
     integer             :: i,j,m
@@ -57,7 +57,8 @@ subroutine lag_freq(nlp,nex,earx,contx,absorbx,Emin,Emax,ReW0,ImW0,ReW1,ImW1,ReW
 
     gslope = 1.
     ABslope = 1.
-    !note: this assumes that DC is never 1
+    cont_1 = 0.
+    cont_2 = 0.
   
     !Now calculate the cross-spectrum (/complex covariance)
     do j = 1, nf
@@ -75,8 +76,8 @@ subroutine lag_freq(nlp,nex,earx,contx,absorbx,Emin,Emax,ReW0,ImW0,ReW1,ImW1,ReW
             E   = 0.5*(earx(i)+earx(i-1))
             do m=1,nlp 
                 fac = log(gso(m)/((1.0+z)*E))
-                contx_1(i) = contx_1(i) + contx(i,m)
-                contx_2(i) = contx_2(i) + fac*contx(i,m)   
+                cont_1(i) = cont_1(i) + contx(i,m)
+                cont_2(i) = cont_2(i) + fac*contx(i,m)   
             end do
             !Multiply by boost parameter and group like terms
             ReW0s = boost * ReW0(i,j)
@@ -86,15 +87,17 @@ subroutine lag_freq(nlp,nex,earx,contx,absorbx,Emin,Emax,ReW0,ImW0,ReW1,ImW1,ReW
             ReW3s = ionvar * boost * ReW3(i,j)
             ImW3s = ionvar * boost * ImW3(i,j)
             !Real part
-            ReGrawEa = ReGrawEa + cosD * (contx_2(i) + ReWbs)
-            ReGrawEa = ReGrawEa - sinD * ImWbs
-            ReGrawEa = ReGrawEa * g_nu
-            ReGrawEa = ReGrawEa + contx_1(i) + ReW0s + ReW3s
+            TempG = cosD * (cont_2(i) + ReWbs) 
+            TempG = TempG - sinD * ImWbs
+            TempG = TempG * g_nu 
+            TempG = TempG + cont_1(i) + ReW0s + ReW3s
+            ReGrawEa = ReGrawEa + TempG
             !Imaginary part
-            ImGrawEa = ImGrawEa + sinD * (contx_2(i) + ReWbs)
-            ImGrawEa = ImGrawEa + cosD * ImWbs
-            ImGrawEa = ImGrawEa * g_nu
-            ImGrawEa = ImGrawEa + ImW0s + ImW3s
+            TempG = sinD * (cont_2(i) + ReWbs)
+            TempG = TempG + cosD * ImWbs
+            TempG = TempG * g_nu
+            TempG = TempG + ImW0s + ImW3s
+            ImGrawEa = ImGrawEa + TempG 
             !Account for absorption
             ReGrawEa = ReGrawEa * absorbx(i)
             ImGrawEa = ImGrawEa * absorbx(i)
@@ -104,8 +107,8 @@ subroutine lag_freq(nlp,nex,earx,contx,absorbx,Emin,Emax,ReW0,ImW0,ReW1,ImW1,ReW
             E   = 0.5*(earx(i)+earx(i-1))
             do m=1,nlp 
                 fac = log(gso(m)/((1.0+z)*E))
-                contx_1(i) = contx_1(i) + contx(i,m)
-                contx_2(i) = contx_2(i) + fac*contx(i,m)   
+                cont_1(i) = cont_1(i) + contx(i,m)
+                cont_2(i) = cont_2(i) + fac*contx(i,m)   
             end do
             !Multiply by boost parameter and group like terms
             ReW0s = boost * ReW0(i,j)
@@ -115,22 +118,25 @@ subroutine lag_freq(nlp,nex,earx,contx,absorbx,Emin,Emax,ReW0,ImW0,ReW1,ImW1,ReW
             ReW3s = ionvar * boost * ReW3(i,j)
             ImW3s = ionvar * boost * ImW3(i,j)
             !Real part
-            ReGrawEb = ReGrawEb + cosD * (contx_2(i) + ReWbs)
-            ReGrawEb = ReGrawEb - sinD * ImWbs
-            ReGrawEb = ReGrawEb * g_nu
-            ReGrawEb = ReGrawEb + contx_1(i) + ReW0s + ReW3s
+            TempG = cosD * (cont_2(i) + ReWbs)
+            TempG = TempG - sinD * ImWbs
+            TempG = TempG * g_nu
+            TempG = TempG + cont_1(i) + ReW0s + ReW3s
+            ReGrawEb = ReGrawEb + TempG 
             !Imaginary part
-            ImGrawEb = ImGrawEb + sinD * (contx_2(i) + ReWbs)
-            ImGrawEb = ImGrawEb + cosD * ImWbs
-            ImGrawEb = ImGrawEb * g_nu
-            ImGrawEb = ImGrawEb + ImW0s + ImW3s
+            TempG = sinD * (cont_2(i) + ReWbs)
+            TempG = TempG + cosD * ImWbs
+            TempG = TempG * g_nu
+            TempG = TempG + ImW0s + ImW3s
+            ImGrawEb = ImGrawEb + TempG 
             !Account for absorption
             ReGrawEb = ReGrawEb * absorbx(i)
             ImGrawEb = ImGrawEb * absorbx(i)
         end do
         !Now cross-spectrum between the two energy bands
+        !note: here the conjugate is b
         ReGraw(j) = (ReGrawEa * ReGrawEb) + (ImGrawEa * ImGrawEb)
-        ImGraw(j) = (ReGrawEa * ImGrawEb) - (ReGrawEb * ImGrawEa)
+        ImGraw(j) = (ReGrawEb * ImGrawEa) - (ReGrawEa * ImGrawEb)
     end do
 
 end subroutine lag_freq
