@@ -1108,7 +1108,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         open (unit = 14, file = 'Output/Total.dat', status='replace', action = 'write')     
         do i = 1,ne 
             dE = ear(i) - ear(i-1)
-            write (14,*) (ear(i)+ear(i-1))/2., photar(i)/dE        
+            write (14,*)  (ear(i)+ear(i-1))/2., photar(i)/dE        
         end do 
         close(14)
     endif 
