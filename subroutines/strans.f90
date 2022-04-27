@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,lumratio,&
+subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,eta,eta_0,&
                   fcons,contx_int,tauso,lens,cosdelta_obs,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,rlxi,lognep,&
                   transe,transe_a,frobs,frrel,logxir,gsdr,logner)
     ! Code to calculate the transfer function for an accretion disk.
@@ -43,7 +43,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     double precision b1,b2,qboost
     double precision fcons,cosdout,logxir(xe),gsdr(xe),logner(xe),dfer_arr(xe)
     real rlxi, dloge, lognep
-    complex cexp,transe(ne,nf,me,xe),transe_a(ne,nf,me,xe)
+    complex cexp,transe(0:nlp,ne,nf,me,xe),transe_a(nlp,ne,nf,me,xe)
     integer i,npts(nlp),j,odisc,n,gbin,rbin,mubin,l,m,k
     parameter (ndelta=1000)
     double precision domega(nro),d,taudo,g,dlgfacthick,dFe,newtex
@@ -61,7 +61,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     double precision spinsav,musav,routsav,mudsav,rnn(nro),domegan(nro)
     integer myenv
     double precision lximax
-    double precision lumratio 
+    double precision eta,eta_0 
     logical dotrace
     
     !arrays to save the transfer function
@@ -162,8 +162,8 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     !loop over all lmaposts (m), photon directions (l), disk radii (i), disk azimuth (j), and calculate the contribution to the
     !transfer function/convolution kernel in energy (gbin), frequency (fbin), emission angle (mubin), disk radialb in (rbin)
     do m=1,nlp
-        !set normalisation of second LP wrt to first
-        if (m .gt. 1) pnorm = lumratio*pnorm
+        !set normalisation of second LP wrt to first - this sets the relative importance of the two signals
+        if (m .gt. 1) pnorm = eta*pnorm
         !get appropriate arrays for rlp/tlp/dcosdr/cosd                 
         do l=1,ndelta
             rlp_column(l)=rlp(l,m)
@@ -233,8 +233,9 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                         !Add to the transfer function integral
                         do fbin = 1,nf
                             cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
-                            transe(gbin,fbin,mubin,rbin)   = transe(gbin,fbin,mubin,rbin)                  + real(dFe) * cexp
-                            transe_a(gbin,fbin,mubin,rbin) = transe_a(gbin,fbin,mubin,rbin) + real(log(g)) * real(dFe) * cexp
+                            transe(0,gbin,fbin,mubin,rbin)   = transe(0,gbin,fbin,mubin,rbin) + real(dFe) * cexp
+                            transe(m,gbin,fbin,mubin,rbin)   = transe(m,gbin,fbin,mubin,rbin) + real(dFe) * cexp
+                            transe_a(m,gbin,fbin,mubin,rbin) = transe_a(m,gbin,fbin,mubin,rbin) + real(log(g)) * real(dFe) * cexp
                         end do
                         !if large verbose, start saving the impulse response function to file 
                         if( verbose .gt. 1 ) then
@@ -302,8 +303,9 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                     !Add to the transfer function integral
                     do fbin = 1,nf
                         cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
-                        transe(gbin,fbin,mubin,rbin)   = transe(gbin,fbin,mubin,rbin)                  + real(dFe) * cexp
-                        transe_a(gbin,fbin,mubin,rbin) = transe_a(gbin,fbin,mubin,rbin) + real(log(g)) * real(dFe) * cexp
+                        transe(0,gbin,fbin,mubin,rbin)   = transe(0,gbin,fbin,mubin,rbin) + real(dFe) * cexp
+                        transe(m,gbin,fbin,mubin,rbin)   = transe(m,gbin,fbin,mubin,rbin) + real(dFe) * cexp
+                        transe_a(m,gbin,fbin,mubin,rbin) = transe_a(m,gbin,fbin,mubin,rbin) + real(log(g)) * real(dFe) * cexp
                     end do
                     !if large verbose, start saving the impulse response function to file 
                     if( verbose .gt. 1 ) then
@@ -364,7 +366,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
 
     !calculate the ionization/density/gsd radial profiles 
     if( dset .eq. 0 .or. size(h) .eq. 2) then
-        call radfunctions_dens(verbose,xe,rin,rnmax,lumratio,dble(rlxi),dble(lognep),spin,h,Gamma,honr,rlp&
+        call radfunctions_dens(verbose,xe,rin,rnmax,eta_0,dble(rlxi),dble(lognep),spin,h,Gamma,honr,rlp&
                                &,dcosdr,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
     else
         call radfuncs_dist(xe,rin,rnmax,b1,b2,qboost,fcons,&
@@ -553,13 +555,13 @@ end function pfunc_raw
 
 
 !-----------------------------------------------------------------------
-subroutine radfunctions_dens(verbose,xe,rin,rnmax,lumratio,logxip,lognep,spin,h,Gamma,honr,rlp,dcosdr&
+subroutine radfunctions_dens(verbose,xe,rin,rnmax,eta_0,logxip,lognep,spin,h,Gamma,honr,rlp,dcosdr&
      &,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
-    ! In  : xe,rin,rnmax,lumratio,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
+    ! In  : xe,rin,rnmax,eta_0,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
     ! Out : logxir(1:xe), gsdr(1:xe), logner(1:xe)
     implicit none
     integer         , intent(IN)   :: xe, ndelta, nlp, npts(nlp)
-    double precision, intent(IN)   :: rin,rmin,rnmax,lumratio,logxip,lognep,spin,h(nlp),honr,Gamma,dfer_arr(xe)
+    double precision, intent(IN)   :: rin,rmin,rnmax,eta_0,logxip,lognep,spin,h(nlp),honr,Gamma,dfer_arr(xe)
     real                           :: gso(nlp)
     double precision, intent(IN)   :: rlp(ndelta,nlp), dcosdr(ndelta,nlp), cosd(ndelta,nlp), contx_int(nlp)
     double precision :: rlp_column(ndelta),dcosdr_column(ndelta),cosd_column(ndelta), dgsofac
@@ -600,7 +602,7 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,lumratio,logxip,lognep,spin,h,
             end do    
             gso(m) = real( dgsofac(spin,h(m)) )     
             xi_lp(i,m) = xiraw(rad(i),spin,h(m),honr,rlp_column,dcosdr_column,ndelta,rmin,npts(m),mudisk,gsd(m))            
-            if (m .eq. 2) xi_lp(i,m) = lumratio*xi_lp(i,m)
+            if (m .eq. 2) xi_lp(i,m) = eta_0*xi_lp(i,m)
             !Calculate the incident angle for this bin
             kk = get_index(rlp_column, ndelta, rad(i), rmin, npts(m))
             mus = interper(rlp_column, cosd_column, ndelta, rad(i), kk)
@@ -632,7 +634,7 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,lumratio,logxip,lognep,spin,h,
     !epsilon(r) for identical coronal spectrra and gamma=2) to file. 
     !note 1) we need to do this before the ionisation array is set to have a minimum of 0, in order
     !to recover the correct scaling of the emissivity at large radii
-    !2) in order to correctly compare the dfer_arr array with the single LP case, it has to be renormalized by (1+lumratio)
+    !2) in order to correctly compare the dfer_arr array with the single LP case, it has to be renormalized by (1+eta_0)
     if( verbose .gt. 1 ) then
         print*, "Peak ionisations from each LP: first " , logxip_lp(1), " second ", logxip_lp(2)
         open (unit = 27, file = 'Output/RadialScalings.dat', status='replace', action = 'write')

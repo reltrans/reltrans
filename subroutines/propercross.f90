@@ -95,13 +95,14 @@ subroutine response_and_energy_bounds(resp_matr)
         ! write(*,*) 'calling intmatrix'
         call initmatrix
      endif
-     
 !Get energy bounds of the reference band
      if( needchans )then
         write(*,*)"Enter lower energy in reference band"
         read(*,*)Elo
+        !Elo = 0.5
         write(*,*)"Enter upper energy in reference band"
         read(*,*)Ehi
+        !Ehi = 10.
         if( Elo .gt. Ehi )then
            dum = Elo
            Elo = Ehi
