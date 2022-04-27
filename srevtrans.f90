@@ -1120,7 +1120,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         if( abs(ReIm) .eq. 5 )then        !Modulus
             do i = 1, ne
                 dE = ear(i) - ear(i-1)
-                photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) * dE
+                photar(i) = sqrt( ReS(i)**2 + ImS(i)**2 ) 
             end do
         else if( abs(ReIm) .eq. 6 )then   !Time lag (s)
             do i = 1, ne
