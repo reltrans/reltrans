@@ -199,7 +199,7 @@ program relwrap
         allocate(ear(0:ne))  
         allocate(photar(ne))       
         emin = 0.1
-        emax = 300.
+        emax = 200.
         do i=0,ne
             ear(i) = emin * (emax/emin)**(real(i)/real(ne))
         end do     

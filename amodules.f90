@@ -156,7 +156,7 @@ photarx_dlogxi, ReW0_conv, ImW0_conv, ReW1_conv, ImW1_conv, ReW2_conv, ImW2_conv
             ReW1_conv(m,:) = ReW1_conv(m,:) + depad_conv
 
             conv = (padFT_photarx * padFT_imline_a(m,:)) * nexm1
-            call de_paddingFT(dyn, conv, ImW1_conv)
+            call de_paddingFT(dyn, conv, depad_conv)
             ImW1_conv(m,:) = ImW1_conv(m,:) + depad_conv
 
             conv = (padFT_photarx_delta * padFT_reline(m,:)) * nexm1
