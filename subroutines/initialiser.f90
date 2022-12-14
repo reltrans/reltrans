@@ -61,7 +61,8 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
         adensity = max( adensity , 0 )
 ! Call environment variables
         verbose = myenv("REV_VERB",0)     !Set verbose level
-
+        idum = myenv("SEED_SIM", -2851043)
+        
         write(*,*) 'RADIAL ZONES', xe
         write(*,*) 'ANGLE ZONES', me
         if (adensity .eq. 0.0) then

@@ -31,8 +31,8 @@ end module telematrix2
 
 module env_variables
   implicit none
-  integer :: adensity
-  real    :: ref_band_Emin, ref_band_Emax
+  integer :: adensity, idum
+  save idum
 end module env_variables
   
 MODULE dyn_gr

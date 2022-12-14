@@ -349,6 +349,7 @@ end subroutine tdrtdistX
 !-----------------------------------------------------------------------
 subroutine simrtdist(ear, ne, param, ifl, photar)
   use telematrix
+  use env_variables
   implicit none
   integer :: ne, ifl, Cp, dset, i
   real    :: ear(0:ne), param(27), photar(ne), par(26)
@@ -361,10 +362,8 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   real :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,br,bs(ne)
   real :: flo,fhi,fc,lag(ne),gasdev,lagsim(ne)
   real, parameter :: pi = acos(-1.0)
-  integer idum, unit,xunit,status,j
+  integer  unit,xunit,status,j
   real E1,E2,frac
-  data idum/-2851043/
-  save idum
   character (len=200) command,flxlagfile,phalagfile,rsplagfile,lagfile,root
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
@@ -464,8 +463,11 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   
 ! Open file to write the lag simulation to
   
-  write(*,*)"Enter root name of simulation products"
-  read(*,'(a)')root
+  ! write(*,*)"Enter root name of simulation products"
+  ! read(*,'(a)')root
+  write(*,*)"The simulation products have the root name reltrans_sim"
+  write(*,*)"(change the name of the products if you do not want to overwrite them with the next simulation)"
+  root = 'reltrans_sim'
   lagfile = trim(root) // '.dat'
   flxlagfile = 'x' // trim(root) // '.dat'
   phalagfile = 'x' // trim(root) // '.pha'

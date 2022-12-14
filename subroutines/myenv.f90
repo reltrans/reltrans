@@ -15,6 +15,24 @@
       end function myenv
 !-----------------------------------------------------------------------    
 
+!-----------------------------------------------------------------------
+      function myenv_real(name, default)
+      implicit none
+      integer           :: stat 
+      real              :: myenv_real, default
+      character (len=5) :: str
+      character (len=*) :: name
+      stat = 0
+      CALL get_environment_variable(trim(name),str)
+      call mystr2real(str, myenv_real, stat)
+      if( stat .ne. 0 )then
+        myenv_real = default
+      end if
+      stat = 0
+      return
+    end function myenv_real
+!-----------------------------------------------------------------------    
+
 
 !-----------------------------------------------------------------------
       function strenv(name)
