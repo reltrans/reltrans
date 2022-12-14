@@ -20,6 +20,7 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
 !!!-------------------------------------------------------------------  
   use conv_mod
   use dyn_gr
+  use env_variables
       implicit none
       integer          , intent(out)   :: xe, me, verbose
       ! integer          , intent(in)    :: nphi, nro !constant
@@ -52,13 +53,22 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
           earx(i) = Emin * (Emax/Emin)**(float(i)/float(nex))
         end do
 
-        me      = myenv("MU_ZONES"  , 5 )   !Set number of mu_e zones used
-        xe      = myenv("ION_ZONES" , 50)   !Set number of ionisation zones used
+        me      = myenv("MU_ZONES"  , 1 )   !Set number of mu_e zones used
+        xe      = myenv("ION_ZONES" , 20)   !Set number of ionisation zones used
+! Decide between zone A density profile or constant density profile
+        adensity = myenv("A_DENSITY",0)
+        adensity = min( adensity , 1 )
+        adensity = max( adensity , 0 )
 ! Call environment variables
         verbose = myenv("REV_VERB",0)     !Set verbose level
 
         write(*,*) 'RADIAL ZONES', xe
         write(*,*) 'ANGLE ZONES', me
+        if (adensity .eq. 0.0) then
+           write(*,*) 'Density profile is constant - A_DENSITY:', adensity
+        else
+           write(*,*) 'Density profile is zone A SS73 - A_DENSITY:', adensity
+        endif
         write(*,*) 'VERBOSE is ', verbose
 
 ! Set sensible distance for observer from the BH

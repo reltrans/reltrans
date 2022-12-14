@@ -312,21 +312,18 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
 ! logxir(1:xe) -- Effective ionisation as a function of r
 ! gsdr(1:xe)   -- Source-to-disc blueshift as a function of r
 ! logner(1:xe) -- Log10 of electron density as a function of r
+  use env_variables
   implicit none
   integer         , intent(IN)   :: xe, ndelta, npts 
   double precision, intent(IN)   :: rin, rmin, rnmax, b1, b2, qboost
   double precision, intent(IN)   :: fcons, lognep, spin, h, honr
   double precision, intent(IN)   :: rlp(ndelta), dcosdr(ndelta), cosd(ndelta)
   double precision, intent(INOUT):: logxieff(xe), gsdr(xe), logner(xe)
-  integer          :: i, kk, get_index, myenv, adensity, verbose
+  integer          :: i, kk, get_index, myenv, verbose
   double precision :: pnorm,re,re1(xe),zA_logne,cosfac,mus,interper,newtex,mudisk
   double precision, parameter :: pi = acos(-1.d0)
   double precision :: ptf,pfunc_raw,gsd,dglpfacthick,eps_bol,Fx(xe),logxir(xe),mui,dinang
   double precision :: pnormer,dareafac,lximax
-! Decide on zone a density profile or constant density profile
-  adensity = myenv("A_DENSITY",1)
-  adensity = min( adensity , 1 )
-  adensity = max( adensity , 0 )
 ! Set disk opening angle
   mudisk   = honr / sqrt( honr**2 + 1.d0  )
 ! Normalise the angular emissivity profile
@@ -440,20 +437,17 @@ end function pfunc_raw
 subroutine radfunctions_dens(xe, rin, rnmax, logxip, lognep, spin, h, honr, rlp, dcosdr&
      &, cosd, ndelta, rmin, npts, logxir, gsdr, logner)
 ! In  : xe,rin,rnmax,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
-! Out : logxir(1:xe), gsdr(1:xe), logner(1:xe)
+  ! Out : logxir(1:xe), gsdr(1:xe), logner(1:xe)
+  use env_variables
   implicit none
   integer         , intent(IN)   :: xe, ndelta, npts 
   double precision, intent(IN)   :: rin, rmin, rnmax, logxip, lognep, spin, h, honr, rlp(ndelta), dcosdr(ndelta), cosd(ndelta)
   double precision, intent(INOUT):: logxir(xe), gsdr(xe), logner(xe)
 
-  integer          :: i, kk, get_index, myenv, adensity
+  integer          :: i, kk, get_index, myenv
   double precision :: rp, logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd, dglpfacthick
   double precision :: logxiraw, mylogne,mudisk
   double precision, allocatable :: rad(:)
-  !Decide on zone a density profile or constant density profile
-  adensity = myenv("A_DENSITY",1)
-  adensity = min( adensity , 1 )
-  adensity = max( adensity , 0 )
 ! Set disk opening angle
   mudisk   = honr / sqrt( honr**2 + 1.d0  )
   
