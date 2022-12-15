@@ -188,7 +188,7 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,&
               do fbin = 1,nf
                  cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
                  transe(gbin,fbin,mubin,rbin)   = transe(gbin,fbin,mubin,rbin)                  + real(dFe) * cexp
-                 transe_a(gbin,fbin,mubin,rbin) = transe_a(gbin,fbin,mubin,rbin) + real(log(g)) * real(dFe) * cexp
+                 transe_a(gbin,fbin,mubin,rbin) = transe_a(gbin,fbin,mubin,rbin) + real(log(gds)) * real(dFe) * cexp
               end do
            end if
         end if
@@ -244,7 +244,7 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,&
            do fbin = 1,nf
               cexp = cmplx( cos(real(2.d0*pi*tau*fi(fbin))) , sin(real(2.d0*pi*tau*fi(fbin))) )
               transe(gbin,fbin,mubin,rbin)   = transe(gbin,fbin,mubin,rbin)                  + real(dFe) * cexp
-              transe_a(gbin,fbin,mubin,rbin) = transe_a(gbin,fbin,mubin,rbin) + real(log(g)) * real(dFe) * cexp
+              transe_a(gbin,fbin,mubin,rbin) = transe_a(gbin,fbin,mubin,rbin) + real(log(gds)) * real(dFe) * cexp
            end do
         end if
      end do
