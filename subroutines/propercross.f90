@@ -241,8 +241,8 @@ subroutine propercross_NOmatrix(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
         imref = 0.0
         do i = Ilo, Ihi
            dE = earx(i) - earx(i-1)
-           reref = reref + ReSraw(i,j) * dE
-           imref = imref + ImSraw(i,j) * dE
+           reref = reref + ReSraw(i,j)
+           imref = imref + ImSraw(i,j)
         end do
 
         !Cross subject band with reference band
