@@ -756,10 +756,14 @@ subroutine initmatrix2
   use telematrix2
   implicit none
   character (len=500) strenv
+  character (len=200) rmfenv2,arfenv2
 
+!Set environment variable names
+  rmfenv2 = 'RMF2SET'
+  arfenv2 = 'ARF2SET'  
 !Get name of response file and arf file
-  respname2 = strenv('RMF2SET')
-  arfname2  = strenv('ARF2SET')
+  respname2 = strenv(rmfenv2)
+  arfname2  = strenv(arfenv2)
   ! write(*,*) 'name of the second response', trim(respname2) 
   ! write(*,*) 'name of the second arf', trim(arfname2)
   ! read(*,*) 
