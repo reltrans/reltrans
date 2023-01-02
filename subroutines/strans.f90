@@ -228,7 +228,7 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,&
            emissivity = emissivity * cosfac / dareafac(re,spin)
            dFe        = emissivity * g**3 * domegan(i) / (1.d0+zcos)**3
            !Add to reflection fraction
-           frobs      = frobs + 2.0 * g**3 * gsd * cosfac/dareafac(re,spin) * domega(i)
+           frobs      = frobs + 2.0 * g**3 * gsd * cosfac/dareafac(re,spin) * domegan(i)
            !Work out energy bin
            gbin = ceiling( log10( g/(1.d0+zcos) ) / dloge ) + ne / 2
            gbin = MAX( 1    , gbin  )
