@@ -7,17 +7,25 @@ subroutine readinbkg
   implicit none
   integer status,U1,readwrite,blocksize,i,colnum,felem
   integer nelem
-  real nullval,Texp,bcorr
+  real nullval,Texp,bcorr, myenv_real
   logical anynull
-  character (len=200) comment
+  character (len=500) strenv
+  character (len=200) comment, bkgenv
 
 ! Get the name of the background fits file
-  write(*,*)"Enter name of the background file (with full path)"
-  read(*,'(a)')bkgname
+  bkgenv = 'BKG_SET'
+  bkgname = strenv(bkgenv)
+  if( trim(bkgname) .eq. 'none' )then
+     write(*,*)"Enter name of the background file (with full path)"
+     read(*,'(a)')bkgname
+  endif
 
 ! Get background scaling factor
-  write(*,*)"Enter BACKSCAL factor (enter 1 if you dont know what this is)"
-  read(*,*)bcorr
+  bcorr = myenv_real("BACKSCL",0.0)
+  if (bcorr .eq. 0.0) then
+     write(*,*)"Enter BACKSCAL factor (enter 1 if you dont know what this is)"
+     read(*,*)bcorr
+  endif
   
 ! Open an unused unit
   status = 0
