@@ -818,6 +818,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         DelA   = 0.0
         ReIm   = 1
         eta    = eta_0
+        beta_p = 1. !this is an ugly hack for the double LP model, to calculate the time-averaged spectrum
     else
         DC     = 0
         boost  = abs(boost)
@@ -1035,7 +1036,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     else if (nlp .gt. 1 .and. beta_p .eq. 0.) then
         call rawG(nex,earx,nf,real(flo),real(fhi),nlp,contx,absorbx,real(tauso),real(gso),ReW0,ImW0,&
                   ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,real(h),real(zcos),real(Gamma),real(eta),boost,ReIm,g,DelAB,&
-                  ionvar,DC,resp_matr,ReGrawa,ImGrawa)  
+                  ionvar,DC,resp_matr,ReGrawa,ImGrawa)                    
     else
         !Calculate raw FT of the full spectrum without absorption
         call rawS(nex,earx,nf,real(flo),real(fhi),nlp,contx,real(tauso),real(gso),ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
