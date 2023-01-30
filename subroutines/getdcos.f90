@@ -13,7 +13,7 @@ subroutine getdcos(a_spin,h,mudisk,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
     ! dcosdr(n)    Corresponding d\cos\delta/dr
     ! tc(n)        Corresponding time coordinate
     ! cosd1(n)     Corresponding \cos\delta
-    ! cosdout      cosd at the outer disk radius - THIS NEEDS TO BE AN ARRAY?
+    ! cosdout      cosd at the outer disk radius 
     !        
     ! For n values of the emission angle, delta, the code calculates the r and t coordinates
     ! for the geodesic for mu=mudisk; i.e. the crossing points of a thin disk.
@@ -22,8 +22,8 @@ subroutine getdcos(a_spin,h,mudisk,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
     implicit none
     double precision sins,mus,a_spin,h(nlp),lambda,q,scal,mudisk
     double precision rhorizon,velocity(3),f1234(4),pp,pr,pt
-    double precision deltamin,deltamax,rout,cosdout
-    integer  m,j,n,k,counter,nlp,npts(nlp),nout
+    double precision deltamin,deltamax,rout,cosdout(nlp)
+    integer  m,j,n,k,counter,nlp,npts(nlp),nout(nlp)
     double precision r1(n,nlp)
     double precision dcosdr(n,nlp),tc(n,nlp)
     double precision deltas,cosd1(n,nlp),r_min,r_max,disco
@@ -46,7 +46,7 @@ subroutine getdcos(a_spin,h,mudisk,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
         r_max = 1d10
         !Go through n different values of the angle delta_s
         counter = 0
-        nout    = 1
+        nout(m) = 1
         do j = 1,n
         !Run through linear steps in the angle delta (see Fig 1; Dauser et al 2013)
             deltas   = deltamin + (j-1) * (deltamax-deltamin)/float(n-1)
@@ -66,22 +66,23 @@ subroutine getdcos(a_spin,h,mudisk,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
                 r1(counter,m)    = rcros
                 cosd1(counter,m) = pr    !cosdelta
                 tc(counter,m)    = tcros
-                if( rout .gt. r1(counter,m) ) nout = counter
+                if( rout .gt. r1(counter,m) ) nout(m) = counter
             end if
         end do 
         npts(m) = counter
     end do 
         
-    !Calculate cosdout !FIX THIS FOR TWO DIFFERENT LAMPPOSTS
-    if( nout .eq. npts(1) )then
-    !Extrapolate assuming Newtonian profile
-        cosdout = h(1)/sqrt(h(1)**2+rout**2)-h(1)/sqrt(h(1)**2+r1(npts(1),1)**2)+cosd1(npts(1),1)
-    else
-    !Inperpolate
-        cosdout = (cosd1(nout+1,1)-cosd1(nout,1))*(rout-r1(nout,1))/(r1(nout+1,1)-r1(nout,1))
-        cosdout = cosdout + cosd1(nout,1)
-    end if
-    
+    !Calculate cosdout
+    do m=1,nlp 
+        if( nout(m) .eq. npts(m) )then
+        !Extrapolate assuming Newtonian profile
+            cosdout(m) = h(m)/sqrt(h(m)**2+rout**2)-h(m)/sqrt(h(m)**2+r1(npts(m),m)**2)+cosd1(npts(m),m)
+        else
+        !Inperpolate
+            cosdout(m) = (cosd1(nout(m)+1,m)-cosd1(nout(m),m))*(rout-r1(nout(m),m))/(r1(nout(m)+1,m)-r1(nout(m),m))
+            cosdout(m) = cosdout(m) + cosd1(nout(m),m)
+        end if
+    end do
     !Calculate d\delta/dr on the r-grid. Note that we need yet another loop over m because of how the counter npts is set up
     !computationally, this costs no time whatsoever
     do m=1,nlp            

@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, me, xe, verbose)
+subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose)
 !!!  Initialises the model and writes the header
 !!!------------------------------------------------------------------
   !    Args:
@@ -21,7 +21,7 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
   use conv_mod
   use dyn_gr
       implicit none
-      integer          , intent(out)   :: xe, me, verbose
+      integer          , intent(out)   :: xe,me,refvar,ionvar,verbose
       ! integer          , intent(in)    :: nphi, nro !constant
       real             , intent(in)    :: Emin, Emax ! constant
       real             , intent(out)   :: dloge, earx(0:nex)
@@ -52,18 +52,23 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
           earx(i) = Emin * (Emax/Emin)**(float(i)/float(nex))
         end do
 
+        ! Call environment variables
         me      = myenv("MU_ZONES"  , 1 )   !Set number of mu_e zones used
         xe      = myenv("ION_ZONES" , 20)   !Set number of ionisation zones used
-! Call environment variables
         verbose = myenv("REV_VERB",0)     !Set verbose level
                                           !0: Xspec output only
                                           !1: Also print quantities to terminal
-                                          !2: Also print model components, radial scalings and impulse response function to files
-                                          !   in /Output folder
+                                          !2: Also print model components, radial scalings and impulse response function to 
+                                          !files in /Output folder
+        refvar = myenv("REF_VAR",1)         !choose whether to include pivoting reflection
+        ionvar = myenv("ION_VAR",1)         !choose whether to include ionization changes
 
         write(*,*) 'RADIAL ZONES', xe
         write(*,*) 'ANGLE ZONES', me
         write(*,*) 'VERBOSE is ', verbose
+        write(*,*) 'REFVAR is ', refvar
+        write(*,*) 'IONVAR is ', ionvar
+        write(*,*)"----------------------------------------------------"
 
 ! Set sensible distance for observer from the BH
         d = max( 1.0d4 , 2.0d2 * rnmax**2 )

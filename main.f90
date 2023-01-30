@@ -1,8 +1,8 @@
 program relwrap
     implicit none
 
-    real    :: params_file(30)      !fulll list of all model parameters, indipendent of model flavour
-    real    :: params_reltrans(26)  !stuff to be used from the parameters in reltransDbl
+    real    :: params_file(31)      !fulll list of all model parameters, indipendent of model flavour
+    real    :: params_reltrans(27)  !stuff to be used from the parameters in reltransDbl
     real    :: emin, emax           !minimum, maximum energy and increment to set model grid
     integer :: ne                   !energy grid resolution
     integer :: ifl                  !weird integer thing that equals 1 for some reason I don't understand. Just pass it to wrapper and
@@ -16,6 +16,7 @@ program relwrap
     character(len=1) path_middle
     character(len=5) path_2
     character(len=19) path_full
+    real :: test (3,2)
        
     real test_model                 !temporary value to test the model output
     real test_precision             !accuracy to which we want the tests to check the model; by default test_precision, ie 0.1% change will
@@ -77,7 +78,7 @@ program relwrap
         params_reltrans(15) = params_file(15)
         params_reltrans(16) = params_file(16)
         params_reltrans(17) = params_file(17)
-        params_reltrans(18) = params_file(21)
+        params_reltrans(18) = params_file(18)
         params_reltrans(19) = params_file(22)
         params_reltrans(20) = params_file(23)
         params_reltrans(21) = params_file(24)
@@ -85,7 +86,8 @@ program relwrap
         params_reltrans(23) = params_file(26)
         params_reltrans(24) = params_file(27)
         params_reltrans(25) = params_file(28)
-        params_reltrans(26) = params_file(30)
+        params_reltrans(26) = params_file(29)
+        params_reltrans(27) = params_file(31)
         
         !call single LP model
         !params_reltrans(1) = params_file(1)
@@ -99,20 +101,20 @@ program relwrap
         !params_reltrans(9) = params_file(10)
         !params_reltrans(10) = params_file(11)
         !params_reltrans(11) = params_file(12)
-        !params_reltrans(12) = params_file(15)
-        !params_reltrans(13) = params_file(16)
-        !params_reltrans(14) = params_file(17)
-        !params_reltrans(15) = params_file(21)
-        !params_reltrans(16) = params_file(22)
-        !params_reltrans(17) = params_file(23)
-        !params_reltrans(18) = params_file(24)
-        !params_reltrans(19) = params_file(25)
-        !params_reltrans(20) = params_file(26)
-        !params_reltrans(21) = params_file(30)
+        !params_reltrans(12) = params_file(16)
+        !params_reltrans(13) = params_file(17)
+        !params_reltrans(14) = params_file(18)
+        !params_reltrans(15) = params_file(22)
+        !params_reltrans(16) = params_file(23)
+        !params_reltrans(17) = params_file(24)
+        !params_reltrans(18) = params_file(25)
+        !params_reltrans(19) = params_file(26)
+        !params_reltrans(20) = params_file(27)
+        !params_reltrans(21) = params_file(31)
         
         !set up frequency array appropriately if using lag/frequency spectra, depending on BH mass:
-        if( params_reltrans(20) .eq. 7 ) then
-            if( params_reltrans(17) .gt. 1.e4 ) then
+        if( params_file(24) .eq. 7 ) then
+            if( params_file(18) .gt. 1.e4 ) then
                 emin = 1.e-4
                 emax = 3.e-2
                 do i=0,ne
@@ -120,7 +122,7 @@ program relwrap
                 end do    
             else
                 emin = 0.1
-                emax = 700.
+                emax = 450.
                 do i=0,ne
                     ear(i) = emin * (emax/emin)**(real(i)/real(ne))
                 end do   
@@ -142,18 +144,19 @@ program relwrap
         print *, "Ecut/Te: ", params_reltrans(12)
         print *, "eta_0:", params_reltrans(13)
         print *, "eta:", params_reltrans(14)
-        print *, "Nh: ", params_reltrans(15)
-        print *, "boost: ", params_reltrans(16)
-        print *, "Mass: ", params_reltrans(17)
-        print *, "flo: ", params_reltrans(18)
-        print *, "fhi: ", params_reltrans(19)
-        print *, "ReIm: ", params_reltrans(20)
-        print *, "DelA: ", params_reltrans(21)
-        print *, "DelAB1: ", params_reltrans(22)
-        print *, "g1: ", params_reltrans(23) 
-        print *, "DelAB2: ", params_reltrans(24)
-        print *, "g2: ", params_reltrans(25)   
-        print *, "# of rsp:", params_reltrans(26) 
+        print*,  "beta_p:", params_reltrans(15)
+        print *, "Nh: ", params_reltrans(16)
+        print *, "boost: ", params_reltrans(17)
+        print *, "Mass: ", params_reltrans(18)
+        print *, "flo: ", params_reltrans(19)
+        print *, "fhi: ", params_reltrans(20)
+        print *, "ReIm: ", params_reltrans(21)
+        print *, "DelA: ", params_reltrans(22)
+        print *, "DelAB1: ", params_reltrans(23)
+        print *, "g1: ", params_reltrans(24) 
+        print *, "DelAB2: ", params_reltrans(25)
+        print *, "g2: ", params_reltrans(26)   
+        print *, "# of rsp:", params_reltrans(27) 
         
         !for the single LP:
         !print *, "Height: ", params_reltrans(1)

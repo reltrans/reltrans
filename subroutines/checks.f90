@@ -6,9 +6,10 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
 ! Parameters that rtrans() is sensitive to:
 ! (1-9):   h1,h2,a,inc,rin,rout,zcos,Gamma,logxi/Dkpc
 ! (11):    lognep
-! (15):    qboost
-! (17-19): honr,b1,b2
-! (21):    Anorm
+! (13):    eta_0
+! (18):    qboost
+! (20-22): honr,b1,b2
+! (31):    Anorm
 ! Also need to check if the frequency range changes
 !
 ! Parameters the restframe spec is sensitive to
@@ -32,7 +33,7 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
   !   neecconv:  if true, we must do the convolution
   implicit none 
   integer         , intent(in)  :: Cp, Cpsave, nf, nfsave
-  real            , intent(in)  :: param(26), paramsave(26)
+  real            , intent(in)  :: param(32), paramsave(32)
   real            , parameter   :: tol = 1e-7
   double precision, intent(in)  :: fhi, flo, fhisave, flosave
   double precision, parameter   :: dtol = 1e-10
@@ -46,10 +47,14 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
   end do
   i = 11
   if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
-  do i = 15,19
+  i = 13
+  if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
+  i = 18
+  if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
+  do i = 20,22
      if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
   end do
-  i = 26
+  i = 31
   if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
 ! Now check if frequency range and frequency grid have changed 
   if( nf .ne. nfsave ) then

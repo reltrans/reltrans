@@ -1,127 +1,129 @@
-subroutine lag_freq(nlp,nex,earx,contx,absorbx,Emin,Emax,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                    g,DelAB,nf,fix,boost,z,gso,lens,Gamma,ionvar,ReGraw,ImGraw)
+subroutine lag_freq(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
+                    h,z,Gamma,eta,beta_p,boost,g,DelAB,ionvar,ReGraw,ImGraw)
 
 ! Calculates the energy-averaged cross spectrum in the energy bins of interest. REDO ALL THIS COMMENT IT'S WRONG
 !
 ! Input: continuum model (contx is f(E) in the papers) and the reflection transfer functions
-! Output: Sraw(E,\nu) before multiplying by the absorption model
+! Output: Graw(E,\nu) after multiplying by the absorption model
 ! These inputs and outputs are all in terms of (dN/dE)*dE; i.e. photar
-!
-! Inputs:
-! nlp                   Number of lamp-posts 
-! nex,earx(0:nex)       Internal energy grid
-! nf                    Number of frequency bins
-! contx(1:nex)          Continuum photar model
-! ReW0(1:nex,1:nf)      Real part of transfer function number 0
-! ImW0(1:nex,1:nf)      Imaginary part of transfer function number 0
-! ReW1(1:nex,1:nf)      Real part of transfer function number 1
-! ImW1(1:nex,1:nf)      Imaginary part of transfer function number 1
-! ReW2(1:nex,1:nf)      Real part of transfer function number 2
-! ImW2(1:nex,1:nf)      Imaginary part of transfer function number 2
-! ReW3(1:nex,1:nf)      Real part of transfer function number 3
-! ImW3(1:nex,1:nf)      Imaginary part of transfer function number 3
-! g                     The model parameter called \gamma
-! DelAB                 The model parameter to replace \phi_{B}. This one is better. In radians.
-! boost                 The boost model parameter (named afac elsewhere in the code)
-! z                     Cosmological redshift
-! gso                   Blueshift travelling from source to observer
-! lens                  Lensing factor -- note: not necessary if we do the correction directly when calling the continuum
-! Gamma                 Photon index
-! ionvar                Integer: ionvar=1 means include ionization variations, ionvar=0 means don't.
-! DC                    Integer: DC=1 means this is the DC component, DC=0 means opposite.
-  
-! Outputs
-! ReGraw(1:nex,1:nf)    Real part of Sraw(E,nu)      - in specific photon flux (photar/dE)
-! ImGraw(1:nex,1:nf)    Imaginary part of Sraw(E,nu) - in specific photon flux (photar/dE)
-
+    use constants
     implicit none
     integer, intent(in) :: nex,nf,ionvar,nlp
     integer             :: Ea1,Ea2,Eb1,Eb2       
-    real   , intent(in) :: g(nlp),DelAB(nlp),boost,z,Gamma,Emin,Emax
-    real   , intent(in) :: gso(nlp),lens(nlp)
+    real   , intent(in) :: g(nlp),DelAB(nlp),boost,z,Gamma,Emin,Emax,beta_p,eta
+    real   , intent(in) :: gso(nlp),tauso(nlp),h(nlp)
     real                :: gslope,ABslope
     real   , intent(in) :: earx(0:nex),contx(nex,nlp),absorbx(nex),fix(0:nf)
-    real   , intent(in) :: ReW0(nex,nf),ImW0(nex,nf),ReW3(nex,nf),ImW3(nex,nf),&
-                           ReW1(nlp,nex,nf),ImW1(nlp,nex,nf),ReW2(nlp,nex,nf),ImW2(nlp,nex,nf)                       
+    real                :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf),&
+                           ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)                       
     real,    intent(out):: ReGraw(nf),ImGraw(nf)
     real                :: ReGrawEa,ImGrawEa,ReGrawEb,ImGrawEb
-    real                :: sinD,cosD,E,fac,TempReG,TempImG
-    real                :: ReW0s,ImW0s,ReWbs,ImWbs,ReW3s,ImW3s 
+    real                :: E,fac,TempReG,TempImG 
     real                :: f,DelAB_nu,g_nu
+    real                :: tau_d,phase_d,tau_p,phase_p,beta,flo,fhi
+    complex             :: W0,W1,W2,W3,Sraw,cexp_p,cexp_d,cexp_phi,Stemp
     integer             :: i,j,m
 
     call energy_bounds(nex,Emin,Emax,Ea1,Ea2,Eb1,Eb2)
 
     gslope = 1.
     ABslope = 1.
-  
+    
+    if(nlp .gt. 1) then
+        ReW0(2,:,:) = eta*ReW0(2,:,:)
+        ImW0(2,:,:) = eta*ImW0(2,:,:)
+        ReW1(2,:,:) = eta*ReW1(2,:,:)
+        ImW1(2,:,:) = eta*ImW1(2,:,:)
+        ReW2(2,:,:) = eta*ReW2(2,:,:)
+        ImW2(2,:,:) = eta*ImW2(2,:,:)
+        ReW3(2,:,:) = eta*ReW3(2,:,:)
+        ImW3(2,:,:) = eta*ImW3(2,:,:)
+    endif 
+    
     !Now calculate the cross-spectrum (/complex covariance), including absorption
     do j = 1, nf
-        f = (fix(j) + fix(j-1)) * 0.5
-        DelAB_nu = DelAB(nlp) * ((fix(1) + fix(0))*0.5/f)**ABslope
-        g_nu     = g(nlp) * ((fix(1) + fix(0))*0.5/f)**gslope
-        sinD = sin(DelAB_nu)
-        cosD = cos(DelAB_nu)
+        f = flo * (fhi/flo)**(  (real(j)-0.5) / real(nf) )        
         ReGrawEa = 0.0
         ImGrawEa = 0.0
         ReGrawEb = 0.0
-        ImGrawEb = 0.0     
+        ImGrawEb = 0.0             
         do i = Ea1, Ea2
-            !Multiply by boost parameter and group like terms
-            ReW0s = boost * ReW0(i,j)
-            ImW0s = boost * ImW0(i,j)                
-            ReW3s = ionvar * boost * ReW3(i,j)
-            ImW3s = ionvar * boost * ImW3(i,j)  
-            E   = 0.5 * ( earx(i) + earx(i-1) )
+            phase_d = 0.
+            phase_p = 0.
+            tau_d = 0.
+            tau_p = 0.
+            Sraw = 0.
+            E = 0.5 * ( earx(i) + earx(i-1) )
             do m=1,nlp
+                DelAB_nu = DelAB(m) * ((fix(1) + fix(0))*0.5/f)**ABslope
+                g_nu = g(m) * ((fix(1) + fix(0))*0.5/f)**gslope
                 fac = log(gso(m)/((1.0+z)*E))
-                sinD = sin(DelAB_nu)
-                cosD = cos(DelAB_nu) 
-                ReWbs = boost * (ReW1(m,i,j) + ReW2(m,i,j))
-                ImWbs = boost * (ImW1(m,i,j) + ImW2(m,i,j))
-                !Real part contribution for each LP
-                TempReG = g(m) * (cosD*(fac*contx(i,m) + ReWbs) - sinD*ImWbs) 
-                TempReG = TempReG + contx(i,m)         
-                !Imaginary part contribution for each LP 
-                TempImG = g(m) * (sinD*(fac*contx(i,m) + ReWbs) + cosD*ImWbs) 
-            end do 
-            !Real part shared by both
-            TempReG = TempReG + ReW0s + ReW3s
-            ReGrawEa = ReGrawEa + TempReG
-            !Imaginary part shared by both
-            TempImG = TempImG + ImW0s + ImW3s
-            ImGrawEa = ImGrawEa + TempImG 
-            ReGrawEa = ReGrawEa * absorbx(i)
-            ImGrawEa = ImGrawEa * absorbx(i)
+                !set up phase factors
+                if (m .gt. 1) then  
+                    tau_d = (tauso(m)-tauso(1))
+                    tau_p = (h(m) - h(1))/(beta_p)             
+                    phase_d = 2.*pi*tau_d*f
+                    phase_p = 2.*pi*tau_p*f
+                endif  
+                cexp_d = cmplx(cos(phase_d),sin(phase_d))
+                cexp_p = cmplx(cos(phase_p),sin(phase_p)) 
+                cexp_phi = cmplx(cos(DelAB_nu),sin(DelAB_nu))  
+                !print*,m,cexp_d,cexp_p,cexp_phi,f*fconv           
+                !set up transfer functions 
+                W0 = boost * cmplx(ReW0(m,i,j),ImW0(m,i,j))
+                W1 = boost * cmplx(ReW1(m,i,j),ImW1(m,i,j))
+                W2 = boost * cmplx(ReW2(m,i,j),ImW2(m,i,j))                       
+                W3 = ionvar * boost * cmplx(ReW3(m,i,j),ImW3(m,i,j))
+                !calculate complex covariance
+                !note: the reason we use complex here is to ease the calculations 
+                !when we add all the extra phases from the double lamp post 
+                Stemp = g_nu*cexp_phi*(W1 + W2 + fac*cexp_d*contx(i,m))
+                Stemp = Stemp + W0 + W3 + cexp_d*contx(i,m)
+                Stemp = cexp_p*Stemp
+                Sraw = Sraw + Stemp
+            end do
+            !separate into real/imaginary parts for compatibility with the rest of the code
+            ReGrawEa = ReGrawEa + real(Sraw)*absorbx(i)
+            ImGrawEa = ImGrawEa + aimag(Sraw)*absorbx(i)
         end do
 
         do i = Eb1, Eb2
-            !Multiply by boost parameter and group like terms
-            ReW0s = boost * ReW0(i,j)
-            ImW0s = boost * ImW0(i,j)                
-            ReW3s = ionvar * boost * ReW3(i,j)
-            ImW3s = ionvar * boost * ImW3(i,j)  
-            E   = 0.5 * ( earx(i) + earx(i-1) )
+            phase_d = 0.
+            phase_p = 0.
+            tau_d = 0.
+            tau_p = 0.
+            Sraw = 0.      
+            E = 0.5 * ( earx(i) + earx(i-1) )
             do m=1,nlp
+                DelAB_nu = DelAB(m) * ((fix(1) + fix(0))*0.5/f)**ABslope
+                g_nu = g(m) * ((fix(1) + fix(0))*0.5/f)**gslope
                 fac = log(gso(m)/((1.0+z)*E))
-                sinD = sin(DelAB_nu)
-                cosD = cos(DelAB_nu) 
-                ReWbs = boost * (ReW1(m,i,j) + ReW2(m,i,j))
-                ImWbs = boost * (ImW1(m,i,j) + ImW2(m,i,j))
-                !Real part contribution for each LP
-                TempReG = g(m) * (cosD*(fac*contx(i,m) + ReWbs) - sinD*ImWbs) 
-                TempReG = TempReG + contx(i,m)         
-                !Imaginary part contribution for each LP 
-                TempImG = g(m) * (sinD*(fac*contx(i,m) + ReWbs) + cosD*ImWbs) 
-            end do 
-            !Real part shared by both
-            TempReG = TempReG + ReW0s + ReW3s
-            ReGrawEb = ReGrawEb + TempReG
-            !Imaginary part shared by both
-            TempImG = TempImG + ImW0s + ImW3s
-            ImGrawEb = ImGrawEb + TempImG 
-            ReGrawEb = ReGrawEb * absorbx(i)
-            ImGrawEb = ImGrawEb * absorbx(i)
+                !set up phase factors
+                if (m .gt. 1) then
+                    tau_d = (tauso(m)-tauso(1))
+                    tau_p = (h(m) - h(1))/(beta_p)
+                    phase_d = 2.*pi*tau_d*f
+                    phase_p = 2.*pi*tau_p*f
+                endif    
+                cexp_d = cmplx(cos(phase_d),sin(phase_d))
+                cexp_p = cmplx(cos(phase_p),sin(phase_p)) 
+                cexp_phi = cmplx(cos(DelAB_nu),sin(DelAB_nu))             
+                !set up transfer functions 
+                W0 = boost * cmplx(ReW0(m,i,j),ImW0(m,i,j))
+                W1 = boost * cmplx(ReW1(m,i,j),ImW1(m,i,j))
+                W2 = boost * cmplx(ReW2(m,i,j),ImW2(m,i,j))                       
+                W3 = ionvar * boost * cmplx(ReW3(m,i,j),ImW3(m,i,j))
+                !calculate complex covariance
+                !note: the reason we use complex here is to ease the calculations 
+                !when we add all the extra phases from the double lamp post 
+                Stemp = g_nu*cexp_phi*(W1 + W2 + fac*cexp_d*contx(i,m))
+                Stemp = Stemp + W0 + W3 + cexp_d*contx(i,m)
+                Stemp = cexp_p*Stemp
+                Sraw = Sraw + Stemp
+            end do
+            !separate into real/imaginary parts for compatibility with the rest of the code
+            ReGrawEb = ReGrawEb + real(Sraw)*absorbx(i)
+            ImGrawEb = ImGrawEb + aimag(Sraw)*absorbx(i)            
         end do
         !Now cross-spectrum between the two energy bands
         !note: here the conjugate is b 
@@ -129,7 +131,110 @@ subroutine lag_freq(nlp,nex,earx,contx,absorbx,Emin,Emax,ReW0,ImW0,ReW1,ImW1,ReW
         ImGraw(j) = (ReGrawEb * ImGrawEa) - (ReGrawEa * ImGrawEb)
     end do
 
+    return
 end subroutine lag_freq
+
+subroutine lag_freq_nocoh(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,&
+                          ReW3,ImW3,h,z,Gamma,eta,boost,g,DelAB,ionvar,ReGraw,ImGraw)
+                                
+    use constants
+    implicit none
+    integer, intent(in) :: nex,nf,ionvar,nlp
+    integer             :: Ea1,Ea2,Eb1,Eb2       
+    real   , intent(in) :: g(nlp),DelAB(nlp),boost,z,Gamma,Emin,Emax,eta
+    real   , intent(in) :: gso(nlp),tauso(nlp),h(nlp)
+    real                :: gslope,ABslope
+    real   , intent(in) :: earx(0:nex),contx(nex,nlp),absorbx(nex),fix(0:nf)
+    real                :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf),&
+                           ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)                       
+    real,    intent(out):: ReGraw(nf),ImGraw(nf)
+    real                :: ReGrawEa,ImGrawEa,ReGrawEb,ImGrawEb
+    real                :: E,fac,TempReG,TempImG 
+    real                :: f,DelAB_nu,g_nu
+    real                :: tau_d,phase_d,flo,fhi
+    complex             :: W0,W1,W2,W3,Sraw,cexp_d,cexp_phi,Stemp
+    integer             :: i,j,m
+
+    call energy_bounds(nex,Emin,Emax,Ea1,Ea2,Eb1,Eb2)
+
+    gslope = 1.
+    Abslope = 1.
+    
+    do m=1,nlp 
+        do j=1,nf 
+            f = flo * (fhi/flo)**(  (real(j)-0.5) / real(nf) )        
+            ReGrawEa = 0.0
+            ImGrawEa = 0.0
+            ReGrawEb = 0.0
+            ImGrawEb = 0.0             
+            do i=Ea1,Ea2 
+                phase_d = 0.
+                tau_d = 0.
+                E = 0.5 * ( earx(i) + earx(i-1) )
+                DelAB_nu = DelAB(m) * ((fix(1) + fix(0))*0.5/f)**ABslope
+                g_nu = g(m) * ((fix(1) + fix(0))*0.5/f)**gslope
+                fac = log(gso(m)/((1.0+z)*E))
+                !set up phase factors
+                if (m .gt. 1) then  
+                    tau_d = (tauso(m)-tauso(1))          
+                    phase_d = 2.*pi*tau_d*f
+                endif  
+                cexp_d = cmplx(cos(phase_d),sin(phase_d))
+                cexp_phi = cmplx(cos(DelAB_nu),sin(DelAB_nu))  
+                !set up transfer functions 
+                W0 = boost * cmplx(ReW0(m,i,j),ImW0(m,i,j))
+                W1 = boost * cmplx(ReW1(m,i,j),ImW1(m,i,j))
+                W2 = boost * cmplx(ReW2(m,i,j),ImW2(m,i,j))                       
+                W3 = ionvar * boost * cmplx(ReW3(m,i,j),ImW3(m,i,j))
+                !calculate complex covariance
+                !note: the reason we use complex here is to ease the calculations 
+                !when we add all the extra phases from the double lamp post 
+                Stemp = g_nu*cexp_phi*(W1 + W2 + fac*cexp_d*contx(i,m)) + W0 + W3 + cexp_d*contx(i,m)
+                !separate into real/imaginary parts for compatibility with the rest of the code
+                ReGrawEa = ReGrawEa + real(Stemp)*absorbx(i)
+                ImGrawEa = ImGrawEa + aimag(Stemp)*absorbx(i)
+            end do
+            
+            do i=Eb1,Eb2 
+                phase_d = 0.
+                tau_d = 0.
+                E = 0.5 * ( earx(i) + earx(i-1) )
+                DelAB_nu = DelAB(m) * ((fix(1) + fix(0))*0.5/f)**ABslope
+                g_nu = g(m) * ((fix(1) + fix(0))*0.5/f)**gslope
+                fac = log(gso(m)/((1.0+z)*E))
+                !set up phase factors
+                if (m .gt. 1) then  
+                    tau_d = (tauso(m)-tauso(1))          
+                    phase_d = 2.*pi*tau_d*f
+                endif  
+                cexp_d = cmplx(cos(phase_d),sin(phase_d))
+                cexp_phi = cmplx(cos(DelAB_nu),sin(DelAB_nu))  
+                !print*,m,cexp_d,cexp_p,cexp_phi,f*fconv           
+                !set up transfer functions 
+                W0 = boost * cmplx(ReW0(m,i,j),ImW0(m,i,j))
+                W1 = boost * cmplx(ReW1(m,i,j),ImW1(m,i,j))
+                W2 = boost * cmplx(ReW2(m,i,j),ImW2(m,i,j))                       
+                W3 = ionvar * boost * cmplx(ReW3(m,i,j),ImW3(m,i,j))
+                !calculate complex covariance
+                !note: the reason we use complex here is to ease the calculations 
+                !when we add all the extra phases from the double lamp post 
+                Stemp = g_nu*cexp_phi*(W1 + W2 + fac*cexp_d*contx(i,m)) + W0 + W3 + cexp_d*contx(i,m)
+                !separate into real/imaginary parts for compatibility with the rest of the code
+                ReGrawEb = ReGrawEb + real(Stemp)*absorbx(i)
+                ImGrawEb = ImGrawEb + aimag(Stemp)*absorbx(i)
+            end do
+            if(m .eq. 1) then
+                ReGraw(j) = (ReGrawEa * ReGrawEb) + (ImGrawEa * ImGrawEb)
+                ImGraw(j) = (ReGrawEb * ImGrawEa) - (ReGrawEa * ImGrawEb)
+            else
+                ReGraw(j) = ReGraw(j) + eta**2. * ((ReGrawEa * ReGrawEb) + (ImGrawEa * ImGrawEb))
+                ImGraw(j) = ImGraw(j) + eta**2. * ((ReGrawEb * ImGrawEa) - (ReGrawEa * ImGrawEb))
+            end if                        
+        end do
+    end do
+
+    return
+end subroutine lag_freq_nocoh
 
 subroutine energy_bounds(nex,Emin,Emax,Ea1,Ea2,Eb1,Eb2)
     use telematrix 
@@ -155,4 +260,5 @@ subroutine energy_bounds(nex,Emin,Emax,Ea1,Ea2,Eb1,Eb2)
         needchans = .false.
     end if
 
+    return
 end subroutine energy_bounds

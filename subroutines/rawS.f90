@@ -1,82 +1,194 @@
-subroutine rawS(nex,earx,nf,nlp,contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,g,DelAB,&
-    boost,z,gso,Gamma,ionvar,DC,ReGraw,ImGraw)
-! Calculates the FT of the spectrum before multiplying by the absorption model
-!
-! Input: continuum model (contx is f(E) in the papers) and the reflection transfer functions
-! Output: Sraw(E,\nu) before multiplying by the absorption model
-! These inputs and outputs are all in terms of (dN/dE)*dE; i.e. photar
-!
-! Inputs:
-! nex,earx(0:nex)       Internal energy grid
-! nf                    Number of frequency bins
-! contx(1:nex)          Continuum photar model
-! ReW0(1:nex,1:nf)      Real part of transfer function number 0
-! ImW0(1:nex,1:nf)      Imaginary part of transfer function number 0
-! ReW1(1:nex,1:nf)      Real part of transfer function number 1
-! ImW1(1:nex,1:nf)      Imaginary part of transfer function number 1
-! ReW2(1:nex,1:nf)      Real part of transfer function number 2
-! ImW2(1:nex,1:nf)      Imaginary part of transfer function number 2
-! ReW3(1:nex,1:nf)      Real part of transfer function number 3
-! ImW3(1:nex,1:nf)      Imaginary part of transfer function number 3
-! g/g2                  The model parameter called gamma/gamma2
-! DelAB/DelAB2/         The model parameter called phiAB/phiAB2
-! boost                 The boost model parameter 
-! z                     Cosmological redshift
-! gso                   Blueshift travelling from source to observer
-! Gamma                 Photon index
-! ionvar                Integer: ionvar=1 means include ionization variations, ionvar=0 means don't.
-! DC                    Integer: DC=1 means this is the DC component, DC=0 means opposite.
-  
-! Outputs
-! ReGraw(1:nex,1:nf)    Real part of Sraw(E,nu)      - in specific photon flux (photar/dE)
-! ImGraw(1:nex,1:nf)    Imaginary part of Sraw(E,nu) - in specific photon flux (photar/dE)
+subroutine rawS(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,h,z,Gamma,eta,&
+                beta_p,boost,g,DelAB,ionvar,DC,ReSraw,ImSraw)
+    ! Calculates the FT of the spectrum before multiplying by the absorption model
+    !
+    ! Input: continuum model (contx is f(E) in the papers) and the reflection transfer functions
+    ! Output: Sraw(E,\nu) before multiplying by the absorption model
+    ! These inputs and outputs are all in terms of (dN/dE)*dE; i.e. photar
+    !
+    ! Inputs:
+    ! nex,earx(0:nex)       Internal energy grid
+    ! nf                    Number of frequency bins
+    ! floHz/fhiHz           Frequency range - needed for double LP model
+    ! contx(1:nex)          Continuum photar model
+    ! tauso                 Source to observer lag - needed for double LP model
+    ! ReW0(1:nex,1:nf)      Real part of transfer function number 0
+    ! ImW0(1:nex,1:nf)      Imaginary part of transfer function number 0
+    ! ReW1(1:nex,1:nf)      Real part of transfer function number 1
+    ! ImW1(1:nex,1:nf)      Imaginary part of transfer function number 1
+    ! ReW2(1:nex,1:nf)      Real part of transfer function number 2
+    ! ImW2(1:nex,1:nf)      Imaginary part of transfer function number 2
+    ! ReW3(1:nex,1:nf)      Real part of transfer function number 3
+    ! ImW3(1:nex,1:nf)      Imaginary part of transfer function number 3
+    ! g/g2                  The model parameter called gamma/gamma2
+    ! DelAB/DelAB2/         The model parameter called phiAB/phiAB2
+    ! boost                 The boost model parameter 
+    ! z                     Cosmological redshift
+    ! gso                   Blueshift travelling from source to observer
+    ! Gamma                 Photon index
+    ! eta                   Weighing factor for the two lamp posts for nlp > 1
+    ! ionvar                Integer: ionvar=1 means include ionization variations, ionvar=0 means don't.
+    ! DC                    Integer: DC=1 means this is the DC component, DC=0 means opposite.
+
+    ! Outputs
+    ! ReGraw(1:nex,1:nf)    Real part of Sraw(E,nu)      - in specific photon flux (photar/dE)
+    ! ImGraw(1:nex,1:nf)    Imaginary part of Sraw(E,nu) - in specific photon flux (photar/dE)
+    use constants
     implicit none
     integer nex,nf,ionvar,DC,nlp
-    real earx(0:nex),corr,contx(nex,nlp),ReW0(nex,nf),ImW0(nex,nf)
-    real ReW1(nlp,nex,nf),ImW1(nlp,nex,nf),ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nex,nf),ImW3(nex,nf)
-    real DelAB(nlp),g(nlp),boost,z,gso(nlp),Gamma,ReGraw(nex,nf),ImGraw(nex,nf)
-    real sinD,cosD,E,fac,ReW0s,ImW0s,ReWbs,ImWbs,ReW3s,ImW3s,gsoz
+    complex W0,W1,W2,W3,Sraw(nex,nf),cexp_p,cexp_d,cexp_phi,Stemp   
+    real earx(0:nex),contx(nex,nlp),tauso(nlp),ReW0(nlp,nex,nf),ImW0(nlp,nex,nf)
+    real ReW1(nlp,nex,nf),ImW1(nlp,nex,nf),ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
+    real DelAB(nlp),g(nlp),boost,z,gso(nlp),Gamma,eta,ReSraw(nex,nf),ImSraw(nex,nf),h(nlp),beta_p 
+    real E,fac,tau_d,phase_d,tau_p,phase_p,f,flo,fhi
     integer i,j,m
 
-    ReGraw = 0.
-    ImGraw = 0.
+    ReSraw = 0.
+    ImSraw = 0.
+    Sraw = 0.
 
-    !Now calculate the cross-spectrum (/complex covariance)
-    if (boost .lt. 0 .and. DC .eq. 1) then 
-        do j = 1,nf
-            do i = 1,nex
-                ReGraw(i,j) = (-boost) * ReW0(i,j)
-            enddo
-        enddo     
-    else
-        do j = 1,nf
-            do i = 1,nex
-                !Multiply by boost parameter and group like terms
-                ReW0s = boost * ReW0(i,j)
-                ImW0s = boost * ImW0(i,j)                
-                ReW3s = (1-DC) * ionvar * boost * ReW3(i,j)
-                ImW3s = (1-DC) * ionvar * boost * ImW3(i,j)  
-                E   = 0.5 * ( earx(i) + earx(i-1) )
-                do m=1,nlp
+    phase_d = 0.
+    phase_p = 0.
+    tau_d = 0.
+    tau_p = 0.
+       
+    do m=1,nlp 
+        if (boost .lt. 0 .and. DC .eq. 1) then             
+            do j = 1,nf
+                do i = 1,nex
+                    if (m .gt. 1) ReW0(m,i,j) = eta*ReW0(m,i,j)
+                    ReSraw(i,j) = ReSraw(i,j) + (-boost) * ReW0(m,i,j)
+                enddo
+            enddo  
+        else        
+            if( m .gt. 1 ) then
+                !set up extra terms if second lamp post present
+                ReW0(m,:,:) = eta*ReW0(m,:,:)
+                ImW0(m,:,:) = eta*ImW0(m,:,:)
+                ReW1(m,:,:) = eta*ReW1(m,:,:)
+                ImW1(m,:,:) = eta*ImW1(m,:,:)
+                ReW2(m,:,:) = eta*ReW2(m,:,:)
+                ImW2(m,:,:) = eta*ImW2(m,:,:)
+                ReW3(m,:,:) = eta*ReW3(m,:,:)
+                ImW3(m,:,:) = eta*ImW3(m,:,:)
+                tau_d = tauso(m)-tauso(1)
+                tau_p = (h(m) - h(1))/(beta_p)
+            end if
+            do j = 1,nf
+                if (DC .eq. 1) then
+                    f = 0.
+                else 
+                    f = flo * (fhi/flo)**(  (real(j)-0.5) / real(nf) )
+                endif
+                do i = 1,nex
+                    E   = 0.5 * ( earx(i) + earx(i-1) )
                     fac = log(gso(m)/((1.0+z)*E))
-                    sinD = sin(DelAB(m))
-                    cosD = cos(DelAB(m)) 
-                    ReWbs = (1-DC) * boost * (ReW1(m,i,j) + ReW2(m,i,j))
-                    ImWbs = (1-DC) * boost * (ImW1(m,i,j) + ImW2(m,i,j))
-                    !Real part contribution for each LP
-                    ReGraw(i,j) = ReGraw(i,j) + g(m) * (cosD*(fac*contx(i,m) + ReWbs) - sinD*ImWbs) 
-                    ReGraw(i,j) = ReGraw(i,j) + contx(i,m)         
-                    !Imaginary part contribution for each LP 
-                    ImGraw(i,j) = ImGraw(i,j) + g(m) * (sinD*(fac*contx(i,m) + ReWbs) + cosD*ImWbs) 
-                end do 
-                !Real part shared by both
-                ReGraw(i,j) = ReGraw(i,j) + ReW0s + ReW3s
-                !Imaginary part shared by both
-                ImGraw(i,j) = ImGraw(i,j) + ImW0s + ImW3s
-            end do
-        end do
-    endif
-    
-
+                    !set up phase factors
+                    if (m .gt. 1) then
+                        phase_d = 2.*pi*tau_d*f
+                        phase_p = 2.*pi*tau_p*f
+                    endif    
+                    cexp_d = cmplx(cos(phase_d),sin(phase_d))
+                    cexp_p = cmplx(cos(phase_p),sin(phase_p)) 
+                    cexp_phi = cmplx(cos(DelAB(m)),sin(DelAB(m)))
+                    !set up transfer functions 
+                    W0 = boost * cmplx(ReW0(m,i,j),ImW0(m,i,j))
+                    W1 = (1-DC) * boost * cmplx(ReW1(m,i,j),ImW1(m,i,j))
+                    W2 = (1-DC) * boost * cmplx(ReW2(m,i,j),ImW2(m,i,j))                       
+                    W3 = ionvar * (1-DC) * boost * cmplx(ReW3(m,i,j),ImW3(m,i,j))
+                    !calculate complex covariance
+                    !note: the reason we use complex here is to ease the calculations 
+                    !when we add all the extra phases from the double lamp post 
+                    Stemp = g(m)*cexp_phi*(W1 + W2 + fac*cexp_d*contx(i,m))
+                    Stemp = Stemp + W0 + W3 + cexp_d*contx(i,m)
+                    Stemp = cexp_p*Stemp
+                    Sraw(i,j) = Sraw(i,j) + Stemp
+                    !separate into real/imaginary parts for compatibility with the rest of the code
+                    ReSraw(i,j) = real(Sraw(i,j))
+                    ImSraw(i,j) = aimag(Sraw(i,j)) 
+                enddo
+            enddo 
+        endif    
+    end do
     return
 end subroutine rawS
+
+subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,h,z,Gamma,eta,&
+                boost,ReIm,g,DelAB,ionvar,DC,resp_matr,ReGraw,ImGraw)
+                
+    use constants
+    implicit none
+    integer nex,nf,ionvar,DC,nlp
+    complex W0,W1,W2,W3,Sraw(nlp,nex,nf),cexp_d,cexp_phi,Stemp   
+    real earx(0:nex),absorbx(nex),contx(nex,nlp),tauso(nlp),ReW0(nlp,nex,nf),ImW0(nlp,nex,nf)
+    real ReW1(nlp,nex,nf),ImW1(nlp,nex,nf),ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
+    real DelAB(nlp),g(nlp),boost,z,gso(nlp),Gamma,eta,ReSraw(nlp,nex,nf),ImSraw(nlp,nex,nf),h(nlp) 
+    real tau_d,phase_d,E,fac,f,flo,fhi,ReGtemp(nlp,nex,nf),ImGtemp(nlp,nex,nf),ReGraw(nex,nf),ImGraw(nex,nf)
+    integer i,j,m,ReIm,resp_matr
+    
+    ReSraw = 0.
+    ImSraw = 0.
+    Sraw = 0.
+    
+    phase_d = 0.
+    tau_d = 0.
+    
+    do m=1,nlp 
+        if (boost .lt. 0 .and. DC .eq. 1) then             
+            do j = 1,nf
+                do i = 1,nex
+                    !if (m .gt. 1) ReW0(m,i,j) = eta*ReW0(m,i,j)
+                    ReSraw(m,i,j) = ReSraw(m,i,j) + (-boost) * ReW0(m,i,j)
+                enddo
+            enddo  
+        else
+            do j = 1,nf
+                if (DC .eq. 1) then
+                    f = 0.
+                else 
+                    f = flo * (fhi/flo)**(  (real(j)-0.5) / real(nf) )
+                endif
+                do i = 1,nex
+                    E   = 0.5 * ( earx(i) + earx(i-1) )
+                    fac = log(gso(m)/((1.0+z)*E))
+                    if (m .gt. 1) phase_d = 2.*pi*tau_d*f  
+                    cexp_d = cmplx(cos(phase_d),sin(phase_d))     
+                    cexp_phi = cmplx(cos(DelAB(m)),sin(DelAB(m)))
+                    !set up transfer functions 
+                    W0 = boost * cmplx(ReW0(m,i,j),ImW0(m,i,j))
+                    W1 = (1-DC) * boost * cmplx(ReW1(m,i,j),ImW1(m,i,j))
+                    W2 = (1-DC) * boost * cmplx(ReW2(m,i,j),ImW2(m,i,j))                       
+                    W3 = ionvar * (1-DC) * boost * cmplx(ReW3(m,i,j),ImW3(m,i,j))
+                    !calculate complex covariance
+                    !note: the reason we use complex here is to ease the calculations 
+                    !when we add all the extra phases from the double lamp post 
+                    Stemp = g(m)*cexp_phi*(W1 + W2 + fac*cexp_d*contx(i,m)) + W0 + W3 + cexp_d*contx(i,m)
+                    Sraw(m,i,j) = Sraw(m,i,j) + Stemp
+                    !separate into real/imaginary parts for compatibility with the rest of the code
+                    ReSraw(m,i,j) = real(Sraw(m,i,j))*absorbx(i)
+                    ImSraw(m,i,j) = aimag(Sraw(m,i,j))*absorbx(i)
+                enddo 
+            enddo    
+        endif 
+    end do
+
+    do m=1,nlp 
+        if (ReIm .gt. 0.0) then 
+            call propercross(nex,nf,earx,ReSraw(m,:,:),ImSraw(m,:,:),ReGtemp(m,:,:),ImGtemp(m,:,:),resp_matr)
+        else 
+            call propercross_NOmatrix(nex,nf,earx,ReSraw(m,:,:),ImSraw(m,:,:),ReGtemp(m,:,:),ImGtemp(m,:,:))
+        endif
+        do j=1,nf 
+            do i=1,nex 
+                if (m .gt. 1) then
+                    ReGtemp(m,i,j) = eta**2.*ReGtemp(m,i,j)
+                    ImGtemp(m,i,j) = eta**2.*ImGtemp(m,i,j)
+                endif
+                ReGraw(i,j) = ReGraw(i,j) + ReGtemp(m,i,j)
+                ImGraw(i,j) = ImGraw(i,j) + ImGtemp(m,i,j)
+            end do
+        end do
+    end do   
+
+    return 
+end subroutine rawG
