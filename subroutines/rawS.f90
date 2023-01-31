@@ -128,6 +128,8 @@ subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,I
     
     ReSraw = 0.
     ImSraw = 0.
+    ReGraw = 0.
+    ImGraw = 0.
     Sraw = 0.
     
     phase_d = 0.
@@ -164,12 +166,19 @@ subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,I
                     !when we add all the extra phases from the double lamp post 
                     Stemp = g(m)*cexp_phi*(W1 + W2 + fac*cexp_d*contx(i,m)) + W0 + W3 + cexp_d*contx(i,m)
                     Sraw(m,i,j) = Sraw(m,i,j) + Stemp
-                    !separate into real/imaginary parts for compatibility with the rest of the code
-                    ReSraw(m,i,j) = real(Sraw(m,i,j))*absorbx(i)
-                    ImSraw(m,i,j) = aimag(Sraw(m,i,j))*absorbx(i)
                 enddo 
             enddo    
         endif 
+    end do
+    
+    !include absorption and separate - this is a bit awful but I think it's the only way?
+    do m=1,nlp 
+        do j=1,nf 
+            do i=1,nex 
+                ReSraw(m,i,j) = real(Sraw(m,i,j))*absorbx(i)
+                ImSraw(m,i,j) = aimag(Sraw(m,i,j))*absorbx(i)
+            end do
+        end do
     end do
 
     do m=1,nlp 
