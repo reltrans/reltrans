@@ -134,7 +134,7 @@ subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,I
     
     phase_d = 0.
     tau_d = 0.
-    
+
     do m=1,nlp 
         if (boost .lt. 0 .and. DC .eq. 1) then             
             do j = 1,nf
@@ -153,7 +153,10 @@ subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,I
                 do i = 1,nex
                     E   = 0.5 * ( earx(i) + earx(i-1) )
                     fac = log(gso(m)/((1.0+z)*E))
-                    if (m .gt. 1) phase_d = 2.*pi*tau_d*f  
+                    if (m .gt. 1) then
+                        tau_d = tauso(m)-tauso(1)
+                        phase_d = 2.*pi*tau_d*f  
+                    endif
                     cexp_d = cmplx(cos(phase_d),sin(phase_d))     
                     cexp_phi = cmplx(cos(DelAB(m)),sin(DelAB(m)))
                     !set up transfer functions 
@@ -170,7 +173,7 @@ subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,I
             enddo    
         endif 
     end do
-    
+
     !include absorption and separate - this is a bit awful but I think it's the only way?
     do m=1,nlp 
         do j=1,nf 
