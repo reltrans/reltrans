@@ -243,16 +243,41 @@ subroutine energy_bounds(nex,Emin,Emax,Ea1,Ea2,Eb1,Eb2)
     integer, intent(out):: Ea1,Ea2,Eb1,Eb2 
     real, intent(in)    :: Emin,Emax
     real                :: band1_Elo,band1_Ehi,band2_Elo,band2_Ehi
+    real     :: myenv_real, dum
      
     if( needchans ) then
-        write(*,*)"Enter lower energy in the first band"
-        read(*,*) band1_Elo
-        write(*,*)"Enter upper energy in the first band"
-        read(*,*) band1_Ehi
-        write(*,*)"Enter lower energy in the second band"
-        read(*,*) band2_Elo
-        write(*,*)"Enter upper energy in the second band"
-        read(*,*) band2_Ehi
+        band1_Elo = myenv_real("EMIN_REF",0.0)
+        band1_Ehi = myenv_real("EMAX_REF",0.0)
+        band2_Elo = myenv_real("EMIN_REF2",0.0)
+        band2_Ehi = myenv_real("EMAX_REF2",0.0)
+        if (band1_Elo .eq. 0.0) then
+            write(*,*)"Enter lower energy in the first band"
+            read(*,*) band1_Elo
+        endif
+        if (band1_Ehi .eq. 0.0) then
+            write(*,*)"Enter upper energy in the first band"
+            read(*,*) band1_Ehi
+        endif
+        if (band2_Elo .eq. 0.0) then
+            write(*,*)"Enter lower energy in the second band"
+            read(*,*) band2_Elo
+        endif
+        if (band2_Ehi .eq. 0.0) then
+            write(*,*)"Enter upper energy in the second band"
+            read(*,*) band2_Ehi
+        endif
+        if( band1_Elo .gt. band1_Ehi )then
+           dum  = band1_Elo
+           band1_Elo = band1_Ehi
+           band1_Ehi = dum
+           write(*,*)"Elo1>Ehi1! Switched!"
+        end if
+        if( band2_Elo .gt. band2_Ehi )then
+           dum  = band2_Elo
+           band2_Elo = band2_Ehi
+           band2_Ehi = dum
+           write(*,*)"Elo2>Ehi2! Switched!"
+        end if
         Ea1 = ceiling( real(nex) * log10(band1_Elo / Emin) / log10(Emax / Emin))
         Ea2 = ceiling( real(nex) * log10(band1_Ehi / Emin) / log10(Emax / Emin))
         Eb1 = ceiling( real(nex) * log10(band2_Elo / Emin) / log10(Emax / Emin))

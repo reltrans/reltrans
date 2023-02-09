@@ -29,7 +29,11 @@ module telematrix2
   data needchans2/.true./
 end module telematrix2
 
-
+module env_variables
+  implicit none
+  integer :: adensity, idum
+  save idum
+end module env_variables
   
 MODULE dyn_gr
 !---------------------------------------------------------------------

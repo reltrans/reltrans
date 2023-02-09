@@ -257,6 +257,19 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
                             ker_W3(nl,gbin,fbin,mubin,rbin) = ker_W3(nl,gbin,fbin,mubin,rbin) + &
                                                               kfac*thetafac(nl)*normfac*cexp 
                         end do
+                        !if large verbose, start saving the impulse response function to file 
+                        if( verbose .gt. 1 ) then
+                            !find the appropriate energy and time bins
+                            gbin = ceiling(g/dg) 
+                            gbin = MAX( 1    , gbin  )
+                            gbin = MIN( gbin , ne    )
+                            tbin = ceiling( log10( tau(nl) / tar(0) ) / dlogt )
+                            !write(102,*)re,tau,log10( tau / tar(0) ) / dlogt
+                            tbin = MAX( 1    , tbin )
+                            tbin = MIN( tbin , nt   )
+                            ! kernel of the impulse response function              
+                            resp(gbin,tbin) = resp(gbin,tbin) + dFe(nl)  
+                        end if 
                     end do                    
                 end if
             end if                
@@ -272,7 +285,6 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
             call drandphithick(alpha,beta,mu0,mudisk,re,phie)
             !If the ray hits the disk, calculate flux and time lag
             if( re .gt. rin .and. re .lt. rout )then
-                !TBD FINISH THIS
                 do m=1,nlp
                     g = dlgfacthick( spin,mu0,alpha,re,mudisk )
                     !Find the rlp bin that corresponds to re
@@ -340,7 +352,20 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
                                                           emisfac*normfac*cexp
                         ker_W3(nl,gbin,fbin,mubin,rbin) = ker_W3(nl,gbin,fbin,mubin,rbin) + &
                                                           kfac*thetafac(nl)*normfac*cexp 
-                    end do           
+                    end do          
+                    !if large verbose, start saving the impulse response function to file 
+                    if( verbose .gt. 1 ) then
+                        !find the appropriate energy and time bins
+                        gbin = ceiling(g/dg) 
+                        gbin = MAX( 1    , gbin  )
+                        gbin = MIN( gbin , ne    )
+                        tbin = ceiling( log10( tau(nl) / tar(0) ) / dlogt )
+                        !write(102,*)re,tau,log10( tau / tar(0) ) / dlogt
+                        tbin = MAX( 1    , tbin )
+                        tbin = MIN( tbin , nt   )
+                        ! kernel of the impulse response function              
+                        resp(gbin,tbin) = resp(gbin,tbin) + dFe(nl)  
+                    end if 
                 end do
             end if
         end do
@@ -463,21 +488,19 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
 ! gsdr(1:xe)   -- Source-to-disc blueshift as a function of r
 ! logner(1:xe) -- Log10 of electron density as a function of r
 !note: this does not work with multiple lamposts for now
+  use env_variables
   implicit none
   integer         , intent(IN)   :: xe, ndelta, npts 
   double precision, intent(IN)   :: rin, rmin, rnmax, b1, b2, qboost
   double precision, intent(IN)   :: fcons, lognep, spin, h, honr
   double precision, intent(IN)   :: rlp(ndelta), dcosdr(ndelta), cosd(ndelta)
   double precision, intent(INOUT):: logxieff(xe), gsdr(xe), logner(xe)
-  integer          :: i, kk, get_index, myenv, adensity, verbose
+  integer          :: i, kk, get_index, myenv, verbose
   double precision :: pnorm,re,re1(xe),zA_logne,cosfac,mus,interper,newtex,mudisk
   double precision, parameter :: pi = acos(-1.d0)
   double precision :: ptf,pfunc_raw,gsd,dglpfacthick,eps_bol,Fx(xe),logxir(xe),mui,dinang
   double precision :: pnormer,dareafac,lximax
-! Decide on zone a density profile or constant density profile
-  adensity = myenv("A_DENSITY",1)
-  adensity = min( adensity , 1 )
-  adensity = max( adensity , 0 )
+
 ! Set disk opening angle
   mudisk   = honr / sqrt( honr**2 + 1.d0  )
 ! Now loop through xe radial bins
@@ -589,6 +612,7 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,eta_0,logxip,lognep,spin,h,Gam
      &,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
     ! In  : xe,rin,rnmax,eta_0,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
     ! Out : logxir(1:xe), gsdr(1:xe), logner(1:xe)
+    use env_variables
     implicit none
     integer         , intent(IN)   :: xe, ndelta, nlp, npts(nlp)
     double precision, intent(IN)   :: rin,rmin,rnmax,eta_0,logxip,lognep,spin,h(nlp),honr,Gamma,dfer_arr(xe)
@@ -596,15 +620,11 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,eta_0,logxip,lognep,spin,h,Gam
     double precision, intent(IN)   :: rlp(ndelta,nlp), dcosdr(ndelta,nlp), cosd(ndelta,nlp), contx_int(nlp)
     double precision :: rlp_column(ndelta),dcosdr_column(ndelta),cosd_column(ndelta), dgsofac
     double precision, intent(INOUT):: logxir(xe), gsdr(xe), logner(xe)
-    integer          :: i, kk, get_index, myenv, adensity, l, m, verbose
+    integer          :: i, kk, get_index, myenv, l, m, verbose
     double precision :: rp, logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd(nlp), dglpfacthick
     double precision :: xi_lp(xe,nlp), logxi_lp(xe,nlp), logxip_lp(nlp), xitot, xiraw, mylogne, mudisk, gsd_temp
     double precision, allocatable :: rad(:)
 
-    !Decide on zone a density profile or constant density profile
-    adensity = myenv("A_DENSITY",1)
-    adensity = min( adensity , 1 )
-    adensity = max( adensity , 0 )
     ! Set disk opening angle
     mudisk   = honr / sqrt( honr**2 + 1.d0  )
     

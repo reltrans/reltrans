@@ -20,6 +20,7 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
 !!!-------------------------------------------------------------------  
   use conv_mod
   use dyn_gr
+  use env_variables
       implicit none
       integer          , intent(out)   :: xe,me,refvar,ionvar,verbose
       ! integer          , intent(in)    :: nphi, nro !constant
@@ -40,7 +41,7 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
          
         needtrans = .true.
         write(*,*)"----------------------------------------------------"
-        write(*,*)"This is RELTRANS v0.8.3: a transfer function model for"
+        write(*,*)"This is RELTRANS v0.9.1: a transfer function model for"
         write(*,*)"X-ray reverberation mapping."
         write(*,*)"Please cite Ingram et al (2019) MNRAS 488 p324-347."
         write(*,*)"----------------------------------------------------"
@@ -55,6 +56,10 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
         ! Call environment variables
         me      = myenv("MU_ZONES"  , 1 )   !Set number of mu_e zones used
         xe      = myenv("ION_ZONES" , 20)   !Set number of ionisation zones used
+        ! Decide between zone A density profile or constant density profile
+        adensity = myenv("A_DENSITY",0)
+        adensity = min( adensity , 1 )
+        adensity = max( adensity , 0 )
         verbose = myenv("REV_VERB",0)     !Set verbose level
                                           !0: Xspec output only
                                           !1: Also print quantities to terminal
@@ -62,9 +67,15 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
                                           !files in /Output folder
         refvar = myenv("REF_VAR",1)         !choose whether to include pivoting reflection
         ionvar = myenv("ION_VAR",1)         !choose whether to include ionization changes
+        idum = myenv("SEED_SIM", -2851043)  !seed for simulations
 
         write(*,*) 'RADIAL ZONES', xe
         write(*,*) 'ANGLE ZONES', me
+        if (adensity .eq. 0.0) then
+            write(*,*) 'Density profile is constant - A_DENSITY:', adensity
+        else
+            write(*,*) 'Density profile is zone A SS73 - A_DENSITY:', adensity
+        endif
         write(*,*) 'VERBOSE is ', verbose
         write(*,*) 'REFVAR is ', refvar
         write(*,*) 'IONVAR is ', ionvar

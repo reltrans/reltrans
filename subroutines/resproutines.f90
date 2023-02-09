@@ -91,7 +91,7 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
      allocate(ReGtel(numchn2))
      allocate(ImGtel(numchn2))
 
-     !Rebin input arrays onto interpal telescope energy grid
+     !Rebin input arrays onto internal telescope energy grid
      call rebinE(earx,E2ReGx,nex,En2,ReGi,nenerg2)
      call rebinE(earx,E2ImGx,nex,En2,ImGi,nenerg2)
      

@@ -122,7 +122,7 @@ program relwrap
                 end do    
             else
                 emin = 0.1
-                emax = 450.
+                emax = 700.
                 do i=0,ne
                     ear(i) = emin * (emax/emin)**(real(i)/real(ne))
                 end do   

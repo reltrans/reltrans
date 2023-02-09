@@ -3,9 +3,9 @@ main = main.f90
 #lib and other stuff to include to the compiler 
 incs = -I ./fftw/fftw_comp/include/ -ffree-line-length-none
 libs = -L ./fftw/fftw_comp/lib/ -lfftw3 -lm \
-       -L /home/matteo/Software/heasoft-6.28/x86_64-pc-linux-gnu-libc2.31/lib/ -lfftw3 -lm\
+       -L ${HEADAS}/lib/ -lfftw3 -lm\
        -lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS -lCCfits_2.5
-
+fitsio = 
 optimization = -O3 
 debug        = -Wall -pedantic -g
 
