@@ -31,7 +31,7 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
       logical          , intent(inout) :: firstcall, needtrans
       integer i
       integer myenv
-
+  
       needtrans = .false.     
       if( firstcall )then
 
@@ -72,20 +72,19 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
         write(*,*) 'RADIAL ZONES', xe
         write(*,*) 'ANGLE ZONES', me
         if (adensity .eq. 0.0) then
-            write(*,*) 'Density profile is constant - A_DENSITY:', adensity
+            write(*,*) 'A_DENSITY:', adensity, 'Density profile is constant'
         else
-            write(*,*) 'Density profile is zone A SS73 - A_DENSITY:', adensity
+            write(*,*) 'A_DENSITY:', adensity, 'Density profile is zone A SS73'
         endif
         write(*,*) 'VERBOSE is ', verbose
         write(*,*) 'REFVAR is ', refvar
-        write(*,*) 'IONVAR is ', ionvar
+        write(*,*) 'IONVAR is ', ionvar     
         write(*,*)"----------------------------------------------------"
 
 ! Set sensible distance for observer from the BH
         d = max( 1.0d4 , 2.0d2 * rnmax**2 )
-        
-           
         firstcall = .false.
+        
      end if
      return
     end subroutine initialiser

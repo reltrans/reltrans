@@ -62,9 +62,9 @@ subroutine set_param(dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,l
   
   !WIP optimization, need to think how best to handle this for cases when phiab/g change
   !but we don't want to re-do all the convolutions
-  if(all(g .eq. 0 ) .or. all(DelAB .eq. 0)) then
-     refvar = 0  
-  end if
+ ! if(all(g .eq. 0 ) .or. all(DelAB .eq. 0)) then
+ !    refvar = 0  
+ ! end if
 
   return
 end subroutine set_param

@@ -1,4 +1,5 @@
 main = main.f90
+benchmark = Benchmarks/benchmark.f90
 
 #lib and other stuff to include to the compiler 
 incs = -I ./fftw/fftw_comp/include/ -ffree-line-length-none
@@ -16,7 +17,9 @@ ccomp = gcc      $(optimization)
 # the files to compile 
 FCODE = $(main) srevtrans.f90
 CCODE = relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c relcache.c
-FTEST = $(test) srevtrans.f90
+FTEST = $(benchmark) srevtrans.f90
+
+CBENCH = Benchmarks/setenv.c 
 
 mod:
 	$(fcomp) $(incs) $(libs) -c amodules.f90
@@ -24,13 +27,21 @@ fobj: $(FCODE)
 	$(fcomp) -c $(FCODE)
 ftest: $(FTEST)
 	$(fcomp) -c $(FTEST)
+
 cobj: 
 	$(ccomp) -c $(CCODE)
+cbench: 
+	$(ccomp) -c $(CBENCH)
 
 compile: mod fobj cobj
 	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) *.o -o main $(libs)
 
+benchmark: mod ftest cobj cbench 
+	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) *.o -o benchmark $(libs)
+	 
 main: clean compile cleanup
+
+test: clean benchmark cleanup
 
 clean:
 	rm -vf *.o *.mod *~ subroutines/*~

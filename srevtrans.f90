@@ -746,14 +746,14 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     data nfsave /-1/  
     !Save the first call variables
     save firstcall, dloge, earx, me, xe, d, verbose
-    save paramsave, fhisave, flosave, nfsave
+    save paramsave, fhisave, flosave, nfsave, refvar, ionvar
     save frobs, frrel, Cpsave, needtrans, lens
     save ker_W0, ker_W1, ker_W2, ker_W3, logxir, gsdr, logner
     save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3
     save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
 
     ifl = 1
-    call FNINIT
+    !call FNINIT
 
     ! Initialise some parameters 
     call initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose)
@@ -848,7 +848,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 
     !Determine if I need to calculate the kernel - double check which parameters cause a new kernel (e.g. new eta)
     call need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsave,needtrans,needconv)
-   
+
     ! Allocate arrays that depend on frequency
     if( nf .ne. nfsave )then
         if( allocated(ker_W0 ) ) deallocate(ker_W0 )
@@ -895,21 +895,27 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   
     !allocate lensing/reflection fraction arrays if necessary
     if( needtrans ) then
-        if( .not. allocated(lens) ) allocate( lens(nlp) )
-        if( .not. allocated(frobs) ) allocate( frobs(nlp) )
-        if( .not. allocated(frrel) ) allocate( frrel(nlp) )
+        if( allocated(lens) ) deallocate( lens )
+        allocate (lens(nlp))
+        if( allocated(frobs) ) deallocate( frobs )
+        allocate (frobs(nlp))
+        if( allocated(frrel) ) deallocate( frrel )
+        allocate (frrel(nlp))
     end if
 
     !set up the continuum spectrum plus relative quantities (cutoff energies, lensing/gfactors, luminosity, etc)
     call init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_obs,Cp_cont,Cp,fcons,Gamma,&
-                   Dkpc,Mass,earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)     
-    
+                   Dkpc,Mass,earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)    
+
     if (verbose .gt. 2) call CPU_TIME (time_start)
     if( needtrans )then
-        !Allocate arrays for kernels     
-        if( .not. allocated(logxir) ) allocate( logxir(xe) )
-        if( .not. allocated(gsdr)   ) allocate( gsdr  (xe) )
-        if( .not. allocated(logner) ) allocate( logner(xe) )
+        !Allocate arrays for kernels   
+        if (allocated (logxir)) deallocate (logxir)
+        allocate (logxir(xe))
+        if (allocated (gsdr)) deallocate (gsdr)
+        allocate (gsdr(xe))
+        if (allocated (logner)) deallocate (logner)
+        allocate (logner(xe))
         !Calculate the Kernel for the given parameters
         status_re_tau = .true.
         call rtrans(verbose,dset,nlp,a,h,gso,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,eta_0,&
@@ -999,6 +1005,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                         end do  
                     end do
                     !always: convolution for reverberation/DC spectrum
+                    !TBD: add flag here to do this convolution if no reflection time, or different convolution with complex
+                    !xillver if tref > 0 or something.
                     call conv_one_FFTw(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
                     if(DC .eq. 0 .and. refvar .eq. 1) then
                         call conv_one_FFTw(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
@@ -1038,7 +1046,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     else if (nlp .gt. 1 .and. beta_p .eq. 0.) then
         call rawG(nex,earx,nf,real(flo),real(fhi),nlp,contx,absorbx,real(tauso),real(gso),ReW0,ImW0,&
                   ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,real(h),real(zcos),real(Gamma),real(eta),boost,ReIm,g,DelAB,&
-                  ionvar,DC,resp_matr,ReGrawa,ImGrawa)                    
+                  ionvar,DC,resp_matr,ReGrawa,ImGrawa)                
     else
         !Calculate raw FT of the full spectrum without absorption
         call rawS(nex,earx,nf,real(flo),real(fhi),nlp,contx,real(tauso),real(gso),ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&

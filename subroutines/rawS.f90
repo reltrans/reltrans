@@ -105,7 +105,7 @@ subroutine rawS(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2
                     Sraw(i,j) = Sraw(i,j) + Stemp
                     !separate into real/imaginary parts for compatibility with the rest of the code
                     ReSraw(i,j) = real(Sraw(i,j))
-                    ImSraw(i,j) = aimag(Sraw(i,j)) 
+                    ImSraw(i,j) = aimag(Sraw(i,j))
                 enddo
             enddo 
         endif    

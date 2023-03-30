@@ -57,6 +57,7 @@ if (Input[23] != 7):
             min_y_timing = Total.T[1][i]
         if (Total.T[1][i] > max_y_timing and Total.T[0][i] > min_x_timing and Total.T[0][i] < max_x_timing):
             max_y_timing = Total.T[1][i]    
+    ''''
     for i in range(len(LightTravelTime.T[0])):
         if (LightTravelTime.T[1][i] < min_y_timing and LightTravelTime.T[0][i] > min_x_timing and LightTravelTime.T[0][i] < max_x_timing):
             min_y_timing = LightTravelTime .T[1][i]
@@ -77,7 +78,7 @@ if (Input[23] != 7):
             min_y_timing = IonVariations .T[1][i]
         if (IonVariations.T[1][i] > max_y_timing and IonVariations.T[0][i] > min_x_timing and IonVariations.T[0][i] < max_x_timing):
             max_y_timing = IonVariations.T[1][i]
-
+    '''
     if (min_y_timing < 0):
         min_y_timing = 1.5*min_y_timing
     else:
