@@ -100,7 +100,7 @@ program relwrap
         print *, "# of rsp:", params_reltrans(21) 
         
         call CPU_TIME (time_start)
-        call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
+        call tdreltransCp(ear,ne,params_reltrans,ifl,photar)
         call CPU_TIME (time_end)
         print *, 'Call runtime: ', time_end - time_start, ' seconds'
         print *,"--------------------------------------------------------------------------------------------------------------"
@@ -151,7 +151,7 @@ program relwrap
         params_reltrans(20) = params_file(23)
         params_reltrans(21) = params_file(25)   
         
-        call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
+        call tdreltransCp(ear,ne,params_reltrans,ifl,photar)
         
         !read benchmark files and output files 
         open(20,file="Benchmarks/Total_0,12_0,25.dat",status='old')
@@ -285,7 +285,7 @@ program relwrap
         params_reltrans(20) = params_file(23)
         params_reltrans(21) = params_file(25)   
         
-        call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
+        call tdreltransCp(ear,ne,params_reltrans,ifl,photar)
         
         !read benchmark files and output files 
         open(20,file="Benchmarks/Total_0,31_0,73.dat",status='old')
@@ -419,7 +419,7 @@ program relwrap
         params_reltrans(20) = params_file(23)
         params_reltrans(21) = params_file(25)   
         
-        call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
+        call tdreltransCp(ear,ne,params_reltrans,ifl,photar)
         
         !read benchmark files and output files 
         open(20,file="Benchmarks/Total_0,80_2,1.dat",status='old')
@@ -554,7 +554,7 @@ program relwrap
         params_reltrans(20) = params_file(23)
         params_reltrans(21) = params_file(25)   
         
-        call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
+        call tdreltransCp(ear,ne,params_reltrans,ifl,photar)
         
         !read benchmark files and output files 
         open(20,file="Benchmarks/Total_2,1_5,8.dat",status='old')
@@ -688,7 +688,7 @@ program relwrap
         params_reltrans(20) = params_file(23)
         params_reltrans(21) = params_file(25)   
         
-        call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
+        call tdreltransCp(ear,ne,params_reltrans,ifl,photar)
         
         !read benchmark files and output files 
         open(20,file="Benchmarks/Total_5,8_16.dat",status='old')

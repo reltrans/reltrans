@@ -1,10 +1,10 @@
 subroutine set_param(dset, param, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc, Afe, &
      lognep, Ecut_obs, Nh, boost, qboost, Mass, honr, b1, b2, floHz, fhiHz, ReIm,&
-     DelA, DelAB, g, Anorm, resp)
+     DelA, DelAB, g, Anorm, resp, Ea1keV, Ea2keV, Eb1keV, Eb2keV, ABslope, gslope)
 !!! Sets the parameters of reltrans depending on the Cp variable
   implicit none
   integer         , intent(in)   :: dset
-  real            , intent(in)   :: param(26)
+  real            , intent(in)   :: param(32)
   double precision, intent(out)  :: h, a, inc, rin, rout, zcos, Gamma
   double precision, intent(out)  :: honr, b1, b2, qboost
   real            , intent(out)  :: logxi, Afe, lognep, Ecut_obs
@@ -12,7 +12,9 @@ subroutine set_param(dset, param, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc
   real            , intent(out)  :: DelA, DelAB, g, Anorm, Dkpc
   integer         , intent(out)  :: ReIm, resp
 
-  
+  real                :: Ea1keV, Ea2keV, Eb1keV, Eb2keV
+  real                :: gslope, ABslope
+
 ! Read in basic parameter array  
   h        = dble( param(1) )
   a        = dble( param(2) )
@@ -47,6 +49,13 @@ subroutine set_param(dset, param, h, a, inc, rin, rout, zcos, Gamma, logxi, Dkpc
      Dkpc = 0.0
   end if
 
+     Ea1keV   = param(27)
+     Ea2keV   = param(28)
+     Eb1keV   = param(29)
+     Eb2keV   = param(30)
+     ABslope  = param(31)
+     gslope   = param(32)
+  
   return
 end subroutine set_param
 !-----------------------------------------------------------------------

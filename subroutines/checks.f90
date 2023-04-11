@@ -32,7 +32,7 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
   !   neecconv:  if true, we must do the convolution
   implicit none 
   integer         , intent(in)  :: Cp, Cpsave, nf, nfsave
-  real            , intent(in)  :: param(25), paramsave(25)
+  real            , intent(in)  :: param(32), paramsave(32)
   real            , parameter   :: tol = 1e-7
   double precision, intent(in)  :: fhi, flo, fhisave, flosave
   double precision, parameter   :: dtol = 1e-10

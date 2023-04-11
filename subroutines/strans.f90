@@ -48,13 +48,15 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,&
   integer kk,fbin,get_index
   double precision rmin,disco,rfunc,scal,velocity(3),mudisk,sysfref
   double precision rnmax,rnmin,rn(nro),phin,mueff,dlogr,interper
-  double precision fi(nf),dgsofac,sindisk,mue,demang,frobs,cosdin,frrel
+  double precision dgsofac,sindisk,mue,demang,frobs,cosdin,frrel
   double precision pnorm,mus,ptf,pfunc_raw,cosdelta_obs,ang_fac
   integer nron,nphin,nrosav,nphisav,verbose
   double precision spinsav,musav,routsav,mudsav,rnn(nro),domegan(nro)
   integer myenv
   double precision lximax
   logical dotrace
+  double precision, allocatable :: fi(:)
+  
   data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
   save nrosav,nphisav,spinsav,musav,routsav,mudsav
       
@@ -76,9 +78,10 @@ subroutine rtrans(spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,&
   !Grid for Newtonian approximation
   call getrgrid(rnmax,rout,mueff,nron,nphin,rnn,domegan)
       
-! Set frequency array
+  ! Set frequency array
+  if (.not. allocated(fi)) allocate(fi(0:nf))
   do fbin = 1,nf
-    fi(fbin) = flo * (fhi/flo)**((float(fbin)-0.5d0)/dble(nf))
+     fi(fbin) = flo * (fhi/flo)**((real(fbin)-0.5d0)/dble(nf))
   end do
   if( fhi .lt. tiny(fhi) ) fi(1) = 0.0d0
 
