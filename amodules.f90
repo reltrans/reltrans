@@ -234,7 +234,7 @@ contains
     call fftw_execute_dft_r2c(plan1, in, out)
 
     padFT_line = out
-
+    
     end subroutine padding4FT
 
 
@@ -250,7 +250,7 @@ contains
     in_conv = padFT_line
 
     call fftw_execute_dft_c2r(plan2, in_conv, out_conv)
-
+    
     ! Populate output array
     photmax = 0.0
     do i = 1, nex
@@ -264,11 +264,6 @@ contains
 
     return 
    end subroutine de_paddingFT
-
-  ! subroutine init_fftw_allconv()
-  !   implicit none
-  !   print *, "Without FFTW"
-  ! end subroutine init_fftw_allconv
 
 end module conv_mod
 

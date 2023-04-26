@@ -59,6 +59,54 @@ subroutine tdreltransDCp(ear, ne, param, ifl, photar)
 end subroutine tdreltransDCp
 !-----------------------------------------------------------------------
 
+!-----------------------------------------------------------------------
+subroutine tdreltransD(ear, ne, param, ifl, photar)
+  implicit none
+  integer :: ne, ifl, Cp, dset, nlp
+  real    :: ear(0:ne), param(21), photar(ne), par(32)
+! Settings
+  Cp   = 1   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
+  dset = 0   !dset=0 means distance is not set, logxi set instead
+  nlp = 1    !use a single lamp post
+! Transfer to general parameter array
+  par(1)  = param(1)         !h1
+  par(2)  = 0.               !h2
+  par(3)  = param(2)         !a
+  par(4)  = param(3)         !inc
+  par(5)  = param(4)         !rin
+  par(6)  = param(5)         !rout
+  par(7)  = param(6)         !zcos
+  par(8)  = param(7)         !Gamma
+  par(9)  = param(8)         !logxi
+  par(10) = param(9)         !Afe
+  par(11) = param(10)        !lognep
+  par(12) = param(11)        !Ecut
+  par(13) = 0.               !eta_0
+  par(14) = 0.               !eta
+  par(15) = 0.               !beta_p
+  par(16) = param(12)        !Nh
+  par(17) = param(13)        !boost
+  par(18) = 1.0              !qboost
+  par(19) = param(14)        !Mass
+  par(20) = 0.0              !honr
+  par(21) = 0.0              !b1
+  par(22) = 0.0              !b2
+  par(23) = param(15)        !floHz
+  par(24) = param(16)        !fhiHz
+  par(25) = param(17)        !ReIm
+  par(26) = param(18)        !DelA
+  par(27) = param(19)        !DelAB
+  par(28) = param(20)        !g
+  par(29) = 0.               !DelAB2
+  par(30) = 0.               !g2
+  par(31) = 1.0              !Anorm
+  par(32) = param(21)        !telescope response
+! Call general code
+  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
+  return
+end subroutine tdreltransD
+!-----------------------------------------------------------------------
+
 
 !-----------------------------------------------------------------------
 subroutine tdreltransx(ear,ne,param,ifl,photar)
@@ -825,7 +873,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         DC     = 0
         boost  = abs(boost)
     end if
-  
     !this could go into a subroutine -- just put it in set_params?
     !Set minimum r (ISCO) and convert rin and h to rg
     if( abs(a) .gt. 0.999 ) a = sign(a,1.d0) * 0.999

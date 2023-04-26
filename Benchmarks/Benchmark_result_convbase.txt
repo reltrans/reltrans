@@ -2,8 +2,9 @@
  Setting up
  MAKE SURE TO RUN THE TEST WITH FNINT COMMENTED OUT FROM SREVTRANS.F90!!!!!!!!!!!!!!!!!
  Note: this test is very strict, and some benchmarks may report as being failed due to numerical
- precision issues in fftw. If the test reports discrepancy in only a handful of bins, consider the 
- test passed.
+ precision issues. Read the .txt output file carefully to decide whether something is wrong in 
+ the code or not. If the test reports discrepancy in only a handful of bins, consider the test 
+ passed 
  --------------------------------------------------------------------------------------------------------
  XRB test: 
  --------------------------------------------------------------------------------------------------------
@@ -19,24 +20,10 @@
  Comparing timing model output: 
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
  Running time-averaged spectrum test: 
  --------------------------------------------------------------------------------------------------------
  Comparing spectrum model output: 
  Model spectrum output test passed
- Comparing kernel energy dependence: 
- Kernel energy dependence test passed
- Comparing kernel time dependence: 
- Kernel time dependence test passed
  --------------------------------------------------------------------------------------------------------
  Benchmarks/xrb/ip_0,31_0,73.dat
  --------------------------------------------------------------------------------------------------------
@@ -59,16 +46,6 @@
  Reverberation output test passed
  --------------------------------------------------------------------------------------------------------
  Running modulus test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
  Timing model output test passed
@@ -97,28 +74,6 @@
  Comparing timing model output: 
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Total model output different at energy bin   1.32039177     keV; Benchmark and model output:   494.937073       494.410156    
- Timing model output test failed, comparing model components
- Comparing ionization model output: 
- Ionization changes output different at energy bin  0.403405815     keV; Benchmark and model output:  -9988.59473      -9959.28027    
- Ionization output test failed
- Comparing pivoting PL output: 
- Pivoting PL output test passed
- Comparing pivoting reflection output: 
- Pivoting reflection changes output different at energy bin  0.769714594     keV; Benchmark and model output:  -6652.84082      -6637.98779    
- Pivoting reflection output test failed
- Comparing reverberation output: 
- Reverberation changes output different at energy bin  0.354506850     keV; Benchmark and model output:   69571.4766       69471.8281    
- Reverberation output test failed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
  Benchmarks/xrb/ip_2,10_5,80.dat
  --------------------------------------------------------------------------------------------------------
  Running lag test: 
@@ -131,16 +86,6 @@
  Comparing timing model output: 
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
  Benchmarks/xrb/ip_5,80_16,0.dat
  --------------------------------------------------------------------------------------------------------
  Running lag test: 
@@ -149,16 +94,6 @@
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
  Running modulus test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
  Timing model output test passed
@@ -177,24 +112,10 @@
  Comparing timing model output: 
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
  Running time-averaged spectrum test: 
  --------------------------------------------------------------------------------------------------------
  Comparing spectrum model output: 
  Model spectrum output test passed
- Comparing kernel energy dependence: 
- Kernel energy dependence test passed
- Comparing kernel time dependence: 
- Kernel time dependence test passed
  --------------------------------------------------------------------------------------------------------
  Benchmarks/agn/ip_xmm_06_20.dat
  --------------------------------------------------------------------------------------------------------
@@ -204,16 +125,6 @@
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
  Running modulus test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
  Timing model output test passed
@@ -230,16 +141,6 @@
  Comparing timing model output: 
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
  Benchmarks/agn/ip_nus_01_06.dat
  --------------------------------------------------------------------------------------------------------
  Running lag test: 
@@ -248,16 +149,6 @@
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
  Running modulus test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
  Timing model output test passed
@@ -284,16 +175,6 @@
  Comparing timing model output: 
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
  Benchmarks/agn/ip_nus_20_90.dat
  --------------------------------------------------------------------------------------------------------
  Running lag test: 
@@ -302,16 +183,6 @@
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
  Running modulus test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
  Timing model output test passed
@@ -330,24 +201,10 @@
  Comparing timing model output: 
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
  Running time-averaged spectrum test: 
  --------------------------------------------------------------------------------------------------------
  Comparing spectrum model output: 
  Model spectrum output test passed
- Comparing kernel energy dependence: 
- Kernel energy dependence test passed
- Comparing kernel time dependence: 
- Kernel time dependence test passed
  --------------------------------------------------------------------------------------------------------
  Benchmarks/dbl/ip_0,50_0,60.dat
  --------------------------------------------------------------------------------------------------------
@@ -357,16 +214,6 @@
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
  Running modulus test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
  Timing model output test passed
@@ -383,16 +230,6 @@
  Comparing timing model output: 
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
  Benchmarks/dbl/ip_3,00_4,20.dat
  --------------------------------------------------------------------------------------------------------
  Running lag test: 
@@ -401,16 +238,6 @@
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
  Running modulus test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
  Timing model output test passed
@@ -427,15 +254,5 @@
  Comparing timing model output: 
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
- Running imaginary test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Running real test: 
- --------------------------------------------------------------------------------------------------------
- Comparing timing model output: 
- Timing model output test passed
- --------------------------------------------------------------------------------------------------------
- Benchmarks runtime:   49.5757027     seconds
+ Benchmarks runtime:   47.2881050     seconds
  --------------------------------------------------------------------------------------------------------

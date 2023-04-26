@@ -24,9 +24,8 @@ program relbench
     write (60,*) "Setting up" 
     write (60,*) "MAKE SURE TO RUN THE TEST WITH FNINT COMMENTED OUT FROM SREVTRANS.F90!!!!!!!!!!!!!!!!!"
     write (60,*) "Note: this test is very strict, and some benchmarks may report as being failed due to numerical"
-    write (60,*) "precision issues. Read the .txt output file carefully to decide whether something is wrong in "
-    write (60,*) "the code or not. If the test reports discrepancy in only a handful of bins, consider the test "
-    write (60,*) "passed "    
+    write (60,*) "precision issues in fftw. If the test reports discrepancy in only a handful of bins, consider the "
+    write (60,*) "test passed."    
       
     call c_setgetenv("0.3","10.")
                             
@@ -146,9 +145,26 @@ subroutine model_singleLP(mode,frange,spec_flag)
     call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     call compare_timing(ne,mode,mtype,frange)
-
     
-    !finally compare spectra
+    !then imaginary part:
+    mtype = "/Imag/"
+    params_reltrans(17) = 2
+    write (60,*) "--------------------------------------------------------------------------------------------------------"
+    write (60,*) "Running imaginary test: "
+    call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
+    write (60,*) "--------------------------------------------------------------------------------------------------------"
+    call compare_timing(ne,mode,mtype,frange)    
+    
+    !then real:
+    mtype = "/Real/"
+    params_reltrans(17) = 1
+    write (60,*) "--------------------------------------------------------------------------------------------------------"
+    write (60,*) "Running real test: "
+    call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
+    write (60,*) "--------------------------------------------------------------------------------------------------------"
+    call compare_timing(ne,mode,mtype,frange)  
+    
+    !finally compare spectra and kernel 
     if( spec_flag .eqv. .true. ) then
         params_reltrans(15) = 0
         params_reltrans(16) = 0
@@ -159,6 +175,7 @@ subroutine model_singleLP(mode,frange,spec_flag)
         call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
         write (60,*) "--------------------------------------------------------------------------------------------------------"
         call compare_spectrum(ne,mode,mtype)
+        call compare_kernel(mode,mtype) 
         spec_flag = .false.
     end if
 
@@ -223,7 +240,24 @@ subroutine model_doubleLP(mode,frange,spec_flag)
     call tdreltransDbl(ear,ne,params_reltrans,ifl,photar)
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     call compare_timing(ne,mode,mtype,frange)
-
+    
+    !then imaginary part:
+    mtype = "/Imag/"
+    params_reltrans(21) = 2
+    write (60,*) "--------------------------------------------------------------------------------------------------------"
+    write (60,*) "Running imaginary test: "
+    call tdreltransDbl(ear,ne,params_reltrans,ifl,photar)
+    write (60,*) "--------------------------------------------------------------------------------------------------------"
+    call compare_timing(ne,mode,mtype,frange)    
+    
+    !then real:
+    mtype = "/Real/"
+    params_reltrans(21) = 1
+    write (60,*) "--------------------------------------------------------------------------------------------------------"
+    write (60,*) "Running real test: "
+    call tdreltransDbl(ear,ne,params_reltrans,ifl,photar)
+    write (60,*) "--------------------------------------------------------------------------------------------------------"
+    call compare_timing(ne,mode,mtype,frange)  
     
     !finally compare spectra
     if( spec_flag .eqv. .true. ) then
@@ -236,6 +270,7 @@ subroutine model_doubleLP(mode,frange,spec_flag)
         call tdreltransDbl(ear,ne,params_reltrans,ifl,photar)
         write (60,*) "--------------------------------------------------------------------------------------------------------"
         call compare_spectrum(ne,mode,mtype)
+        call compare_kernel(mode,mtype) 
         spec_flag = .false.
     end if
 
@@ -472,7 +507,97 @@ subroutine compare_spectrum(ne,mode,mtype)
         write (60,*) "Model spectrum output test passed"
     else                                    
         write (60,*) "Model spectrum output test failed"
-    endif  
+    endif     
 
     return 
 end subroutine
+
+subroutine compare_kernel(mode,mtype)
+    implicit none
+
+    !tbd: hardcode size of transfer functions
+    integer i   
+    integer, parameter :: ne = 2**12
+    integer, parameter :: nt = 2**9
+    real test_precision, test_model     
+    logical test_bool, full_print      
+
+    character(len=3) mode
+    character(len=9) frange
+    character(len=5) mtype
+    character(len=60) full_path
+    character(len=60) output_path
+
+    real    :: benchmark_energy(ne,2)      
+    real    :: model_energy(ne,2) 
+    real    :: benchmark_time(ne,2)      
+    real    :: model_time(ne,2)              
+    
+    output_path = "Output/Impulse_1dImpulseVsEnergy.dat"  
+    open(50,file=output_path,status='old')
+    do i=1,ne 
+        read(50,*) model_energy(i,1),model_energy(i,2)
+    end do
+    close(50)
+    
+    full_path = "Benchmarks/" // trim(mode) // trim(mtype) // "/Impulse_1dImpulseVsEnergy.dat" 
+    open(50,file=full_path,status='old')
+    do i=1,ne 
+        read(50,*) benchmark_energy(i,1),benchmark_energy(i,2)
+    end do
+    close(50)
+    
+    test_precision = 1.001 
+    full_print = .true. 
+    
+    write (60,*) "Comparing kernel energy dependence: "
+    test_bool = .true.     
+    do i=1,ne  
+        test_model = benchmark_energy(i,2)/model_energy(i,2)
+        if (abs(test_model) .ge. test_precision) then
+            if (full_print .eqv. .true.) then
+                write (60,*) "Total model output different at g-factor", benchmark_energy(i,1), model_energy(i,1), "; ", &
+                             "Benchmark and model output:", benchmark_energy(i,2), model_energy(i,2)
+            endif
+            test_bool = .false.
+        endif
+    end do    
+    if (test_bool .eqv. .true.) then
+        write (60,*) "Kernel energy dependence test passed"
+    else                                    
+        write (60,*) "Kernel energy dependence test failed"
+    endif     
+    
+    output_path = "Output/Impulse_1dImpulseVsTime.dat"  
+    open(50,file=output_path,status='old')
+    do i=1,nt 
+        read(50,*) model_time(i,1),model_time(i,2)
+    end do
+    close(50)
+    
+    full_path = "Benchmarks/" // trim(mode) // trim(mtype) // "/Impulse_1dImpulseVsTime.dat" 
+    open(50,file=full_path,status='old')
+    do i=1,nt 
+        read(50,*) benchmark_time(i,1),benchmark_time(i,2)
+    end do
+    close(50)
+    
+    write (60,*) "Comparing kernel time dependence: "
+    test_bool = .true.     
+    do i=1,nt  
+        test_model = benchmark_time(i,2)/model_time(i,2)
+        if (abs(test_model) .ge. test_precision) then
+            if (full_print .eqv. .true.) then
+                write (60,*) "Total model output different at g-factor", benchmark_time(i,1), model_time(i,1), "; ", &
+                             "Benchmark and model output:", benchmark_time(i,2), model_time(i,2)
+            endif
+            test_bool = .false.
+        endif
+    end do    
+    if (test_bool .eqv. .true.) then
+        write (60,*) "Kernel time dependence test passed"
+    else                                    
+        write (60,*) "Kernel time dependence test failed"
+    endif     
+
+end subroutine 
