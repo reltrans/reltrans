@@ -907,8 +907,8 @@ endif
      resp_matr_b = -1
      call lag_freq_resp(nex,earx,Emin,dloge,Ea1keV,Ea2keV,Eb1keV,Eb2keV,resp_matr_a,resp_matr_b,&
      contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-     absorbx, g, gslope,  DelAB, ABslope, nfx, fix, boost, z, gso, lens,&
-     Gamma, ionvar, ReGraw, ImGraw)
+     absorbx, g, gslope,  DelAB, ABslope, nf, fix, boost, real(zcos), gso, real(lens),&
+     real(Gamma), ionvar, ReSrawL, ImSrawL)
      
      !Rebin for xspec
      call rebinE(fix, ReSrawL, nf, ear, ReSL, ne)
