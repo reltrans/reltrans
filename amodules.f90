@@ -29,6 +29,28 @@ module telematrix2
   data needchans2/.true./
 end module telematrix2
 
+module telematrix3
+  !Module containing definitions needs to fold around the telescope
+  !response matrix
+  logical              :: needchans3, needresp3, arf3
+  integer              :: nenerg3, numchn3, Ilo3, Ihi3, needEs3
+  real                 :: Elo3, Ehi3
+  real,    allocatable :: En3(:), resp3(:,:), ECHN3(:)
+  integer, allocatable :: NGRP3(:), FCHAN3(:,:), LCHAN3(:,:), NCHAN3(:,:)
+  character (len=500) respname3, arfname3
+
+  data needresp3/.true./
+  data needchans3/.true./
+end module telematrix3
+
+module telematrix_ab
+  !Module containing the arrays and definitions used to calculate the
+  !two energy bands of the lag vs frequency model
+  integer nenerg_a,numchn_a,nenerg_b,numchn_b
+  real, allocatable :: En_a(:),Echn_a(:),resp_a(:,:),Wtel_a(:)
+  real, allocatable :: En_b(:),Echn_b(:),resp_b(:,:),Wtel_b(:)
+end module telematrix_ab
+
 module env_variables
   implicit none
   integer :: adensity, idum

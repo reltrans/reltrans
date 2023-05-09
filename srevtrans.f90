@@ -609,6 +609,7 @@ subroutine genreltrans(Cp, dset, ear, ne, param, ifl, photar)
   real                :: df, gslope, ABslope
   integer             :: fbinx, Ea1, Ea2, Eb1, Eb2
   real, allocatable   :: ReSrawL(:), ImSrawL(:), ReSL(:), ImSL(:), fix(:)
+  integer :: resp_matr_a, resp_matr_b
 
   
   data firstcall /.true./
@@ -890,18 +891,25 @@ endif
   ! write(*,*) nex, Ea1kev, Ea2kev, Eb1kev, Eb2kev
   !Calculate the lag between the two bands
   if (Ea1keV .ne. 0.0 .and.  Ea2keV .ne. 0.0) then
-     !Figure out the 2 energy bands in terms of array index
-     Ea1 = ceiling( real(nex) * log10(Ea1kev / Emin) / log10(Emax / Emin))
-     Ea2 = ceiling( real(nex) * log10(Ea2kev / Emin) / log10(Emax / Emin))
-     Eb1 = ceiling( real(nex) * log10(Eb1kev / Emin) / log10(Emax / Emin))
-     Eb2 = ceiling( real(nex) * log10(Eb2kev / Emin) / log10(Emax / Emin))
-     ! write(*,*) Ea1, Ea2, Eb1, Eb2
-     ! write(*,*) earx(Ea1), earx(Ea2), earx(Eb1), earx(Eb2)
-     call lag_freq(nex, earx, Ea1, Ea2, Eb1, Eb2, contx,&
-          ReW0, ImW0, ReW1, ImW1, ReW2, ImW2, ReW3, ImW3, &
-          absorbx, g, gslope, DelAB, ABslope, nf, fix, boost, real(zcos), gso, &
-          real(lens), real(Gamma), ionvar, ReSrawL, ImSrawL)
+     ! !Figure out the 2 energy bands in terms of array index
+     ! Ea1 = ceiling( real(nex) * log10(Ea1kev / Emin) / log10(Emax / Emin))
+     ! Ea2 = ceiling( real(nex) * log10(Ea2kev / Emin) / log10(Emax / Emin))
+     ! Eb1 = ceiling( real(nex) * log10(Eb1kev / Emin) / log10(Emax / Emin))
+     ! Eb2 = ceiling( real(nex) * log10(Eb2kev / Emin) / log10(Emax / Emin))
+     ! ! write(*,*) Ea1, Ea2, Eb1, Eb2
+     ! ! write(*,*) earx(Ea1), earx(Ea2), earx(Eb1), earx(Eb2)
+     ! call lag_freq(nex, earx, Ea1, Ea2, Eb1, Eb2, contx,&
+     !      ReW0, ImW0, ReW1, ImW1, ReW2, ImW2, ReW3, ImW3, &
+     !      absorbx, g, gslope, DelAB, ABslope, nf, fix, boost, real(zcos), gso, &
+     !      real(lens), real(Gamma), ionvar, ReSrawL, ImSrawL)
 
+     resp_matr_a = -1
+     resp_matr_b = -1
+     call lag_freq_resp(nex,earx,Emin,dloge,Ea1keV,Ea2keV,Eb1keV,Eb2keV,resp_matr_a,resp_matr_b,&
+     contx,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
+     absorbx, g, gslope,  DelAB, ABslope, nfx, fix, boost, z, gso, lens,&
+     Gamma, ionvar, ReGraw, ImGraw)
+     
      !Rebin for xspec
      call rebinE(fix, ReSrawL, nf, ear, ReSL, ne)
      call rebinE(fix, ImSrawL, nf, ear, ImSL, ne)

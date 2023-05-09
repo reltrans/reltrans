@@ -1,4 +1,25 @@
 !-----------------------------------------------------------------------
+subroutine get_response(resp_matr)
+  use telematrix
+  use telematrix2
+  use telematrix3
+  implicit none
+  integer, INTENT(IN) :: resp_matr
+  if(resp_matr .eq. 1) then 
+     if( needresp ) call initmatrix
+  else if(resp_matr .eq. 2) then 
+     if( needresp2 ) call initmatrix2
+  else if(resp_matr .eq. 3) then 
+     if( needresp3 ) call initmatrix3
+  else
+     write(*,*)"More than 3 response matrices not implemented!"
+     write(*,*)"Using matrix 1"
+  end if
+end subroutine get_response
+!-----------------------------------------------------------------------
+
+
+!-----------------------------------------------------------------------
 subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
 ! Initmatrix must have alreadt been called
 ! Input:  {ReGx(nex),ImGx(nex)]: in units of photar; i.e. (dN/dE)*dE
@@ -147,60 +168,6 @@ end subroutine cfoldandbin
 !-----------------------------------------------------------------------
 
 
-! !-----------------------------------------------------------------------
-! subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG)
-! ! Initmatrix must have alreadt been called
-! ! Input:  {ReGx(nex),ImGx(nex)]: in units of photar; i.e. (dN/dE)*dE
-! ! Output: {ReG(nex) ,ImG(nex) ]: in units of photar; i.e. (dN/dE)*dE
-! ! G is folded around the instrument response and re-binned onto the
-! ! input energy array ear(0:ne)
-!   use telematrix
-!   implicit none
-!   integer nex,ne,i,j,k
-!   real earx(0:nex),ReGx(nex),ImGx(nex),ear(0:ne),ReG(ne),ImG(ne)
-!   real ReGi(nenerg),ImGi(nenerg),E,dE,E2ReGx(nex),E2ImGx(nex)
-!   real ReGtel(numchn),ImGtel(numchn)
-  
-!   !Convert to E^2*dN/dE for better accuracy
-!   do i = 1,nex
-!      E  = 0.5 * ( earx(i) + earx(i-1) )
-!      dE = earx(i) - earx(i-1)
-!      E2ReGx(i) = E**2 * ReGx(i) / dE
-!      E2ImGx(i) = E**2 * ImGx(i) / dE
-!   end do
-     
-!   !Rebin input arrays onto interpal telescope energy grid
-!   call rebinE(earx,E2ReGx,nex,En,ReGi,nenerg)
-!   call rebinE(earx,E2ImGx,nex,En,ImGi,nenerg)
-
-!   !Convert back to (dN/dE)*dE
-!   do i = 1,nenerg
-!      E  = 0.5 * ( En(i) + En(i-1) )
-!      dE = En(i) - En(i-1)
-!      ReGi(i) = ReGi(i) / E**2 * dE
-!      ImGi(i) = ImGi(i) / E**2 * dE
-!   end do
-     
-!   !Fold around response
-!   ReGtel = 0.0
-!   ImGtel = 0.0
-!   do J = 1,NENERG
-!      do K = 1,NGRP(J)
-!         do I = FCHAN(J,K)+1,LCHAN(J,K)
-!            dE = En(J) - En(J-1)
-!            ReGtel(I) = ReGtel(I) + ReGi(J) * RESP(I,J)
-!            ImGtel(I) = ImGtel(I) + ImGi(J) * RESP(I,J)
-!         end do
-!      end do
-!   end do
-
-!   !Rebin onto input energy grid
-!   call rebinE(echn,ReGtel,numchn,ear,ReG,ne)
-!   call rebinE(echn,ImGtel,numchn,ear,ImG,ne)
-  
-!   return
-! end subroutine cfoldandbin
-! !-----------------------------------------------------------------------
 
 
 !-----------------------------------------------------------------------
@@ -457,6 +424,92 @@ subroutine readinresp2
 end subroutine readinresp2
 !-----------------------------------------------------------------------
 
+
+
+!-----------------------------------------------------------------------
+subroutine readinresp3
+! Reads in the second response matrix 
+! ***Must already know numchn nd nenerg***
+  use telematrix3
+  implicit none
+  integer status,U1,readwrite,blocksize,hdutype,i,colnum,felem
+  integer nelem,j,rows,k
+  character (len=200) exname,comment
+  real nullval,area(10000)
+  logical anynull
+  status = 0
+  call ftgiou(U1,status)
+  !Open the response matrix fits file with read-only access
+  readwrite = 0
+  call ftopen(U1,RESPNAME3,readwrite,blocksize,status)
+  if( status .ne. 0 ) stop 'cannot open response file'
+  !Shift to extension 1
+  call ftmrhd(U1,1,hdutype,status)
+  !Get the name of this extension
+  call ftgkys(U1,'EXTNAME',EXNAME,comment,status)
+  !Read in whatever this extension this is
+  if( EXNAME .eq. 'EBOUNDS' )then     
+     ! write(*,*) ' call energyextension3 (third matrix)'
+     call energyextension3(U1)
+     ! write(*,*) 'out from energyextension3'
+  else if(EXNAME.eq.'MATRIX'.or.EXNAME.eq.'SPECRESP MATRIX')then
+     ! write(*,*) ' call matrixextension3 (third matrix)'
+     call matrixextension3(U1)
+     ! write(*,*) 'out from matrixextension3'
+  end if
+  !Shift to extension 2
+  call ftmrhd(U1,1,hdutype,status)
+  !Get the name of this extension
+  call ftgkys(U1,'EXTNAME',EXNAME,comment,status)
+  if( EXNAME .eq. 'EBOUNDS' )then     
+     ! write(*,*) ' call energyextension3 (third matrix)'
+     call energyextension3(U1)
+     ! write(*,*) 'out from energyextension3'
+  else if(EXNAME.eq.'MATRIX'.or.EXNAME.eq.'SPECRESP MATRIX')then
+     ! write(*,*) ' call matrixextension3 (third matrix)'
+    call matrixextension3(U1)
+     ! write(*,*) 'out from matrixextension3'
+  end if
+  !Close unit
+  call ftclos(U1,status)
+  call ftfiou(U1,status)
+  !----------------------------------------------------------------
+  
+  !Read in the arf file if required
+  if( ARF3 )then
+     !Open file
+     status = 0
+     call ftgiou(U1,status)
+     call ftopen(U1,ARFNAME3,readwrite,blocksize,status)
+     if( status .ne. 0 ) stop 'cannot open arf file'
+     !Move to the SPECRESP extension
+     status = 0
+     call ftmrhd(U1,1,hdutype,status)
+     if(status .ne. 0) stop 'Cannot move to the SPECRESP extension'
+     !Check this has the same number of rows as the rmf file
+     call ftgkyj(U1,'NAXIS2',rows,comment,status)
+     if(status .ne. 0) stop 'Cannot determine NENERG from arf file'
+     if( rows .ne. NENERG3 ) stop 'rmf and arf not compatible!'
+     !Read in rows and re-normalise response matrix
+     do J = 1,NENERG3
+        colnum = 3
+        call ftgcve(U1,colnum,J,1,1,nullval,AREA(J),anynull,status)
+        if( status .ne. 0 ) stop 'problem reading AREA'
+        do K = 1,NGRP3(J)
+           do I = FCHAN3(J,K)+1,LCHAN3(J,K)
+              resp3(I,J) = resp3(I,J) * AREA(J)
+           end do
+        end do
+     end do
+     !Close unit
+     call ftclos(U1,status)
+     call ftfiou(U1,status)
+  end if
+  return
+end subroutine readinresp3
+!-----------------------------------------------------------------------
+
+
 !-----------------------------------------------------------------------
 subroutine energyextension(U1)
   use telematrix
@@ -515,6 +568,34 @@ subroutine energyextension2(U1)
 end subroutine energyextension2
 !-----------------------------------------------------------------------
 
+!-----------------------------------------------------------------------
+subroutine energyextension3(U1)
+  use telematrix3
+  implicit none
+  integer, INTENT(IN)  :: U1
+  ! real   , INTENT(OUT) :: ECHN(numchn)
+  integer status,i,colnum,felem,nelem
+  character (len=200) exname,comment
+  real nullval
+  logical anynull
+  !Read in En(numchn)
+  do I = 1, numchn3
+     status = 0
+     !Read in E_MIN
+     colnum  = 2
+     felem   = 1
+     nelem   = 1
+     nullval = -1.0
+     anynull = .false.
+     call ftgcve(U1,colnum,I,felem,nelem,nullval,ECHN3(I-1),anynull,status)
+     !Read in E_MAX
+     colnum  = 3
+     call ftgcve(U1,colnum,I,felem,nelem,nullval,ECHN3(I),anynull,status)
+     if( status .ne. 0 ) stop 'problem reading in EBOUNDS'
+  end do
+  return
+end subroutine energyextension3
+!-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
 subroutine matrixextension(U1)
@@ -645,6 +726,72 @@ subroutine matrixextension2(U1)
   end do
   return
 end subroutine matrixextension2
+!-----------------------------------------------------------------------
+
+
+!-----------------------------------------------------------------------
+subroutine matrixextension3(U1)
+  use telematrix3
+  implicit none
+  integer status,U1,i,colnum,felem,nelem,j,k,i0,arrayj(5000)
+  real nullval,arraye(5000)
+  logical anynull
+  !Read in resp(numchn,nenerg) and En
+  resp3 = 0.0
+  do J = 1,NENERG3
+     status = 0
+     !Read in ENERG_LO
+     colnum  = 1
+     felem   = 1
+     nelem   = 1
+     nullval = -1.0
+     anynull = .false.
+     call ftgcve(U1,colnum,J,felem,nelem,nullval,En3(J-1),anynull,status)
+     if( status .ne. 0 ) stop 'problem reading ENERG_LO'
+     !Read in ENERG_HI
+     colnum  = 2
+     call ftgcve(U1,colnum,J,felem,nelem,nullval,En3(J),anynull,status)
+     if( status .ne. 0 ) stop 'problem reading ENERG_HI'
+     !Read in NGRP(J)
+     colnum  = 3
+     call ftgcvj(U1,colnum,J,felem,nelem,nullval,NGRP3(J),anynull,status)
+     if( status .ne. 0 ) stop 'problem reading NGRP'
+     !Read in FCHAN(J,K)
+     colnum = 4
+     anynull = .false.
+     call ftgcvj(U1,colnum,J,1,NGRP3(J),nullval,ARRAYJ,anynull,status)
+     do K = 1,NGRP3(J)
+        FCHAN3(J,K) = ARRAYJ(K)
+     end do
+     if( status .ne. 0 ) stop 'problem reading FCHAN'
+     !Read in NCHAN(J,K)
+     colnum = 5
+     call ftgcvj(U1,colnum,J,1,NGRP3(J),nullval,ARRAYJ,anynull,status)
+     do K = 1,NGRP3(J)
+        NCHAN3(J,K) = ARRAYJ(K)
+        LCHAN3(J,K) = FCHAN3(J,K)+NCHAN3(J,K)
+     end do
+     if( status .ne. 0 ) stop 'problem reading NCHAN'
+     !Read in MATRIX - first calculate number of elements per row
+     colnum = 6
+     nelem  = 0
+     do K = 1,NGRP3(J)
+        nelem = nelem + NCHAN3(J,K)
+     end do
+     !Now can read in and put in a sensible format
+     call ftgcve(U1,colnum,J,1,nelem,nullval,ARRAYE,anynull,status)
+     if( status .ne. 0 ) stop 'problem reading MATRIX'
+     if( anynull ) write(*,*)"Null values in MATRIX"
+     I0 = 0
+     do K = 1,NGRP3(J)
+        do I = FCHAN3(J,K)+1,LCHAN3(J,K)
+           I0 = I0 + 1
+           resp3(I,J) = ARRAYE(I0)
+        end do
+     end do
+  end do
+  return
+end subroutine matrixextension3
 !-----------------------------------------------------------------------
 
 
@@ -808,6 +955,62 @@ subroutine initmatrix2
 end subroutine initmatrix2
 !-----------------------------------------------------------------------
 
+!-----------------------------------------------------------------------
+subroutine initmatrix3
+  use telematrix3
+  implicit none
+  character (len=500) strenv
+  character (len=200) rmfenv3,arfenv3
+
+!Set environment variable names
+  rmfenv3 = 'RMF3SET'
+  arfenv3 = 'ARF3SET'  
+!Get name of response file and arf file
+  respname3 = strenv(rmfenv3)
+  arfname3  = strenv(arfenv3)
+  ! write(*,*) 'name of the second response', trim(respname2) 
+  ! write(*,*) 'name of the second arf', trim(arfname2)
+  ! read(*,*) 
+!If this is not set, ask for it
+  if( trim(respname3) .eq. 'none' )then
+     write(*,*)"Enter name of the THIRD response file (with full path)"
+     read(*,'(a)') respname3
+  end if
+  !Check if I need the arf
+  call arfcheck(respname3, arf3)
+!Look for arf
+  if( arf3 )then
+     !If not defined, ask for it
+     if( trim(arfname3) .eq. 'none' )then
+        write(*,*)"Enter name of the THIRD anciliary (arf) response file (with full path)"
+        read(*,'(a)') arfname3
+     end if
+  end if
+
+!Get the dimensions of the arrays in the matrix
+  ! write(*,*) ' Get the dimensions of the arrays in the matrix (third matrix)'
+  call getdim(respname3, nenerg3, numchn3)
+  ! write(*,*) 'finished'
+  
+!Allocate the arrays
+  allocate( En3(0:nenerg3) )
+  allocate( Echn3(0:numchn3) )
+  allocate( resp3(numchn3,nenerg3) )
+  allocate( Ngrp3(nenerg3) )
+  allocate( fchan3(nenerg3,numchn3) )
+  allocate( lchan3(nenerg3,numchn3) )
+  allocate( nchan3(nenerg3,numchn3) )
+  
+! Read matrix to fill the arrays
+  ! write(*,*) ' Read matrix to fill the arrays (second matrix)'
+  call readinresp3
+  ! write(*,*) 'finished'
+
+  needresp3  = .false.
+  needchans3 = .true.
+  return
+end subroutine initmatrix3
+!-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
       subroutine arfcheck(respname,arf)
