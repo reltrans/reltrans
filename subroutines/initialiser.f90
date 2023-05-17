@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, me, xe, verbose)
+subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose)
 !!!  Initialises the model and writes the header
 !!!------------------------------------------------------------------
   !    Args:
@@ -22,7 +22,7 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
   use dyn_gr
   use env_variables
       implicit none
-      integer          , intent(out)   :: xe, me, verbose
+      integer          , intent(out)   :: xe,me,refvar,ionvar,verbose
       ! integer          , intent(in)    :: nphi, nro !constant
       real             , intent(in)    :: Emin, Emax ! constant
       real             , intent(out)   :: dloge, earx(0:nex)
@@ -31,7 +31,7 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
       logical          , intent(inout) :: firstcall, needtrans
       integer i
       integer myenv
-
+  
       needtrans = .false.     
       if( firstcall )then
 
@@ -41,9 +41,11 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
          
         needtrans = .true.
         write(*,*)"----------------------------------------------------"
-        write(*,*)"This is RELTRANS v0.9.2: a transfer function model for"
+        write(*,*)"This is RELTRANS v1.0.0: a transfer function model for"
         write(*,*)"X-ray reverberation mapping."
-        write(*,*)"Please cite Ingram et al (2019) MNRAS 488 p324-347."
+        write(*,*)"Please cite Ingram et al (2019) MNRAS 488 p324-347, "
+        write(*,*)"Mastroserio et al (2021) MNRAS 507 p55-73, and "  
+        write(*,*)"Lucchini et al (2023) arXiv 230505039L."  
         write(*,*)"----------------------------------------------------"
 
 !Create *logarithmic* working energy grid
@@ -53,30 +55,38 @@ subroutine initialiser(firstcall, Emin, Emax, dloge, earx, rnmax, d, needtrans, 
           earx(i) = Emin * (Emax/Emin)**(float(i)/float(nex))
         end do
 
+        ! Call environment variables
         me      = myenv("MU_ZONES"  , 1 )   !Set number of mu_e zones used
         xe      = myenv("ION_ZONES" , 20)   !Set number of ionisation zones used
-! Decide between zone A density profile or constant density profile
+        ! Decide between zone A density profile or constant density profile
         adensity = myenv("A_DENSITY",0)
         adensity = min( adensity , 1 )
         adensity = max( adensity , 0 )
-! Call environment variables
         verbose = myenv("REV_VERB",0)     !Set verbose level
-        idum = myenv("SEED_SIM", -2851043)
-        
+                                          !0: Xspec output only
+                                          !1: Also print quantities to terminal
+                                          !2: Also print model components, radial scalings and impulse response function to 
+                                          !files in /Output folder
+        refvar = myenv("REF_VAR",1)         !choose whether to include pivoting reflection
+        ionvar = myenv("ION_VAR",1)         !choose whether to include ionization changes
+        idum = myenv("SEED_SIM", -2851043)  !seed for simulations
+
         write(*,*) 'RADIAL ZONES', xe
         write(*,*) 'ANGLE ZONES', me
         if (adensity .eq. 0.0) then
-           write(*,*) 'Density profile is constant - A_DENSITY:', adensity
+            write(*,*) 'A_DENSITY:', adensity, 'Density profile is constant'
         else
-           write(*,*) 'Density profile is zone A SS73 - A_DENSITY:', adensity
+            write(*,*) 'A_DENSITY:', adensity, 'Density profile is zone A SS73'
         endif
         write(*,*) 'VERBOSE is ', verbose
+        write(*,*) 'REFVAR is ', refvar
+        write(*,*) 'IONVAR is ', ionvar     
+        write(*,*)"----------------------------------------------------"
 
 ! Set sensible distance for observer from the BH
         d = max( 1.0d4 , 2.0d2 * rnmax**2 )
-        
-           
         firstcall = .false.
+        
      end if
      return
     end subroutine initialiser

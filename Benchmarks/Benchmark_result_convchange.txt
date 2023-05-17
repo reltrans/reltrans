@@ -1,0 +1,750 @@
+ --------------------------------------------------------------------------------------------------------
+ Setting up
+ MAKE SURE TO RUN THE TEST WITH FNINT COMMENTED OUT FROM SREVTRANS.F90!!!!!!!!!!!!!!!!!
+ Note: this test is very strict, and some benchmarks may report as being failed due to numerical
+ precision issues. Read the .txt output file carefully to decide whether something is wrong in 
+ the code or not. If the test reports discrepancy in only a handful of bins, consider the test 
+ passed 
+ --------------------------------------------------------------------------------------------------------
+ XRB test: 
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/xrb/ip_0,12_0,25.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Running time-averaged spectrum test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing spectrum model output: 
+ Model spectrum output test passed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/xrb/ip_0,31_0,73.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Total model output different at energy bin  0.641364634     keV; Benchmark and model output:  -1.25977858E-05  -1.25230126E-05
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection changes output different at energy bin  0.419032067     keV; Benchmark and model output:  -3.15404031E-04  -3.14863515E-04
+ Pivoting reflection changes output different at energy bin  0.435263693     keV; Benchmark and model output:  -2.01165123E-04  -2.00623923E-04
+ Pivoting reflection changes output different at energy bin  0.438584685     keV; Benchmark and model output:  -3.86081985E-04  -3.85539839E-04
+ Pivoting reflection changes output different at energy bin  0.499080956     keV; Benchmark and model output:  -3.62812832E-04  -3.62271181E-04
+ Pivoting reflection output test failed
+ Comparing reverberation output: 
+ Reverberation output test passed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/xrb/ip_0,80_2,10.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/xrb/ip_2,10_5,80.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/xrb/ip_5,80_16,0.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Total model output different at energy bin   50.7220993     keV; Benchmark and model output:   5.47377203E-06   5.46594947E-06
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection test passed
+ Comparing reverberation output: 
+ Reverberation changes output different at energy bin   59.5002556     keV; Benchmark and model output:   3.63444246E-06   3.62991022E-06
+ Reverberation output test failed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ AGN test: 
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/agn/ip_xmm_01_06.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Total model output different at energy bin   135.216644     keV; Benchmark and model output:   4529.98145       4516.57373    
+ Total model output different at energy bin   169.848190     keV; Benchmark and model output:   4588.79736       4584.19336    
+ Total model output different at energy bin   175.091492     keV; Benchmark and model output:   4613.23486       4607.06201    
+ Total model output different at energy bin   184.659805     keV; Benchmark and model output:   4645.02881       4637.31445    
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection changes output different at energy bin   175.091492     keV; Benchmark and model output:   4681.20166       4673.58838    
+ Pivoting reflection changes output different at energy bin   184.659805     keV; Benchmark and model output:   4694.01758       4686.31299    
+ Pivoting reflection output test failed
+ Comparing reverberation output: 
+ Reverberation changes output different at energy bin   126.276009     keV; Benchmark and model output:   59.1640320       59.0416718    
+ Reverberation changes output different at energy bin   127.239471     keV; Benchmark and model output:   59.0131760       58.7169304    
+ Reverberation changes output different at energy bin   128.210266     keV; Benchmark and model output:   58.6493034       58.5145798    
+ Reverberation changes output different at energy bin   132.168198     keV; Benchmark and model output:   58.4122238       58.3324928    
+ Reverberation changes output different at energy bin   133.176636     keV; Benchmark and model output:   58.1480560       57.9956779    
+ Reverberation changes output different at energy bin   136.248306     keV; Benchmark and model output:   54.7727127       54.6732063    
+ Reverberation changes output different at energy bin   137.287842     keV; Benchmark and model output:   55.0193977       53.9077682    
+ Reverberation changes output different at energy bin   138.335358     keV; Benchmark and model output:   52.8811836       52.0795708    
+ Reverberation changes output different at energy bin   139.390839     keV; Benchmark and model output:   49.9202919       49.7290459    
+ Reverberation changes output different at energy bin   144.790283     keV; Benchmark and model output:   42.9960899       42.7359695    
+ Reverberation changes output different at energy bin   147.008133     keV; Benchmark and model output:   39.8369789       39.7838249    
+ Reverberation changes output different at energy bin   148.129807     keV; Benchmark and model output:   39.9568291       39.9045715    
+ Reverberation changes output different at energy bin   149.260040     keV; Benchmark and model output:   40.1861763       40.1340714    
+ Reverberation changes output different at energy bin   150.398865     keV; Benchmark and model output:   40.5212479       40.4768028    
+ Reverberation changes output different at energy bin   151.546356     keV; Benchmark and model output:   40.7243538       40.6733894    
+ Reverberation changes output different at energy bin   152.702637     keV; Benchmark and model output:   40.7370491       40.6792526    
+ Reverberation changes output different at energy bin   153.867752     keV; Benchmark and model output:   40.8348160       40.7812805    
+ Reverberation changes output different at energy bin   155.041748     keV; Benchmark and model output:   41.0175438       40.9376411    
+ Reverberation changes output different at energy bin   156.224686     keV; Benchmark and model output:   41.3064575       41.1055565    
+ Reverberation changes output different at energy bin   157.416656     keV; Benchmark and model output:   41.0895233       40.3419304    
+ Reverberation changes output different at energy bin   159.827988     keV; Benchmark and model output:   38.8428345       38.8032341    
+ Reverberation changes output different at energy bin   161.047424     keV; Benchmark and model output:   38.9589767       38.9079094    
+ Reverberation changes output different at energy bin   162.276184     keV; Benchmark and model output:   39.1644821       39.0953636    
+ Reverberation changes output different at energy bin   163.514313     keV; Benchmark and model output:   39.4962311       39.3978004    
+ Reverberation changes output different at energy bin   164.761932     keV; Benchmark and model output:   39.9517212       39.8474503    
+ Reverberation changes output different at energy bin   166.019073     keV; Benchmark and model output:   40.3133278       40.2038994    
+ Reverberation changes output different at energy bin   167.285751     keV; Benchmark and model output:   40.4061241       40.3016396    
+ Reverberation changes output different at energy bin   171.144135     keV; Benchmark and model output:   37.6142883       36.4788589    
+ Reverberation changes output different at energy bin   172.449951     keV; Benchmark and model output:   35.9675636       34.9140625    
+ Reverberation changes output different at energy bin   173.765717     keV; Benchmark and model output:   32.9360313       32.8765450    
+ Reverberation changes output different at energy bin   176.427460     keV; Benchmark and model output:   21.2240486       20.8633327    
+ Reverberation output test failed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Total model output different at energy bin   147.008133     keV; Benchmark and model output:   1.01388323       1.01262045    
+ Total model output different at energy bin   169.848190     keV; Benchmark and model output:  0.204858303      0.204645693    
+ Total model output different at energy bin   171.144135     keV; Benchmark and model output:  0.187012523      0.186754048    
+ Total model output different at energy bin   175.091492     keV; Benchmark and model output:  0.141217843      0.140984416    
+ Total model output different at energy bin   184.659805     keV; Benchmark and model output:   7.39255920E-02   7.37930834E-02
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection changes output different at energy bin   147.008133     keV; Benchmark and model output:  0.921996117      0.920875430    
+ Pivoting reflection changes output different at energy bin   169.848190     keV; Benchmark and model output:  0.186792821      0.186587229    
+ Pivoting reflection changes output different at energy bin   175.091492     keV; Benchmark and model output:  0.129429251      0.129209056    
+ Pivoting reflection changes output different at energy bin   184.659805     keV; Benchmark and model output:   6.80415258E-02   6.79193810E-02
+ Pivoting reflection output test failed
+ Comparing reverberation output: 
+ Reverberation changes output different at energy bin   133.176636     keV; Benchmark and model output:   1.70135558       1.69866765    
+ Reverberation changes output different at energy bin   137.287842     keV; Benchmark and model output:   1.25607169       1.25408399    
+ Reverberation changes output different at energy bin   138.335358     keV; Benchmark and model output:   1.16610157       1.16393566    
+ Reverberation changes output different at energy bin   139.390839     keV; Benchmark and model output:   1.07286966       1.07084477    
+ Reverberation changes output different at energy bin   144.790283     keV; Benchmark and model output:  0.713767409      0.712749660    
+ Reverberation changes output different at energy bin   157.416656     keV; Benchmark and model output:  0.298696250      0.298246384    
+ Reverberation changes output different at energy bin   171.144135     keV; Benchmark and model output:  0.116889194      0.116542399    
+ Reverberation changes output different at energy bin   172.449951     keV; Benchmark and model output:  0.105283350      0.105125286    
+ Reverberation output test failed
+ --------------------------------------------------------------------------------------------------------
+ Running time-averaged spectrum test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing spectrum model output: 
+ Total model output different at energy bin   136.248306       136.248306     keV; Benchmark and model output:   2.80088011E-06   2.79744540E-06
+ Total model output different at energy bin   137.287842       137.287842     keV; Benchmark and model output:   2.59008129E-06   2.55484156E-06
+ Total model output different at energy bin   138.335358       138.335358     keV; Benchmark and model output:   2.39211045E-06   2.38515054E-06
+ Total model output different at energy bin   139.390839       139.390839     keV; Benchmark and model output:   2.22155586E-06   2.20783249E-06
+ Total model output different at energy bin   171.144135       171.144135     keV; Benchmark and model output:   2.40974401E-07   2.40466591E-07
+ Model spectrum output test failed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/agn/ip_xmm_06_20.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Total model output different at energy bin   157.416656     keV; Benchmark and model output:   1910.45972       1900.79932    
+ Total model output different at energy bin   166.019073     keV; Benchmark and model output:   1895.69153       1893.78137    
+ Total model output different at energy bin   167.285751     keV; Benchmark and model output:   1886.25696       1883.76599    
+ Total model output different at energy bin   168.562103     keV; Benchmark and model output:   1881.09888       1878.48230    
+ Total model output different at energy bin   175.091492     keV; Benchmark and model output:   1881.99414       1880.05627    
+ Total model output different at energy bin   184.659805     keV; Benchmark and model output:   1886.05859       1881.66077    
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection changes output different at energy bin   157.416656     keV; Benchmark and model output:   1959.88000       1950.75452    
+ Pivoting reflection changes output different at energy bin   167.285751     keV; Benchmark and model output:   1932.50476       1930.00366    
+ Pivoting reflection changes output different at energy bin   168.562103     keV; Benchmark and model output:   1926.58923       1924.21167    
+ Pivoting reflection changes output different at energy bin   184.659805     keV; Benchmark and model output:   1920.33167       1915.93713    
+ Pivoting reflection output test failed
+ Comparing reverberation output: 
+ Reverberation changes output different at energy bin   68.2240372     keV; Benchmark and model output:   3.51910543       3.51555824    
+ Reverberation changes output different at energy bin   68.7445831     keV; Benchmark and model output:   3.14425325       3.14087200    
+ Reverberation changes output different at energy bin   69.2690887     keV; Benchmark and model output:   2.70559645       2.70212746    
+ Reverberation changes output different at energy bin   69.7975998     keV; Benchmark and model output:   2.22885442       2.22516441    
+ Reverberation changes output different at energy bin   70.3301392     keV; Benchmark and model output:   1.76488435       1.76134813    
+ Reverberation changes output different at energy bin   70.8667603     keV; Benchmark and model output:   1.33385885       1.32941377    
+ Reverberation changes output different at energy bin   71.4074707     keV; Benchmark and model output:  0.937958241      0.933238924    
+ Reverberation changes output different at energy bin   71.9522858     keV; Benchmark and model output:  0.568008482      0.564439952    
+ Reverberation changes output different at energy bin   72.5012665     keV; Benchmark and model output:  0.166047052      0.165697172    
+ Reverberation changes output different at energy bin   97.5182266     keV; Benchmark and model output:  -13.2661371      -13.2279167    
+ Reverberation changes output different at energy bin   98.2622910     keV; Benchmark and model output:  -13.4698706      -13.4542561    
+ Reverberation changes output different at energy bin   99.7674408     keV; Benchmark and model output:  -13.7547112      -13.7387924    
+ Reverberation changes output different at energy bin   100.528671     keV; Benchmark and model output:  -14.0530834      -14.0366039    
+ Reverberation changes output different at energy bin   101.295700     keV; Benchmark and model output:  -14.3470335      -14.3298016    
+ Reverberation changes output different at energy bin   102.068558     keV; Benchmark and model output:  -14.5876131      -14.5698147    
+ Reverberation changes output different at energy bin   102.847321     keV; Benchmark and model output:  -14.7651033      -14.7446756    
+ Reverberation changes output different at energy bin   103.632027     keV; Benchmark and model output:  -14.8715754      -14.8486691    
+ Reverberation changes output different at energy bin   104.422737     keV; Benchmark and model output:  -14.9558954      -14.9317427    
+ Reverberation changes output different at energy bin   105.219475     keV; Benchmark and model output:  -15.2091713      -15.1870003    
+ Reverberation changes output different at energy bin   106.022278     keV; Benchmark and model output:  -15.4856663      -15.4629536    
+ Reverberation changes output different at energy bin   106.831207     keV; Benchmark and model output:  -15.6877451      -15.6640387    
+ Reverberation changes output different at energy bin   107.646324     keV; Benchmark and model output:  -15.8289881      -15.8057547    
+ Reverberation changes output different at energy bin   108.467667     keV; Benchmark and model output:  -15.8854761      -15.8593111    
+ Reverberation changes output different at energy bin   109.295242     keV; Benchmark and model output:  -15.9058247      -15.8777113    
+ Reverberation changes output different at energy bin   110.129150     keV; Benchmark and model output:  -16.1133041      -16.0879669    
+ Reverberation changes output different at energy bin   110.969406     keV; Benchmark and model output:  -16.3592148      -16.3321018    
+ Reverberation changes output different at energy bin   111.816101     keV; Benchmark and model output:  -16.5227680      -16.4911690    
+ Reverberation changes output different at energy bin   112.669258     keV; Benchmark and model output:  -16.6102409      -16.5751190    
+ Reverberation changes output different at energy bin   113.528900     keV; Benchmark and model output:  -16.6130199      -16.5788002    
+ Reverberation changes output different at energy bin   114.395096     keV; Benchmark and model output:  -16.5633755      -16.5292282    
+ Reverberation changes output different at energy bin   115.267914     keV; Benchmark and model output:  -16.7196293      -16.6840534    
+ Reverberation changes output different at energy bin   116.147400     keV; Benchmark and model output:  -16.9450016      -16.8850803    
+ Reverberation changes output different at energy bin   117.033600     keV; Benchmark and model output:  -17.3334770      -17.0352669    
+ Reverberation changes output different at energy bin   118.826294     keV; Benchmark and model output:  -17.5623817      -17.5074062    
+ Reverberation changes output different at energy bin   126.276009     keV; Benchmark and model output:  -17.6989021      -17.5851536    
+ Reverberation changes output different at energy bin   129.188507     keV; Benchmark and model output:  -18.9088821      -18.8344727    
+ Reverberation changes output different at energy bin   133.176636     keV; Benchmark and model output:  -19.2270966      -18.9609451    
+ Reverberation changes output different at energy bin   134.192780     keV; Benchmark and model output:  -20.7506695      -20.7163982    
+ Reverberation changes output different at energy bin   135.216644     keV; Benchmark and model output:  -22.3503685      -22.0266342    
+ Reverberation changes output different at energy bin   136.248306     keV; Benchmark and model output:  -23.3296242      -22.5564995    
+ Reverberation changes output different at energy bin   141.526001     keV; Benchmark and model output:  -40.0408363      -39.6427994    
+ Reverberation changes output different at energy bin   173.765717     keV; Benchmark and model output:  -55.0109291      -54.8887138    
+ Reverberation changes output different at energy bin   175.091492     keV; Benchmark and model output:  -56.9895020      -56.5408134    
+ Reverberation changes output different at energy bin   176.427460     keV; Benchmark and model output:  -59.0979462      -58.4445953    
+ Reverberation changes output different at energy bin   177.773590     keV; Benchmark and model output:  -61.0262871      -60.8271790    
+ Reverberation output test failed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Total model output different at energy bin   153.867752     keV; Benchmark and model output:  0.433130056      0.431755960    
+ Total model output different at energy bin   157.416656     keV; Benchmark and model output:  0.331830800      0.329782218    
+ Total model output different at energy bin   166.019073     keV; Benchmark and model output:  0.181666836      0.181261659    
+ Total model output different at energy bin   167.285751     keV; Benchmark and model output:  0.167155653      0.166732296    
+ Total model output different at energy bin   168.562103     keV; Benchmark and model output:  0.153609276      0.153152555    
+ Total model output different at energy bin   184.659805     keV; Benchmark and model output:   5.07438332E-02   5.06090745E-02
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection changes output different at energy bin   153.867752     keV; Benchmark and model output:  0.398035020      0.396759272    
+ Pivoting reflection changes output different at energy bin   157.416656     keV; Benchmark and model output:  0.304899603      0.302967966    
+ Pivoting reflection changes output different at energy bin   166.019073     keV; Benchmark and model output:  0.167064130      0.166694522    
+ Pivoting reflection changes output different at energy bin   167.285751     keV; Benchmark and model output:  0.153698280      0.153307945    
+ Pivoting reflection changes output different at energy bin   168.562103     keV; Benchmark and model output:  0.141237304      0.140826419    
+ Pivoting reflection changes output different at energy bin   184.659805     keV; Benchmark and model output:   4.71064113E-02   4.69814017E-02
+ Pivoting reflection output test failed
+ Comparing reverberation output: 
+ Reverberation changes output different at energy bin   127.239471     keV; Benchmark and model output:   1.74359691       1.74088395    
+ Reverberation changes output different at energy bin   128.210266     keV; Benchmark and model output:   1.63119709       1.62827706    
+ Reverberation changes output different at energy bin   133.176636     keV; Benchmark and model output:   1.15698993       1.15213203    
+ Reverberation changes output different at energy bin   137.287842     keV; Benchmark and model output:  0.854482353      0.851217091    
+ Reverberation changes output different at energy bin   138.335358     keV; Benchmark and model output:  0.791751027      0.790717304    
+ Reverberation changes output different at energy bin   139.390839     keV; Benchmark and model output:  0.730828345      0.728619993    
+ Reverberation changes output different at energy bin   145.894989     keV; Benchmark and model output:  0.449730575      0.449252129    
+ Reverberation changes output different at energy bin   171.144135     keV; Benchmark and model output:   7.95529857E-02   7.94279873E-02
+ Reverberation changes output different at energy bin   172.449951     keV; Benchmark and model output:   7.17070326E-02   7.16248974E-02
+ Reverberation output test failed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/agn/ip_xmm_20_90.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Total model output different at energy bin   128.210266     keV; Benchmark and model output:   172.879807       172.629547    
+ Total model output different at energy bin   132.168198     keV; Benchmark and model output:   173.547729       173.350128    
+ Total model output different at energy bin   134.192780     keV; Benchmark and model output:   173.531647       173.103653    
+ Total model output different at energy bin   139.390839     keV; Benchmark and model output:   172.325546       171.996231    
+ Total model output different at energy bin   148.129807     keV; Benchmark and model output:   171.495209       171.008743    
+ Total model output different at energy bin   167.285751     keV; Benchmark and model output:   161.008148       160.751038    
+ Total model output different at energy bin   168.562103     keV; Benchmark and model output:   160.196960       159.580795    
+ Total model output different at energy bin   175.091492     keV; Benchmark and model output:   158.001770       157.700134    
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection changes output different at energy bin   148.129807     keV; Benchmark and model output:   185.614120       185.126404    
+ Pivoting reflection changes output different at energy bin   167.285751     keV; Benchmark and model output:   175.813309       175.590500    
+ Pivoting reflection changes output different at energy bin   168.562103     keV; Benchmark and model output:   175.204407       174.934860    
+ Pivoting reflection changes output different at energy bin   175.091492     keV; Benchmark and model output:   174.114334       173.815720    
+ Pivoting reflection output test failed
+ Comparing reverberation output: 
+ Reverberation changes output different at energy bin   98.2622910     keV; Benchmark and model output:   7.44155741       7.42931938    
+ Reverberation changes output different at energy bin   105.219475     keV; Benchmark and model output:   6.51470327       6.50471354    
+ Reverberation changes output different at energy bin   106.022278     keV; Benchmark and model output:   6.36668682       6.35491133    
+ Reverberation changes output different at energy bin   106.831207     keV; Benchmark and model output:   6.26127338       6.24821091    
+ Reverberation changes output different at energy bin   107.646324     keV; Benchmark and model output:   6.19059706       6.17824507    
+ Reverberation changes output different at energy bin   108.467667     keV; Benchmark and model output:   6.16555405       6.15521336    
+ Reverberation changes output different at energy bin   109.295242     keV; Benchmark and model output:   6.16188526       6.15141582    
+ Reverberation changes output different at energy bin   110.129150     keV; Benchmark and model output:   6.05408049       6.04209423    
+ Reverberation changes output different at energy bin   110.969406     keV; Benchmark and model output:   5.92367411       5.91223192    
+ Reverberation changes output different at energy bin   111.816101     keV; Benchmark and model output:   5.84082222       5.83393574    
+ Reverberation changes output different at energy bin   112.669258     keV; Benchmark and model output:   5.80309105       5.79651117    
+ Reverberation changes output different at energy bin   113.528900     keV; Benchmark and model output:   5.81132078       5.80411005    
+ Reverberation changes output different at energy bin   114.395096     keV; Benchmark and model output:   5.84570551       5.83887625    
+ Reverberation changes output different at energy bin   115.267914     keV; Benchmark and model output:   5.76312828       5.75681686    
+ Reverberation changes output different at energy bin   116.147400     keV; Benchmark and model output:   5.66288280       5.65324974    
+ Reverberation changes output different at energy bin   117.033600     keV; Benchmark and model output:   5.59477329       5.53896236    
+ Reverberation changes output different at energy bin   120.646492     keV; Benchmark and model output:   5.19009686       5.15771294    
+ Reverberation changes output different at energy bin   121.567001     keV; Benchmark and model output:   5.10812950       5.06988573    
+ Reverberation changes output different at energy bin   122.494537     keV; Benchmark and model output:   5.06103849       5.02168751    
+ Reverberation changes output different at energy bin   123.429138     keV; Benchmark and model output:   5.07297325       5.03130627    
+ Reverberation changes output different at energy bin   124.370895     keV; Benchmark and model output:   5.14660406       5.10260820    
+ Reverberation changes output different at energy bin   125.319839     keV; Benchmark and model output:   5.26109838       5.21033573    
+ Reverberation changes output different at energy bin   126.276009     keV; Benchmark and model output:   5.23872852       5.17676497    
+ Reverberation changes output different at energy bin   127.239471     keV; Benchmark and model output:   5.16803360       4.91984892    
+ Reverberation changes output different at energy bin   128.210266     keV; Benchmark and model output:   5.02923107       4.62857580    
+ Reverberation changes output different at energy bin   132.168198     keV; Benchmark and model output:   4.35690594       4.05363894    
+ Reverberation changes output different at energy bin   133.176636     keV; Benchmark and model output:   3.73849988       3.63979983    
+ Reverberation changes output different at energy bin   134.192780     keV; Benchmark and model output:   2.63539720       2.31232643    
+ Reverberation changes output different at energy bin   136.248306     keV; Benchmark and model output:  0.549437642      0.367296696    
+ Reverberation changes output different at energy bin   137.287842     keV; Benchmark and model output:  0.387390047     -0.236107752    
+ Reverberation changes output different at energy bin   140.454361     keV; Benchmark and model output:  -10.0941257      -9.49234295    
+ Reverberation changes output different at energy bin   144.790283     keV; Benchmark and model output:  -12.0935593      -12.0024061    
+ Reverberation changes output different at energy bin   156.224686     keV; Benchmark and model output:  -13.7465248      -13.6812553    
+ Reverberation changes output different at energy bin   157.416656     keV; Benchmark and model output:  -14.4984283      -14.3751774    
+ Reverberation changes output different at energy bin   158.617737     keV; Benchmark and model output:  -15.2157688      -14.8668652    
+ Reverberation output test failed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Total model output different at energy bin   127.239471     keV; Benchmark and model output:   2.33838391       2.33540201    
+ Total model output different at energy bin   137.287842     keV; Benchmark and model output:   1.15353119       1.14983213    
+ Total model output different at energy bin   138.335358     keV; Benchmark and model output:   1.07072294       1.06736791    
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection test passed
+ Comparing reverberation output: 
+ Reverberation changes output different at energy bin   127.239471     keV; Benchmark and model output:   1.90092778       1.89827895    
+ Reverberation changes output different at energy bin   137.287842     keV; Benchmark and model output:  0.936537802      0.933506727    
+ Reverberation changes output different at energy bin   138.335358     keV; Benchmark and model output:  0.869813263      0.866968036    
+ Reverberation output test failed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/agn/ip_nus_01_06.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Total model output different at energy bin   135.216644     keV; Benchmark and model output:   4498.41943       4485.01123    
+ Total model output different at energy bin   169.848190     keV; Benchmark and model output:   4557.23486       4552.63232    
+ Total model output different at energy bin   175.091492     keV; Benchmark and model output:   4581.67236       4575.50049    
+ Total model output different at energy bin   184.659805     keV; Benchmark and model output:   4613.46680       4605.75293    
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization changes output different at energy bin   35.7560768     keV; Benchmark and model output:   4.19241749E-02   4.18708064E-02
+ Ionization changes output different at energy bin   36.3037872     keV; Benchmark and model output:   1.92221124E-02   1.92014500E-02
+ Ionization changes output different at energy bin   36.5807800     keV; Benchmark and model output:   8.30772053E-03   8.28967616E-03
+ Ionization changes output different at energy bin   37.1411171     keV; Benchmark and model output:  -1.42876627E-02  -1.42682502E-02
+ Ionization changes output different at energy bin   37.7100449     keV; Benchmark and model output:  -3.69380675E-02  -3.65680791E-02
+ Ionization changes output different at energy bin   37.9977722     keV; Benchmark and model output:  -4.98175919E-02  -4.89054918E-02
+ Ionization changes output different at energy bin   47.3683167     keV; Benchmark and model output: -0.269006789     -0.268468201    
+ Ionization changes output different at energy bin   47.7297249     keV; Benchmark and model output: -0.274022043     -0.271974862    
+ Ionization changes output different at energy bin   48.0939026     keV; Benchmark and model output: -0.277436554     -0.275527537    
+ Ionization changes output different at energy bin   48.4608612     keV; Benchmark and model output: -0.285995990     -0.285311043    
+ Ionization changes output different at energy bin   50.7220993     keV; Benchmark and model output: -0.306554347     -0.305345327    
+ Ionization changes output different at energy bin   51.1091003     keV; Benchmark and model output: -0.312580258     -0.312175691    
+ Ionization changes output different at energy bin   53.9020805     keV; Benchmark and model output: -0.337480694     -0.337141126    
+ Ionization changes output different at energy bin   54.3133392     keV; Benchmark and model output: -0.340290934     -0.339905918    
+ Ionization changes output different at energy bin   54.7277374     keV; Benchmark and model output: -0.342896730     -0.342518508    
+ Ionization changes output different at energy bin   55.1452980     keV; Benchmark and model output: -0.346187681     -0.345656663    
+ Ionization changes output different at energy bin   55.5660553     keV; Benchmark and model output: -0.349675208     -0.348787636    
+ Ionization changes output different at energy bin   55.9900246     keV; Benchmark and model output: -0.352271616     -0.351791233    
+ Ionization changes output different at energy bin   56.4172134     keV; Benchmark and model output: -0.354711562     -0.354224980    
+ Ionization changes output different at energy bin   56.8476639     keV; Benchmark and model output: -0.357082784     -0.356557220    
+ Ionization changes output different at energy bin   57.2814102     keV; Benchmark and model output: -0.359484643     -0.358901590    
+ Ionization changes output different at energy bin   57.7184677     keV; Benchmark and model output: -0.361836106     -0.361217707    
+ Ionization changes output different at energy bin   58.1588440     keV; Benchmark and model output: -0.364300340     -0.363640040    
+ Ionization changes output different at energy bin   58.6025848     keV; Benchmark and model output: -0.366539538     -0.365780562    
+ Ionization changes output different at energy bin   59.0497093     keV; Benchmark and model output: -0.368867964     -0.368024647    
+ Ionization changes output different at energy bin   59.5002556     keV; Benchmark and model output: -0.370944709     -0.370032609    
+ Ionization changes output different at energy bin   59.9542427     keV; Benchmark and model output: -0.374665499     -0.372779727    
+ Ionization changes output different at energy bin   60.4116821     keV; Benchmark and model output: -0.383316278     -0.376636475    
+ Ionization changes output different at energy bin   60.8726082     keV; Benchmark and model output: -0.400316328     -0.391422004    
+ Ionization changes output different at energy bin   61.8050690     keV; Benchmark and model output: -0.435686797     -0.433661550    
+ Ionization changes output different at energy bin   62.2766266     keV; Benchmark and model output: -0.439779162     -0.437935472    
+ Ionization output test failed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection changes output different at energy bin   175.091492     keV; Benchmark and model output:   4649.77295       4642.15918    
+ Pivoting reflection changes output different at energy bin   184.659805     keV; Benchmark and model output:   4662.58789       4654.88379    
+ Pivoting reflection output test failed
+ Comparing reverberation output: 
+ Reverberation changes output different at energy bin   118.826294     keV; Benchmark and model output:   27.6818695       27.6385155    
+ Reverberation changes output different at energy bin   122.494537     keV; Benchmark and model output:   27.3755741       27.3420696    
+ Reverberation changes output different at energy bin   123.429138     keV; Benchmark and model output:   27.3786125       27.3394547    
+ Reverberation changes output different at energy bin   124.370895     keV; Benchmark and model output:   27.4795666       27.4321480    
+ Reverberation changes output different at energy bin   125.319839     keV; Benchmark and model output:   27.6507759       27.5946503    
+ Reverberation changes output different at energy bin   126.276009     keV; Benchmark and model output:   27.6048107       27.4824276    
+ Reverberation changes output different at energy bin   127.239471     keV; Benchmark and model output:   27.4539318       27.1576691    
+ Reverberation changes output different at energy bin   128.210266     keV; Benchmark and model output:   27.0900421       26.9553127    
+ Reverberation changes output different at energy bin   129.188507     keV; Benchmark and model output:   26.9487000       26.9201412    
+ Reverberation changes output different at energy bin   132.168198     keV; Benchmark and model output:   26.8529453       26.7732162    
+ Reverberation changes output different at energy bin   133.176636     keV; Benchmark and model output:   26.5887661       26.4363804    
+ Reverberation changes output different at energy bin   134.192780     keV; Benchmark and model output:   25.6110592       25.5763454    
+ Reverberation changes output different at energy bin   136.248306     keV; Benchmark and model output:   23.2131939       23.1136799    
+ Reverberation changes output different at energy bin   137.287842     keV; Benchmark and model output:   23.4599018       22.3481960    
+ Reverberation changes output different at energy bin   138.335358     keV; Benchmark and model output:   21.3215466       20.5198727    
+ Reverberation changes output different at energy bin   139.390839     keV; Benchmark and model output:   18.3604527       18.1692009    
+ Reverberation changes output different at energy bin   142.605804     keV; Benchmark and model output:   11.0254869       10.9871922    
+ Reverberation changes output different at energy bin   143.693893     keV; Benchmark and model output:   11.3086376       11.2719555    
+ Reverberation changes output different at energy bin   144.790283     keV; Benchmark and model output:   11.4357948       11.1756573    
+ Reverberation changes output different at energy bin   147.008133     keV; Benchmark and model output:   8.27647018       8.22331810    
+ Reverberation changes output different at energy bin   148.129807     keV; Benchmark and model output:   8.39633751       8.34406376    
+ Reverberation changes output different at energy bin   149.260040     keV; Benchmark and model output:   8.62569237       8.57358742    
+ Reverberation changes output different at energy bin   150.398865     keV; Benchmark and model output:   8.96078014       8.91633987    
+ Reverberation changes output different at energy bin   151.546356     keV; Benchmark and model output:   9.16390038       9.11294460    
+ Reverberation changes output different at energy bin   152.702637     keV; Benchmark and model output:   9.17661285       9.11880016    
+ Reverberation changes output different at energy bin   153.867752     keV; Benchmark and model output:   9.27437115       9.22084141    
+ Reverberation changes output different at energy bin   155.041748     keV; Benchmark and model output:   9.45711422       9.37719727    
+ Reverberation changes output different at energy bin   156.224686     keV; Benchmark and model output:   9.74605179       9.54513550    
+ Reverberation changes output different at energy bin   157.416656     keV; Benchmark and model output:   9.52909756       8.78146458    
+ Reverberation changes output different at energy bin   158.617737     keV; Benchmark and model output:   7.74933958       7.71815968    
+ Reverberation changes output different at energy bin   159.827988     keV; Benchmark and model output:   7.28226185       7.24266386    
+ Reverberation changes output different at energy bin   161.047424     keV; Benchmark and model output:   7.39841223       7.34733486    
+ Reverberation changes output different at energy bin   162.276184     keV; Benchmark and model output:   7.60393143       7.53480673    
+ Reverberation changes output different at energy bin   163.514313     keV; Benchmark and model output:   7.93571043       7.83725834    
+ Reverberation changes output different at energy bin   164.761932     keV; Benchmark and model output:   8.39123154       8.28694630    
+ Reverberation changes output different at energy bin   166.019073     keV; Benchmark and model output:   8.75285816       8.64341640    
+ Reverberation changes output different at energy bin   167.285751     keV; Benchmark and model output:   8.84565258       8.74116230    
+ Reverberation changes output different at energy bin   171.144135     keV; Benchmark and model output:   6.05363464       4.91812325    
+ Reverberation changes output different at energy bin   172.449951     keV; Benchmark and model output:   4.40679646       3.35322738    
+ Reverberation changes output different at energy bin   173.765717     keV; Benchmark and model output:   1.37506711       1.31557727    
+ Reverberation changes output different at energy bin   175.091492     keV; Benchmark and model output:  -6.23065805      -4.72183466    
+ Reverberation changes output different at energy bin   177.773590     keV; Benchmark and model output:  -11.8436060      -11.5633812    
+ Reverberation changes output different at energy bin   179.129959     keV; Benchmark and model output:  -13.1895742      -12.8793249    
+ Reverberation changes output different at energy bin   180.496674     keV; Benchmark and model output:  -13.5019512      -13.3262539    
+ Reverberation output test failed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Total model output different at energy bin   147.008133     keV; Benchmark and model output:   1.01388502       1.01262057    
+ Total model output different at energy bin   169.848190     keV; Benchmark and model output:  0.204858661      0.204645678    
+ Total model output different at energy bin   171.144135     keV; Benchmark and model output:  0.187012851      0.186754063    
+ Total model output different at energy bin   175.091492     keV; Benchmark and model output:  0.141218066      0.140984416    
+ Total model output different at energy bin   184.659805     keV; Benchmark and model output:   7.39257187E-02   7.37930834E-02
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection changes output different at energy bin   147.008133     keV; Benchmark and model output:  0.922042727      0.920921743    
+ Pivoting reflection changes output different at energy bin   169.848190     keV; Benchmark and model output:  0.186801866      0.186596274    
+ Pivoting reflection changes output different at energy bin   175.091492     keV; Benchmark and model output:  0.129435539      0.129215315    
+ Pivoting reflection changes output different at energy bin   184.659805     keV; Benchmark and model output:   6.80448487E-02   6.79226890E-02
+ Pivoting reflection output test failed
+ Comparing reverberation output: 
+ Reverberation changes output different at energy bin   133.176636     keV; Benchmark and model output:   1.70135534       1.69866765    
+ Reverberation changes output different at energy bin   137.287842     keV; Benchmark and model output:   1.25607169       1.25408411    
+ Reverberation changes output different at energy bin   138.335358     keV; Benchmark and model output:   1.16610146       1.16393554    
+ Reverberation changes output different at energy bin   139.390839     keV; Benchmark and model output:   1.07286978       1.07084477    
+ Reverberation changes output different at energy bin   144.790283     keV; Benchmark and model output:  0.713767350      0.712749660    
+ Reverberation changes output different at energy bin   157.416656     keV; Benchmark and model output:  0.298696220      0.298246384    
+ Reverberation changes output different at energy bin   171.144135     keV; Benchmark and model output:  0.116889201      0.116542421    
+ Reverberation changes output different at energy bin   172.449951     keV; Benchmark and model output:  0.105283365      0.105125286    
+ Reverberation output test failed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/agn/ip_nus_06_20.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Total model output different at energy bin  0.724304914     keV; Benchmark and model output:   2.12844349E-02   2.11891085E-02
+ Total model output different at energy bin   157.416656     keV; Benchmark and model output:   1917.57751       1907.91711    
+ Total model output different at energy bin   166.019073     keV; Benchmark and model output:   1902.80920       1900.89905    
+ Total model output different at energy bin   167.285751     keV; Benchmark and model output:   1893.37463       1890.88342    
+ Total model output different at energy bin   168.562103     keV; Benchmark and model output:   1888.21643       1885.59973    
+ Total model output different at energy bin   175.091492     keV; Benchmark and model output:   1889.11194       1887.17395    
+ Total model output different at energy bin   184.659805     keV; Benchmark and model output:   1893.17639       1888.77844    
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection changes output different at energy bin   157.416656     keV; Benchmark and model output:   1966.99011       1957.86768    
+ Pivoting reflection changes output different at energy bin   167.285751     keV; Benchmark and model output:   1939.62415       1937.12366    
+ Pivoting reflection changes output different at energy bin   168.562103     keV; Benchmark and model output:   1933.71057       1931.33386    
+ Pivoting reflection changes output different at energy bin   184.659805     keV; Benchmark and model output:   1927.45496       1923.06189    
+ Pivoting reflection output test failed
+ Comparing reverberation output: 
+ Reverberation changes output different at energy bin   75.8842850     keV; Benchmark and model output:   4.86370945       4.85874319    
+ Reverberation changes output different at energy bin   76.4632797     keV; Benchmark and model output:   4.39308262       4.38826847    
+ Reverberation changes output different at energy bin   77.0466766     keV; Benchmark and model output:   3.97444868       3.96930194    
+ Reverberation changes output different at energy bin   77.6345215     keV; Benchmark and model output:   3.56861830       3.56325626    
+ Reverberation changes output different at energy bin   78.2268524     keV; Benchmark and model output:   3.21882105       3.21428847    
+ Reverberation changes output different at energy bin   78.8237305     keV; Benchmark and model output:   2.90007234       2.89630795    
+ Reverberation changes output different at energy bin   79.4251556     keV; Benchmark and model output:   2.55448198       2.55119610    
+ Reverberation changes output different at energy bin   80.0311432     keV; Benchmark and model output:   2.11607933       2.11218286    
+ Reverberation changes output different at energy bin   80.6417618     keV; Benchmark and model output:   1.70074260       1.69645035    
+ Reverberation changes output different at energy bin   81.2570648     keV; Benchmark and model output:   1.32767403       1.32294369    
+ Reverberation changes output different at energy bin   81.8770523     keV; Benchmark and model output:  0.989176810      0.984951854    
+ Reverberation changes output different at energy bin   82.5017548     keV; Benchmark and model output:  0.707401991      0.703460872    
+ Reverberation changes output different at energy bin   83.1312256     keV; Benchmark and model output:  0.385638505      0.382167876    
+ Reverberation changes output different at energy bin   97.5182266     keV; Benchmark and model output:  -6.14882898      -6.11056805    
+ Reverberation changes output different at energy bin   98.2622910     keV; Benchmark and model output:  -6.35263538      -6.33698368    
+ Reverberation changes output different at energy bin   99.0120087     keV; Benchmark and model output:  -6.50184298      -6.49075985    
+ Reverberation changes output different at energy bin   99.7674408     keV; Benchmark and model output:  -6.63756943      -6.62161684    
+ Reverberation changes output different at energy bin   100.528671     keV; Benchmark and model output:  -6.93604612      -6.91952753    
+ Reverberation changes output different at energy bin   101.295700     keV; Benchmark and model output:  -7.23009014      -7.21282673    
+ Reverberation changes output different at energy bin   102.068558     keV; Benchmark and model output:  -7.47075272      -7.45291615    
+ Reverberation changes output different at energy bin   102.847321     keV; Benchmark and model output:  -7.64830494      -7.62783527    
+ Reverberation changes output different at energy bin   103.632027     keV; Benchmark and model output:  -7.75481176      -7.73186684    
+ Reverberation changes output different at energy bin   104.422737     keV; Benchmark and model output:  -7.83915949      -7.81496954    
+ Reverberation changes output different at energy bin   105.219475     keV; Benchmark and model output:  -8.09252071      -8.07031155    
+ Reverberation changes output different at energy bin   106.022278     keV; Benchmark and model output:  -8.36910534      -8.34635544    
+ Reverberation changes output different at energy bin   106.831207     keV; Benchmark and model output:  -8.57125378      -8.54750919    
+ Reverberation changes output different at energy bin   107.646324     keV; Benchmark and model output:  -8.71254635      -8.68927288    
+ Reverberation changes output different at energy bin   108.467667     keV; Benchmark and model output:  -8.76905251      -8.74284840    
+ Reverberation changes output different at energy bin   109.295242     keV; Benchmark and model output:  -8.78940487      -8.76125526    
+ Reverberation changes output different at energy bin   110.129150     keV; Benchmark and model output:  -8.99695301      -8.97158146    
+ Reverberation changes output different at energy bin   110.969406     keV; Benchmark and model output:  -9.24294758      -9.21579838    
+ Reverberation changes output different at energy bin   111.816101     keV; Benchmark and model output:  -9.40655994      -9.37492180    
+ Reverberation changes output different at energy bin   112.669258     keV; Benchmark and model output:  -9.49406338      -9.45889950    
+ Reverberation changes output different at energy bin   113.528900     keV; Benchmark and model output:  -9.49684429      -9.46257877    
+ Reverberation changes output different at energy bin   114.395096     keV; Benchmark and model output:  -9.44717979      -9.41298962    
+ Reverberation changes output different at energy bin   115.267914     keV; Benchmark and model output:  -9.60348606      -9.56786919    
+ Reverberation changes output different at energy bin   116.147400     keV; Benchmark and model output:  -9.82893372      -9.76895809    
+ Reverberation changes output different at energy bin   117.033600     keV; Benchmark and model output:  -10.2175398      -9.91919994    
+ Reverberation changes output different at energy bin   118.826294     keV; Benchmark and model output:  -10.4465237      -10.3914967    
+ Reverberation changes output different at energy bin   119.732941     keV; Benchmark and model output:  -10.3707209      -10.3538265    
+ Reverberation changes output different at energy bin   126.276009     keV; Benchmark and model output:  -10.5830889      -10.4692717    
+ Reverberation changes output different at energy bin   129.188507     keV; Benchmark and model output:  -11.7934761      -11.7190113    
+ Reverberation changes output different at energy bin   133.176636     keV; Benchmark and model output:  -12.1117926      -11.8455276    
+ Reverberation changes output different at energy bin   134.192780     keV; Benchmark and model output:  -13.6358767      -13.6015720    
+ Reverberation changes output different at energy bin   135.216644     keV; Benchmark and model output:  -15.2361193      -14.9122429    
+ Reverberation changes output different at energy bin   136.248306     keV; Benchmark and model output:  -16.2157135      -15.4422865    
+ Reverberation changes output different at energy bin   141.526001     keV; Benchmark and model output:  -32.9325333      -32.5343323    
+ Reverberation changes output different at energy bin   173.765717     keV; Benchmark and model output:  -47.9076462      -47.7853661    
+ Reverberation changes output different at energy bin   175.091492     keV; Benchmark and model output:  -49.8868942      -49.4380226    
+ Reverberation changes output different at energy bin   176.427460     keV; Benchmark and model output:  -51.9960480      -51.3424530    
+ Reverberation changes output different at energy bin   177.773590     keV; Benchmark and model output:  -53.9250183      -53.7258224    
+ Reverberation output test failed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Total model output different at energy bin   153.867752     keV; Benchmark and model output:  0.433130771      0.431755900    
+ Total model output different at energy bin   157.416656     keV; Benchmark and model output:  0.331831306      0.329782188    
+ Total model output different at energy bin   166.019073     keV; Benchmark and model output:  0.181667149      0.181261659    
+ Total model output different at energy bin   167.285751     keV; Benchmark and model output:  0.167155907      0.166732267    
+ Total model output different at energy bin   168.562103     keV; Benchmark and model output:  0.153609529      0.153152540    
+ Total model output different at energy bin   184.659805     keV; Benchmark and model output:   5.07439114E-02   5.06090708E-02
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection changes output different at energy bin   153.867752     keV; Benchmark and model output:  0.398168802      0.396892518    
+ Pivoting reflection changes output different at energy bin   157.416656     keV; Benchmark and model output:  0.305002153      0.303069919    
+ Pivoting reflection changes output different at energy bin   166.019073     keV; Benchmark and model output:  0.167120352      0.166750625    
+ Pivoting reflection changes output different at energy bin   167.285751     keV; Benchmark and model output:  0.153750002      0.153359547    
+ Pivoting reflection changes output different at energy bin   168.562103     keV; Benchmark and model output:  0.141284809      0.140873834    
+ Pivoting reflection changes output different at energy bin   184.659805     keV; Benchmark and model output:   4.71222624E-02   4.69972119E-02
+ Pivoting reflection output test failed
+ Comparing reverberation output: 
+ Reverberation changes output different at energy bin   127.239471     keV; Benchmark and model output:   1.74359941       1.74088407    
+ Reverberation changes output different at energy bin   128.210266     keV; Benchmark and model output:   1.63119912       1.62827730    
+ Reverberation changes output different at energy bin   133.176636     keV; Benchmark and model output:   1.15699148       1.15213203    
+ Reverberation changes output different at energy bin   137.287842     keV; Benchmark and model output:  0.854483664      0.851217151    
+ Reverberation changes output different at energy bin   138.335358     keV; Benchmark and model output:  0.791752160      0.790717423    
+ Reverberation changes output different at energy bin   139.390839     keV; Benchmark and model output:  0.730829477      0.728620112    
+ Reverberation changes output different at energy bin   145.894989     keV; Benchmark and model output:  0.449731320      0.449252307    
+ Reverberation changes output different at energy bin   171.144135     keV; Benchmark and model output:   7.95531198E-02   7.94280618E-02
+ Reverberation changes output different at energy bin   172.449951     keV; Benchmark and model output:   7.17071742E-02   7.16249347E-02
+ Reverberation output test failed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/agn/ip_nus_20_90.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Total model output different at energy bin   128.210266     keV; Benchmark and model output:   173.224701       172.974411    
+ Total model output different at energy bin   132.168198     keV; Benchmark and model output:   173.892578       173.695007    
+ Total model output different at energy bin   134.192780     keV; Benchmark and model output:   173.876511       173.448547    
+ Total model output different at energy bin   139.390839     keV; Benchmark and model output:   172.670395       172.341095    
+ Total model output different at energy bin   148.129807     keV; Benchmark and model output:   171.840073       171.353622    
+ Total model output different at energy bin   167.285751     keV; Benchmark and model output:   161.353043       161.095917    
+ Total model output different at energy bin   168.562103     keV; Benchmark and model output:   160.541855       159.925674    
+ Total model output different at energy bin   175.091492     keV; Benchmark and model output:   158.346634       158.044998    
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection changes output different at energy bin   148.129807     keV; Benchmark and model output:   185.964325       185.476578    
+ Pivoting reflection changes output different at energy bin   167.285751     keV; Benchmark and model output:   176.163376       175.940582    
+ Pivoting reflection changes output different at energy bin   168.562103     keV; Benchmark and model output:   175.554474       175.284912    
+ Pivoting reflection changes output different at energy bin   175.091492     keV; Benchmark and model output:   174.464355       174.165756    
+ Pivoting reflection output test failed
+ Comparing reverberation output: 
+ Reverberation changes output different at energy bin   98.2622910     keV; Benchmark and model output:   7.78676319       7.77452326    
+ Reverberation changes output different at energy bin   105.219475     keV; Benchmark and model output:   6.85987234       6.84988403    
+ Reverberation changes output different at energy bin   106.022278     keV; Benchmark and model output:   6.71184969       6.70007610    
+ Reverberation changes output different at energy bin   106.831207     keV; Benchmark and model output:   6.60643530       6.59337139    
+ Reverberation changes output different at energy bin   107.646324     keV; Benchmark and model output:   6.53575325       6.52340364    
+ Reverberation changes output different at energy bin   108.467667     keV; Benchmark and model output:   6.51071167       6.50037241    
+ Reverberation changes output different at energy bin   109.295242     keV; Benchmark and model output:   6.50704145       6.49657345    
+ Reverberation changes output different at energy bin   110.129150     keV; Benchmark and model output:   6.39923477       6.38724661    
+ Reverberation changes output different at energy bin   110.969406     keV; Benchmark and model output:   6.26882219       6.25737858    
+ Reverberation changes output different at energy bin   111.816101     keV; Benchmark and model output:   6.18596888       6.17908049    
+ Reverberation changes output different at energy bin   112.669258     keV; Benchmark and model output:   6.14823484       6.14165401    
+ Reverberation changes output different at energy bin   113.528900     keV; Benchmark and model output:   6.15646553       6.14925385    
+ Reverberation changes output different at energy bin   114.395096     keV; Benchmark and model output:   6.19085026       6.18402147    
+ Reverberation changes output different at energy bin   115.267914     keV; Benchmark and model output:   6.10827112       6.10195780    
+ Reverberation changes output different at energy bin   116.147400     keV; Benchmark and model output:   6.00802183       5.99838734    
+ Reverberation changes output different at energy bin   117.033600     keV; Benchmark and model output:   5.93990898       5.88409662    
+ Reverberation changes output different at energy bin   120.646492     keV; Benchmark and model output:   5.53521824       5.50283337    
+ Reverberation changes output different at energy bin   121.567001     keV; Benchmark and model output:   5.45324707       5.41500282    
+ Reverberation changes output different at energy bin   122.494537     keV; Benchmark and model output:   5.40615320       5.36680079    
+ Reverberation changes output different at energy bin   123.429138     keV; Benchmark and model output:   5.41808748       5.37642050    
+ Reverberation changes output different at energy bin   124.370895     keV; Benchmark and model output:   5.49172449       5.44772482    
+ Reverberation changes output different at energy bin   125.319839     keV; Benchmark and model output:   5.60622215       5.55545664    
+ Reverberation changes output different at energy bin   126.276009     keV; Benchmark and model output:   5.58385181       5.52188396    
+ Reverberation changes output different at energy bin   127.239471     keV; Benchmark and model output:   5.51315355       5.26495886    
+ Reverberation changes output different at energy bin   128.210266     keV; Benchmark and model output:   5.37434578       4.97367477    
+ Reverberation changes output different at energy bin   132.168198     keV; Benchmark and model output:   4.70199537       4.39871597    
+ Reverberation changes output different at energy bin   133.176636     keV; Benchmark and model output:   4.08356524       3.98486161    
+ Reverberation changes output different at energy bin   134.192780     keV; Benchmark and model output:   2.98042083       2.65733790    
+ Reverberation changes output different at energy bin   136.248306     keV; Benchmark and model output:  0.894382596      0.712234437    
+ Reverberation changes output different at energy bin   137.287842     keV; Benchmark and model output:  0.732328653      0.108807378    
+ Reverberation changes output different at energy bin   140.454361     keV; Benchmark and model output:  -9.74958611      -9.14777851    
+ Reverberation changes output different at energy bin   144.790283     keV; Benchmark and model output:  -11.7490931      -11.6579342    
+ Reverberation changes output different at energy bin   156.224686     keV; Benchmark and model output:  -13.4021196      -13.3368483    
+ Reverberation changes output different at energy bin   157.416656     keV; Benchmark and model output:  -14.1540527      -14.0307922    
+ Reverberation changes output different at energy bin   158.617737     keV; Benchmark and model output:  -14.8714180      -14.5225000    
+ Reverberation output test failed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Dual LP test: 
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/dbl/ip_0,10_0,40.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Running time-averaged spectrum test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing spectrum model output: 
+ Model spectrum output test passed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/dbl/ip_0,50_0,60.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/dbl/ip_1,10_1,40.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/dbl/ip_3,00_4,20.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks/dbl/ip_4,30_15,6.dat
+ --------------------------------------------------------------------------------------------------------
+ Running lag test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Running modulus test: 
+ --------------------------------------------------------------------------------------------------------
+ Comparing timing model output: 
+ Timing model output test passed
+ --------------------------------------------------------------------------------------------------------
+ Benchmarks runtime:   36.3542061     seconds
+ --------------------------------------------------------------------------------------------------------

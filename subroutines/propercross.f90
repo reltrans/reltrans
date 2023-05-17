@@ -96,7 +96,6 @@ subroutine response_and_energy_bounds(resp_matr)
         ! write(*,*) 'calling intmatrix'
         call initmatrix
      endif
-     
 !Get energy bounds of the reference band
      if( needchans )then
         Elo = myenv_real("EMIN_REF",0.0)
@@ -241,8 +240,8 @@ subroutine propercross_NOmatrix(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
         imref = 0.0
         do i = Ilo, Ihi
            dE = earx(i) - earx(i-1)
-           reref = reref + ReSraw(i,j)
-           imref = imref + ImSraw(i,j)
+           reref = reref + ReSraw(i,j) 
+           imref = imref + ImSraw(i,j) 
         end do
 
         !Cross subject band with reference band

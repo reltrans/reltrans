@@ -62,22 +62,22 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
      do I = 1,numchn
         E  = 0.5 * ( ECHN(I) + ECHN(I-1) )
         dE = ( ECHN(I) - ECHN(I-1) )
-        ReGtel(I) = ReGtel(I) / dE  !now dN/dE
-        ImGtel(I) = ImGtel(I) / dE  !now dN/dE        
+        ReGtel(I) = ReGtel(I) / dE  
+        ImGtel(I) = ImGtel(I) / dE        
      end do
      
      !Rebin onto input energy grid
      call rebinE(echn,ReGtel,numchn,ear,ReG,ne)
      call rebinE(echn,ImGtel,numchn,ear,ImG,ne)
-
-     !Convert G from dN/dE to photar
+     
+    !Convert G from dN/dE to photar
      do i = 1,ne
         E  = 0.5 * ( ear(i) + ear(i-1) )
         dE = ear(i) - ear(i-1)
-        ReG(i) = ReG(i) * dE  !now dN (photar)
-        ImG(i) = ImG(i) * dE  !now dN (photar)
+        ReG(i) = ReG(i) * dE  
+        ImG(i) = ImG(i) * dE  
      end do
-        
+     
      deallocate(ReGi)
      deallocate(ImGi)
      deallocate(ReGtel)
@@ -94,7 +94,6 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
      !Rebin input arrays onto internal telescope energy grid
      call rebinE(earx,E2ReGx,nex,En2,ReGi,nenerg2)
      call rebinE(earx,E2ImGx,nex,En2,ImGi,nenerg2)
-
      !Convert back to (dN/dE)*dE
      do i = 1,nenerg2
         E  = 0.5 * ( En2(i) + En2(i-1) )
@@ -120,22 +119,22 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
      do I = 1,numchn2
         E  = 0.5 * ( ECHN2(I) + ECHN2(I-1) )
         dE = ( ECHN2(I) - ECHN2(I-1) )
-        ReGtel(I) = ReGtel(I) / dE  !now dN/dE
-        ImGtel(I) = ImGtel(I) / dE  !now dN/dE        
+        ReGtel(I) = ReGtel(I) / dE  
+        ImGtel(I) = ImGtel(I) / dE      
      end do
      
      !Rebin onto input energy grid
      call rebinE(echn2,ReGtel,numchn2,ear,ReG,ne)
      call rebinE(echn2,ImGtel,numchn2,ear,ImG,ne)
-
-     !Convert G from dN/dE to photar
+     
+    !Convert G from dN/dE to photar
      do i = 1,ne
         E  = 0.5 * ( ear(i) + ear(i-1) )
         dE = ear(i) - ear(i-1)
-        ReG(i) = ReG(i) * dE  !now dN (photar)
-        ImG(i) = ImG(i) * dE  !now dN (photar)
+        ReG(i) = ReG(i) * dE  
+        ImG(i) = ImG(i) * dE  
      end do
-     
+
      deallocate(ReGi)
      deallocate(ImGi)
      deallocate(ReGtel)
