@@ -1,7 +1,7 @@
 program relwrap
     implicit none
 
-    real    :: params_file(31)      !fulll list of all model parameters, indipendent of model flavour
+    real    :: params_file(32)      !fulll list of all model parameters, indipendent of model flavour, from the input file
     real    :: params_reltrans(27)  !stuff to be used from the parameters in reltransDbl
     real    :: emin, emax           !minimum, maximum energy and increment to set model grid
     integer :: ne                   !energy grid resolution
@@ -15,7 +15,7 @@ program relwrap
     
     logical single_lp               !switch to change between single and double LP models
     
-    single_lp = .false. 
+    single_lp = .true. 
 
     !set up energy and countrate arrays  
     ne = 1000                             
@@ -50,13 +50,14 @@ program relwrap
         params_reltrans(12) = params_file(16)
         params_reltrans(13) = params_file(17)
         params_reltrans(14) = params_file(18)
-        params_reltrans(15) = params_file(22)
+        params_reltrans(15) = params_file(19)
         params_reltrans(16) = params_file(23)
         params_reltrans(17) = params_file(24)
         params_reltrans(18) = params_file(25)
         params_reltrans(19) = params_file(26)
         params_reltrans(20) = params_file(27)
-        params_reltrans(21) = params_file(31)
+        params_reltrans(21) = params_file(28)
+        params_reltrans(22) = params_file(32)
         
         print *, "Single LP model: "
         print *, "Height: ", params_reltrans(1)
@@ -72,14 +73,15 @@ program relwrap
         print *, "Ecut/Te: ", params_reltrans(11)
         print *, "Nh: ", params_reltrans(12)
         print *, "boost: ", params_reltrans(13)
-        print *, "Mass: ", params_reltrans(14)
-        print *, "flo: ", params_reltrans(15)
-        print *, "fhi: ", params_reltrans(16)
-        print *, "ReIm: ", params_reltrans(17)
-        print *, "DelA: ", params_reltrans(18)
-        print *, "DelAB: ", params_reltrans(19)
-        print *, "g: ", params_reltrans(20)   
-        print *, "# of rsp:", params_reltrans(21)  
+        print *, "diffusion time: ",params_reltrans(14)
+        print *, "Mass: ", params_reltrans(15)
+        print *, "flo: ", params_reltrans(16)
+        print *, "fhi: ", params_reltrans(17)
+        print *, "ReIm: ", params_reltrans(18)
+        print *, "DelA: ", params_reltrans(19)
+        print *, "DelAB: ", params_reltrans(20)
+        print *, "g: ", params_reltrans(21)   
+        print *, "# of rsp:", params_reltrans(22)  
     else
         !set up parameters for double LP model
         params_reltrans(1) = params_file(1)
@@ -99,16 +101,16 @@ program relwrap
         params_reltrans(15) = params_file(15)
         params_reltrans(16) = params_file(16)
         params_reltrans(17) = params_file(17)
-        params_reltrans(18) = params_file(18)
-        params_reltrans(19) = params_file(22)
-        params_reltrans(20) = params_file(23)
-        params_reltrans(21) = params_file(24)
-        params_reltrans(22) = params_file(25)
-        params_reltrans(23) = params_file(26)
-        params_reltrans(24) = params_file(27)
-        params_reltrans(25) = params_file(28)
-        params_reltrans(26) = params_file(29)
-        params_reltrans(27) = params_file(31)
+        params_reltrans(18) = params_file(19)
+        params_reltrans(19) = params_file(23)
+        params_reltrans(20) = params_file(24)
+        params_reltrans(21) = params_file(25)
+        params_reltrans(22) = params_file(26)
+        params_reltrans(23) = params_file(27)
+        params_reltrans(24) = params_file(28)
+        params_reltrans(25) = params_file(29)
+        params_reltrans(26) = params_file(30)
+        params_reltrans(27) = params_file(32)
         
         print *, "Double LP model: "      
         print *, "Height 1: ", params_reltrans(1)
@@ -141,8 +143,8 @@ program relwrap
     end if
         
     !set up frequency array appropriately if using lag/frequency spectra, depending on BH mass:
-    if( params_file(24) .eq. 7 ) then
-        if( params_file(18) .gt. 1.e4 ) then
+    if( params_file(25) .eq. 7 ) then
+        if( params_file(19) .gt. 1.e4 ) then
             emin = 1.e-4
             emax = 3.e-2
             do i=0,ne

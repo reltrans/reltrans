@@ -33,7 +33,7 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
   !   neecconv:  if true, we must do the convolution
   implicit none 
   integer         , intent(in)  :: Cp, Cpsave, nf, nfsave
-  real            , intent(in)  :: param(32), paramsave(32)
+  real            , intent(in)  :: param(33), paramsave(33)
   real            , parameter   :: tol = 1e-7
   double precision, intent(in)  :: fhi, flo, fhisave, flosave
   double precision, parameter   :: dtol = 1e-10
@@ -49,12 +49,12 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
   if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
   i = 13
   if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
-  !i = 18
-  !if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true. !note: i=19 is the mass
-  do i = 18,22
+  i = 18
+  if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true. !note: i=20 is the mass, the rest are the corona emissivity 
+  do i = 20,23
      if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
   end do
-  i = 31
+  i = 33
   if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
 ! Now check if frequency range and frequency grid have changed 
   if( nf .ne. nfsave ) then
@@ -69,5 +69,6 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
   if( Cp .ne. Cpsave ) needconv = .true.
   if( abs( param(10) - paramsave(10) ) .gt. tol ) needconv = .true.
   if( abs( param(12) - paramsave(12) ) .gt. tol ) needconv = .true.
+  if( abs( param(19) - paramsave(19) ) .gt. tol ) needconv = .true.
 end subroutine need_check
 !-----------------------------------------------------------------------

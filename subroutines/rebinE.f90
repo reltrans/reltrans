@@ -41,9 +41,8 @@ subroutine rebinE(earx,px,nex,ear,p,ne)
 !j,ne,ear,p    = output
   implicit none
   integer i,nex,j,ne,ilo,ihi
-  real earx(0:nex),ear(0:ne),px(nex),p(ne),Ehigh,Elow,upper,lower
-  real FRAC,Ej,Ei,pi,Ei2,pi2,grad,cons,Ehi,Elo,phi,plo
-  logical interp
+  real earx(0:nex),ear(0:ne),px(nex),p(ne),upper,lower
+  real Ej,Ei,Ehi,Elo,phi,plo
   ilo = 1
   do j = 1,ne
      do while( earx(ilo) .le. ear(j-1) .and. ilo .lt. nex )

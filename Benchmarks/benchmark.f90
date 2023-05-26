@@ -101,7 +101,7 @@ subroutine model_singleLP(mode,frange,spec_flag)
     integer     :: ifl
     
     real        :: emin, emax
-    real        :: params_reltrans(21)
+    real        :: params_reltrans(22)
     
     real, dimension(:), allocatable      :: ear        !photon energy grid 
     real, dimension(:), allocatable      :: photar     !spectrum array
@@ -130,7 +130,7 @@ subroutine model_singleLP(mode,frange,spec_flag)
     end do  
     
     mtype = "/Lags/"
-    params_reltrans(17) = 4
+    params_reltrans(18) = 4
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     write (60,*) "Running lag test: "
     call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
@@ -138,7 +138,7 @@ subroutine model_singleLP(mode,frange,spec_flag)
     call compare_timing(ne,mode,mtype,frange)    
     
     !then compare modulus
-    params_reltrans(17) = 3
+    params_reltrans(18) = 3
     mtype = "/Mods/"
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     write (60,*) "Running modulus test: "
@@ -148,7 +148,7 @@ subroutine model_singleLP(mode,frange,spec_flag)
     
     !then imaginary part:
     mtype = "/Imag/"
-    params_reltrans(17) = 2
+    params_reltrans(18) = 2
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     write (60,*) "Running imaginary test: "
     call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
@@ -157,7 +157,7 @@ subroutine model_singleLP(mode,frange,spec_flag)
     
     !then real:
     mtype = "/Real/"
-    params_reltrans(17) = 1
+    params_reltrans(18) = 1
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     write (60,*) "Running real test: "
     call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
@@ -166,9 +166,9 @@ subroutine model_singleLP(mode,frange,spec_flag)
     
     !finally compare spectra and kernel 
     if( spec_flag .eqv. .true. ) then
-        params_reltrans(15) = 0
         params_reltrans(16) = 0
-        params_reltrans(17) = 1
+        params_reltrans(17) = 0
+        params_reltrans(18) = 1
         mtype = "/Spec/"
         write (60,*) "--------------------------------------------------------------------------------------------------------"
         write (60,*) "Running time-averaged spectrum test: " 

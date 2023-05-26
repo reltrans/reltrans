@@ -12,7 +12,17 @@
  Running lag test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
- Timing model output test passed
+ Total model output different at energy bin  0.775587380     keV; Benchmark and model output:   8.50433116E-06   8.42886948E-06
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection changes output different at energy bin  0.622158229     keV; Benchmark and model output:   3.64226144E-04   3.63784289E-04
+ Pivoting reflection output test failed
+ Comparing reverberation output: 
+ Reverberation output test passed
  --------------------------------------------------------------------------------------------------------
  Running modulus test: 
  --------------------------------------------------------------------------------------------------------
@@ -22,7 +32,17 @@
  Running imaginary test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
- Timing model output test passed
+ Total model output different at energy bin  0.775587380     keV; Benchmark and model output:   530.803467       526.093994    
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection changes output different at energy bin  0.622158229     keV; Benchmark and model output:   10733.8965       10720.9014    
+ Pivoting reflection output test failed
+ Comparing reverberation output: 
+ Reverberation output test passed
  --------------------------------------------------------------------------------------------------------
  Running real test: 
  --------------------------------------------------------------------------------------------------------
@@ -43,20 +63,7 @@
  Running lag test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
- Total model output different at energy bin  0.641364634     keV; Benchmark and model output:  -1.25977858E-05  -1.25247016E-05
- Timing model output test failed, comparing model components
- Comparing ionization model output: 
- Ionization output test passed
- Comparing pivoting PL output: 
- Pivoting PL output test passed
- Comparing pivoting reflection output: 
- Pivoting reflection changes output different at energy bin  0.419032067     keV; Benchmark and model output:  -3.15404031E-04  -3.14863835E-04
- Pivoting reflection changes output different at energy bin  0.435263693     keV; Benchmark and model output:  -2.01165123E-04  -2.00625567E-04
- Pivoting reflection changes output different at energy bin  0.438584685     keV; Benchmark and model output:  -3.86081985E-04  -3.85541731E-04
- Pivoting reflection changes output different at energy bin  0.499080956     keV; Benchmark and model output:  -3.62812832E-04  -3.62273277E-04
- Pivoting reflection output test failed
- Comparing reverberation output: 
- Reverberation output test passed
+ Timing model output test passed
  --------------------------------------------------------------------------------------------------------
  Running modulus test: 
  --------------------------------------------------------------------------------------------------------
@@ -66,7 +73,19 @@
  Running imaginary test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
- Timing model output test passed
+ Total model output different at energy bin  0.425450802     keV; Benchmark and model output:   20769.5156       20659.0898    
+ Total model output different at energy bin  0.681574345     keV; Benchmark and model output:   35119.9531       35083.7305    
+ Total model output different at energy bin  0.686774611     keV; Benchmark and model output:   12606.5381       12569.8164    
+ Total model output different at energy bin  0.856138647     keV; Benchmark and model output:   9818.46680       9805.39844    
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection test passed
+ Comparing reverberation output: 
+ Reverberation output test passed
  --------------------------------------------------------------------------------------------------------
  Running real test: 
  --------------------------------------------------------------------------------------------------------
@@ -78,19 +97,7 @@
  Running lag test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
- Total model output different at energy bin   1.32039177     keV; Benchmark and model output:   3.25505107E-06   3.25160727E-06
- Timing model output test failed, comparing model components
- Comparing ionization model output: 
- Ionization changes output different at energy bin  0.403405815     keV; Benchmark and model output:  -6.64186700E-06  -6.62227649E-06
- Ionization output test failed
- Comparing pivoting PL output: 
- Pivoting PL output test passed
- Comparing pivoting reflection output: 
- Pivoting reflection changes output different at energy bin  0.769714594     keV; Benchmark and model output:  -2.36755368E-05  -2.36230808E-05
- Pivoting reflection output test failed
- Comparing reverberation output: 
- Reverberation changes output different at energy bin  0.354506850     keV; Benchmark and model output:   1.27515805E-05   1.27334042E-05
- Reverberation output test failed
+ Timing model output test passed
  --------------------------------------------------------------------------------------------------------
  Running modulus test: 
  --------------------------------------------------------------------------------------------------------
@@ -100,19 +107,7 @@
  Running imaginary test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
- Total model output different at energy bin   1.32039177     keV; Benchmark and model output:   494.937073       494.410156    
- Timing model output test failed, comparing model components
- Comparing ionization model output: 
- Ionization changes output different at energy bin  0.403405815     keV; Benchmark and model output:  -9988.59473      -9959.28027    
- Ionization output test failed
- Comparing pivoting PL output: 
- Pivoting PL output test passed
- Comparing pivoting reflection output: 
- Pivoting reflection changes output different at energy bin  0.769714594     keV; Benchmark and model output:  -6652.84082      -6637.98779    
- Pivoting reflection output test failed
- Comparing reverberation output: 
- Reverberation changes output different at energy bin  0.354506850     keV; Benchmark and model output:   69571.4766       69471.8281    
- Reverberation output test failed
+ Timing model output test passed
  --------------------------------------------------------------------------------------------------------
  Running real test: 
  --------------------------------------------------------------------------------------------------------
@@ -124,7 +119,16 @@
  Running lag test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
- Timing model output test passed
+ Total model output different at energy bin   4.95543814     keV; Benchmark and model output:  -9.95473511E-06  -9.93659978E-06
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection test passed
+ Comparing reverberation output: 
+ Reverberation output test passed
  --------------------------------------------------------------------------------------------------------
  Running modulus test: 
  --------------------------------------------------------------------------------------------------------
@@ -134,7 +138,16 @@
  Running imaginary test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
- Timing model output test passed
+ Total model output different at energy bin   4.95543814     keV; Benchmark and model output:  -296.369141      -295.830994    
+ Timing model output test failed, comparing model components
+ Comparing ionization model output: 
+ Ionization output test passed
+ Comparing pivoting PL output: 
+ Pivoting PL output test passed
+ Comparing pivoting reflection output: 
+ Pivoting reflection test passed
+ Comparing reverberation output: 
+ Reverberation output test passed
  --------------------------------------------------------------------------------------------------------
  Running real test: 
  --------------------------------------------------------------------------------------------------------
@@ -267,17 +280,7 @@
  Running lag test: 
  --------------------------------------------------------------------------------------------------------
  Comparing timing model output: 
- Total model output different at energy bin  0.724304914     keV; Benchmark and model output:   2.12844349E-02   2.11897362E-02
- Timing model output test failed, comparing model components
- Comparing ionization model output: 
- Ionization output test passed
- Comparing pivoting PL output: 
- Pivoting PL output test passed
- Comparing pivoting reflection output: 
- Pivoting reflection test passed
- Comparing reverberation output: 
- Reverberation changes output different at energy bin   83.7654877     keV; Benchmark and model output:  -1.85793545E-02  -1.85494442E-02
- Reverberation output test failed
+ Timing model output test passed
  --------------------------------------------------------------------------------------------------------
  Running modulus test: 
  --------------------------------------------------------------------------------------------------------
@@ -437,5 +440,5 @@
  Comparing timing model output: 
  Timing model output test passed
  --------------------------------------------------------------------------------------------------------
- Benchmarks runtime:   49.5757027     seconds
+ Benchmarks runtime:   49.9304008     seconds
  --------------------------------------------------------------------------------------------------------

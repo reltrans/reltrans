@@ -95,7 +95,7 @@ contains
     plan2 = fftw_plan_dft_c2r_1d(nex_conv, in_conv, out_conv, flags)
     end subroutine init_fftw_allconv
 
-    subroutine conv_one_FFTw(dyn,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
+    subroutine conv_real_FFTw(dyn,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
     implicit none
     integer, intent(in) :: DC, nlp 
     real                :: dyn
@@ -130,90 +130,62 @@ contains
         endif
     end do
 
-    end subroutine conv_one_FFTw
- 
-    subroutine conv_all_FFTw(dyn,photarx,photarx_delta,photarx_dlogxi,reline_w0,imline_w0,reline_w1,imline_w1,& 
-                             reline_w2,imline_w2,reline_w3,imline_w3,ReW0_conv,ImW0_conv,ReW1_conv,ImW1_conv,&
-                             ReW2_conv,ImW2_conv,ReW3_conv,ImW3_conv,DC,nlp)
-
+    end subroutine conv_real_FFTw
+    
+    
+    subroutine conv_complex_FFTw(dyn,re_phot,im_phot,reline,imline,ReW_conv,ImW_conv,DC,nlp)
+    
     implicit none
-    integer, intent(in) :: DC, nlp 
+    integer, intent(in) :: DC,nlp 
     real                :: dyn
-    real, intent(in)    :: photarx(nex), photarx_delta(nex), photarx_dlogxi(nex) 
-    real, intent(in)    :: reline_w0(nlp,nex), imline_w0(nlp,nex)
-    real, intent(in)    :: reline_w1(nlp,nex), imline_w1(nlp,nex)
-    real, intent(in)    :: reline_w2(nlp,nex), imline_w2(nlp,nex)
-    real, intent(in)    :: reline_w3(nlp,nex), imline_w3(nlp,nex)
-    real, intent(inout) :: ReW0_conv(nlp,nex), ImW0_conv(nlp,nex)
-    real, intent(inout) :: ReW1_conv(nlp,nex), ImW1_conv(nlp,nex)
-    real, intent(inout) :: ReW2_conv(nlp,nex), ImW2_conv(nlp,nex)
-    real, intent(inout) :: ReW3_conv(nlp,nex), ImW3_conv(nlp,nex)
-    complex :: conv(nec),padFT_photarx(nec),padFT_photarx_delta(nec),padFT_photarx_dlogxi(nec) 
-    complex :: padFT_reline_w0(nec),  padFT_imline_w0(nec)
-    complex :: padFT_reline_w1(nec),  padFT_imline_w1(nec)
-    complex :: padFT_reline_w2(nec),  padFT_imline_w2(nec)
-    complex :: padFT_reline_w3(nec),  padFT_imline_w3(nec)              
+    real, intent(in)    :: re_phot(nex), im_phot(nex)
+    real, intent(in)    :: reline(nlp,nex), imline(nlp,nex)
+    real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
+    complex :: conv(nec),padFT_rephot(nec), padFT_imphot(nec)
+    complex :: padFT_reline(nec),  padFT_imline(nec)            
     integer :: m
     real    :: photmax, depad_conv(nex)
-
-    do m=1,nlp  
+    
+    do m=1,nlp 
         if (DC .eq. 1 ) then   
-            call padding4FT(photarx,padFT_photarx)         
-            call padding4FT(reline_w0(m,:),padFT_reline_w0)                        
+            call padding4FT(re_phot,padFT_rephot)         
+            call padding4FT(reline(m,:),padFT_reline)                        
             
-            conv = (padFT_photarx * padFT_reline_w0) * nexm1
+            conv = (padFT_rephot * padFT_reline) * nexm1
             call de_paddingFT(dyn, conv, depad_conv)
-            ReW0_conv(m,:) = ReW0_conv(m,:) + depad_conv
-        else 
-            call padding4FT(photarx       , padFT_photarx)
-            call padding4FT(photarx_delta , padFT_photarx_delta)
-            call padding4FT(photarx_dlogxi, padFT_photarx_dlogxi)  
-        
-            call padding4FT(reline_w0(m,:),padFT_reline_w0)
-            call padding4FT(reline_w1(m,:),padFT_reline_w1)
-            call padding4FT(reline_w2(m,:),padFT_reline_w2)
-            call padding4FT(reline_w3(m,:),padFT_reline_w3)      
+            ReW_conv(m,:) = ReW_conv(m,:) + depad_conv
+        else  
+            !pad xillver
+            call padding4FT(re_phot,padFT_rephot)     
+            call padding4FT(im_phot,padFT_imphot)            
+            !pad transfer function 
+            call padding4FT(reline(m,:),padFT_reline)
+            call padding4FT(imline(m,:),padFT_imline)  
             
-            call padding4FT(imline_w0(m,:),padFT_imline_w0)
-            call padding4FT(imline_w1(m,:),padFT_imline_w1)
-            call padding4FT(imline_w2(m,:),padFT_imline_w2)
-            call padding4FT(imline_w3(m,:),padFT_imline_w3)      
+            !real part - real(xillver)*real(transfer func) = real
+            conv = (padFT_rephot * padFT_reline) * nexm1
+            call de_paddingFT(dyn, conv, depad_conv)
+            ReW_conv(m,:) = ReW_conv(m,:) + depad_conv
+            
+            !immaginary(xillver) * immaginary(transfer func) = -real
+            conv = (padFT_imphot * padFT_imline) * nexm1
+            call de_paddingFT(dyn, conv, depad_conv)
+            ReW_conv(m,:) = ReW_conv(m,:) - depad_conv 
+            
+            !next immaginary part: real(xillver)*immaginary(transfer func) = immaginary  
+            conv = (padFT_rephot * padFT_imline) * nexm1
+            call de_paddingFT(dyn, conv, depad_conv)
+            ImW_conv(m,:) = ImW_conv(m,:) + depad_conv     
 
-            conv = (padFT_photarx * padFT_reline_w0) * nexm1
+            !immaginary(xillver) * real(trasfer func) = immaginary
+            conv = (padFT_imphot * padFT_reline) * nexm1
             call de_paddingFT(dyn, conv, depad_conv)
-            ReW0_conv(m,:) = ReW0_conv(m,:) + depad_conv
-            
-            conv = (padFT_photarx * padFT_imline_w0) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
-            ImW0_conv(m,:) = ImW0_conv(m,:) + depad_conv
-            
-            conv = (padFT_photarx * padFT_reline_w1) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
-            ReW1_conv(m,:) = ReW1_conv(m,:) + depad_conv
-
-            conv = (padFT_photarx * padFT_imline_w1) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
-            ImW1_conv(m,:) = ImW1_conv(m,:) + depad_conv  
-            
-            conv = (padFT_photarx_delta * padFT_reline_w2) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
-            ReW2_conv(m,:) = ReW2_conv(m,:) + depad_conv
-
-            conv = (padFT_photarx_delta * padFT_imline_w2) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
-            ImW2_conv(m,:) = ImW2_conv(m,:) + depad_conv  
-            
-            conv = (padFT_photarx_dlogxi * padFT_reline_w3) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
-            ReW3_conv(m,:) = ReW3_conv(m,:) + depad_conv
-            
-            conv = (padFT_photarx_dlogxi * padFT_imline_w3) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
-            ImW3_conv(m,:) = ImW3_conv(m,:) + depad_conv  
+            ImW_conv(m,:) = ImW_conv(m,:) + depad_conv  
         endif
-    end do
-        
-    end subroutine conv_all_FFTw
+    end do  
+    
+    end subroutine conv_complex_FFTw
+
 
     subroutine padding4FT(line, padFT_line)
     implicit none 
