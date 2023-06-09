@@ -18,15 +18,15 @@ colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e3
 
 Input = np.genfromtxt("Input/ip.dat")
 
-if(Input[22]==0):
+if(Input[23]==0):
     label = "E*F(E)"
-elif (np.abs(Input[23]) == 1):
+elif (np.abs(Input[24]) == 1):
     label = "Real Comp"
-elif (np.abs(Input[23]) == 2):
+elif (np.abs(Input[24]) == 2):
     label = "Imaginary Comp"
-elif (np.abs(Input[23]) == 3 or np.abs(Input[23]) == 5):
+elif (np.abs(Input[24]) == 3 or np.abs(Input[24]) == 5):
     label = "Modulus"   
-elif (np.abs(Input[23]) == 4 or np.abs(Input[23]) == 6 or Input[23] == 7):
+elif (np.abs(Input[24]) == 4 or np.abs(Input[24]) == 6 or Input[24] == 7):
     label = "Lag(s)"    
 else:
     label = "Unclear"   
@@ -38,11 +38,11 @@ PivotingReflection = np.genfromtxt("Output/PivotingReflection.dat")
 IonVariations = np.genfromtxt("Output/IonVariations.dat")
 Continuum = np.genfromtxt("Output/Continuum_spec.dat")
 
-if (Input[23] != 7):
+if (Input[24] != 7):
     min_x_timing = 0.3
     max_x_timing = 10.
 
-    min_x_spectrum = 0.1
+    min_x_spectrum = 0.01
     max_x_spectrum = 100.
 
     max_y_timing = -1e20
@@ -95,10 +95,10 @@ if (Input[23] != 7):
     min_y_spectrum = min_y_spectrum/1.5
     max_y_spectrum = 1.5*max_y_spectrum 
 else:
-    if (Input[17] > 1.e4):
+    if (Input[18] > 1.e4):
         min_x_timing = 0.7e-5
         max_x_timing = 3.e-2
-    elif (Input[23] == 7):
+    elif (Input[24] == 7):
         min_x_timing = 0.1
         max_x_timing = 450.        
     else:
@@ -128,7 +128,7 @@ dashed_line = np.zeros(50)
 line_array = np.logspace(np.log10(min_x_timing),np.log10(max_x_timing),50)
 
 #timing plot
-if(Input[22] != 0 and Input[23] != 7):
+if(Input[23] != 0 and Input[24] != 7):
     ax1.plot(Total.T[0],Total.T[1],linewidth=3.0,label='Total',color=colors[0],zorder=2)
     ax1.plot(LightTravelTime.T[0],LightTravelTime.T[1],linewidth=2.0,label='Reverberation',color=colors[1],zorder=1)
     ax1.plot(PivotingPL.T[0],PivotingPL.T[1],linewidth=2.0,label='Continuum',color=colors[2],zorder=1)
@@ -139,12 +139,12 @@ if(Input[22] != 0 and Input[23] != 7):
     ax1.set_xlim([min_x_timing,max_x_timing])
     ax1.set_ylim([min_y_timing,max_y_timing])
     ax1.set_xscale('log', base=10)
-    if (Input[23] == 3 or Input[23] == 5):
+    if (Input[24] == 3 or Input[24] == 5):
         ax1.set_yscale('log', base=10)    
     ax1.set_xlabel('Energy (kev)',fontsize=22)
     ax1.set_ylabel(label,fontsize=22)
 #lag-frequency plot
-elif(Input[23] == 7):
+elif(Input[24] == 7):
     ax1.plot(Total.T[0],Total.T[1],linewidth=2.5,label='Total',color=colors[1],zorder=2)    
     ax1.plot(line_array,dashed_line,linestyle='dashed',linewidth=1.0,color='black')
     #ax1.legend(loc='best',fontsize=14)

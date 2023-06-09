@@ -29,7 +29,6 @@ program relbench
       
     call c_setgetenv("0.3","10.")
                             
-    !tbd: think of a way to compare impulse responses directly 
     !test one: xrb, maxi j1820, single lamp post 
     write (60,*)  "--------------------------------------------------------------------------------------------------------"
     write (60,*)  "XRB test: "
@@ -45,7 +44,6 @@ program relbench
     call model_singleLP(mode,frange,spec_flag)    
     frange = "5,80_16,0" 
     call model_singleLP(mode,frange,spec_flag)
-    !tbd: implement time-averaged test, implement rolling flag that checks all tests have been passed 
     
     !test two: agn, ark 564, single lamp post, xmm first,nustar second 
     write (60,*)  "--------------------------------------------------------------------------------------------------------"   
@@ -66,7 +64,7 @@ program relbench
     frange = "nus_20_90" 
     call model_singleLP(mode,frange,spec_flag) 
     
-    !test three: TBD, dual lamp post
+    !test three: dual lamp post 
     write (60,*)  "--------------------------------------------------------------------------------------------------------"  
     write (60,*)  "Dual LP test: "
     spec_flag = .true.
@@ -93,7 +91,7 @@ end program
 subroutine model_singleLP(mode,frange,spec_flag)
     implicit none
     
-    character(len=:), allocatable   :: first_path, second_path, par_path, bench_path, mtype
+    character(len=:), allocatable   :: first_path, second_path, par_path, mtype
     character(len=3)                :: mode
     character(len=9)                :: frange
     
@@ -188,7 +186,7 @@ end subroutine
 subroutine model_doubleLP(mode,frange,spec_flag)
     implicit none
     
-    character(len=:), allocatable   :: first_path, second_path, par_path, bench_path, mtype
+    character(len=:), allocatable   :: first_path, second_path, par_path, mtype
     character(len=3)                :: mode
     character(len=9)                :: frange
     

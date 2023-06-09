@@ -12,6 +12,8 @@ subroutine set_param(dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,l
   real            , intent(out)  :: DelA, DelAB(nlp), g(nlp), Anorm, Dkpc
   integer         , intent(out)  :: ReIm, resp, refvar
   integer m
+  !relativistic parameters and limit on rin and h
+  double precision :: rmin, rh , disco
 
   !TBD: DelAB, g also arryas of size nlp 
 ! Read in basic parameter array   
@@ -60,6 +62,25 @@ subroutine set_param(dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,l
   else
      Dkpc = 0.0
   end if
+  
+  !Set minimum r (ISCO) and convert rin and h to rg
+  if( abs(a) .gt. 0.999 ) a = sign(a,1.d0) * 0.999
+  rmin   = disco( a )
+  if( rin .lt. 0.d0 ) rin = abs(rin) * rmin
+  rh     = 1.d0+sqrt(1.d0-a**2)
+  if( verbose .gt. 0 ) write(*,*)"rin (Rg)=",rin
+  if( rin .lt. rmin )then
+     write(*,*)"Warning! rin<ISCO! Set to ISCO"
+        rin = rmin
+  end if
+  do m=1,nlp 
+     if( h(m) .lt. 0.d0 ) h(m) = abs(h(m)) * rh
+     if( verbose .gt. 0 ) write(*,*)"h (Rg)=",h(m)
+     if( h(m) .lt. 1.5d0*rh )then
+        write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
+        h(m) = 1.5d0 * rh
+     end if 
+  end do
   
   !WIP optimization, need to think how best to handle this for cases when phiab/g change
   !but we don't want to re-do all the convolutions

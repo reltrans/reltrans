@@ -76,8 +76,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
     double precision, allocatable :: resp(:,:)
 
     data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
-    save nrosav,nphisav,spinsav,musav,routsav,mudsav
-       
+    save nrosav,nphisav,spinsav,musav,routsav,mudsav 
     ! Settings/initialization 
     nron     = 100
     nphin    = 100
@@ -91,7 +90,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
     ker_W1 = 0.
     ker_W2 = 0.
     ker_W3 = 0.
-    
+ 
     !set up saving the impulse response function if user desieres
 !note: the ideal parameters to plot the transfer function are nro~=7000,nphi~=7000,nt~=2e9,nex~=2e10
     if (verbose .gt. 1) then    
@@ -116,7 +115,6 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
         !open (unit = 201, file = 'Output/Impulse_Integrated2.dat', status='replace', action = 'write')
         !open (unit = 202, file = 'Output/Impulse_Integrated3.dat', status='replace', action = 'write')
     endif 
-    
     ! Set up observer's camera ( alpha = rn sin(phin), beta = mueff rn cos(phin) )
     ! to do full GR ray tracing with      
     mueff  = max( mu0 , 0.3d0 )

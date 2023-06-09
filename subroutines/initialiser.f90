@@ -1,5 +1,6 @@
 !-----------------------------------------------------------------------
-subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose)
+subroutine initialiser(firstcall,ReIm,DC,nlp,nphi,nro,nf,nfsave,nexsave,nlpsave,Anorm,Emin,Emax,dloge,earxi,rnmax,d,needtrans,&
+                       me,xe,refvar,ionvar,verbose)
 !!!  Initialises the model and writes the header
 !!!------------------------------------------------------------------
   !    Args:
@@ -15,30 +16,46 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
 
   !    Internal variables:
   !        i: loop index
-
-  !   Last change: Gullo - 2020 Jun
 !!!-------------------------------------------------------------------  
-  use conv_mod
-  use dyn_gr
-  use env_variables
-      implicit none
-      integer          , intent(out)   :: xe,me,refvar,ionvar,verbose
-      ! integer          , intent(in)    :: nphi, nro !constant
-      real             , intent(in)    :: Emin, Emax ! constant
-      real             , intent(out)   :: dloge, earx(0:nex)
-      double precision , intent(in)    :: rnmax
-      double precision , intent(out)   :: d
-      logical          , intent(inout) :: firstcall, needtrans
-      integer i
-      integer myenv
-  
-      needtrans = .false.     
-      if( firstcall )then
+    use conv_mod
+    use dyn_gr
+    use dyn_en
+    use env_variables
+    implicit none
+    integer          , intent(out)   :: xe,me,refvar,ionvar,verbose
+    ! integer          , intent(in)    :: nphi, nro !constant
+    real             , intent(in)    :: Emin, Emax ! constant
+    real             , intent(out)   :: dloge, earxi(0:nexi), Anorm!, earx(0:nex)
+    double precision , intent(in)    :: rnmax
+    double precision , intent(out)   :: d
+    logical          , intent(inout) :: firstcall, needtrans
+    integer i, ReIm, DC, nlp, nphi, nro, nf, nfsave, nexsave, conv_size, grid_red, nlpsave
+    integer myenv
 
-!call the initializer of the FFtw convolution
-! the function is in amodules.f90 it sets the structure for the FFTw       
-        call init_fftw_allconv() 
-         
+ 
+    !this controls how much more coarse the energy grid becomes going into lag energy or lag freqeuency modes
+    !and the size of the arrays used in computing the Fourier transform. TWEAK AT YOUR OWN RISK
+    grid_red = 4   
+    conv_size = 2 
+    if( DC .eq. 1 ) then
+        nex = nexi
+    else if (ReIm .lt. 7) then 
+        nex = nexi/grid_red
+    else 
+        nex = nexi/(grid_red**2)
+    end if
+
+    nex_conv = conv_size * nex
+    nec = nex_conv/2 + 1
+    
+    !THIS IS JUST A PLACEHOLDER TO AVOID THE NORMALIZATION ISSUES
+    Anorm = Anorm*grid_red**2
+    needtrans = .false.     
+    if( firstcall )then    
+        !call the initializer of the FFtw convolution
+        ! the function is in amodules.f90 it sets the structure for the FFTw       
+        call init_fftw_allconv(nexi,conv_size,grid_red) 
+                
         needtrans = .true.
         write(*,*)"----------------------------------------------------"
         write(*,*)"This is RELTRANS v1.0.0: a transfer function model for"
@@ -47,13 +64,6 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
         write(*,*)"Mastroserio et al (2021) MNRAS 507 p55-73, and "  
         write(*,*)"Lucchini et al (2023) arXiv 230505039L."  
         write(*,*)"----------------------------------------------------"
-
-!Create *logarithmic* working energy grid
-!Will need to evaluate xillver on this grid to use the FT convolution code 
-        dloge = log10( Emax / Emin ) / float(nex)
-        do i = 0, nex
-          earx(i) = Emin * (Emax/Emin)**(float(i)/float(nex))
-        end do
 
         ! Call environment variables
         me      = myenv("MU_ZONES"  , 1 )   !Set number of mu_e zones used
@@ -82,12 +92,28 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
         write(*,*) 'REFVAR is ', refvar
         write(*,*) 'IONVAR is ', ionvar     
         write(*,*)"----------------------------------------------------"
-
-! Set sensible distance for observer from the BH
+        
+        ! Set sensible distance for observer from the BH
         d = max( 1.0d4 , 2.0d2 * rnmax**2 )
         firstcall = .false.
-        
-     end if
-     return
+   ! else if (nlp .ne. nlpsave) then
+        !call init_fftw_allconv(nexi,conv_size,grid_red) 
+    end if
+
+    call allocate_arrays(nlp,nphi,nro,nf,nfsave,nexsave,nlpsave,me,xe)    
+
+    !First internal energy grid: static grid used to evaluate xspec models
+    dloge = log10( Emax / Emin ) / float(nexi)
+    do i = 0, nexi
+        earxi(i) = Emin * (Emax/Emin)**(float(i)/float(nexi))
+    end do
+
+   !Second internal energy grid: dynamic grid that changes size depending on mode
+    dloge = log10( Emax / Emin ) / float(nex)
+    do i = 0, nex
+        earx(i) = Emin * (Emax/Emin)**(float(i)/float(nex))
+    end do       
+
+    return
     end subroutine initialiser
 !-----------------------------------------------------------------------

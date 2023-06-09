@@ -20,12 +20,13 @@ program relwrap
     !set up energy and countrate arrays  
     ne = 1000                             
     allocate(ear(0:ne))  
-    allocate(photar(ne))       
+    allocate(photar(ne))    
     emin = 0.1
     emax = 200.
     do i=0,ne
         ear(i) = emin * (emax/emin)**(real(i)/real(ne))
     end do                                             
+                                             
     
     print *,"Reltrans wrapper code."
     print *,"--------------------------------------------------------------------------------------------------------------"
@@ -142,7 +143,7 @@ program relwrap
         print *, "# of rsp:", params_reltrans(27)         
     end if
         
-    !set up frequency array appropriately if using lag/frequency spectra, depending on BH mass:
+    !change energy to frequency array appropriately if using lag/frequency spectra, depending on BH mass:
     if( params_file(25) .eq. 7 ) then
         if( params_file(19) .gt. 1.e4 ) then
             emin = 1.e-4
@@ -162,6 +163,7 @@ program relwrap
     call CPU_TIME (time_start)
     if( single_lp .eqv. .true. ) then
         call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
+        !tbd: placeholder move file thingy here
     else
         call tdreltransDbl(ear,ne,params_reltrans,ifl,photar)    
     end if    

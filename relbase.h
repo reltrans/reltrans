@@ -70,6 +70,7 @@
 /** parameters for the convolution **/
 #define N_ENER_CONV  4096  // number of bins for the convolution, not that it needs to follow 2^N because of the FFT
 #define EMIN_RELXILL 0.00035  // minimal energy of the convolution (in keV)
+//#define EMIN_RELXILL 1e-6  // minimal energy of the convolution (in keV)
 #define EMAX_RELXILL 2000.0 // minimal energy of the convolution (in keV)
 #define EMIN_XILLVER_NORMALIZATION 0.1
 #define EMAX_XILLVER_NORMALIZATION 1000.0

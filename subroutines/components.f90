@@ -1,5 +1,5 @@
 subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                            h,z,Gamma,eta,beta_p,boost,floHz,fhiHz,ReIm,DelA,DelAB,g,ionvar,resp_matr)             
+                            h,z,Gamma,eta,beta_p,boost,floHz,fhiHz,ReIm,DelA,DelAB,g,ionvar,resp_matr)            
     !this subroutine separates the components from the model, calculates each cross spectrum including the effects of absorRTion,
     !folds the response matrix if desired, calls the phase correction, averages over frequnecy, and prints each different components
     !to a new file. This code repeats a lot and it's a bit of a monstrosity, mostly because it's annoying to separate the transfer
@@ -9,21 +9,21 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     !LT - light travel time only
     !PR - pivoting reflection of each source
     !RT - total reflection lag due to light travel time, pivoting of each reflection signal, and ionization variations  
-    
+
     implicit none
-    integer :: ne,nex,nf,nlp,ionvar,ReIm,resp_matr
-    real :: ear(0:ne),earx(0:nex),corr,contx(nex,nlp),absorbx(nex)
+    integer :: ne,nf,nlp,ionvar,ReIm,resp_matr,nex 
+    real :: ear(0:ne),corr,earx(0:nex),contx(nex,nlp),absorbx(nex)
     real :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
     real :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
     real :: g(nlp),DelA,DelAB(nlp),boost,z,Gamma,eta,h(nlp),beta_p
     real :: gso(nlp),tauso(nlp)
-    real :: fac,ReW0s,ImW0s,ReWbs,ImWbs,ReW3s,ImW3s
+    real :: fac!,ReW0s,ImW0s,ReWbs,ImWbs,ReW3s,ImW3s
     real :: tempRe,tempIm,dE
     real :: f,flo,fhi,floHz,fhiHz
     double precision :: fc
     double precision, parameter :: pi = acos(-1.d0)
     integer :: i,j,m
-    !indiRTdual components transfer functions (S) and cross spectrum (G) dynamic allocation
+    !individual components transfer functions (S) and cross spectrum (G) dynamic allocation
     real, dimension(:,:), allocatable :: ReScont,ImScont,ReSrev,ImSrev
     real, dimension(:,:), allocatable :: ReSpiv,ImSpiv,ImSion,ReSion
     real, dimension(:,:), allocatable :: ReGcont,ImGcont,ReGrev,ImGrev 
@@ -80,15 +80,15 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
         end do    
         !Calculate raw cross-spectrum from S(E,\nu) and the reference band parameters, for each component separately
         if (ReIm .gt. 0.0) then
-            call propercross(nex,nf,earx,ReScont,ImScont,ReGcont,ImGcont,resp_matr)
-            call propercross(nex,nf,earx,ReSrev,ImSrev,ReGrev,ImGrev,resp_matr)     
-            call propercross(nex,nf,earx,ReSpiv,ImSpiv,ReGpiv,ImGpiv,resp_matr)   
-            call propercross(nex,nf,earx,ReSion,ImSion,ReGion,ImGion,resp_matr)
+            call propercross(earx,nex,nf,ReScont,ImScont,ReGcont,ImGcont,resp_matr)
+            call propercross(earx,nex,nf,ReSrev,ImSrev,ReGrev,ImGrev,resp_matr)     
+            call propercross(earx,nex,nf,ReSpiv,ImSpiv,ReGpiv,ImGpiv,resp_matr)   
+            call propercross(earx,nex,nf,ReSion,ImSion,ReGion,ImGion,resp_matr)
         else
-            call propercross_NOmatrix(nex,nf,earx,ReScont,ImScont,ReGcont,ImGcont)
-            call propercross_NOmatrix(nex,nf,earx,ReSrev,ImSrev,ReGrev,ImGrev)
-            call propercross_NOmatrix(nex,nf,earx,ReSpiv,ImSpiv,ReGpiv,ImGpiv)
-            call propercross_NOmatrix(nex,nf,earx,ReSion,ImSion,ReGion,ImGion)
+            call propercross_NOmatrix(earx,nex,nf,ReScont,ImScont,ReGcont,ImGcont)
+            call propercross_NOmatrix(earx,nex,nf,ReSrev,ImSrev,ReGrev,ImGrev)
+            call propercross_NOmatrix(earx,nex,nf,ReSpiv,ImSpiv,ReGpiv,ImGpiv)
+            call propercross_NOmatrix(earx,nex,nf,ReSion,ImSion,ReGion,ImGion)
         endif   
     endif              
     !Apply phase correction parameter to the cross-spectral model (for bad calibration)
@@ -236,8 +236,8 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
 
     use constants
     implicit none
-    integer nex,nf,ionvar,nlp
-    real earx(0:nex),corr,contx(nex,nlp),contx_sum(nex)
+    integer nf,ionvar,nlp,nex
+    real corr,earx(0:nex),contx(nex,nlp)
     real ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
     real ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
     real g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp)
@@ -252,8 +252,6 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
     Sreverb = 0.
     Spivot = 0.
     Sion = 0.
-       
-    !TBD initialize new lags to 0/1 as appropriate here
     phase_d = 0.
     phase_p = 0.
     tau_d = 0.
@@ -324,8 +322,8 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
                             ReGpiv,ImGpiv,ReGion,ImGion)
     use constants
     implicit none
-    integer nex,nf,ionvar,nlp,ReIm,resp_matr
-    real earx(0:nex),corr,contx(nex,nlp),contx_sum(nex),absorbx(nex)
+    integer nf,ionvar,nlp,ReIm,resp_matr,nex 
+    real corr,earx(0:nex),contx(nex,nlp),absorbx(nex)
     real ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
     real ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
     real g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp)
@@ -404,15 +402,15 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
 
     do m=1,nlp 
         if (ReIm .gt. 0.0) then 
-            call propercross(nex,nf,earx,ReScont(m,:,:),ImScont(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:),resp_matr)
-            call propercross(nex,nf,earx,ReSrev(m,:,:),ImSrev(m,:,:),ReGrev_temp(m,:,:),ImGrev_temp(m,:,:),resp_matr)
-            call propercross(nex,nf,earx,ReSpiv(m,:,:),ImSpiv(m,:,:),ReGpiv_temp(m,:,:),ImGpiv_temp(m,:,:),resp_matr)
-            call propercross(nex,nf,earx,ReSion(m,:,:),ImSion(m,:,:),ReGion_temp(m,:,:),ImGion_temp(m,:,:),resp_matr)
+            call propercross(earx,nex,nf,ReScont(m,:,:),ImScont(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:),resp_matr)
+            call propercross(earx,nex,nf,ReSrev(m,:,:),ImSrev(m,:,:),ReGrev_temp(m,:,:),ImGrev_temp(m,:,:),resp_matr)
+            call propercross(earx,nex,nf,ReSpiv(m,:,:),ImSpiv(m,:,:),ReGpiv_temp(m,:,:),ImGpiv_temp(m,:,:),resp_matr)
+            call propercross(earx,nex,nf,ReSion(m,:,:),ImSion(m,:,:),ReGion_temp(m,:,:),ImGion_temp(m,:,:),resp_matr)
         else 
-            call propercross_NOmatrix(nex,nf,earx,ReScont(m,:,:),ImScont(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:))
-            call propercross_NOmatrix(nex,nf,earx,ReSrev(m,:,:),ImSrev(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:))
-            call propercross_NOmatrix(nex,nf,earx,ReSpiv(m,:,:),ImSpiv(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:))
-            call propercross_NOmatrix(nex,nf,earx,ReSion(m,:,:),ImSion(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:))
+            call propercross_NOmatrix(earx,nex,nf,ReScont(m,:,:),ImScont(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:))
+            call propercross_NOmatrix(earx,nex,nf,ReSrev(m,:,:),ImSrev(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:))
+            call propercross_NOmatrix(earx,nex,nf,ReSpiv(m,:,:),ImSpiv(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:))
+            call propercross_NOmatrix(earx,nex,nf,ReSion(m,:,:),ImSion(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:))
         endif
         do j=1,nf 
             do i=1,nex 

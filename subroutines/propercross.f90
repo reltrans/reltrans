@@ -1,10 +1,10 @@
 !-----------------------------------------------------------------------
-subroutine propercross(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw, resp_matr)
+subroutine propercross(earx, nex, nf,  ReSraw, ImSraw, ReGraw, ImGraw, resp_matr)
   use telematrix
   use telematrix2
   implicit none
-  integer, intent(in)  :: nex, nf, resp_matr
-  real,    intent(in)  :: earx(0:nex), ReSraw(nex,nf), ImSraw(nex,nf)
+  integer, intent(in)  :: nf, resp_matr, nex
+  real,    intent(in)  :: ReSraw(nex,nf), ImSraw(nex,nf), earx(0:nex) 
   real,    intent(out) :: ReGraw(nex,nf), ImGraw(nex,nf)
   real,    allocatable :: ReStel(:), ImStel(:)
   real,    allocatable :: ReStel2(:), ImStel2(:)
@@ -197,11 +197,11 @@ subroutine response_and_energy_bounds(resp_matr)
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-subroutine propercross_NOmatrix(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
+subroutine propercross_NOmatrix(earx, nex, nf, ReSraw, ImSraw, ReGraw, ImGraw)
   use telematrix
   implicit none
-  integer, intent(in)  :: nex, nf
-  real,    intent(in)  :: earx(0:nex), ReSraw(nex,nf), ImSraw(nex,nf)
+  integer, intent(in)  :: nf, nex
+  real,    intent(in)  :: ReSraw(nex,nf), ImSraw(nex,nf), earx(0:nex)
   real,    intent(out) :: ReGraw(nex,nf), ImGraw(nex,nf)
   real,    allocatable :: ReStel(:), ImStel(:)
   real                 :: reref, imref, dum, dE

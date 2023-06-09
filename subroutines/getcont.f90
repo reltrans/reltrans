@@ -1,7 +1,8 @@
 subroutine init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_obs,Cp_cont,Cp,fcons,Gamma,Dkpc,Mass,&
-    earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)
+    earxi,Emin,Emax,dlogE,verbose,dset,Anorm,contx_int,eta)
     !!!sets up the continuum arrays/quantities depending on model parameters/flavour 
     use dyn_gr
+    use dyn_en 
     use conv_mod
     implicit none
     integer, intent(in)             :: nlp,Cp,dset,verbose
@@ -10,11 +11,11 @@ subroutine init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_
     double precision, intent(in)    :: a,zcos,Gamma,muobs,eta
     
     integer                         :: m
-    real                            :: Ecut_s,Ecut_obs,Eintegrate
+    real                            :: Ecut_s,Ecut_obs,Eintegrate,earxi(0:nexi),contxi(nexi,nlp)
     double precision                :: lacc,ell13pt6,get_lacc,get_fcons,dgsofac
 
     integer, intent(out)            :: Cp_cont
-    real, intent(out)               :: earx(0:nex),contx(nex,nlp)
+    !real, intent(out)               :: !earx(0:nex)!,contx(nex,nlp)
     double precision, intent(out)   :: gso(nlp),lens(nlp),tauso(nlp),cosdelta_obs(nlp),fcons,contx_int(nlp)
     
     if (nlp .eq. 1) then 
@@ -24,7 +25,8 @@ subroutine init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_
         if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"
         Cp_cont = Cp
         if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
-        call getcont(nex,earx,Gamma,Ecut_obs,Cp_cont,contx)        
+        call getcont(nexi,earxi,Gamma,Ecut_obs,Cp_cont,contxi)   
+        call rebinE(earxi,contxi,nexi,earx,contx,nex)       
         if( dset .eq. 1 )then
             fcons = get_fcons(h(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
         else
@@ -46,7 +48,7 @@ subroutine init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_
             end if  
         end if         
         contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1
-        contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx          
+        contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx        
     else 
         do m=1,nlp   
             !here the observed cutoffs are set from the temperature in the source frame   
@@ -56,7 +58,8 @@ subroutine init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_
             Ecut_obs = Ecut_s * gso(m) / real(1.d0+zcos)
             Cp_cont = Cp 
             if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx        
-            call getcont(nex,earx,Gamma,Ecut_obs,Cp_cont,contx(:,m))
+            call getcont(nexi,earxi,Gamma,Ecut_obs,Cp_cont,contxi(:,m))
+            call rebinE(earxi,contxi(:,m),nexi,earx,contx(:,m),nex)    
             if (m .gt. 1) contx(:,m) = eta*contx(:,m)  
             !TODO fix this section, calculate luminosities better
             if( verbose .gt. 0 )then
@@ -66,12 +69,11 @@ subroutine init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_
                 else
                     write(*,*)"kTe observed from source #", m, "is (keV)=" ,Ecut_obs
                 end if
-            end if  
+            end if 
             contx_int(m) = Eintegrate(Emin,Emax,nex,earx,contx(:,m),dlogE)    
             contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos)))**Gamma * contx(:,m)   
         end do  
     end if  
-    !TBD ADD PROPAGATION LAG HERE
 
 end subroutine init_cont
 

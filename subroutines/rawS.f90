@@ -186,9 +186,9 @@ subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,I
 
     do m=1,nlp 
         if (ReIm .gt. 0.0) then 
-            call propercross(nex,nf,earx,ReSraw(m,:,:),ImSraw(m,:,:),ReGtemp(m,:,:),ImGtemp(m,:,:),resp_matr)
+            call propercross(earx,nex,nf,ReSraw(m,:,:),ImSraw(m,:,:),ReGtemp(m,:,:),ImGtemp(m,:,:),resp_matr)
         else 
-            call propercross_NOmatrix(nex,nf,earx,ReSraw(m,:,:),ImSraw(m,:,:),ReGtemp(m,:,:),ImGtemp(m,:,:))
+            call propercross_NOmatrix(earx,nex,nf,ReSraw(m,:,:),ImSraw(m,:,:),ReGtemp(m,:,:),ImGtemp(m,:,:))
         endif
         do j=1,nf 
             do i=1,nex 

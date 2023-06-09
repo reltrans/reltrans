@@ -42,203 +42,322 @@ MODULE dyn_gr
 !---------------------------------------------------------------------
     implicit none
     logical :: status_re_tau  
-    double precision,dimension(:,:),allocatable :: re1,taudo1,pem1
+    double precision,dimension(:,:),allocatable :: re1,taudo1,pem1    
+    
     save status_re_tau
 END MODULE dyn_gr
 
 
-
+MODULE dyn_en
+!---------------------------------------------------------------------
+!  Module containing definitions needed to dynamically allocate 
+!  the values of an array 
+!---------------------------------------------------------------------
+  implicit none
+  !continuum and grid arrays
+  real,dimension(:),allocatable :: fix
+  real,dimension(:),allocatable :: earx,absorbx,photerx
+  real,dimension(:,:),allocatable :: contx
+      
+  !Transfer function and cross spectrum component arrays
+  real,dimension(:,:),allocatable :: reline_w0,imline_w0,reline_w1,imline_w1
+  real,dimension(:,:),allocatable :: reline_w2,imline_w2,reline_w3,imline_w3
+  real,dimension(:,:,:),allocatable :: ReW0,ImW0,ReW1,ImW1
+  real,dimension(:,:,:),allocatable :: ReW2,ImW2,ReW3,ImW3
+  complex,dimension(:,:,:,:,:),allocatable :: ker_W0,ker_W1,ker_W2,ker_W3
+    
+  !rest frame reflection arrays 
+  real,dimension(:),allocatable :: photarx,photarx_1, photarx_2, photarx_delta, photarx_dlogxi
+  real,dimension(:),allocatable :: re_phot,im_phot,re_phot_delta,im_phot_delta,re_phot_logxi,im_phot_logxi
+  
+  !final cross spectrum arrays 
+  real,dimension(:,:),allocatable :: ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG  
+  real,dimension(:),allocatable :: ImGbar,ReGbar   
+  
+END MODULE dyn_en
 
 module conv_mod
   use, intrinsic :: iso_c_binding
   implicit none
   include 'fftw3.f03'
 
-  integer, parameter :: nex = 2**12, nex_conv = 4 * nex, nec = nex_conv/2 + 1
-  ! real   , dimension(2 * nex_conv) :: adata,bdata,cdata
-  ! complex, dimension(nex_conv) :: ac,bc,cc
+  integer, parameter :: nexi = 2**12
   
-  double precision, parameter :: nexm1 = 1. / real(nex_conv, kind(8))
-
-  type(C_ptr) :: plan1, plan2
-  real(   c_double), pointer, dimension(:) :: in,  out_conv
-  complex(c_double), pointer, dimension(:) :: out, in_conv
+  type(C_ptr) :: plan_timeavg_pad, plan_timeavg_depad
+  type(C_ptr) :: plan_lage_pad, plan_lage_depad
+  type(C_ptr) :: plan_lagf_pad, plan_lagf_depad 
+  real(c_double), pointer, dimension(:)    :: in_timeavg, out_timeavg_conv
+  complex(c_double), pointer, dimension(:) :: out_timeavg, in_timeavg_conv
+  real(c_double), pointer, dimension(:)    :: in_lage, out_lage_conv
+  complex(c_double), pointer, dimension(:) :: out_lage, in_lage_conv
+  real(c_double), pointer, dimension(:)    :: in_lagf, out_lagf_conv
+  complex(c_double), pointer, dimension(:) :: out_lagf, in_lagf_conv
   type(C_ptr) :: a1, a2, a3, a4
-
-
-contains
   
-    subroutine init_fftw_allconv()
+  !array sizes/renormalization 
+  integer :: nex,nex_conv,nec,conv_width
+  double precision :: nexm1      
+
+contains  
+    subroutine init_fftw_allconv(nbins,width,grebin)
     implicit none
-    integer(c_int) :: flags, i
-    integer, external :: omp_get_max_threads
+    integer(c_int) :: flags, i!, nex_conv, nec 
+    !note: these sizes need to be separate from nex_conv etc to cover all the possible cases, unlike nex/nex_conv which are
+    !specific to the mode in which the model is running 
+    integer conv_size, out_size, nbins, width, grebin
+    
+    !first: arrays for time-averaged grid, so assume nex = nexi
+    conv_width = width  
+    conv_size = width * nbins
+    out_size = conv_size/2 + 1   
 
-    !i = fftw_init_threads()
-    !call fftw_plan_with_nthreads(omp_get_max_threads())
-    !print*, "Using threads num:", omp_get_max_threads()
+    !allocate placeholder arrays 
+    a1 = fftw_alloc_real(int(conv_size, c_size_t))
+    a2 = fftw_alloc_real(int(conv_size, c_size_t))
+    a3 = fftw_alloc_complex(int(out_size, c_size_t))
+    a4 = fftw_alloc_complex(int(out_size, c_size_t))
 
-    ! allocate
-    a1 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a2 = fftw_alloc_real(   int(nex_conv, c_size_t))
-    a3 = fftw_alloc_complex(int(nec     , c_size_t))
-    a4 = fftw_alloc_complex(int(nec     , c_size_t))
-
-    call c_f_pointer(a1, in      , [nex_conv])
-    call c_f_pointer(a2, out_conv, [nex_conv])
-    call c_f_pointer(a3, out     , [nec     ])
-    call c_f_pointer(a4, in_conv , [nec     ])
- !   flags = 0 + FFTW_ESTIMATE
+    call c_f_pointer(a1, in_timeavg, [conv_size])
+    call c_f_pointer(a2, out_timeavg_conv, [conv_size])
+    call c_f_pointer(a3, out_timeavg, [out_size])
+    call c_f_pointer(a4, in_timeavg_conv, [out_size])
     flags = 0 + FFTW_PATIENT
 
-! note: these two are what kill the runtime of this subroutine
-    plan1 = fftw_plan_dft_r2c_1d(nex_conv,  in, out, flags)
-    plan2 = fftw_plan_dft_c2r_1d(nex_conv, in_conv, out_conv, flags)
+    !note: these two are what kill the runtime of this subroutine
+    plan_timeavg_pad = fftw_plan_dft_r2c_1d(conv_size, in_timeavg, out_timeavg, flags)
+    plan_timeavg_depad = fftw_plan_dft_c2r_1d(conv_size, in_timeavg_conv, out_timeavg_conv, flags)
+    
+    !tbd second: arrays for lag-energy energy grid grid, grebin times smaller than time-averaged grid
+    conv_size = width*nbins/grebin
+    out_size = conv_size/2 + 1
+    
+    !allocate placeholder arrays 
+    a1 = fftw_alloc_real(int(conv_size, c_size_t))
+    a2 = fftw_alloc_real(int(conv_size, c_size_t))
+    a3 = fftw_alloc_complex(int(out_size, c_size_t))
+    a4 = fftw_alloc_complex(int(out_size, c_size_t))
+
+    call c_f_pointer(a1, in_lage, [conv_size])
+    call c_f_pointer(a2, out_lage_conv, [conv_size])
+    call c_f_pointer(a3, out_lage, [out_size])
+    call c_f_pointer(a4, in_lage_conv, [out_size])
+    flags = 0 + FFTW_PATIENT
+
+    !note: these two are what kill the runtime of this subroutine
+    plan_lage_pad = fftw_plan_dft_r2c_1d(conv_size, in_lage, out_lage, flags)
+    plan_lage_depad = fftw_plan_dft_c2r_1d(conv_size, in_lage_conv, out_lage_conv, flags)
+    
+    !third: arrays for lag-frequency energy grid, grebin**2 times smaller than time-averaged grid 
+    conv_size = width*nbins/(grebin**2)
+    out_size = conv_size/2 + 1   
+    
+    !allocate placeholder arrays 
+    a1 = fftw_alloc_real(int(conv_size, c_size_t))
+    a2 = fftw_alloc_real(int(conv_size, c_size_t))
+    a3 = fftw_alloc_complex(int(out_size, c_size_t))
+    a4 = fftw_alloc_complex(int(out_size, c_size_t))
+
+    call c_f_pointer(a1, in_lagf, [conv_size])
+    call c_f_pointer(a2, out_lagf_conv, [conv_size])
+    call c_f_pointer(a3, out_lagf, [out_size])
+    call c_f_pointer(a4, in_lagf_conv, [out_size])
+    flags = 0 + FFTW_PATIENT
+
+    !note: these two are what kill the runtime of this subroutine
+    plan_lagf_pad = fftw_plan_dft_r2c_1d(conv_size, in_lagf, out_lagf, flags)
+    plan_lagf_depad = fftw_plan_dft_c2r_1d(conv_size, in_lagf_conv, out_lagf_conv, flags)    
     end subroutine init_fftw_allconv
 
-    subroutine conv_real_FFTw(dyn,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
+    subroutine conv_real_FFTw(dyn,photarx,reline,imline,ReW_conv,ImW_conv,DC,ReIm,nlp)
     implicit none
-    integer, intent(in) :: DC, nlp 
+    integer, intent(in) :: DC, nlp, ReIm!, nex, nex_conv, nec 
     real                :: dyn
     real, intent(in)    :: photarx(nex)
     real, intent(in)    :: reline(nlp,nex), imline(nlp,nex)
     real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
-    complex :: conv(nec),padFT_photarx(nec)
-    complex :: padFT_reline(nec),  padFT_imline(nec)            
+    complex :: conv(nec), padFT_photarx(nec)
+    complex :: padFT_reline(nec), padFT_imline(nec)            
     integer :: m
-    real    :: photmax, depad_conv(nex)
+    real    :: depad_conv(nex)!, nexm1 !, photmax   
     
+    nexm1 = 1. / real(nex_conv, kind(8))
+
     do m=1,nlp  
         if (DC .eq. 1 ) then   
-            call padding4FT(photarx,padFT_photarx)         
-            call padding4FT(reline(m,:),padFT_reline)                        
+            call padding4FT(ReIm,DC,photarx,padFT_photarx)         
+            call padding4FT(ReIm,DC,reline(m,:),padFT_reline)                        
             
             conv = (padFT_photarx * padFT_reline) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
+            call de_paddingFT(ReIm,DC,dyn, conv, depad_conv)
             ReW_conv(m,:) = ReW_conv(m,:) + depad_conv
         else 
-            call padding4FT(photarx       , padFT_photarx)        
-            call padding4FT(reline(m,:),padFT_reline)
-            call padding4FT(imline(m,:),padFT_imline)
+            call padding4FT(ReIm,DC,photarx,padFT_photarx)        
+            call padding4FT(ReIm,DC,reline(m,:),padFT_reline)
+            call padding4FT(ReIm,DC,imline(m,:),padFT_imline)
      
             conv = (padFT_photarx * padFT_reline) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
+            call de_paddingFT(ReIm,DC,dyn,conv,depad_conv)
             ReW_conv(m,:) = ReW_conv(m,:) + depad_conv
             
             conv = (padFT_photarx * padFT_imline) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
+            call de_paddingFT(ReIm,DC,dyn,conv,depad_conv)
             ImW_conv(m,:) = ImW_conv(m,:) + depad_conv           
         endif
     end do
-
-    end subroutine conv_real_FFTw
+    end subroutine conv_real_FFTw  
     
-    
-    subroutine conv_complex_FFTw(dyn,re_phot,im_phot,reline,imline,ReW_conv,ImW_conv,DC,nlp)
-    
+    subroutine conv_complex_FFTw(dyn,re_phot,im_phot,reline,imline,ReW_conv,ImW_conv,DC,ReIm,nlp)    
     implicit none
-    integer, intent(in) :: DC,nlp 
+    integer, intent(in) :: DC, nlp, ReIm!, nex, nex_conv, nec  
     real                :: dyn
     real, intent(in)    :: re_phot(nex), im_phot(nex)
     real, intent(in)    :: reline(nlp,nex), imline(nlp,nex)
     real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
-    complex :: conv(nec),padFT_rephot(nec), padFT_imphot(nec)
-    complex :: padFT_reline(nec),  padFT_imline(nec)            
+    complex :: conv(nec), padFT_rephot(nec), padFT_imphot(nec)
+    complex :: padFT_reline(nec), padFT_imline(nec)            
     integer :: m
-    real    :: photmax, depad_conv(nex)
-    
+    real    :: depad_conv(nex)!, photmax   
+
+    nexm1 = 1. / real(nex_conv, kind(8))    
     do m=1,nlp 
         if (DC .eq. 1 ) then   
-            call padding4FT(re_phot,padFT_rephot)         
-            call padding4FT(reline(m,:),padFT_reline)                        
+            call padding4FT(ReIm,DC,re_phot,padFT_rephot)         
+            call padding4FT(ReIm,DC,reline(m,:),padFT_reline)                        
             
             conv = (padFT_rephot * padFT_reline) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
+            call de_paddingFT(ReIm,DC,dyn,conv,depad_conv)
             ReW_conv(m,:) = ReW_conv(m,:) + depad_conv
         else  
             !pad xillver
-            call padding4FT(re_phot,padFT_rephot)     
-            call padding4FT(im_phot,padFT_imphot)            
+            call padding4FT(ReIm,DC,re_phot,padFT_rephot)     
+            call padding4FT(ReIm,DC,im_phot,padFT_imphot)            
             !pad transfer function 
-            call padding4FT(reline(m,:),padFT_reline)
-            call padding4FT(imline(m,:),padFT_imline)  
+            call padding4FT(ReIm,DC,reline(m,:),padFT_reline)
+            call padding4FT(ReIm,DC,imline(m,:),padFT_imline)  
             
             !real part - real(xillver)*real(transfer func) = real
             conv = (padFT_rephot * padFT_reline) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
+            call de_paddingFT(ReIm,DC,dyn,conv,depad_conv)
             ReW_conv(m,:) = ReW_conv(m,:) + depad_conv
             
             !immaginary(xillver) * immaginary(transfer func) = -real
             conv = (padFT_imphot * padFT_imline) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
+            call de_paddingFT(ReIm,DC,dyn,conv,depad_conv)
             ReW_conv(m,:) = ReW_conv(m,:) - depad_conv 
             
             !next immaginary part: real(xillver)*immaginary(transfer func) = immaginary  
             conv = (padFT_rephot * padFT_imline) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
+            call de_paddingFT(ReIm,DC,dyn,conv,depad_conv)
             ImW_conv(m,:) = ImW_conv(m,:) + depad_conv     
 
             !immaginary(xillver) * real(trasfer func) = immaginary
             conv = (padFT_imphot * padFT_reline) * nexm1
-            call de_paddingFT(dyn, conv, depad_conv)
+            call de_paddingFT(ReIm,DC,dyn,conv,depad_conv)
             ImW_conv(m,:) = ImW_conv(m,:) + depad_conv  
         endif
-    end do  
-    
+    end do      
     end subroutine conv_complex_FFTw
 
-
-    subroutine padding4FT(line, padFT_line)
+    subroutine padding4FT(ReIm, DC, line, padFT_line)
     implicit none 
     real           , intent(in)  :: line(nex)
     complex        , intent(out) :: padFT_line(nec)
-
-    integer :: i 
-
-    ! Fill padded arrays
-    in(1) = 0.0
-    do i = 1, nex
-        in(i+1) = line(i)
-    end do
-    do i = 2, 3 * nex
-        in(i + nex) = 0.
-    end do
-
-    call fftw_execute_dft_r2c(plan1, in, out)
-
-    padFT_line = out
+    integer :: i, ReIm, DC 
     
+    !print*,"Array size test: ",nex,nex_conv,nec
+    !print*,"Mode test:", ReIm,DC
+    !the code below is absolutely disgusting, do this better seriously 
+    if (DC .eq. 1) then
+        ! Fill padded arrays
+        in_timeavg(1) = 0.0
+        do i = 1, nex
+            in_timeavg(i+1) = line(i)
+        end do
+        do i = 2, (conv_width-1)*nex
+            in_timeavg(i + nex) = 0.
+        end do
+        call fftw_execute_dft_r2c(plan_timeavg_pad, in_timeavg, out_timeavg)
+        padFT_line = out_timeavg      
+    else if (ReIm .lt. 7) then
+        ! Fill padded arrays
+        in_lage(1) = 0.0
+        do i = 1, nex
+            in_lage(i+1) = line(i)
+        end do
+        do i = 2, (conv_width-1)*nex
+            in_lage(i + nex) = 0.
+        end do
+        call fftw_execute_dft_r2c(plan_lage_pad, in_lage, out_lage)
+        padFT_line = out_lage      
+    else
+        ! Fill padded arrays
+        in_lagf(1) = 0.0
+        do i = 1, nex
+            in_lagf(i+1) = line(i)
+        end do
+        do i = 2, (conv_width-1)*nex
+            in_lagf(i + nex) = 0.
+        end do 
+        call fftw_execute_dft_r2c(plan_lagf_pad, in_lagf, out_lagf)
+        padFT_line = out_lagf       
+    end if 
     end subroutine padding4FT
 
-
-    subroutine de_paddingFT(dyn, padFT_line, out_line)
+    subroutine de_paddingFT(ReIm, DC, dyn, padFT_line, out_line)
     implicit none 
     real    , intent(in) :: dyn
     complex , intent(in) :: padFT_line(nec)
     real    , intent(out):: out_line(nex)
 
-    integer :: i 
+    integer :: i, ReIm, DC
     real    :: photmax
 
-    in_conv = padFT_line
-
-    call fftw_execute_dft_c2r(plan2, in_conv, out_conv)
-    
-    ! Populate output array
-    photmax = 0.0
-    do i = 1, nex
-        out_line(i) = out_conv(i + nex/2 + 1)
-        photmax = max( photmax , out_line(i) )
-    end do
-    ! Clean any residual edge effects
-    do i = 1, nex
-        if( abs(out_line(i)) .lt. abs(dyn * photmax) ) out_line(i) = 0.0
-    end do
+    !the code below is absolutely disgusting, do this better seriously 
+    if (DC .eq. 1) then
+        in_timeavg_conv = padFT_line
+        call fftw_execute_dft_c2r(plan_timeavg_depad, in_timeavg_conv, out_timeavg_conv)   
+        ! Populate output array
+        photmax = 0.0
+        do i = 1, nex
+            out_line(i) = out_timeavg_conv(i + nex/2 + 1)
+            photmax = max( photmax , out_line(i) )
+        end do
+        ! Clean any residual edge effects
+        do i = 1, nex
+            if( abs(out_line(i)) .lt. abs(dyn * photmax) ) out_line(i) = 0.0
+        end do 
+    else if (ReIm .lt. 7) then
+        in_lage_conv = padFT_line
+        call fftw_execute_dft_c2r(plan_lage_depad, in_lage_conv, out_lage_conv)
+        ! Populate output array
+        photmax = 0.0
+        do i = 1, nex
+            out_line(i) = out_lage_conv(i + nex/2 + 1)
+            photmax = max( photmax , out_line(i) )
+        end do
+        ! Clean any residual edge effects
+        do i = 1, nex
+            if( abs(out_line(i)) .lt. abs(dyn * photmax) ) out_line(i) = 0.0
+        end do 
+    else 
+        in_lagf = padFT_line
+        call fftw_execute_dft_c2r(plan_lagf_depad, in_lagf_conv, out_lagf_conv)
+        ! Populate output array
+        photmax = 0.0
+        do i = 1, nex
+            out_line(i) = out_lagf_conv(i + nex/2 + 1)
+            photmax = max( photmax , out_line(i) )
+        end do
+        ! Clean any residual edge effects
+        do i = 1, nex
+            if( abs(out_line(i)) .lt. abs(dyn * photmax) ) out_line(i) = 0.0
+        end do 
+    end if   
 
     return 
-   end subroutine de_paddingFT
+    end subroutine de_paddingFT
 
 end module conv_mod
-
 
 
 !***********************************************************************

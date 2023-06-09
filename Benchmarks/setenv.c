@@ -43,7 +43,7 @@ void c_setgetenv(char *emin, char *emax)
         }
     }
     
-    setenv("REV_VERB","2",1);
+    setenv("REV_VERB","3",1);
     p = getenv("REV_VERB");
     
     if (verbose == 1){
