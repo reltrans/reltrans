@@ -122,7 +122,7 @@ else:
     #this is just to make the plot a bit prettier - at low frequencies it's super messy because the continuum lags become huge
     #min_x_timing = 0.9*min_x_timing
 
-fig, (ax1) = plt.subplots(1,1,figsize=(7.5,4.5))
+fig, (ax1) = plt.subplots(1,1,figsize=(9.,6.))
 
 dashed_line = np.zeros(50)
 line_array = np.logspace(np.log10(min_x_timing),np.log10(max_x_timing),50)

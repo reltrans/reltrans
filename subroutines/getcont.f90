@@ -26,7 +26,7 @@ subroutine init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_
         Cp_cont = Cp
         if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
         call getcont(nexi,earxi,Gamma,Ecut_obs,Cp_cont,contxi)   
-        call rebinE(earxi,contxi,nexi,earx,contx,nex)       
+        call rebin_xspec(earxi,contxi,nexi,earx,contx,nex)       
         if( dset .eq. 1 )then
             fcons = get_fcons(h(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
         else
@@ -59,7 +59,7 @@ subroutine init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_
             Cp_cont = Cp 
             if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx        
             call getcont(nexi,earxi,Gamma,Ecut_obs,Cp_cont,contxi(:,m))
-            call rebinE(earxi,contxi(:,m),nexi,earx,contx(:,m),nex)    
+            call rebin_xspec(earxi,contxi(:,m),nexi,earx,contx(:,m),nex)    
             if (m .gt. 1) contx(:,m) = eta*contx(:,m)  
             !TODO fix this section, calculate luminosities better
             if( verbose .gt. 0 )then

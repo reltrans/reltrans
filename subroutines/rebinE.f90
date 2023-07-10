@@ -9,7 +9,7 @@ subroutine crebin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG)
   integer i
   real E,dE,E2ReGx(nex),E2ImGx(nex)
 
-  !Convert to E^2*dN/dE for better accuracy
+  !Convert to E^2*dN/dE for better accuracy >> WRONG THIS WORSENS THE ACCURACY FOR SOME REASON
   do i = 1,nex
      E  = 0.5 * ( earx(i) + earx(i-1) )
      dE = earx(i) - earx(i-1)
@@ -25,8 +25,8 @@ subroutine crebin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG)
   do i = 1,ne
      E  = 0.5 * ( ear(i) + ear(i-1) )
      dE = ear(i) - ear(i-1)
-     ReG(i) = ReG(i) / E**2 * dE
-     ImG(i) = ImG(i) / E**2 * dE
+     ReG(i) = dE * ReG(i) / E**2
+     ImG(i) = dE * ImG(i) /  E**2
   end do
   
   return
@@ -35,14 +35,79 @@ end subroutine crebin
 
 
 !-----------------------------------------------------------------------
+subroutine rebin_xspec(earx,px,nex,ear,p,ne)
+!this subroutine is identical to the below one, except it is for arrays in units of photar
+!i,nex,earx,px = input
+!j,ne,ear,p    = output
+  implicit none
+  integer i,nex,j,ne,ilo,ihi
+  real earx(0:nex),ear(0:ne),px(nex),p(ne),upper,lower,rebin(nex)
+  real Ej,Ei,Ehi,Elo,phi,plo,dE
+  
+  !switch units to dN/dE instead of dN
+  do i=1,nex 
+     dE = earx(i) - earx(i-1)
+     rebin(i) = px(i) / dE
+  end do
+  
+  ilo = 1
+  do j = 1,ne
+     do while( earx(ilo) .le. ear(j-1) .and. ilo .lt. nex )
+        ilo = ilo + 1
+     end do
+     ihi = ilo
+     do while( earx(ihi) .le. ear(j) .and. ihi .lt. nex )
+        ihi = ihi + 1
+     end do
+     if( ihi .gt. ilo )then
+        p(j) = 0.0
+        do i = ilo,ihi
+           lower = MAX( earx(i-1) , ear(j-1)  )
+           upper = MIN( earx(i)   , ear(j)    )
+           p(j) = p(j) + rebin(i) * ( upper - lower )
+        end do
+        p(j) = p(j) / ( ear(j) - ear(j-1) )
+     else
+        !Interpolate (or extrapolate)
+        i = ilo
+        Ei = 0.5 * ( earx(i) + earx(i-1) )
+        Ej  = 0.5 * ( ear(j) + ear(j-1) )
+        if( Ei .gt. Ej ) i = ilo - 1
+        i = max( i , 2     )
+        i = min( i , nex-1 )
+        Ehi = 0.5 * ( earx(i+1) + earx(i)   )
+        Elo = 0.5 * ( earx(i)   + earx(i-1) )
+        phi = rebin(i+1)
+        plo = rebin(i)
+        p(j) = plo + (phi-plo)*(Ej-Elo)/(Ehi-Elo)
+     end if
+     if( ilo .gt. 1 ) ilo = ilo - 1
+  end do
+
+
+  !switch units back to dN
+  do i=1,ne 
+     dE = ear(i) - ear(i-1)
+     p(i) = p(i) * dE
+  end do
+  
+  RETURN   
+END subroutine rebin_xspec
+!-----------------------------------------------------------------------
+
+
+!-----------------------------------------------------------------------
 subroutine rebinE(earx,px,nex,ear,p,ne)
 !General rebinning scheme, should be nice and robust - BUT IT FUCKING ISN'T
+!NOTE: THIS IS ONLY ROBUST IF WE PASS dN/dE in some form (including factors E or E**2) 
+!NOT PHOTAR ARRAYS WHICH HAVE UNITS OF dN
 !i,nex,earx,px = input
 !j,ne,ear,p    = output
   implicit none
   integer i,nex,j,ne,ilo,ihi
   real earx(0:nex),ear(0:ne),px(nex),p(ne),upper,lower
-  real Ej,Ei,Ehi,Elo,phi,plo
+  real Ej,Ei,Ehi,Elo,phi,plo,temp1,temp2
+
   ilo = 1
   do j = 1,ne
      do while( earx(ilo) .le. ear(j-1) .and. ilo .lt. nex )
@@ -64,10 +129,10 @@ subroutine rebinE(earx,px,nex,ear,p,ne)
         !Interpolate (or extrapolate)
         i = ilo
         Ei = 0.5 * ( earx(i) + earx(i-1) )
+        Ej  = 0.5 * ( ear(j) + ear(j-1) )
         if( Ei .gt. Ej ) i = ilo - 1
         i = max( i , 2     )
         i = min( i , nex-1 )
-        Ej  = 0.5 * ( ear(j) + ear(j-1) )
         Ehi = 0.5 * ( earx(i+1) + earx(i)   )
         Elo = 0.5 * ( earx(i)   + earx(i-1) )
         phi = px(i+1)

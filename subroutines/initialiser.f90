@@ -35,8 +35,8 @@ subroutine initialiser(firstcall,ReIm,DC,nlp,nphi,nro,nf,nfsave,nexsave,nlpsave,
  
     !this controls how much more coarse the energy grid becomes going into lag energy or lag freqeuency modes
     !and the size of the arrays used in computing the Fourier transform. TWEAK AT YOUR OWN RISK
-    grid_red = 4   
-    conv_size = 2 
+    grid_red = 2  
+    conv_size = 2
     if( DC .eq. 1 ) then
         nex = nexi
     else if (ReIm .lt. 7) then 
@@ -47,9 +47,7 @@ subroutine initialiser(firstcall,ReIm,DC,nlp,nphi,nro,nf,nfsave,nexsave,nlpsave,
 
     nex_conv = conv_size * nex
     nec = nex_conv/2 + 1
-    
-    !THIS IS JUST A PLACEHOLDER TO AVOID THE NORMALIZATION ISSUES
-    Anorm = Anorm*grid_red**2
+
     needtrans = .false.     
     if( firstcall )then    
         !call the initializer of the FFtw convolution

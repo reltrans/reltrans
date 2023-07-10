@@ -264,9 +264,6 @@ contains
     complex        , intent(out) :: padFT_line(nec)
     integer :: i, ReIm, DC 
     
-    !print*,"Array size test: ",nex,nex_conv,nec
-    !print*,"Mode test:", ReIm,DC
-    !the code below is absolutely disgusting, do this better seriously 
     if (DC .eq. 1) then
         ! Fill padded arrays
         in_timeavg(1) = 0.0
@@ -312,7 +309,6 @@ contains
     integer :: i, ReIm, DC
     real    :: photmax
 
-    !the code below is absolutely disgusting, do this better seriously 
     if (DC .eq. 1) then
         in_timeavg_conv = padFT_line
         call fftw_execute_dft_c2r(plan_timeavg_depad, in_timeavg_conv, out_timeavg_conv)   

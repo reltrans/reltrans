@@ -62,6 +62,8 @@ subroutine set_param(dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,l
   else
      Dkpc = 0.0
   end if
+
+!tbd: avoid REim=-5/-6 
   
   !Set minimum r (ISCO) and convert rin and h to rg
   if( abs(a) .gt. 0.999 ) a = sign(a,1.d0) * 0.999

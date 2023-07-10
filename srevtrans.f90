@@ -724,7 +724,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     implicit none
     !Constants
     integer         , parameter :: nphi = 200, nro = 200!, ionvar! = 1 
-    real            , parameter :: Emin = 1e-2, Emax = 3e3, dyn = 1e-7
+    real            , parameter :: Emin = 1e-1, Emax = 5e2, dyn = 1e-7
     double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0, &
                                    dlogf = 0.09 !This is a resolution parameter (base 10)      
     double precision, parameter :: Grav = 6.6743e-8, c = 2.99792458e10, Msun = 1.989e33 
@@ -928,7 +928,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                 if( me .eq. 1 ) thetae = real(inc)
                 !Call restframe reflection model
                 call myreflect(earxi,nexi,Gamma0,Afe,logne,Ecut0,logxi0,thetae,Cp,photarxi)
-                call rebinE(earxi,photarxi,nexi,earx,photarx,nex)
+                call rebin_xspec(earxi,photarxi,nexi,earx,photarx,nex)
                 if( verbose .gt. 2 ) then
                     path = 'Output/Xillver/xillver'//trim(str(rbin))//'.dat' 
                     inquire(file=path, exist=exist_check)
@@ -940,25 +940,27 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                     do counter=1,nexi
                         write (12,*) 0.5*(earxi(counter-1)+earxi(counter)), photarxi(counter)
                     end do
-                    close(12)
+                    close(12)                  
                 end if
+                !photar is dN, # of photons per energy bin, what needs to be the same when plotting is dN/dE
+                !the sum of dN needs to be preserved
                 !NON LINEAR EFFECTS                
                 if (DC .eq. 0) then 
                     !Gamma variations
                     logxiin = logxi0 + ionvariation * dlogxi1
                     call myreflect(earxi,nexi,Gamma1,Afe,logne,Ecut0,logxiin,thetae,Cp,photarxi_1)
-                    call rebinE(earxi,photarxi_1,nexi,earx,photarx_1,nex)  
+                    call rebin_xspec(earxi,photarxi_1,nexi,earx,photarx_1,nex)  
                     logxiin = logxi0 + ionvariation * dlogxi2
                     call myreflect(earxi,nexi,Gamma2,Afe,logne,Ecut0,logxiin,thetae,Cp,photarxi_2)
-                    call rebinE(earxi,photarxi_2,nexi,earx,photarx_2,nex)  
+                    call rebin_xspec(earxi,photarxi_2,nexi,earx,photarx_2,nex)  
                     photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
                     !xi variations
                     logxiin = logxi0 + ionvariation * dlogxi1
                     call myreflect(earxi,nexi,Gamma0,Afe,logne,Ecut0,logxiin,thetae,Cp,photarxi_1)
-                    call rebinE(earxi,photarxi_1,nexi,earx,photarx_1,nex)  
+                    call rebin_xspec(earxi,photarxi_1,nexi,earx,photarx_1,nex)  
                     logxiin = logxi0 + ionvariation * dlogxi2
                     call myreflect(earxi,nexi,Gamma0,Afe,logne,Ecut0,logxiin,thetae,Cp,photarxi_2)
-                    call rebinE(earxi,photarxi_2,nexi,earx,photarx_2,nex)   
+                    call rebin_xspec(earxi,photarxi_2,nexi,earx,photarx_2,nex)   
                     photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
                 end if
                 !Loop through frequencies, energies and lamp posts
@@ -1020,7 +1022,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   
     ! Calculate absorption 
     call tbabs(earxi,nexi,nh,Ifl,absorbxi,photerxi)
-    call rebinE(earxi,absorbxi,nexi,earx,absorbx,nex)
+    call rebin_xspec(earxi,absorbxi,nexi,earx,absorbx,nex)
     !call rebinE(earxi,photerxi,nexi,earx,photerx,nex)
 
     !TBD coherence check - if zero coherence between lamp posts, call a different subroutine 
@@ -1059,7 +1061,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             ReGbar(i) = (Anorm/real(1.+eta)) * ReSrawa(i,1)
         end do
     else if (ReIm .eq. 7) then     
-        !if calculating the lag-frequency spectrum, just rebin the arrays 
+        !if calculating the lag-frequency spectrum, just rebin the arrays
+        !DOUBLE CHECK THAT THIS IS CORRECT BEFORE FITTING DATA
         call rebinE(fix, ReGbar, nf, ear, ReS, ne)
         call rebinE(fix, ImGbar, nf, ear, ImS, ne)  
         if(allocated(fix))deallocate(fix)   
