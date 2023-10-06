@@ -1609,8 +1609,8 @@ void add_primary_component(double *ener, int n_ener, double *flu, relParam *rel_
 
   double primarySpecNormFactor = 1. / calcNormWrtXillverTableSpec(pl_flux_xill, egrid->ener, egrid->nbins, status);
 
-  /** bin the primary continuum onto the Input grid **/
-  rebin_spectrum(ener, pl_flux, n_ener, egrid->ener, pl_flux_xill, egrid->nbins); //TODO: bug, if E<0.1keV in ener grid
+  // calcualte the primary spectrum on the input energy grid
+  calculatePrimarySpectrum(pl_flux, ener, n_ener, rel_param, xill_param, status);
 
   for (int ii = 0; ii < n_ener; ii++) {
     pl_flux[ii] *= primarySpecNormFactor;
