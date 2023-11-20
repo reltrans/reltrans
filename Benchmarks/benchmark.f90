@@ -22,7 +22,7 @@ program relbench
     open(60,file='Benchmarks/Benchmark_result.txt',status='replace', action = 'write')
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     write (60,*) "Setting up" 
-    write (60,*) "MAKE SURE TO RUN THE TEST WITH FNINT COMMENTED OUT FROM SREVTRANS.F90!!!!!!!!!!!!!!!!!"
+    write (60,*) "MAKE SURE TO RUN THE TEST WITH FNINIT COMMENTED OUT FROM SREVTRANS.F90!!!!!!!!!!!!!!!!!"
     write (60,*) "Note: this test is very strict, and some benchmarks may report as being failed due to numerical"
     write (60,*) "precision issues in fftw. If the test reports discrepancy in only a handful of bins, consider the "
     write (60,*) "test passed."    
