@@ -21,6 +21,7 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
   use conv_mod
   use dyn_gr
   use env_variables
+  use xillver_tables
       implicit none
       integer          , intent(out)   :: xe,me,refvar,ionvar,verbose
       ! integer          , intent(in)    :: nphi, nro !constant
@@ -30,8 +31,9 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
       double precision , intent(out)   :: d
       logical          , intent(inout) :: firstcall, needtrans
       integer i
-      integer myenv
-  
+      integer get_env_int
+      character (len=200) :: get_env_char
+ 
       needtrans = .false.     
       if( firstcall )then
 
@@ -56,20 +58,20 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
         end do
 
         ! Call environment variables
-        me      = myenv("MU_ZONES"  , 1 )   !Set number of mu_e zones used
-        xe      = myenv("ION_ZONES" , 20)   !Set number of ionisation zones used
+        me      = get_env_int("MU_ZONES"  , 1 )   !Set number of mu_e zones used
+        xe      = get_env_int("ION_ZONES" , 20)   !Set number of ionisation zones used
         ! Decide between zone A density profile or constant density profile
-        adensity = myenv("A_DENSITY",0)
+        adensity = get_env_int("A_DENSITY",0)
         adensity = min( adensity , 1 )
         adensity = max( adensity , 0 )
-        verbose = myenv("REV_VERB",0)     !Set verbose level
+        verbose = get_env_int("REV_VERB",0)     !Set verbose level
                                           !0: Xspec output only
                                           !1: Also print quantities to terminal
                                           !2: Also print model components, radial scalings and impulse response function to 
                                           !files in /Output folder
-        refvar = myenv("REF_VAR",1)         !choose whether to include pivoting reflection
-        ionvar = myenv("ION_VAR",1)         !choose whether to include ionization changes
-        idum = myenv("SEED_SIM", -2851043)  !seed for simulations
+        refvar = get_env_int("REF_VAR",1)         !choose whether to include pivoting reflection
+        ionvar = get_env_int("ION_VAR",1)         !choose whether to include ionization changes
+        idum = get_env_int("SEED_SIM", -2851043)  !seed for simulations
 
         write(*,*) 'RADIAL ZONES', xe
         write(*,*) 'ANGLE ZONES', me
@@ -85,6 +87,16 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
 
 ! Set sensible distance for observer from the BH
         d = max( 1.0d4 , 2.0d2 * rnmax**2 )
+
+! set the table names 
+        path_tables = get_env_char("RELTRANS_TABLES"  , './' )   !search for the env variable RELTRANS_TABLES otherwise set the path to ./
+        write(pathname_xillver, '(A, A, A)') trim(path_tables), '/', trim(xillver)
+        write(pathname_xillverD, '(A, A, A)') trim(path_tables), '/', trim(xillverD)
+        write(pathname_xillverDCp, '(A, A, A)') trim(path_tables), '/', trim(xillverDCp)
+        write(*,'(A, A)') 'Set the XILLVER table to ', trim(pathname_xillver)
+        write(*,'(A, A)') 'Set the high density XILLVER table to ', trim(pathname_xillverD)
+        write(*,'(A, A)') 'Set the nthComp, high density XILLVER table to ', trim(pathname_xillverDCp)
+
         firstcall = .false.
         
      end if

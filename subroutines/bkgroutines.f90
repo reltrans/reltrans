@@ -7,7 +7,7 @@ subroutine readinbkg
   implicit none
   integer status,U1,readwrite,blocksize,i,colnum,felem
   integer nelem
-  real nullval,Texp,bcorr, myenv_real
+  real nullval,Texp,bcorr, get_env_real
   logical anynull
   character (len=500) strenv
   character (len=200) comment, bkgenv
@@ -21,7 +21,7 @@ subroutine readinbkg
   endif
 
 ! Get background scaling factor
-  bcorr = myenv_real("BACKSCL",0.0)
+  bcorr = get_env_real("BACKSCL",0.0)
   if (bcorr .eq. 0.0) then
      write(*,*)"Enter BACKSCAL factor (enter 1 if you dont know what this is)"
      read(*,*)bcorr

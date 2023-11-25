@@ -46,8 +46,16 @@ MODULE dyn_gr
     save status_re_tau
 END MODULE dyn_gr
 
-
-
+module xillver_tables
+    implicit none 
+    character (len=50), parameter ::  xillver = 'xillver-a-Ec5.fits'
+    character (len=50), parameter ::  xillverD = 'xillverD-5.fits'
+    character (len=50), parameter ::  xillverDCp = 'xillverCp_v3.4.fits'
+    character (len=200) ::  path_tables 
+    character (len=200) ::  pathname_xillver 
+    character (len=200) ::  pathname_xillverD 
+    character (len=200) ::  pathname_xillverDCp
+end module xillver_tables
 
 module conv_mod
   use, intrinsic :: iso_c_binding

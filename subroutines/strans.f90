@@ -60,7 +60,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
     double precision pnorm,pnormer,mus,ptf,pfunc_raw,ang_fac
     integer nron,nphin,nrosav,nphisav,verbose
     double precision spinsav,musav,routsav,mudsav,rnn(nro),domegan(nro)
-    integer myenv
+    integer get_env_int
     double precision lximax
     double precision eta_0
     logical dotrace
@@ -496,7 +496,7 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
   double precision, intent(IN)   :: fcons, lognep, spin, h, honr
   double precision, intent(IN)   :: rlp(ndelta), dcosdr(ndelta), cosd(ndelta)
   double precision, intent(INOUT):: logxieff(xe), gsdr(xe), logner(xe)
-  integer          :: i, kk, get_index, myenv, verbose
+  integer          :: i, kk, get_index, get_env_int, verbose
   double precision :: pnorm,re,re1(xe),zA_logne,cosfac,mus,interper,newtex,mudisk
   double precision, parameter :: pi = acos(-1.d0)
   double precision :: ptf,pfunc_raw,gsd,dglpfacthick,eps_bol,Fx(xe),logxir(xe),mui,dinang
@@ -547,7 +547,7 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
   !...no need to enforce limits on logne since this is done in myreflect()
   !This is needed because reflionx has a different maximum to xillverDCp
 
-  verbose = myenv("REV_VERB",0)
+  verbose = get_env_int("REV_VERB",0)
   if( verbose .gt. 2 )then
      !Write out logxir for plots
      lximax = -huge(lximax)
@@ -621,7 +621,7 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,eta_0,logxip,lognep,spin,h,Gam
     double precision, intent(IN)   :: rlp(ndelta,nlp), dcosdr(ndelta,nlp), cosd(ndelta,nlp), contx_int(nlp)
     double precision :: rlp_column(ndelta),dcosdr_column(ndelta),cosd_column(ndelta), dgsofac
     double precision, intent(INOUT):: logxir(xe), gsdr(xe), logner(xe)
-    integer          :: i, kk, get_index, myenv, l, m, verbose
+    integer          :: i, kk, get_index, get_env_int, l, m, verbose
     double precision :: rp, logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd(nlp), dglpfacthick
     double precision :: xi_lp(xe,nlp), logxi_lp(xe,nlp), logxip_lp(nlp), xitot, xiraw, mylogne, mudisk, gsd_temp
     double precision, allocatable :: rad(:)

@@ -1,35 +1,4 @@
 !-----------------------------------------------------------------------
-subroutine myreflionx(ear, ne, param, ifl, photar)
-  implicit none
-  integer, intent(in)  :: ne, ifl
-  real,    intent(in)  :: ear(0:ne), param(7)
-  real,    intent(out) :: photar(ne)
-  real                 :: photer(ne)
-  character (len=500)  :: filenm,strenv
-  character (len=200)  :: envnm
-  logical              :: needfile
-  data needfile/.true./
-  save needfile
-  
-! Get the reflionx table  
-  if( needfile )then
-     envnm  = 'REFLIONX_FILE'
-     filenm = strenv(envnm)
-     if( trim(filenm) .eq. 'none' )then
-        write(*,*)"Enter reflionx file (with full path)"
-        read(*,'(a)')filenm
-     end if
-     needfile = .false.
-  end if
-  
-! Interpolate a spectrum from it
-  call xsatbl(ear, ne, param, filenm, ifl, photar, photer) 
-
-  return
-end subroutine myreflionx
-!-----------------------------------------------------------------------
-
-!-----------------------------------------------------------------------
 subroutine normreflionx(ear,ne,Gamma,Afe,logne,kTe,logxi,thetae,photar)
 !
 ! Returns reflionx model renormalised with xillverDCp
@@ -38,7 +7,7 @@ subroutine normreflionx(ear,ne,Gamma,Afe,logne,kTe,logxi,thetae,photar)
   integer ne,ifl,j,jmax
   parameter (jmax=20)
   real ear(0:ne),Gamma,Afe,logne,kTe,logxi,thetae,photar(ne)
-  real kTbb,param(7),xillpar(7),xillparDCp(8),xillphotar(ne)
+  real kTbb, param(7), xillpar(6), xillparDCp(7), xillphotar(ne)
   real E,dE,rintegral,xintegral,fac,lognej,lognex
   integer i,Cp,ilo,ihi
 ! Set integration bounds
@@ -57,28 +26,26 @@ subroutine normreflionx(ear,ne,Gamma,Afe,logne,kTe,logxi,thetae,photar)
   param(6) = kTbb
   param(7) = 0.0    !Redshift
 ! Call model
-  call myreflionx(ear, ne, param, ifl, photar)
+  call get_reflionx(ear, ne, param, ifl, photar)
 ! Call xillver equivalent
   xillpar(1) = Gamma
   xillpar(2) = Afe    !
   xillpar(3) = 15.0   !logne or Ecut or kTe
   xillpar(4) = logxi  !ionization par
-  xillpar(5) = 0.0    !redshift
-  xillpar(6) = thetae !emission angle
-  xillpar(7) = -1.0   !refl_frac
+  xillpar(5) = thetae !emission angle
+  xillpar(6) = 0.0    !redshift
   xillparDCp(1) = Gamma  !photon index
   xillparDCp(2) = Afe    !Afe
-  xillparDCp(3) = kTe    !Ecut or kTe
+  xillparDCp(3) = logxi  !ionization par
+  xillparDCp(4) = kTe    !Ecut or kTe
   lognex = logne
   lognex = min(logne,20.0)
   lognex = max(logne,15.0)
-  xillparDCp(4) = lognex   !logne
-  xillparDCp(5) = logxi  !ionization par
-  xillparDCp(6) = 0.0    !redshift
-  xillparDCp(7) = thetae !emission angle
-  xillparDCp(8) = -1.0   !refl_frac  
+  xillparDCp(5) = lognex   !logne
+  xillparDCp(6) = thetae !emission angle
+  xillparDCp(7) = 0.0    !redshift
   Cp = 2
-  call myxill(ear, ne, xillpar, xillparDCp, ifl, Cp, xillphotar)
+  call get_xillver(ear, ne, xillpar, xillparDCp, Cp, xillphotar)
 ! Integrate both spectra
   rintegral = 0.0
   xintegral = 0.0
