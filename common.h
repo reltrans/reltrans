@@ -25,8 +25,8 @@
 #include <assert.h>
 #include <limits.h>
 #include <float.h>
-//#include <fitsio.h>
-#include "/home/matteo/Software/heasoft-6.28/heacore/cfitsio/fitsio.h" 
+#include <fitsio.h>
+/* #include "/home/matteo/Software/heasoft-6.28/heacore/cfitsio/fitsio.h"  */
 
 /*********** DEFINE STATEMENTS *********/
 

@@ -250,10 +250,10 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
   par(31) = param(24)        !Anorm
   par(32) = param(25)        !telescope response
 ! Check that we're not looking at the side of the disc
-  honr = par(19)
+  honr = par(20)
   pi   = acos(-1.d0)
-  cosi = cos( par(3) * pi / 180.d0 )
-  cos0 = honr / sqrt( honr**2 + 1.d0  )  
+  cosi = cos( par(4) * pi / 180.d0 )
+  cos0 = honr / sqrt( honr**2 + 1.d0  )
 ! Call general code
   if( cos0 .ge. cosi )then
      photar = 0.0   !XSPEC *hates* this. Just do it with limits, and flag here.
@@ -820,7 +820,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     end if 
     
     muobs = cos( inc * pi / 180.d0 )
-
+    
     !this needs to go in a subroutine - model_mode or something
     !rework this logic so that low frequencies always result in time independent spectrum, not just for reim<7
     if( ReIm .eq. 7 .and. fhiHz .gt. tiny(fhiHz) .and. floHz .gt. tiny(floHz)) then
