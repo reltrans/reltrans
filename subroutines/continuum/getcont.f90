@@ -1,24 +1,27 @@
 !-----------------------------------------------------------------------
-      subroutine getcont(earx, nex, Gamma, Ecut_obs, Cp, contx)
-!!! Calculates continuum spectrum and sets xillver parameters !!!
+      subroutine getcont(earx, nex, Gamma, Ecut_obs, logxi, logne, contx)
+!!! Calculates continuum spectrum calling nthComp with the correct normalisation
+!!!based on the xillver spectrum 
 !!!  Arg:
         !  earx: energy grid
         !  nex: number of grid points
         !  Gamma: continuum spectrum inclination
         !  Ecut_obs: high energy cut-off or electron temperature
-        !  Cp: sets which xillver spectrum
-        ! (output) contx: continuum spectrum
-!!! Last change: Gullo 2023 Sep; adapted to match the xillver tables call 
+        !  logxi: ionisation parameter
+        !  logne: density 
+        !  (output) contx: continuum spectrum
+!!! Last change: Gullo 2023 Nov; adapted to match the xillver tables call 
         !
       implicit none
-      integer, intent(in)           :: nex, Cp
-      real   , intent(in)           :: earx(0:nex), Ecut_obs
+      integer, intent(in)           :: nex
+      real   , intent(in)           :: earx(0:nex), Ecut_obs, logxi, logne
       real   , intent(out)          :: contx(nex)
       double precision , intent(in) :: Gamma
 
       integer :: i, ifl
       real    :: nth_par(5), photer(nex)
-
+      real    :: get_norm_cont
+      
 !So far this works only with kTe, so only with nthComp continuum model
       nth_par(1) = real(Gamma)
       nth_par(2) = Ecut_obs
@@ -26,9 +29,12 @@
       nth_par(4) = 1.d0
       nth_par(5) = 0.d0
       Ifl=1
-      
-      call donthcomp(earx, nex, nth_par, ifl, contx, photer)
 
+      call donthcomp(earx, nex, nth_par, ifl, contx, photer)
+!the continuum needs to be renormalised according to the illuminating flux that was considered in xillver get_norm_cont does the job
+! Plus we divide by a factor 1000.0 to agree with the first versions of reltrans      
+      contx = contx * get_norm_cont(real(Gamma), Ecut_obs, logxi, logne) / 1000.0
+      
       return
     end subroutine getcont
 !-----------------------------------------------------------------------

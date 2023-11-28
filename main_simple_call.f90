@@ -22,7 +22,7 @@ program main_simple_call
   param(7)  = 2.0     !Gamma !Photon index
   param(8)  = 3.0    !logxi !log10xi - ionisation parameter
   param(9)  = 1.0     !Afe   !Iron abundance      
-  param(10) = 15   !kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
+  param(10) = 15   !density
   param(11) = 60.0   !kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
   param(12) = 0.0     !Nh
   param(13) = 1.0     !1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum

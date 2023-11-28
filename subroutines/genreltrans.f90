@@ -258,7 +258,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     end if
 
     !set up the continuum spectrum plus relative quantities (cutoff energies, lensing/gfactors, luminosity, etc)
-    call init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_obs,Cp_cont,Cp,fcons,Gamma,&
+    call init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,logxi, lognep, gso,&
+                   muobs,lens,tauso,cosdelta_obs,Cp_cont,Cp,fcons,Gamma,&
                    Dkpc,Mass,earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)    
 
     if (verbose .gt. 2) call CPU_TIME (time_start)
@@ -381,7 +382,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         call CPU_TIME (time_end)
         print *, 'Convolutions runtime: ', time_end - time_start, ' seconds' 
     endif
-  
+    
     ! Calculate absorption 
     call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
 

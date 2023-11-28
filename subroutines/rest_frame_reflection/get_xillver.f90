@@ -13,7 +13,7 @@
       !       2 xillverDCp   high density and nthcomp  illumination
       ! photar: (output) xillver energy spectrum
 
-!!! Last change: Gullo - 2022 Oct
+!!! Last change: Gullo - 2023 Nov
       use xillver_tables
       implicit none
       integer, intent(in)  :: ne, Cp
@@ -34,6 +34,7 @@
          write(*,*) 'No xillver model available for this configuration'
          stop 
       end if
+      photar = photar / 1000.0 !this factor is needed to match the normalisation with the first versions of reltrans
       return
     end subroutine get_xillver
 !-----------------------------------------------------------------------

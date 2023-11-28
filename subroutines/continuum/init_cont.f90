@@ -1,18 +1,19 @@
-subroutine init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_obs,Cp_cont,Cp,fcons,Gamma,Dkpc,Mass,&
-    earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)
+subroutine init_cont(nlp, a, h, zcos, Ecut_s, Ecut_obs, logxi, logne, gso, &
+     muobs, lens, tauso, cosdelta_obs, Cp_cont, Cp, fcons, Gamma, Dkpc, Mass,&
+    earx, Emin, Emax, contx, dlogE, verbose, dset, Anorm, contx_int, eta)
     !!!sets up the continuum arrays/quantities depending on model parameters/flavour 
     use dyn_gr
     use conv_mod
     implicit none
     integer         , intent(in)    :: nlp,Cp,dset,verbose
-    real            , intent(in)    :: Dkpc,Anorm,Mass,dlogE,Emin,Emax
+    real            , intent(in)    :: Dkpc,Anorm,Mass,dlogE,Emin,Emax, logxi, logne
     double precision, intent(in)    :: h(nlp)
     double precision, intent(in)    :: a,zcos,Gamma,muobs,eta
     integer         , intent(out)   :: Cp_cont
     real            , intent(out)   :: earx(0:nex),contx(nex,nlp)
     double precision, intent(out)   :: gso(nlp),lens(nlp),tauso(nlp),cosdelta_obs(nlp),fcons,contx_int(nlp)
     
-    integer                         :: m
+    integer                         :: m, i
     real                            :: Ecut_s,Ecut_obs,Eintegrate
     double precision                :: lacc,ell13pt6,get_lacc,get_fcons,dgsofac
 
@@ -26,7 +27,7 @@ subroutine init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_
        
        Cp_cont = Cp
        if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
-       call getcont(earx, nex, Gamma, Ecut_obs, Cp_cont, contx)        
+       call getcont(earx, nex, Gamma, Ecut_obs, logxi, logne, contx(:,1))
        
        if( dset .eq. 1 ) then
           fcons = get_fcons(h(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
@@ -50,7 +51,7 @@ subroutine init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_
           end if
        end if
 
-       contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1
+       contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1       
        contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
 
     else 
@@ -62,7 +63,7 @@ subroutine init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_
           Ecut_obs = Ecut_s * gso(m) / real(1.d0+zcos)
           Cp_cont = Cp 
           if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx        
-          call getcont(earx, nex, Gamma, Ecut_obs, Cp_cont, contx(:,m))
+          call getcont(earx, nex, Gamma, Ecut_obs, logxi, logne, contx(:,m))
           if (m .gt. 1) contx(:,m) = eta*contx(:,m)  
           !TODO fix this section, calculate luminosities better
           if( verbose .gt. 0 )then
