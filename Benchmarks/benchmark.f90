@@ -2,14 +2,14 @@ program relbench
     implicit none    
     !This interfaces the C routine that sets the environment variables correctly
     !Necessary because the fortran "system" call somehow can't do this
-    interface
-        subroutine c_setgetenv (emin,emax) bind(c)
-            use, intrinsic :: iso_c_binding
-            implicit none
-            CHARACTER(c_char) :: emin, emax
-            !import ! use declarations from host (implicit none, iso_c_binding)
-        end subroutine c_setgetenv
-    end interface
+    ! interface
+    !     subroutine c_setgetenv (emin,emax) bind(c)
+    !         use, intrinsic :: iso_c_binding
+    !         implicit none
+    !         CHARACTER(c_char) :: emin, emax
+    !         !import ! use declarations from host (implicit none, iso_c_binding)
+    !     end subroutine c_setgetenv
+    ! end interface
     
     real    :: emin, emax           !minimum, maximum energy and increment to set model grid
     integer :: i , j                !loop variables 
@@ -27,7 +27,7 @@ program relbench
     write (60,*) "precision issues in fftw. If the test reports discrepancy in only a handful of bins, consider the "
     write (60,*) "test passed."    
       
-    call c_setgetenv("0.3","10.")
+    ! call c_setgetenv("0.3","10.")
                             
     !tbd: think of a way to compare impulse responses directly 
     !test one: xrb, maxi j1820, single lamp post 

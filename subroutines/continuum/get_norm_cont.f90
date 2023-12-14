@@ -27,14 +27,13 @@
 
       Ifl=1      
       call donthcomp(earx, nex, nth_par, ifl, spec, photer)
+
       Icomp = 0.0
       do i = 1, nex
          Icomp = Icomp + ((earx(i) + earx(i-1)) * 0.5 * spec(i)) 
       enddo
-      write(*,*) 'integral' , Gamma, Ecut_obs, Icomp
-      inc_flux = 10**(logne + logxi) / (4.0 * pi) / (ergsev * 1000.0) !calculate incident flux in units  [keV/cm^2/s]
-      write(*,*) 'inc_flux in keV' , logne, logxi, inc_flux
 
+      inc_flux = 10**(logne + logxi) / (4.0 * pi) / (ergsev * 1000.0) !calculate incident flux in units  [keV/cm^2/s]
       get_norm_cont = inc_flux/ Icomp / 1e20
       
     end function get_norm_cont

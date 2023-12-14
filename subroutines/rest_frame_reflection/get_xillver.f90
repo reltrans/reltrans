@@ -25,16 +25,18 @@
 
       ifl = 0
       if( Cp .eq. -1 )then         !xillver
+         write(*,*) 'xillver parameters', param6
          call xsatbl(ear, ne, param6, trim(pathname_xillver), ifl, photar, photer)
       else if( Cp .eq. 1 )then     !xillverD
+         write(*,*) 'xillver parameters', param6
          call xsatbl(ear, ne, param6, trim(pathname_xillverD), ifl, photar, photer)
       else if ( Cp .eq. 2 )then    !xillverDCp
+         write(*,*) 'xillver parameters', param7
          call xsatbl(ear, ne, param7, trim(pathname_xillverDCp), ifl, photar, photer)
       else
          write(*,*) 'No xillver model available for this configuration'
          stop 
       end if
-      photar = photar / 1000.0 !this factor is needed to match the normalisation with the first versions of reltrans
       return
     end subroutine get_xillver
 !-----------------------------------------------------------------------

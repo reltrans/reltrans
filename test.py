@@ -2,9 +2,12 @@ import numpy as np
 from  matplotlib import pyplot as plt
 import f2py_interface as ib
 
+
 Emin = 0.1
 Emax = 500.0
-ear = np.logspace(np.log10(Emin), np.log10(Emax), 1000, dtype = np.float32)
+ne = 5001
+
+ear = np.logspace(np.log10(Emin), np.log10(Emax), ne, dtype = np.float32)
 
 param = np.zeros(21, dtype = np.float32)
 
@@ -30,20 +33,36 @@ param[18] = 0.0     #DelAB
 param[19] = 0.0     #gamma
 param[20] = 1       #telescope response
 
-photar = ib.reltransDCp(ear, param)
+# parameters = np.zeros(21, dtype = np.float32)
+parameters = np.genfromtxt('./Benchmarks/xrb/ip_0,12_0,25.dat',dtype = np.float32)
 
-print()
-# for phot in photar:
-#     print(phot)
+parameters[14] = 0.0     #flo   !Lowest frequency in band (Hz)
+parameters[15] = 0.0     #fhi   !Highest frequency in band (Hz)
+parameters[16] = 1.0     #ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
 
+photar = ib.reltransDCp(ear, parameters)
+
+# take the saved spectrum 
+data = np.genfromtxt('./Benchmarks/xrb/Spec/Total.dat')
+# data_phot = np.genfromtxt('/Users/gullo/Software/reltrans/reltrans_v0.9.0_test/fort.98')
+# data_phot_new = np.genfromtxt('/Users/gullo/Work/git/reverberation_code/fort.98')
+# data_final = np.genfromtxt('/Users/gullo/Software/reltrans/reltrans_v0.9.0_test/fort.99', skip_header=1, skip_footer=4)
+# data_final_new = np.genfromtxt('/Users/gullo/Work/git/reverberation_code/fort.99', skip_header=1, skip_footer=1)
+
+# Print the two models 
 fig, ax = plt.subplots(1, 1, figsize=(10, 8))
-font = 20 
+font = 20
 
 E = (ear[1:] + ear[:-1]) * 0.5 
+dE = (ear[1:] - ear[:-1]) 
 
-ax.plot(E, photar, lw = 5, color = 'k', label = 'reltrans spectrum')
+ax.plot(data[:,0], data[:,1], linewidth = 3, linestyle = '--', color = 'grey'   , label = 'phot (old)')
+ax.plot(E, photar/dE, lw = 5, color = 'red', label = 'reltrans spectrum')
+# ax.plot(data_phot_new[:,0], data_phot_new[:,1], linewidth = 3, linestyle = '-' , color = 'black'   , label = 'phot (new)')
+# ax.plot(data_phot[:,0]    , data_phot[:,1]    , linewidth = 3, linestyle = '--', color = 'grey'   , label = 'phot (old)')
+# ax.plot(data_final_new[:,0], data_final_new[:,1], lw = 5, color = 'red', linestyle = '-', label = 'reltrans spectrum')
+# ax.plot(data_final[:,0], data_final[:,1], lw = 5, color = 'magenta', linestyle = '--', label = 'reltrans spectrum')
 
-font = 25
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_ylabel(r'keV * photons / $cm^2$ / s / keV ', fontsize = font )
@@ -55,5 +74,6 @@ for axis in ['top','bottom','left','right']:
 ax.yaxis.set_ticks_position('both')
 # ax.set_xlim(0.1, 1e3)
 # ax.set_ylim(0.99, 1.01)
+# ax.set_ylim(1e-2, 1e3)
 
 plt.show()

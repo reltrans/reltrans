@@ -19,7 +19,8 @@ subroutine rest_frame(ear,ne,Gamma,Afe,logne,Ecut,logxi,thetae,Cp,photar)
    real, intent(in)    :: ear(0:ne), Gamma, Afe, logne, Ecut, logxi, thetae
    real, intent(out)   :: photar(ne)
    real                :: xillpar(6), xillparDCp(7)
-
+   integer :: i 
+   
    if( Cp .ne. 0 )then
       !The model is a xillver model
    !   !Set density limits
@@ -42,12 +43,20 @@ subroutine rest_frame(ear,ne,Gamma,Afe,logne,Ecut,logxi,thetae,Cp,photar)
       xillparDCp(6) = thetae !emission angle
       xillparDCp(7) = 0.0    !redshift
       call get_xillver(ear, ne, xillpar, xillparDCp, Cp, photar)
+      ! photar = photar / 10**(logxi + logne - 15) !this factor is needed to match the normalisation with the first versions of reltrans
+      ! write(*,*) 'xillver normalisation factor 10**(logxi + logne - 15)', 10**(logxi + logne - 15)
    else
       !The model is reflionx
       !Set density limits
    !   lognex = min(logne,22.0)
       call normreflionx(ear,ne,Gamma,Afe,logne,Ecut,logxi,thetae,photar)
    end if
+   
+   do i = 1, ne
+      write(33,*) (ear(i) + ear(i-1))*0.5, &
+           photar(i)/(ear(i) - ear(i-1)) * ((ear(i) + ear(i-1))*0.5)**2
+   enddo
+   
    return
  end subroutine rest_frame
 !-----------------------------------------------------------------------

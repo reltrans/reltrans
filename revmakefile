@@ -7,13 +7,13 @@ wrap = wrappers.f90
 PARALL  = -fopenmp
 EXTRA   = -Wall -Wconversion -Wshadow -pedantic
 PROFILE = -pg -g
-FLAGS_lib = -DHAVE_INLINE -g -fPIC -shared -fno-automatic $(EXTRA)  -rdynamic -fno-second-underscore
-FLAGS   = -DHAVE_INLINE -g -fPIC -fno-automatic $(EXTRA)  -rdynamic -fno-second-underscore
+FLAGS_lib = -DHAVE_INLINE -g -fPIC -fno-automatic  -rdynamic -fno-second-underscore -shared # $(EXTRA) 
+FLAGS     = -DHAVE_INLINE -g -fPIC -fno-automatic  -rdynamic -fno-second-underscore #$(EXTRA)
 OPT     = -O3
 # LDFLAGS = -L/usr/lib/x86_64-linux-gnu/ -lgslcblas -lcfitsio -lpthread -lm                
 libs =  -L ${HEADAS}/lib/ -lfftw3 -lm -lXSFunctions -lcfitsio -lpthread -lXSModel 
 incs = -I ./fftw/fftw_comp/include/ $(FLAGS) $(libs) 
-incs_lib = -I ./fftw/fftw_comp/include/ $(FLAGS_lib) $(libs) 
+incs_lib = -I ./fftw/fftw_comp/include/  $(FLAGS_lib) $(libs) 
 
 
 # set compilers
@@ -23,7 +23,7 @@ fcomp = gfortran $(optimization) #$(debug)
 FCODE = $(main) $(wrap)
 FTEST = $(benchmark) $(wrap) 
 
-CBENCH = Benchmarks/setenv.c 
+# CBENCH = Benchmarks/setenv.c 
 
 fobj: $(FCODE)
 	$(fcomp) $(incs) -c $(FCODE)
