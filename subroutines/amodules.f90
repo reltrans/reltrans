@@ -50,7 +50,7 @@ module xillver_tables
     implicit none 
     character (len=50), parameter ::  xillver = 'xillver-a-Ec5.fits'
     character (len=50), parameter ::  xillverD = 'xillverD-5.fits'
-    character (len=50), parameter ::  xillverDCp = 'xillverCp_v3.4.fits'
+    character (len=50), parameter ::  xillverDCp = 'xillverCp_v3.4_normalised.fits'
     character (len=200) ::  path_tables 
     character (len=200) ::  pathname_xillver 
     character (len=200) ::  pathname_xillverD 

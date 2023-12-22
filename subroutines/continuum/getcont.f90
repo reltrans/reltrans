@@ -34,7 +34,7 @@
 !the continuum needs to be renormalised according to the illuminating flux that was considered in xillver get_norm_cont does the job
 ! Plus we divide by a factor that depends on ionisation and density to agree with the first versions of reltrans      
       contx = contx * get_norm_cont(real(Gamma), Ecut_obs, logxi, logne)
-      ! contx = contx / 10**(logxi + logne - 15)
+      contx = contx / 10**(logxi + logne - 15)
       
       return
     end subroutine getcont
