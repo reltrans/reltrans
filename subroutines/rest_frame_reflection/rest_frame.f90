@@ -52,10 +52,10 @@ subroutine rest_frame(ear,ne,Gamma,Afe,logne,Ecut,logxi,thetae,Cp,photar)
       call normreflionx(ear,ne,Gamma,Afe,logne,Ecut,logxi,thetae,photar)
    end if
    
-   do i = 1, ne
-      write(33,*) (ear(i) + ear(i-1))*0.5, &
-           photar(i)/(ear(i) - ear(i-1)) * ((ear(i) + ear(i-1))*0.5)**2
-   enddo
+   ! do i = 1, ne
+   !    write(33,*) (ear(i) + ear(i-1))*0.5, &
+   !         photar(i)/(ear(i) - ear(i-1)) * ((ear(i) + ear(i-1))*0.5)**2
+   ! enddo
    
    return
  end subroutine rest_frame

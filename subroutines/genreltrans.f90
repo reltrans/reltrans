@@ -513,17 +513,17 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             end do
         end if
     end if
-    
+
     if (verbose .gt. 1 .and. abs(ReIm) .gt. 0 .and. ReIm .lt. 7) then
         if( DC .eq. 0 .and. beta_p .eq. 0) then
-            call write_components(ne,ear,nex,earx,nf,real(flo),real(fhi),nlp,contx,absorbx,real(tauso),real(gso),&
+           call write_components(ne,ear,nex,earx,nf,real(flo),real(fhi),nlp,contx,absorbx,real(tauso),real(gso),&
                                   ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,real(h),real(zcos),real(Gamma),real(eta),&
                                   beta_p,boost,floHz,fhiHz,ReIm,DelA,DelAB,g,ionvar,resp_matr)
         !catch case here for coherence = 0 or 1
         end if                
         !this writes the full model as returned to Xspec 
         !note that xspec gets output in e.g. lags*dE, and we want just the lags, so a factor dE needs to be included
-        !add writing of components for lag frequency spectrum 
+        !add writing of components for lag frequency spectrum
         open (unit = 14, file = 'Output/Total.dat', status='replace', action = 'write')     
         do i = 1,ne 
             dE = ear(i) - ear(i-1)
@@ -547,14 +547,14 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         end do
         close(24)
     else if (ReIm .eq. 7) then
-        open (unit = 14, file = 'Output/Total.dat', status='replace', action = 'write')     
+       open (unit = 14, file = 'Output/Total.dat', status='replace', action = 'write')     
         do i = 1,ne 
             dE = ear(i) - ear(i-1)
             write (14,*)  (ear(i)+ear(i-1))/2., photar(i)/dE        
         end do 
         close(14)
     endif 
-    
+
     fhisave   = fhi
     flosave   = flo
     nfsave    = nf

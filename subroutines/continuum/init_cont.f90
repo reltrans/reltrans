@@ -50,9 +50,9 @@ subroutine init_cont(nlp, a, h, zcos, Ecut_s, Ecut_obs, logxi, logne, gso, &
              write(*,*)"kTe in source restframe (keV)=", Ecut_s
           end if
        end if
-       do i = 1, nex
-          write(32,*) (earx(i) + earx(i-1))*0.5, contx(i,1)/(earx(i) - earx(i-1))* ((earx(i) + earx(i-1))*0.5)**2
-       enddo
+       ! do i = 1, nex
+       !    write(32,*) (earx(i) + earx(i-1))*0.5, contx(i,1)/(earx(i) - earx(i-1))* ((earx(i) + earx(i-1))*0.5)**2
+       ! enddo
 
        contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1       
        contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx

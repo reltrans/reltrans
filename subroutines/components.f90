@@ -38,23 +38,23 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     character (len=30) path
     
     !Allocate model component matrixes
-    allocate( ReScont(nex,nf) )
-    allocate( ImScont(nex,nf) )
-    allocate( ReSrev(nex,nf) )
-    allocate( ImSrev(nex,nf) )  
-    allocate( ReSpiv(nex,nf) )
-    allocate( ImSpiv(nex,nf) ) 
-    allocate( ReSion(nex,nf) )
-    allocate( ImSion(nex,nf) ) 
+    if(.not. allocated(ReScont)) allocate( ReScont(nex,nf) )
+    if(.not. allocated(ImScont)) allocate( ImScont(nex,nf) )
+    if(.not. allocated(ReSrev )) allocate( ReSrev (nex,nf) )
+    if(.not. allocated(ImSrev )) allocate( ImSrev (nex,nf) )  
+    if(.not. allocated(ReSpiv )) allocate( ReSpiv (nex,nf) )
+    if(.not. allocated(ImSpiv )) allocate( ImSpiv (nex,nf) ) 
+    if(.not. allocated(ReSion )) allocate( ReSion (nex,nf) )
+    if(.not. allocated(ImSion )) allocate( ImSion (nex,nf) ) 
     !Allocate cross spectra
-    allocate( ReGcont(nex,nf) )
-    allocate( ImGcont(nex,nf) )
-    allocate( ReGrev(nex,nf) )
-    allocate( ImGrev(nex,nf) )  
-    allocate( ReGpiv(nex,nf) )
-    allocate( ImGpiv(nex,nf) ) 
-    allocate( ReGion(nex,nf) )
-    allocate( ImGion(nex,nf) ) 
+    if(.not. allocated(ReGcont)) allocate( ReGcont(nex,nf) )
+    if(.not. allocated(ImGcont)) allocate( ImGcont(nex,nf) )
+    if(.not. allocated(ReGrev )) allocate( ReGrev (nex,nf) )
+    if(.not. allocated(ImGrev )) allocate( ImGrev (nex,nf) )  
+    if(.not. allocated(ReGpiv )) allocate( ReGpiv (nex,nf) )
+    if(.not. allocated(ImGpiv )) allocate( ImGpiv (nex,nf) ) 
+    if(.not. allocated(ReGion )) allocate( ReGion (nex,nf) )
+    if(.not. allocated(ImGion )) allocate( ImGion (nex,nf) ) 
   
     !This stores each component contribution in the Re/Im matrices 
     if (nlp .gt. 1 .and. beta_p .eq. 0.) then  
@@ -219,7 +219,24 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     close(12)
     close(13)
     close(14)  
-    
+
+    if (allocated( ReScont )) deallocate( ReScont )
+    if (allocated( ImScont )) deallocate( ImScont )
+    if (allocated( ReSrev  )) deallocate( ReSrev  )
+    if (allocated( ImSrev  )) deallocate( ImSrev  )
+    if (allocated( ReSpiv  )) deallocate( ReSpiv  )
+    if (allocated( ImSpiv  )) deallocate( ImSpiv  )
+    if (allocated( ReSion  )) deallocate( ReSion  )
+    if (allocated( ImSion  )) deallocate( ImSion  )
+    if (allocated( ReGcont )) deallocate( ReGcont )
+    if (allocated( ImGcont )) deallocate( ImGcont )
+    if (allocated( ReGrev  )) deallocate( ReGrev  )
+    if (allocated( ImGrev  )) deallocate( ImGrev  )
+    if (allocated( ReGpiv  )) deallocate( ReGpiv  )
+    if (allocated( ImGpiv  )) deallocate( ImGpiv  )    
+    if (allocated( ReGion  )) deallocate( ReGion  )
+    if (allocated( ImGion  )) deallocate( ImGion  )
+	    
     return  
 end subroutine write_ComponentS
 

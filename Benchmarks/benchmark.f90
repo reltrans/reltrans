@@ -36,9 +36,19 @@ program relbench
     spec_flag = .true.  
     mode = "xrb"
     frange = "0,12_0,25" 
-    call model_singleLP(mode,frange,spec_flag)    
+    call model_singleLP(mode,frange,spec_flag)
+    write(*,*)
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
+    write(*,*) 'First frequency range finished'
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
+    write(*,*)
     frange = "0,31_0,73" 
     call model_singleLP(mode,frange,spec_flag)          
+    write(*,*)
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
+    write(*,*) 'Second frequency range finished------------------------------'
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
+    write(*,*)
     frange = "0,80_2,10" 
     call model_singleLP(mode,frange,spec_flag)    
     frange = "2,10_5,80" 
@@ -131,38 +141,59 @@ subroutine model_singleLP(mode,frange,spec_flag)
     
     mtype = "/Lags/"
     params_reltrans(17) = 4
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
+    write (*,*) "Running lag test: "
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
+
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     write (60,*) "Running lag test: "
     call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
+    write (*,*) "finished to run the model"
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     call compare_timing(ne,mode,mtype,frange)    
+    write (*,*) "finished to run the timing comparison"
+
+    stop
     
     !then compare modulus
     params_reltrans(17) = 3
     mtype = "/Mods/"
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
+    write (*,*) "Running modulus test: "
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     write (60,*) "Running modulus test: "
     call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
+    write (*,*) "finished to run the model"
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     call compare_timing(ne,mode,mtype,frange)
+    write (*,*) "finished to run the timing comparison"
     
     !then imaginary part:
     mtype = "/Imag/"
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
+    write (*,*) "Running imaginary test: "
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
     params_reltrans(17) = 2
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     write (60,*) "Running imaginary test: "
     call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     call compare_timing(ne,mode,mtype,frange)    
+    write (*,*) "finished to run the timing comparison"
     
     !then real:
     mtype = "/Real/"
     params_reltrans(17) = 1
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
+    write (*,*) "Running real test: "
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     write (60,*) "Running real test: "
     call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
     write (60,*) "--------------------------------------------------------------------------------------------------------"
     call compare_timing(ne,mode,mtype,frange)  
+    write (*,*) "finished to run the timing comparison"
     
     !finally compare spectra and kernel 
     if( spec_flag .eqv. .true. ) then
@@ -170,12 +201,17 @@ subroutine model_singleLP(mode,frange,spec_flag)
         params_reltrans(16) = 0
         params_reltrans(17) = 1
         mtype = "/Spec/"
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
+    write (*,*) "Running time-averaged spectrum test: "
+    write (*,*) "--------------------------------------------------------------------------------------------------------"
         write (60,*) "--------------------------------------------------------------------------------------------------------"
         write (60,*) "Running time-averaged spectrum test: " 
         call tdreltransDCp(ear,ne,params_reltrans,ifl,photar)
         write (60,*) "--------------------------------------------------------------------------------------------------------"
         call compare_spectrum(ne,mode,mtype)
+    write (*,*) "finished to run the spectral comparison"
         call compare_kernel(mode,mtype) 
+    write (*,*) "finished to run the kernel comparison"
         spec_flag = .false.
     end if
 

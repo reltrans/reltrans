@@ -1,6 +1,6 @@
 main = main.f90
-benchmark = main_simple_call.f90
-# benchmark = Benchmarks/benchmark.f90
+# benchmark = main_simple_call.f90
+benchmark = Benchmarks/benchmark.f90
 wrap = wrappers.f90
 
 #lib and other stuff to include to the compiler 
