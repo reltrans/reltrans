@@ -315,7 +315,10 @@ subroutine readinresp
   !Open the response matrix fits file with read-only access
   readwrite = 0
   call ftopen(U1,RESPNAME,readwrite,blocksize,status)
-  if( status .ne. 0 ) stop 'cannot open response file'
+  if( status .ne. 0 ) then 
+     write(*,*) 'response file name: ', trim(RESPNAME)
+     stop 'cannot open response file'
+  endif
   !Shift to extension 1
   call ftmrhd(U1,1,hdutype,status)
   !Get the name of this extension
@@ -389,7 +392,10 @@ subroutine readinresp2
   !Open the response matrix fits file with read-only access
   readwrite = 0
   call ftopen(U1,RESPNAME2,readwrite,blocksize,status)
-  if( status .ne. 0 ) stop 'cannot open response file'
+  if( status .ne. 0 ) then
+     write(*,*) 'response file name: ', trim(RESPNAME2)
+     stop 'cannot open response file'
+  endif
   !Shift to extension 1
   call ftmrhd(U1,1,hdutype,status)
   !Get the name of this extension
@@ -660,7 +666,10 @@ subroutine getdim(respname,nenerg,numchn)
   !Open the response matrix fits file with read-only access
   readwrite = 0
   call ftopen(U1,RESPNAME,readwrite,blocksize,status)
-  if( status .ne. 0 ) stop 'cannot open response file'
+  if( status .ne. 0 ) then
+     write(*,*) 'response file name: ', trim(RESPNAME)
+     stop 'cannot open response file'
+  endif
   !Shift to extension 1
   call ftmrhd(U1,1,hdutype,status)
   !Get the name of this extension

@@ -797,7 +797,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
 
     ifl = 1
-    !call FNINIT
+    ! call FNINIT
 
     ! Initialise some parameters 
     call initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose)

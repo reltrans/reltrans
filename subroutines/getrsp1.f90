@@ -52,7 +52,10 @@
       !Open the response matrix fits file with read-only access
       readwrite = 0
       call ftopen(U1,RESPNAME,readwrite,blocksize,status)
-      if( status .ne. 0 ) stop 'cannot open response file'
+      if( status .ne. 0 ) then
+         write(*,*) 'response file name: ', RESPNAME
+         stop 'cannot open response file'
+      endif
       !-----------------------------------------------------------------
       !Shift to extension 1
       call ftmrhd(U1,1,hdutype,status)

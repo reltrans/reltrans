@@ -34,7 +34,10 @@ subroutine readinbkg
 ! Open the background fits file with read-only access
   readwrite = 0
   call ftopen(U1,bkgname,readwrite,blocksize,status)
-  if( status .ne. 0 ) stop 'cannot open background file'
+  if( status .ne. 0 ) then
+     write(*,*) 'background file name: ', bkgname
+     stop 'cannot open background file'
+  endif
 
 ! Shift to SPECTRUM extension
   status = 0
