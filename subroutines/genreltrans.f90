@@ -464,14 +464,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ReGbar = ReGbar * fac * (Anorm/real(1.+eta))**2  
         ImGbar = ImGbar * fac * (Anorm/real(1.+eta))**2  
     end if
-
-    do i = 1, nex
-       write(35,*) (earx(i) + earx(i-1))*0.5, &
-            ReW0(i,1,1)/(earx(i) - earx(i-1)) *  ((earx(i) + earx(i-1))*0.5)**2, &
-            ReSraw(i,1)/(earx(i) - earx(i-1)) *  ((earx(i) + earx(i-1))*0.5)**2, &
-            ReSrawa(i,1)/(earx(i) - earx(i-1)) *  ((earx(i) + earx(i-1))*0.5)**2, &
-            ReGbar(i)/(earx(i) - earx(i-1)) *  ((earx(i) + earx(i-1))*0.5)**2
-    enddo
     
     !Write output depending on ReIm parameter
     if( ReIm .eq. 7 ) then

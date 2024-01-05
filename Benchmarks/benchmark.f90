@@ -153,8 +153,6 @@ subroutine model_singleLP(mode,frange,spec_flag)
     call compare_timing(ne,mode,mtype,frange)    
     write (*,*) "finished to run the timing comparison"
 
-    stop
-    
     !then compare modulus
     params_reltrans(17) = 3
     mtype = "/Mods/"
