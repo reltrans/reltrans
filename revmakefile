@@ -2,12 +2,13 @@ main = main.f90
 # benchmark = main_simple_call.f90
 benchmark = Benchmarks/benchmark.f90
 wrap = wrappers.f90
+amodules = subroutines/amodules.f90
 
 #lib and other stuff to include to the compiler 
 PARALL  = -fopenmp
 EXTRA   = -Wall -Wconversion -Wshadow -pedantic
-PROFILE = -pg -g
-FLAGS_lib = -DHAVE_INLINE -g -fPIC -fno-automatic  -rdynamic -fno-second-underscore -shared # $(EXTRA) 
+PROFILE = #-pg -g
+FLAGS_lib = -DHAVE_INLINE -g -fPIC -fno-automatic  -rdynamic -fno-second-underscore  -shared  #$(EXTRA) 
 FLAGS     = -DHAVE_INLINE -g -fPIC -fno-automatic  -rdynamic -fno-second-underscore #$(EXTRA)
 OPT     = -O3
 # LDFLAGS = -L/usr/lib/x86_64-linux-gnu/ -lgslcblas -lcfitsio -lpthread -lm                
@@ -17,7 +18,7 @@ incs_lib = -I ./fftw/fftw_comp/include/  $(FLAGS_lib) $(libs)
 
 
 # set compilers
-fcomp = gfortran $(optimization) #$(debug) 
+fcomp = gfortran-12 $(optimization) #$(debug) 
 
 # the files to compile 
 FCODE = $(main) $(wrap)
@@ -31,8 +32,8 @@ fobj: $(FCODE)
 ftest: $(FTEST)
 	$(fcomp) $(incs) -c $(FTEST)
 
-lib: 
-	$(fcomp) $(incs_lib) $(PROFILE) $(wrap) -o lib_reltrans.so 
+lib:
+	$(fcomp) $(incs_lib) $(PROFILE) $(wrap) -o  lib_reltrans.so 
 
 compile: fobj
 	 $(fcomp) $(incs) *.o -o main 
