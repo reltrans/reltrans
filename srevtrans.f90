@@ -14,11 +14,12 @@ include 'subroutines/header.h'
 !-----------------------------------------------------------------------
 subroutine tdreltransDCp(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(21), photar(ne), par(32)
+  integer :: ne, ifl, Cp, dset, aset, nlp
+  real    :: ear(0:ne), param(21), photar(ne), par(39)
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
+  aset = 0   !aset=1 means absoprtions is TBFeO
   nlp = 1    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
@@ -53,8 +54,15 @@ subroutine tdreltransDCp(ear, ne, param, ifl, photar)
   par(30) = 0.               !g2
   par(31) = 1.0              !Anorm
   par(32) = param(21)        !telescope response
+  par(33) = 0.		     !TBFeO Oxygen abundance
+  par(34) = 0.               !TBFeO Iron abundance
+  par(35) = 0.               !TBFeO redshift 
+  par(36) = 0.		     !Mym Ionised absorber Nh
+  par(37) = 0.               !Mym Ionised absorber logxi
+  par(38) = 0.               !Mym Ionised absorber covering fraction
+  par(39) = 0.               !Mym Ionised absorber redshift
 ! Call general code
-  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
+  call genreltrans(Cp, dset, aset, nlp, ear, ne, par, ifl, photar)  
   return
 end subroutine tdreltransDCp
 !-----------------------------------------------------------------------
@@ -62,11 +70,12 @@ end subroutine tdreltransDCp
 !-----------------------------------------------------------------------
 subroutine tdreltransD(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(21), photar(ne), par(32)
+  integer :: ne, ifl, Cp, dset, aset, nlp
+  real    :: ear(0:ne), param(21), photar(ne), par(39)
 ! Settings
   Cp   = 1   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
+  aset = 0   !aset=1 means absoprtions is TBFeO
   nlp = 1    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
@@ -101,8 +110,15 @@ subroutine tdreltransD(ear, ne, param, ifl, photar)
   par(30) = 0.               !g2
   par(31) = 1.0              !Anorm
   par(32) = param(21)        !telescope response
+  par(33) = 0.		     !TBFeO Oxygen abundance
+  par(34) = 0.               !TBFeO Iron abundance
+  par(35) = 0.               !TBFeO redshift 
+  par(36) = 0.		     !Mym Ionised absorber Nh
+  par(37) = 0.               !Mym Ionised absorber logxi
+  par(38) = 0.               !Mym Ionised absorber covering fraction
+  par(39) = 0.               !Mym Ionised absorber redshift
 ! Call general code
-  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
+  call genreltrans(Cp, dset, aset, nlp, ear, ne, par, ifl, photar)  
   return
 end subroutine tdreltransD
 !-----------------------------------------------------------------------
@@ -111,11 +127,12 @@ end subroutine tdreltransD
 !-----------------------------------------------------------------------
 subroutine tdreltransx(ear,ne,param,ifl,photar)
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(21), photar(ne), par(32)
+  integer :: ne, ifl, Cp, dset, aset, nlp
+  real    :: ear(0:ne), param(21), photar(ne), par(39)
 ! Settings
   Cp   = 0   !Cp=0 means use the reflionx model with nthcomp and free density
   dset = 0   !dset=0 means distance is not set, logxi set instead
+  aset = 0   !aset=1 means absoprtions is TBFeO
   nlp = 1    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
@@ -150,8 +167,15 @@ subroutine tdreltransx(ear,ne,param,ifl,photar)
   par(30) = 0.               !g2
   par(31) = 1.0              !Anorm
   par(32) = param(21)        !telescope response
+  par(33) = 0.		     !TBFeO Oxygen abundance
+  par(34) = 0.               !TBFeO Iron abundance
+  par(35) = 0.               !TBFeO redshift 
+  par(36) = 0.		     !Mym Ionised absorber Nh
+  par(37) = 0.               !Mym Ionised absorber logxi
+  par(38) = 0.               !Mym Ionised absorber covering fraction
+  par(39) = 0.               !Mym Ionised absorber redshift
 ! Call general code
-  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
+  call genreltrans(Cp, dset, aset, nlp, ear, ne, par, ifl, photar)  
   return
 end subroutine tdreltransx
 !-----------------------------------------------------------------------
@@ -160,11 +184,12 @@ end subroutine tdreltransx
 !-----------------------------------------------------------------------
 subroutine tdreltransDbl(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(27), photar(ne), par(32)
+  integer :: ne, ifl, Cp, dset, aset, nlp
+  real    :: ear(0:ne), param(27), photar(ne), par(39)
 !Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
+  aset = 0   !aset=1 means absoprtions is TBFeO
   nlp =2     !use a double lamp post 
 ! Transfer to general parameter array REDO THIS PROPERLY -- EDIT GENRELTRANS AND SET_PARAM FIRST
   par(1)  = param(1)         !h1
@@ -199,8 +224,15 @@ subroutine tdreltransDbl(ear, ne, param, ifl, photar)
   par(30) = param(26)        !g2
   par(31) = 1.0              !Anorm
   par(32) = param(27)        !resp
+  par(33) = 0.		     !TBFeO Oxygen abundance
+  par(34) = 0.               !TBFeO Iron abundance
+  par(35) = 0.               !TBFeO redshift 
+  par(36) = 0.		     !Mym Ionised absorber Nh
+  par(37) = 0.               !Mym Ionised absorber logxi
+  par(38) = 0.               !Mym Ionised absorber covering fraction
+  par(39) = 0.               !Mym Ionised absorber redshift
 ! Call general code
-  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
+  call genreltrans(Cp, dset, aset, nlp, ear, ne, par, ifl, photar)  
   return
 end subroutine tdreltransDbl
 !-----------------------------------------------------------------------
@@ -209,12 +241,13 @@ end subroutine tdreltransDbl
 !-----------------------------------------------------------------------
 subroutine tdrtdist(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(25), photar(ne), par(32), getcountrate
+  integer :: ne, ifl, Cp, dset, aset, nlp
+  real    :: ear(0:ne), param(25), photar(ne), par(39), getcountrate
   double precision    :: honr,pi,cosi,cos0
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 1   !dset=1 means distance is set, logxi is calculated internally
+  aset = 0   !aset=1 means absoprtions is TBFeO
   nlp = 1    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
@@ -249,6 +282,13 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
   par(30) = 0.               !g2
   par(31) = param(24)        !Anorm
   par(32) = param(25)        !telescope response
+  par(33) = 0.		     !TBFeO Oxygen abundance
+  par(34) = 0.               !TBFeO Iron abundance
+  par(35) = 0.               !TBFeO redshift 
+  par(36) = 0.		     !Mym Ionised absorber Nh
+  par(37) = 0.               !Mym Ionised absorber logxi
+  par(38) = 0.               !Mym Ionised absorber covering fraction
+  par(39) = 0.               !Mym Ionised absorber redshift
 ! Check that we're not looking at the side of the disc
   honr = par(20)
   pi   = acos(-1.d0)
@@ -262,7 +302,7 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
      write(*,*)"leading to crash and seg fault. Better to set hard max on inc, incmax"
      write(*,*)"and set honr_max to cos(incmax)/sqrt(1-cos^2(incmax))."
   else
-     call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
+     call genreltrans(Cp, dset, aset, nlp, ear, ne, par, ifl, photar)  
   end if
   
   return
@@ -270,16 +310,90 @@ end subroutine tdrtdist
 !-----------------------------------------------------------------------
 
 
+!-----------------------------------------------------------------------
+subroutine tdrtdistab(ear, ne, param, ifl, photar)
+  implicit none
+  integer :: ne, ifl, Cp, dset, aset, nlp
+  real    :: ear(0:ne), param(32), photar(ne), par(39), getcountrate
+  double precision    :: honr,pi,cosi,cos0
+! Settings
+  Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
+  dset = 1   !dset=1 means distance is set, logxi is calculated internally
+  aset = 1   !aset=1 means absoprtions is TBFeO
+  nlp = 1    !use a single lamp post
+! Transfer to general parameter array
+  par(1)  = param(1)         !h1
+  par(2)  = 0.               !h2
+  par(3)  = param(2)         !a
+  par(4)  = param(3)         !inc
+  par(5)  = param(4)         !rin
+  par(6)  = param(5)         !rout
+  par(7)  = param(6)         !zcos
+  par(8)  = param(7)         !Gamma
+  par(9)  = param(8)         !Dkpc
+  par(10)  = param(9)         !Afe
+  par(11) = param(10)        !lognep
+  par(12) = param(11)        !kTe
+  par(13) = 0.               !eta_0
+  par(14) = 0.               !eta
+  par(15) = 0.               !beta_p
+  par(16) = param(12)        !Nh
+  par(17) = 1.0              !boost
+  par(18) = param(13)        !qboost
+  par(19) = param(14)        !Mass
+  par(20) = param(15)        !honr
+  par(21) = param(16)        !b1
+  par(22) = param(17)        !b2
+  par(23) = param(18)        !floHz
+  par(24) = param(19)        !fhiHz
+  par(25) = param(20)        !ReIm
+  par(26) = param(21)        !DelA
+  par(27) = param(22)        !DelAB
+  par(28) = param(23)        !g
+  par(29) = 0.               !DelAB2
+  par(30) = 0.               !g2
+  par(31) = param(24)        !Anorm
+  par(32) = param(25)        !telescope response
+  par(33) = param(26)        !TBFeO Oxygen abundance
+  par(34) = param(27)        !TBFeO Iron abundance
+  par(35) = param(28)        !TBFeO redshift 
+  par(36) = param(29)	     !Mym Ionised absorber Nh
+  par(37) = param(30)        !Mym Ionised absorber logxi
+  par(38) = param(31)        !Mym Ionised absorber covering fraction
+  par(39) = param(32)        !Mym Ionised absorber redshift
+! Check that we're not looking at the side of the disc
+  honr = par(20)
+  pi   = acos(-1.d0)
+  cosi = cos( par(4) * pi / 180.d0 )
+  cos0 = honr / sqrt( honr**2 + 1.d0  )
+! Call general code
+  if( cos0 .ge. cosi )then
+     photar = 0.0   !XSPEC *hates* this. Just do it with limits, and flag here.
+     write(*,*)"Warning! Disc thickness is too high for this inclinaiton!"
+     write(*,*)"Model output set to zero -- XSPEC *hates* this and may get lost"
+     write(*,*)"leading to crash and seg fault. Better to set hard max on inc, incmax"
+     write(*,*)"and set honr_max to cos(incmax)/sqrt(1-cos^2(incmax))."
+  else
+     call genreltrans(Cp, dset, aset, nlp, ear, ne, par, ifl, photar)  
+  end if
+  
+  return
+end subroutine tdrtdistab
+!-----------------------------------------------------------------------
+
+
+
 
 !-----------------------------------------------------------------------
 subroutine tdrtdistX(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp
-  real    :: ear(0:ne), param(25), photar(ne), par(32), getcountrate
+  integer :: ne, ifl, Cp, dset, aset, nlp
+  real    :: ear(0:ne), param(25), photar(ne), par(39), getcountrate
   double precision    :: honr,pi,cosi,cos0
 ! Settings
   Cp   = 0   !Cp=0 means use the reflionx model with nthcomp and free density 
   dset = 1   !dset=1 means distance is set, logxi is calculated internally
+  aset = 0   !aset=1 means absoprtions is TBFeO
   nlp = 1    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
@@ -314,6 +428,13 @@ subroutine tdrtdistX(ear, ne, param, ifl, photar)
   par(30) = 0.               !g2
   par(31) = param(24)        !Anorm
   par(32) = param(25)        !telescope response
+  par(33) = 0.		     !TBFeO Oxygen abundance
+  par(34) = 0.               !TBFeO Iron abundance
+  par(35) = 0.               !TBFeO redshift 
+  par(36) = 0.		     !Mym Ionised absorber Nh
+  par(37) = 0.               !Mym Ionised absorber logxi
+  par(38) = 0.               !Mym Ionised absorber covering fraction
+  par(39) = 0.               !Mym Ionised absorber redshift
 ! Check that we're not looking at the side of the disc
   honr = par(20)
   pi   = acos(-1.d0)
@@ -327,7 +448,7 @@ subroutine tdrtdistX(ear, ne, param, ifl, photar)
      write(*,*)"leading to crash and seg fault. Better to set hard max on inc, incmax"
      write(*,*)"and set honr_max to cos(incmax)/sqrt(1-cos^2(incmax))."
   else
-     call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
+     call genreltrans(Cp, dset, aset, nlp, ear, ne, par, ifl, photar)  
   end if
   
   return
@@ -339,8 +460,8 @@ subroutine simrtdbl(ear, ne, param, ifl, photar)
   use telematrix
   use env_variables
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp, i
-  real    :: ear(0:ne), param(28), photar(ne), par(32)
+  integer :: ne, ifl, Cp, dset, aset, nlp, i
+  real    :: ear(0:ne), param(28), photar(ne), par(39)
   real    :: gammac2, Texp, E, dE, getcountrate
   real    :: rephotar(ne), imphotar(ne)
   real, parameter :: Emin = 1e-1, Emax = 300.0
@@ -356,6 +477,7 @@ subroutine simrtdbl(ear, ne, param, ifl, photar)
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=1 means distance is set, logxi is calculated internally
+  aset = 0   !aset=1 means absoprtions is TBFeO
   nlp = 2    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
@@ -392,6 +514,13 @@ subroutine simrtdbl(ear, ne, param, ifl, photar)
   Texp    = param(26)        !Texp (s)
   pow     = param(27)        !power in [rms/mean]^2/Hz units (alpha(nu))
   par(32) = param(28)        !telescope response
+  par(33) = 0.		     !TBFeO Oxygen abundance
+  par(34) = 0.               !TBFeO Iron abundance
+  par(35) = 0.               !TBFeO redshift 
+  par(36) = 0.		     !Mym Ionised absorber Nh
+  par(37) = 0.               !Mym Ionised absorber logxi
+  par(38) = 0.               !Mym Ionised absorber covering fraction
+  par(39) = 0.               !Mym Ionised absorber redshift
   
   flo = par(23)
   fhi = par(24)
@@ -399,7 +528,7 @@ subroutine simrtdbl(ear, ne, param, ifl, photar)
   
 ! Get `folded' lags
   par(25) = 6.0   !ReIm
-  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
+  call genreltrans(Cp, dset,aset, nlp, ear, ne, par, ifl, photar)  
   do i = 1,ne
      lag(i) = photar(i) / ( ear(i) - ear(i-1) )
   end do
@@ -411,14 +540,14 @@ subroutine simrtdbl(ear, ne, param, ifl, photar)
   
 ! Calculate real and imaginary parts on the fine energy grid
   par(25) = 1.0   !ReIm
-  call genreltrans(Cp, dset, nlp, earx, nex, par, ifl, rephotarx)  
+  call genreltrans(Cp, dset, aset, nlp, earx, nex, par, ifl, rephotarx)  
   par(25) = 2.0   !ReIm
-  call genreltrans(Cp, dset, nlp, earx, nex, par, ifl, imphotarx)  
+  call genreltrans(Cp, dset, aset, nlp, earx, nex, par, ifl, imphotarx)  
 ! Get DC component
   par(23) = 0.0   !floHz
   par(24) = 0.0   !fhiHz
   par(25) = 1.0   !ReIm
-  call genreltrans(Cp, dset, nlp, earx, nex, par, ifl, photarx)  
+  call genreltrans(Cp, dset, aset, nlp, earx, nex, par, ifl, photarx)  
 
 ! Read in background array
   if( needbkg )then
@@ -515,8 +644,8 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   use telematrix
   use env_variables
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp, i
-  real    :: ear(0:ne), param(27), photar(ne), par(32)
+  integer :: ne, ifl, Cp, dset, aset, nlp, i
+  real    :: ear(0:ne), param(27), photar(ne), par(39)
   real    :: gammac2, Texp, E, dE, getcountrate
   real    :: rephotar(ne), imphotar(ne)
   real, parameter :: Emin = 1e-1, Emax = 300.0
@@ -532,6 +661,7 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 1   !dset=1 means distance is set, logxi is calculated internally
+  aset = 0   !aset=1 means absoprtions is TBFeO
   nlp = 1    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
@@ -568,6 +698,13 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   Texp    = param(25)        !Texp (s)
   pow     = param(26)        !power in [rms/mean]^2/Hz units (alpha(nu))
   par(32) = param(27)        !telescope response
+  par(33) = 0.		     !TBFeO Oxygen abundance
+  par(34) = 0.               !TBFeO Iron abundance
+  par(35) = 0.               !TBFeO redshift 
+  par(36) = 0.		     !Mym Ionised absorber Nh
+  par(37) = 0.               !Mym Ionised absorber logxi
+  par(38) = 0.               !Mym Ionised absorber covering fraction
+  par(39) = 0.               !Mym Ionised absorber redshift
   
   flo = par(23)
   fhi = par(24)
@@ -575,7 +712,7 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   
 ! Get `folded' lags
   par(25) = 6.0   !ReIm
-  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
+  call genreltrans(Cp, dset, aset, nlp, ear, ne, par, ifl, photar)  
   do i = 1,ne
      lag(i) = photar(i) / ( ear(i) - ear(i-1) )
   end do
@@ -587,14 +724,14 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   
 ! Calculate real and imaginary parts on the fine energy grid
   par(25) = 1.0   !ReIm
-  call genreltrans(Cp, dset, nlp, earx, nex, par, ifl, rephotarx)  
+  call genreltrans(Cp, dset, aset, nlp, earx, nex, par, ifl, rephotarx)  
   par(25) = 2.0   !ReIm
-  call genreltrans(Cp, dset, nlp, earx, nex, par, ifl, imphotarx)  
+  call genreltrans(Cp, dset, aset, nlp, earx, nex, par, ifl, imphotarx)  
 ! Get DC component
   par(23) = 0.0   !floHz
   par(24) = 0.0   !fhiHz
   par(25) = 1.0   !ReIm
-  call genreltrans(Cp, dset, nlp, earx, nex, par, ifl, photarx)  
+  call genreltrans(Cp, dset, aset, nlp, earx, nex, par, ifl, photarx)  
 
 ! Read in background array
   if( needbkg )then
@@ -688,7 +825,7 @@ end subroutine simrtdist
 
 
 !-----------------------------------------------------------------------
-subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
+subroutine genreltrans(Cp, dset,aset, nlp, ear, ne, param, ifl, photar)
 ! All reltrans flavours are calculated in this subroutine.
 ! Cp and dset are the settings:
 ! |Cp|=1 means use cut-off power-law, |Cp|=2 means use nthcomp
@@ -722,8 +859,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                                    dlogf = 0.09 !This is a resolution parameter (base 10)       
     !Args:
     integer, intent(inout) :: ifl
-    integer, intent(in)    :: Cp, dset, ne, nlp
-    real   , intent(inout) :: param(32)
+    integer, intent(in)    :: Cp, dset,aset, ne, nlp
+    real   , intent(inout) :: param(39)
     real   , intent(out)   :: photar(ne)  
     !Variables of the subroutine
     !initializer
@@ -734,6 +871,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     double precision :: h(nlp), a, inc, rin, rout, zcos, Gamma, honr, muobs 
     real             :: logxi, Afe, lognep, Ecut_obs, Ecut_s, Dkpc, Anorm, beta_p
     real             :: Nh, boost, Mass, floHz, fhiHz, DelA, DelAB(nlp), g(nlp)
+    real             :: Oab, Feab, za
+    real             :: nh_xiab, logxi_xiab, fcov_xiab, z_xiab
     integer          :: ReIm, resp_matr
     double precision :: qboost,b1,b2, eta, eta_0
     !internal frequency grid
@@ -764,7 +903,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     double precision, allocatable :: logxir(:),gsdr(:), logner(:)
     real    :: contx(nex,nlp)
     real    :: mue, logxi0, reline_w0(nlp,nex), imline_w0(nlp,nex), photarx(nex), photerx(nex)
-    real    :: absorbx(nex), ImGbar(nex), ReGbar(nex)
+    real    :: absorbx(nex), absorbx2(nex), ImGbar(nex), ReGbar(nex)
     real    :: ReGx(nex),ImGx(nex),ReS(ne),ImS(ne)
     !variable for non linear effects
     integer ::  DC, ionvariation
@@ -774,7 +913,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     real    :: dlogxi1, dlogxi2, Gamma1, Gamma2, DeltaGamma  
     !SAVE 
     integer          :: nfsave, Cpsave
-    real             :: paramsave(32)
+    real             :: paramsave(39)
     double precision :: fhisave, flosave
     !Functions
     integer          :: i, j, myenv
@@ -784,6 +923,11 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     real             :: Gamma0,logne,Ecut0,thetae,logxiin
     integer          :: Cp_cont
     real time_start,time_end        !runtime stuff
+    
+    ! Absorbtion parameter tables
+    real   , dimension(:,:,:,:)    , allocatable :: param_tbfeo
+    real   , dimension(:,:,:,:)    , allocatable :: param_mymxiab
+
  
     data firstcall /.true./
     data Cpsave/2/
@@ -810,13 +954,13 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     !Note: the two different calls are because for the double lP we set the temperature from the coronal frame(s), but for the single
     !LP we use the temperature in the observer frame
     if (nlp .eq. 1) then
-        call set_param(dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Ecut_obs,&
+        call set_param(dset,aset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Ecut_obs,&
                        eta_0,eta,beta_p,Nh,boost,qboost,Mass,honr,b1,b2,floHz,fhiHz,ReIm,DelA,DelAB,&
-                       g,Anorm,resp_matr,refvar,verbose)        
+                       g,Anorm,resp_matr,Oab,Feab,za,nh_xiab, logxi_xiab, fcov_xiab, z_xiab,refvar,verbose)        
     else 
-        call set_param(dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Ecut_s,&
+        call set_param(dset,aset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Ecut_s,&
                        eta_0,eta,beta_p,Nh,boost,qboost,Mass,honr,b1,b2,floHz,fhiHz,ReIm,DelA,DelAB,&
-                       g,Anorm,resp_matr,refvar,verbose) 
+                       g,Anorm,resp_matr,Oab,Feab,za,nh_xiab, logxi_xiab, fcov_xiab, z_xiab,refvar,verbose)
     end if 
     
     muobs = cos( inc * pi / 180.d0 )
@@ -1072,7 +1216,27 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     endif
   
     ! Calculate absorption 
-    call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
+    
+    if( aset .eq. 1 ) then
+ 	
+ 	allocate( param_tbfeo(nh,Oab,Feab,za) )   
+ 	allocate( param_mymxiab(nh_xiab, logxi_xiab, fcov_xiab, z_xiab) )	
+!    	param_tbfeo(1) = Nh
+!    	param_tbfeo(2) = Oab
+!    	param_tbfeo(3) = Feab
+!    	param_tbfeo(4) = z
+    
+    	call TBfeo(earx,nex,param_tbfeo,Ifl,absorbx,photerx)
+    	call mym(ear,ne,param_mymxiab,ifl,absorbx2)
+    	
+    	absorbx = absorbx*absorbx2
+    
+    else
+    
+    	call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
+    
+    end if
+    
 
     !TBD coherence check - if zero coherence between lamp posts, call a different subroutine 
     if( ReIm .eq. 7 ) then

@@ -1,18 +1,20 @@
-subroutine set_param(dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Ecut,&
+subroutine set_param(dset,aset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Ecut,&
                      eta_0,eta,beta_p,Nh,boost,qboost,Mass,honr,b1,b2,floHz,fhiHz,ReIm,DelA,DelAB,&
-                     g,Anorm,resp,refvar,verbose)
+                     g,Anorm,resp,Oab,Feab,za,nh_xiab, logxi_xiab, fcov_xiab, z_xiab, refvar,verbose)
 !!! Sets the parameters of reltrans depending on the Cp variable
   implicit none
-  integer         , intent(in)   :: dset, nlp, verbose
-  real            , intent(in)   :: param(32)
+  integer         , intent(in)   :: dset, aset, nlp, verbose
+  real            , intent(in)   :: param(39)
   double precision, intent(out)  :: h(nlp), a, inc, rin, rout, zcos, Gamma
   double precision, intent(out)  :: honr, b1, b2, qboost, eta_0, eta
   real            , intent(out)  :: logxi, Afe, lognep, Ecut, beta_p
   real            , intent(out)  :: Nh, boost, Mass, floHz, fhiHz
   real            , intent(out)  :: DelA, DelAB(nlp), g(nlp), Anorm, Dkpc
+  real            , intent(out)  :: Oab, Feab, za
+  real            , intent(out)  :: nh_xiab, logxi_xiab, fcov_xiab, z_xiab
   integer         , intent(out)  :: ReIm, resp, refvar
   integer m
-
+  
   !TBD: DelAB, g also arryas of size nlp 
 ! Read in basic parameter array   
   do m=1,nlp 
@@ -53,6 +55,13 @@ subroutine set_param(dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,l
   end do
   Anorm    = param(31)
   resp     = param(32)
+  Oab      = param(33)
+  Feab     = param(34)
+  za     = param(35)
+  nh_xiab = param(36)
+  logxi_xiab = param(37)
+  fcov_xiab = param(38)
+  z_xiab   = param(39)
 
   if( dset .eq. 1 )then
      Dkpc = param(9)
