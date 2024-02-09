@@ -1,7 +1,23 @@
 import numpy as np
 from  matplotlib import pyplot as plt
 import f2py_interface as ib
+import os
 
+#-----------------------------#
+#set env variables for tests
+os.environ["REV_VERB" ] = "2"
+os.environ["MU_ZONES" ] = "1"
+os.environ["ION_ZONES"] = "10"
+os.environ["A_DENSITY"] = "0"
+os.environ["EMIN_REF" ] = "0.3"
+os.environ["EMAX_REF" ] = "10.0"
+os.environ["EMIN_REF2"] = "0.3"
+os.environ["EMAX_REF2"] = "10.0"
+os.environ["SEED_SIM" ] = "-2851043"
+os.environ["BACKSCL"  ] = "1.0"
+os.environ["RMF_SET"  ] = "./Benchmarks/resp_matrix/nicer-rmf6s-teamonly-array50.rmf"
+os.environ["AMF_SET"  ] = "./Benchmarks/resp_matrix/nicer-consim135p-teamonly-array50.arf"
+#-----------------------------#
 
 Emin = 0.1
 Emax = 500.0
@@ -34,46 +50,57 @@ param[19] = 0.0     #gamma
 param[20] = 1       #telescope response
 
 # parameters = np.zeros(21, dtype = np.float32)
-parameters = np.genfromtxt('./Benchmarks/xrb/ip_0,12_0,25.dat',dtype = np.float32)
 
-parameters[14] = 0.0     #flo   !Lowest frequency in band (Hz)
-parameters[15] = 0.0     #fhi   !Highest frequency in band (Hz)
-parameters[16] = 1.0     #ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
+source = ['xrb']
+frange = ['0,12_0,25', '0,31_0,73', '0,80_2,10', '2,10_5,80', '5,80_16,0']
+mode   = ['Lags', 'Mods', 'Imag', 'Real', 'Spec'] 
+mode_par   = [4, 3, 2, 1, 0]
+model_type = ['Total']
+for _source in source:
+    for _frange in frange:
+        name = './Benchmarks/'+str(_source)+'/ip_'+str(_frange)+'.dat'
+        print (f'reading input parameters in {name} file ')
+        parameters = np.genfromtxt(name ,dtype = np.float32)
 
-photar = ib.reltransDCp(ear, param)
+        for i, _mode in enumerate(mode):
+            print(f'running model for {_source} in {_mode} mode')
+            if (mode_par[i] == 0):
+                parameters[14] = 0.0     #flo   !Lowest frequency in band (Hz)
+                parameters[15] = 0.0     #fhi   !Highest frequency in band (Hz)
+                parameters[16] = 1.0     #ReIm  !1=Re, 2=Im, 3=modulus, 4=time
+            else:
+                parameters[16] = mode_par[i]
+            print(f' for {_mode} mode the freqneucy range is [\
+            {parameters[14]}-{parameters[15]}] and ReIm is {parameters[16]}')
+            photar = ib.reltransDCp(ear, parameters)
 
-# take the saved spectrum 
-data = np.genfromtxt('./Benchmarks/xrb/Spec/Total.dat')
-# data_phot = np.genfromtxt('/Users/gullo/Software/reltrans/reltrans_v0.9.0_test/fort.98')
-# data_phot_new = np.genfromtxt('/Users/gullo/Work/git/reverberation_code/fort.98')
-# data_final = np.genfromtxt('/Users/gullo/Software/reltrans/reltrans_v0.9.0_test/fort.99', skip_header=1, skip_footer=4)
-# data_final_new = np.genfromtxt('/Users/gullo/Work/git/reverberation_code/fort.99', skip_header=1, skip_footer=1)
+            for _model_type in model_type:
+                name_archive = './Benchmarks/'+str(_source)+'/'+str(_mode)+'/'\
+                    +str(_model_type)+'_'+str(_frange)+'.dat'
+                print(f'Then comparing with the stored data: {name_archive}')
+                data = np.genfromtxt(name_archive)
 
-# Print the two models 
-fig, ax = plt.subplots(1, 1, figsize=(10, 8))
-font = 20
+                # Print the two models 
+                fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+                font = 20
 
-E = (ear[1:] + ear[:-1]) * 0.5 
-dE = (ear[1:] - ear[:-1]) 
+                E = (ear[1:] + ear[:-1]) * 0.5 
+                dE = (ear[1:] - ear[:-1]) 
 
-ax.plot(data[:,0], data[:,1], linewidth = 3, linestyle = '--', color = 'grey'   , label = 'phot (old)')
-ax.plot(E, photar/dE, lw = 5, color = 'red', label = 'reltrans spectrum')
-# ax.plot(data_phot_new[:,0], data_phot_new[:,1], linewidth = 3, linestyle = '-' , color = 'black'   , label = 'phot (new)')
-# ax.plot(data_phot[:,0]    , data_phot[:,1]    , linewidth = 3, linestyle = '--', color = 'grey'   , label = 'phot (old)')
-# ax.plot(data_final_new[:,0], data_final_new[:,1], lw = 5, color = 'red', linestyle = '-', label = 'reltrans spectrum')
-# ax.plot(data_final[:,0], data_final[:,1], lw = 5, color = 'magenta', linestyle = '--', label = 'reltrans spectrum')
+                ax.plot(E, photar/dE, lw = 5, color = 'red', label = 'reltrans spectrum')
+                ax.plot(data[:,0], data[:,1], linewidth = 3, linestyle = '--', color = 'grey'   , label = 'phot (old)')
 
-ax.set_xscale('log')
-ax.set_yscale('log')
-ax.set_ylabel(r'keV * photons / $cm^2$ / s / keV ', fontsize = font )
-ax.set_xlabel(r'Energy [keV]', fontsize = font )
-ax.tick_params(which='major', width=2, length=8, labelsize = font, pad=10)
-ax.tick_params(which='minor', width=2, length=5, labelsize = font, pad=10)
-for axis in ['top','bottom','left','right']:
-    ax.spines[axis].set_linewidth(3)
-ax.yaxis.set_ticks_position('both')
-# ax.set_xlim(0.1, 1e3)
-# ax.set_ylim(0.99, 1.01)
-# ax.set_ylim(1e-2, 1e3)
+                # ax.set_xscale('log')
+                # ax.set_yscale('log')
+                ax.set_ylabel(r'keV * photons / $cm^2$ / s / keV ', fontsize = font )
+                ax.set_xlabel(r'Energy [keV]', fontsize = font )
+                ax.tick_params(which='major', width=2, length=8, labelsize = font, pad=10)
+                ax.tick_params(which='minor', width=2, length=5, labelsize = font, pad=10)
+                for axis in ['top','bottom','left','right']:
+                    ax.spines[axis].set_linewidth(3)
+                    ax.yaxis.set_ticks_position('both')
+                    # ax.set_xlim(0.1, 1e3)
+                    # ax.set_ylim(0.99, 1.01)
+                    # ax.set_ylim(1e-2, 1e3)
 
 plt.show()

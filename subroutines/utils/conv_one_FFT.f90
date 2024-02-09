@@ -1,0 +1,26 @@
+  subroutine conv_one_FFT(dyn,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
+    use conv_mod
+    implicit none
+    integer, intent(in) :: DC, nlp 
+    real                :: dyn
+    real, intent(in)    :: photarx(nex)
+    real, intent(in)    :: reline(nlp,nex), imline(nlp,nex)
+    real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
+    complex :: conv(nec),padFT_photarx(nec)
+    complex :: padFT_reline(nec),  padFT_imline(nec)            
+    integer :: m
+    real    :: photmax, depad_conv(nex)
+    
+    do m=1,nlp  
+        if (DC .eq. 1 ) then   
+            call FTcnv(nex, reline(m,:), photarx, ReW_conv(m,:))
+        else 
+            
+            call FTcnv(nex, reline(m,:), photarx, ReW_conv(m,:))
+            call FTcnv(nex, imline(m,:), photarx, ImW_conv(m,:))
+
+        endif
+    end do
+
+  end subroutine conv_one_FFT
+

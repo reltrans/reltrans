@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose)
+subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose, test)
 !!!  Initialises the model and writes the header
 !!!------------------------------------------------------------------
   !    Args:
@@ -29,8 +29,8 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
       real             , intent(out)   :: dloge, earx(0:nex)
       double precision , intent(in)    :: rnmax
       double precision , intent(out)   :: d
-      logical          , intent(inout) :: firstcall, needtrans
-      integer i
+      logical          , intent(inout) :: firstcall, needtrans, test
+      integer i, env_test
       integer get_env_int
       character (len=200) :: get_env_char
  
@@ -82,7 +82,17 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
         endif
         write(*,*) 'VERBOSE is ', verbose
         write(*,*) 'REFVAR is ', refvar
-        write(*,*) 'IONVAR is ', ionvar     
+        write(*,*) 'IONVAR is ', ionvar 
+
+! set if it's a TEST run 
+        env_test = get_env_int("TEST_RUN",0)   
+        if (env_test .eq. 1) then
+           write(*,*) '*********  This is a TEST run  *********'
+           test = .true.
+        else
+           test = .false.
+        endif
+
         write(*,*)"----------------------------------------------------"
 
 ! Set sensible distance for observer from the BH
@@ -96,7 +106,7 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
         write(*,'(A, A)') 'Set the XILLVER table to ', trim(pathname_xillver)
         write(*,'(A, A)') 'Set the high density XILLVER table to ', trim(pathname_xillverD)
         write(*,'(A, A)') 'Set the nthComp, high density XILLVER table to ', trim(pathname_xillverDCp)
-
+        
         firstcall = .false.
         
      end if

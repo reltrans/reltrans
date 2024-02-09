@@ -25,7 +25,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   
     use dyn_gr
     use conv_mod
-    use conv_mod_test
     implicit none
     !Constants
     integer         , parameter :: nphi = 200, nro = 200!, ionvar! = 1 
@@ -40,7 +39,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     !Variables of the subroutine
     !initializer
     integer          :: verbose, me, xe, m, ionvar, refvar
-    logical          :: firstcall, needtrans, needconv
+    logical          :: firstcall, needtrans, needconv, test
     double precision :: d
     !Parameters of the model:
     double precision :: h(nlp), a, inc, rin, rout, zcos, Gamma, honr, muobs 
@@ -109,11 +108,13 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
 
     ifl = 1
-    ! call FNINIT
-
     ! Initialise some parameters 
-    call initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose)
+    call initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose, test)
 
+    if (test) then 
+       call FNINIT
+    endif
+    
     !Allocate dynamically the array to calculate the trasfer function 
     if (.not. allocated(re1)) allocate(re1(nphi,nro))
     if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
@@ -363,14 +364,26 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                     !always: convolution for reverberation/DC spectrum
                     !TBD: add flag here to do this convolution if no reflection time, or different convolution with complex
                     !xillver if tref > 0 or something.
-                    call conv_one_FFT(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
-                    if(DC .eq. 0 .and. refvar .eq. 1) then
-                        call conv_one_FFTw(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
-                        call conv_one_FFTw(dyn,photarx_delta,reline_w2,imline_w2,ReW2(:,:,j),ImW2(:,:,j),DC,nlp)
-                    end if
-                    if(DC .eq. 0 .and. ionvar .eq. 1) then
-                        call conv_one_FFTw(dyn,photarx_dlogxi,reline_w3,imline_w3,ReW3(:,:,j),ImW3(:,:,j),DC,nlp)
-                    end if
+
+                    if (test) then 
+                       call conv_one_FFT(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
+                       if(DC .eq. 0 .and. refvar .eq. 1) then
+                          call conv_one_FFT(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
+                          call conv_one_FFT(dyn,photarx_delta,reline_w2,imline_w2,ReW2(:,:,j),ImW2(:,:,j),DC,nlp)
+                       end if
+                       if(DC .eq. 0 .and. ionvar .eq. 1) then
+                          call conv_one_FFT(dyn,photarx_dlogxi,reline_w3,imline_w3,ReW3(:,:,j),ImW3(:,:,j),DC,nlp)
+                       end if
+                    else
+                       call conv_one_FFTw(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
+                       if(DC .eq. 0 .and. refvar .eq. 1) then
+                          call conv_one_FFTw(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
+                          call conv_one_FFTw(dyn,photarx_delta,reline_w2,imline_w2,ReW2(:,:,j),ImW2(:,:,j),DC,nlp)
+                       end if
+                       if(DC .eq. 0 .and. ionvar .eq. 1) then
+                          call conv_one_FFTw(dyn,photarx_dlogxi,reline_w3,imline_w3,ReW3(:,:,j),ImW3(:,:,j),DC,nlp)
+                       end if
+                    endif
                     !old call: always convolve every single transfer function in one go
                     !call conv_all_FFTw(dyn,photarx,photarx_delta,photarx_dlogxi,reline_w0,imline_w0,reline_w1,imline_w1,&
                     !     reline_w2,imline_w2,reline_w3,imline_w3,ReW0(:,:,j),ImW0(:,:,j),ReW1(:,:,j),ImW1(:,:,j),&
