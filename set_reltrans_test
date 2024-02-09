@@ -1,8 +1,8 @@
 #Reltrans MODEL:
 
-export REV_VERB=2
+export REV_VERB=0
 export MU_ZONES=1
-export ION_ZONES=20
+export ION_ZONES=1
 export A_DENSITY=0
 export EMIN_REF=0.3
 export EMAX_REF=10.0

@@ -25,6 +25,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   
     use dyn_gr
     use conv_mod
+    use conv_mod_test
     implicit none
     !Constants
     integer         , parameter :: nphi = 200, nro = 200!, ionvar! = 1 
@@ -362,7 +363,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                     !always: convolution for reverberation/DC spectrum
                     !TBD: add flag here to do this convolution if no reflection time, or different convolution with complex
                     !xillver if tref > 0 or something.
-                    call conv_one_FFTw(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
+                    call conv_one_FFT(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
                     if(DC .eq. 0 .and. refvar .eq. 1) then
                         call conv_one_FFTw(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
                         call conv_one_FFTw(dyn,photarx_delta,reline_w2,imline_w2,ReW2(:,:,j),ImW2(:,:,j),DC,nlp)

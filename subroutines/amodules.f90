@@ -115,7 +115,7 @@ contains
     real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
     complex :: conv(nec),padFT_photarx(nec)
     complex :: padFT_reline(nec),  padFT_imline(nec)            
-    integer :: m
+    integer :: m, i
     real    :: photmax, depad_conv(nex)
     
     do m=1,nlp  
@@ -124,6 +124,9 @@ contains
             call padding4FT(reline(m,:),padFT_reline)                        
             
             conv = (padFT_photarx * padFT_reline) * nexm1
+            do i = 1, nec
+               write(59,*) i, conv(i)
+            enddo
             call de_paddingFT(dyn, conv, depad_conv)
             ReW_conv(m,:) = ReW_conv(m,:) + depad_conv
         else 
@@ -168,10 +171,10 @@ contains
     real    :: photmax, depad_conv(nex)
 
     do m=1,nlp  
-        if (DC .eq. 1 ) then   
+       if (DC .eq. 1 ) then
             call padding4FT(photarx,padFT_photarx)         
             call padding4FT(reline_w0(m,:),padFT_reline_w0)                        
-            
+
             conv = (padFT_photarx * padFT_reline_w0) * nexm1
             call de_paddingFT(dyn, conv, depad_conv)
             ReW0_conv(m,:) = ReW0_conv(m,:) + depad_conv
@@ -242,7 +245,16 @@ contains
         in(i + nex) = 0.
     end do
 
+    do i = 1, nex_conv
+       write(51,*) i, in(i)
+    enddo
+    
     call fftw_execute_dft_r2c(plan1, in, out)
+
+    do i = 1, nec
+       ! write(52,*) real(out(i)), aimag(out(i))
+       write(52,*) i, real(out(i)),  aimag(out(i))
+    enddo
 
     padFT_line = out
     
@@ -260,7 +272,14 @@ contains
 
     in_conv = padFT_line
 
+    do i = 1, nec
+       write(53,*) i, real(in_conv(i)), aimag(in_conv(i))
+    enddo
+
     call fftw_execute_dft_c2r(plan2, in_conv, out_conv)
+    do i = 1, nex_conv
+       write(54,*) i, out_conv(i)
+    enddo
     
     ! Populate output array
     photmax = 0.0
@@ -268,6 +287,11 @@ contains
         out_line(i) = out_conv(i + nex/2 + 1)
         photmax = max( photmax , out_line(i) )
     end do
+
+    do i = 1, nex
+       write(55,*) i, out_line(i)
+    enddo
+
     ! Clean any residual edge effects
     do i = 1, nex
         if( abs(out_line(i)) .lt. abs(dyn * photmax) ) out_line(i) = 0.0
@@ -277,6 +301,162 @@ contains
    end subroutine de_paddingFT
 
 end module conv_mod
+
+
+
+
+
+!*******************************************************************************!
+!*******************************************************************************!
+
+module conv_mod_test
+  use conv_mod
+  implicit none
+
+  ! double precision :: in_padded(nex_conv)
+  ! double precision :: in_padded(nex_conv)
+  
+  
+contains
+ 
+    subroutine conv_one_FFT(dyn,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
+    implicit none
+    integer, intent(in) :: DC, nlp 
+    real                :: dyn
+    real, intent(in)    :: photarx(nex)
+    real, intent(in)    :: reline(nlp,nex), imline(nlp,nex)
+    real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
+    complex :: conv(nec),padFT_photarx(nec)
+    complex :: padFT_reline(nec),  padFT_imline(nec)            
+    integer :: m,i
+    real    :: photmax, depad_conv(nex)
+    
+    do m=1,nlp  
+        if (DC .eq. 1 ) then   
+            call padding4FT_test(photarx,padFT_photarx)         
+            call padding4FT_test(reline(m,:),padFT_reline)
+            
+            conv = (padFT_photarx * padFT_reline) * nexm1
+            do i = 1, nec
+               write(19,*) i, conv(i)
+            enddo
+            call de_paddingFT_test(dyn, conv, depad_conv)
+            ReW_conv(m,:) = ReW_conv(m,:) + depad_conv
+        else 
+            call padding4FT_test(photarx       , padFT_photarx)        
+            call padding4FT_test(reline(m,:),padFT_reline)
+            call padding4FT_test(imline(m,:),padFT_imline)
+     
+            conv = (padFT_photarx * padFT_reline) * nexm1
+            call de_paddingFT_test(dyn, conv, depad_conv)
+            ReW_conv(m,:) = ReW_conv(m,:) + depad_conv
+            
+            conv = (padFT_photarx * padFT_imline) * nexm1
+            call de_paddingFT_test(dyn, conv, depad_conv)
+            ImW_conv(m,:) = ImW_conv(m,:) + depad_conv           
+        endif
+    end do
+
+    end subroutine conv_one_FFT   
+
+    subroutine padding4FT_test(line, padFT_line_test)
+    implicit none 
+    real   , intent(in)  :: line(nex)
+    complex, intent(out) :: padFT_line_test(nec)
+    
+    integer :: i 
+    real    :: line_padded(2 * nex_conv)
+
+    line_padded = 0.0
+    
+    do i = 1, nex
+       line_padded(2 * i - 1) = line(i)
+       line_padded(2 * i)     = 0.0
+    end do
+    ! do i = 2, 3 * nex
+    !     line_padded(i + nex) = 0.
+    ! end do
+
+    do i = 1, nex_conv
+       write(11,*) i, line_padded(2 * i - 1), line_padded(2 * i) 
+    enddo
+    
+    call four1_real(line_padded, nex_conv, 1)
+
+    do i = 1, nec
+       write(12,*) i, line_padded(2 * i - 1), line_padded(2 * i)
+    enddo
+
+    do i = 1, nec
+       ! write(*,*) line_padded(2 * i - 1), line_padded(2 * i)
+       padFT_line_test(i) = cmplx(line_padded(2 * i - 1), line_padded(2 * i))
+       ! write(*,*) real(padFT_line_test(i))
+    enddo
+        
+    ! Fill padded arrays
+    ! in_padded(1) = 0.0
+    ! do i = 1, nex
+    !     in_padded(i+1) = line(i)
+    ! end do
+    ! do i = 2, 3 * nex
+    !     in_padded(i + nex) = 0.
+    ! end do
+
+    ! call FT_not_fast(in_padded, re_out, im_out, nex)
+    ! do i = 1, nex 
+    !    padFT_line = cmplx(re_out(i), im_out(i))
+    ! enddo
+
+       
+  end subroutine padding4FT_test
+
+
+  subroutine de_paddingFT_test(dyn, padFT_line_test, out_line)
+    implicit none 
+    real    , intent(in) :: dyn
+    complex , intent(in) :: padFT_line_test(nec)
+    real    , intent(out):: out_line(nex)
+
+    integer :: i 
+    real    :: photmax
+    real    :: line_padded(2 * nec)
+
+    do i = 1, nec 
+       write(13,*) i, real(padFT_line_test(i)), aimag(padFT_line_test(i))
+    enddo
+
+    do i = 1, nec
+       line_padded(2 * i - 1) = real (padFT_line_test(i))
+       line_padded(2 * i)     = aimag(padFT_line_test(i))
+    enddo
+    
+    call four1_real(line_padded, nec, -1)
+
+     do i = 1, nec
+       write(14,*) i, line_padded(2 * i - 1), line_padded(2 * i)
+    enddo
+    
+    ! Populate output array
+    photmax = 0.0
+    do i = 1, nex
+       out_line(i) = line_padded(i + nex/2 + 1)
+       photmax = max( photmax , out_line(i) )
+    end do
+
+    do i = 1, nex
+       write(15,*) i, out_line(i)
+    enddo
+    
+    ! Clean any residual edge effects
+    do i = 1, nex
+        if( abs(out_line(i)) .lt. abs(dyn * photmax) ) out_line(i) = 0.0
+    end do
+
+    return 
+  end subroutine de_paddingFT_test
+
+ end module conv_mod_test
+
 
 
 

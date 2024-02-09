@@ -40,7 +40,7 @@ parameters[14] = 0.0     #flo   !Lowest frequency in band (Hz)
 parameters[15] = 0.0     #fhi   !Highest frequency in band (Hz)
 parameters[16] = 1.0     #ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
 
-photar = ib.reltransDCp(ear, parameters)
+photar = ib.reltransDCp(ear, param)
 
 # take the saved spectrum 
 data = np.genfromtxt('./Benchmarks/xrb/Spec/Total.dat')

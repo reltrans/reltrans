@@ -3,6 +3,8 @@ include 'subroutines/continuum/get_norm_cont.f90'
 include 'subroutines/continuum/init_cont.f90'
 
 include 'subroutines/utils/crebin.f90'
+include 'subroutines/utils/four1.f90'
+include 'subroutines/utils/four1_real.f90'
 include 'subroutines/utils/get_env_int.f90'
 include 'subroutines/utils/get_env_real.f90'
 include 'subroutines/utils/get_env_char.f90'
