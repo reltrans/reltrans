@@ -110,7 +110,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ifl = 1
     ! Initialise some parameters 
     call initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose, test)
-
+    
     if (test) then 
        call FNINIT
     endif

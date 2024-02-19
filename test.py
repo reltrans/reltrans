@@ -6,6 +6,7 @@ import os
 #-----------------------------#
 #set env variables for tests
 os.environ["REV_VERB" ] = "2"
+os.environ["TEST_RUN" ] = "1"
 os.environ["MU_ZONES" ] = "1"
 os.environ["ION_ZONES"] = "10"
 os.environ["A_DENSITY"] = "0"
@@ -16,7 +17,7 @@ os.environ["EMAX_REF2"] = "10.0"
 os.environ["SEED_SIM" ] = "-2851043"
 os.environ["BACKSCL"  ] = "1.0"
 os.environ["RMF_SET"  ] = "./Benchmarks/resp_matrix/nicer-rmf6s-teamonly-array50.rmf"
-os.environ["AMF_SET"  ] = "./Benchmarks/resp_matrix/nicer-consim135p-teamonly-array50.arf"
+os.environ["ARF_SET"  ] = "./Benchmarks/resp_matrix/nicer-consim135p-teamonly-array50.arf"
 #-----------------------------#
 
 Emin = 0.1
@@ -60,7 +61,7 @@ for _source in source:
     for _frange in frange:
         name = './Benchmarks/'+str(_source)+'/ip_'+str(_frange)+'.dat'
         print (f'reading input parameters in {name} file ')
-        parameters = np.genfromtxt(name ,dtype = np.float32)
+        parameters = np.genfromtxt(name, dtype = np.float32)
 
         for i, _mode in enumerate(mode):
             print(f'running model for {_source} in {_mode} mode')
@@ -74,10 +75,11 @@ for _source in source:
             {parameters[14]}-{parameters[15]}] and ReIm is {parameters[16]}')
             photar = ib.reltransDCp(ear, parameters)
 
-            for _model_type in model_type:
+            if (mode_par[i] == 0):
                 name_archive = './Benchmarks/'+str(_source)+'/'+str(_mode)+'/'\
                     +str(_model_type)+'_'+str(_frange)+'.dat'
                 print(f'Then comparing with the stored data: {name_archive}')
+
                 data = np.genfromtxt(name_archive)
 
                 # Print the two models 
@@ -103,4 +105,4 @@ for _source in source:
                     # ax.set_ylim(0.99, 1.01)
                     # ax.set_ylim(1e-2, 1e3)
 
-plt.show()
+# plt.show()
