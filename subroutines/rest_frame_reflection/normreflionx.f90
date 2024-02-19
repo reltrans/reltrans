@@ -25,6 +25,7 @@ subroutine normreflionx(ear,ne,Gamma,Afe,logne,kTe,logxi,thetae,photar)
   param(5) = Gamma
   param(6) = kTbb
   param(7) = 0.0    !Redshift
+  ifl = 0
 ! Call model
   call get_reflionx(ear, ne, param, ifl, photar)
 ! Call xillver equivalent
