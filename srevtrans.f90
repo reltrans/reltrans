@@ -1229,6 +1229,7 @@ subroutine genreltrans(Cp, dset,aset, nlp, ear, ne, param, ifl, photar)
     	param_mymxiab(2) = logxi_xiab
     	param_mymxiab(3) = fcov_xiab
     	param_mymxiab(4) = z_xiab
+    	
     
     	call TBfeo(earx,nex,param_tbfeo,Ifl,absorbx,photerx)
     	
