@@ -43,47 +43,47 @@ subroutine mym(ear,ne,param,ifl,photar)
      emax0=20.0
      emin0=0.1
      !Read column used from the etable and convert to units of 1e22
-     write(*,*)"Ive just set the energy boundary values..."
+!     write(*,*)"Ive just set the energy boundary values..."
      call getNh(filenm,Nh0)
-     write(*,*)"Ive just called getNh..."
+!     write(*,*)"Ive just called getNh..."
      Nh0 = Nh0/1e22
-     write(*,*)"Ive just normalised Nh..."
+!     write(*,*)"Ive just normalised Nh..."
      !Set firstcall
      firstcall = .false.
   end if
  
-  write(*,*)"About to call mtable subroutine..."   
+!  write(*,*)"About to call mtable subroutine..."   
   
-  write(*,*)filenm
+!  write(*,*)filenm
 ! Call mtable routine to interpolate from grid
   call xsmtbl(ear_rest,ne,par,filenm,ifl,tau,photer)
   
-  write(*,*)"I've just called mtable subroutine..." 
+!  write(*,*)"I've just called mtable subroutine..." 
   
 ! Extrapolate above the highest energy in the grid
   call extrap(ear,ne,z,filenm,Emax0,tau)
  
-  write(*,*)"I've just called extrap subroutine..." 
+!  write(*,*)"I've just called extrap subroutine..." 
 
 ! Extrapolate below the lowest energy in the grid
   call extraplo(ear,ne,z,filenm,Emin0,tau)
  
-  write(*,*)"I've just called extraplo subroutine..." 
+!  write(*,*)"I've just called extraplo subroutine..." 
  
 ! Convert tau for the input Nh
   tau = tau * Nh/Nh0
   
-  write(*,*)"I've just coverted tau to the input Nh..." 
+!  write(*,*)"I've just coverted tau to the input Nh..." 
 
 ! Calculate transmission fraction
   trans = exp( -tau )
   
-  write(*,*)"I've just calculated the transmission fraction..." 
+!  write(*,*)"I've just calculated the transmission fraction..." 
   
 ! Apply covering fraction
   photar = (1.0-fcov) + fcov*trans
   
-  write(*,*)"I've just applied the covering fraction..."
+!  write(*,*)"I've just applied the covering fraction..."
   
   return
 end subroutine mym

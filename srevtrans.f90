@@ -925,8 +925,8 @@ subroutine genreltrans(Cp, dset,aset, nlp, ear, ne, param, ifl, photar)
     real time_start,time_end        !runtime stuff
     
     ! Absorbtion parameter tables
-    real   , dimension(:,:,:,:)    , allocatable :: param_tbfeo
-    real   , dimension(:,:,:,:)    , allocatable :: param_mymxiab
+    real   :: param_tbfeo(4)
+    real   :: param_mymxiab(4)
 
  
     data firstcall /.true./
@@ -1219,14 +1219,20 @@ subroutine genreltrans(Cp, dset,aset, nlp, ear, ne, param, ifl, photar)
     
     if( aset .eq. 1 ) then
  	
- 	allocate( param_tbfeo(nh,Oab,Feab,za) )   
- 	allocate( param_mymxiab(nh_xiab, logxi_xiab, fcov_xiab, z_xiab) )	
-!    	param_tbfeo(1) = Nh
-!    	param_tbfeo(2) = Oab
-!    	param_tbfeo(3) = Feab
-!    	param_tbfeo(4) = z
+
+    	param_tbfeo(1) = Nh
+    	param_tbfeo(2) = Oab
+    	param_tbfeo(3) = Feab
+    	param_tbfeo(4) = za
+    	
+    	param_mymxiab(1) = nh_xiab
+    	param_mymxiab(2) = logxi_xiab
+    	param_mymxiab(3) = fcov_xiab
+    	param_mymxiab(4) = z_xiab
     
     	call TBfeo(earx,nex,param_tbfeo,Ifl,absorbx,photerx)
+    	
+    	ifl = 0
     	call mym(ear,ne,param_mymxiab,ifl,absorbx2)
     	
     	absorbx = absorbx*absorbx2
