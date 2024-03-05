@@ -95,6 +95,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     real             :: Gamma0,logne,Ecut0,thetae,logxiin
     integer          :: Cp_cont
     real time_start,time_end        !runtime stuff
+    integer env_test
+    integer get_env_int
  
     data firstcall /.true./
     data Cpsave/2/
@@ -111,9 +113,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! Initialise some parameters 
     call initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose, test)
     
-    if (test) then 
-       call FNINIT
-    endif
+    ! if (test) then 
+    call FNINIT
+    ! endif
     
     !Allocate dynamically the array to calculate the trasfer function 
     if (.not. allocated(re1)) allocate(re1(nphi,nro))
@@ -289,7 +291,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if( verbose .gt. 0) write(*,*)"Relxill reflection fraction for each source:",frrel    
     
     if( verbose .gt. 2) call CPU_TIME (time_start)  
-    if( needconv )then
+    ! if( needconv )then
         !needtrans = .false.
         !Initialize arrays for transfer functions
         ReW0 = 0.0
@@ -365,23 +367,38 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                     !TBD: add flag here to do this convolution if no reflection time, or different convolution with complex
                     !xillver if tref > 0 or something.
 
+                    env_test = get_env_int("TEST_RUN",0)   
+                    if (env_test .eq. 1) then
+                       write(*,*) '*********  This is a TEST run  *********'
+                       test = .true.
+                    else
+                       test = .false.
+                       write(*,*) '*********  This is NOT a TEST run  *********'
+                    endif
+
                     if (test) then 
                        call conv_one_FFT(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
+                       write(*,*) 'ciao'
                        if(DC .eq. 0 .and. refvar .eq. 1) then
                           call conv_one_FFT(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
                           call conv_one_FFT(dyn,photarx_delta,reline_w2,imline_w2,ReW2(:,:,j),ImW2(:,:,j),DC,nlp)
+                          write(*,*) 'ciao ciao'
                        end if
                        if(DC .eq. 0 .and. ionvar .eq. 1) then
                           call conv_one_FFT(dyn,photarx_dlogxi,reline_w3,imline_w3,ReW3(:,:,j),ImW3(:,:,j),DC,nlp)
+                          write(*,*) 'ciao ciao ciao'
                        end if
                     else
                        call conv_one_FFTw(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
+                       write(*,*) 'ciao fftw'
                        if(DC .eq. 0 .and. refvar .eq. 1) then
                           call conv_one_FFTw(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
                           call conv_one_FFTw(dyn,photarx_delta,reline_w2,imline_w2,ReW2(:,:,j),ImW2(:,:,j),DC,nlp)
+                       write(*,*) 'ciao ciao fftw'
                        end if
                        if(DC .eq. 0 .and. ionvar .eq. 1) then
                           call conv_one_FFTw(dyn,photarx_dlogxi,reline_w3,imline_w3,ReW3(:,:,j),ImW3(:,:,j),DC,nlp)
+                       write(*,*) 'ciao ciao ciao fftw'
                        end if
                     endif
                     !old call: always convolve every single transfer function in one go
@@ -391,16 +408,21 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                 end do
             end do
         end do
-    end if
+    ! end if
     if( verbose .gt. 2 ) then
         call CPU_TIME (time_end)
         print *, 'Convolutions runtime: ', time_end - time_start, ' seconds' 
     endif
 
     ! do i = 1, nex
-    !    write(32,*) (earx(i) + earx(i-1))*0.5, &
-    !          contx(i,1)/(earx(i) - earx(i-1)) *  ((earx(i) + earx(i-1))*0.5)**2 
+    !    write(10,*) (earx(i) + earx(i-1))*0.5, ReW0(1,i,1)             
     ! enddo
+    ! write(10, *) 'no no'
+    ! do i = 1, nex
+    !    write(10,*) (earx(i) + earx(i-1))*0.5, ReW0(2,i,1)             
+    ! enddo
+    ! write(10, *) 'no no'
+                       
        
     ! Calculate absorption 
     call tbabs(earx,nex,nh,Ifl,absorbx,photerx)

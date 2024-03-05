@@ -126,6 +126,39 @@ contains
             conv = (padFT_photarx * padFT_reline) * nexm1
             call de_paddingFT(dyn, conv, depad_conv)
             ReW_conv(m,:) = ReW_conv(m,:) + depad_conv
+
+            do i = 1, nex
+               write(20,*) i,  reline(m,i)   
+            enddo
+            write(20, *) 'no no'
+            do i = 1, nec
+               write(200,*) i,  real(padFT_reline(i))
+            enddo
+            write(200, *) 'no no'
+            do i = 1, nec
+               write(200,*) i,  aimag(padFT_reline(i))
+            enddo
+            write(200, *) 'no no'
+
+
+            do i = 1, nex
+               write(21,*) i,  photarx(i)   
+            enddo
+            write(21, *) 'no no'
+            do i = 1, nec
+               write(210,*) i,  real(padFT_photarx(i))
+            enddo
+            write(210, *) 'no no'
+            do i = 1, nec
+               write(210,*) i,  aimag(padFT_photarx(i))
+            enddo
+            write(210, *) 'no no'
+
+            do i = 1, nex
+               write(22,*) i,  ReW_conv(m,i)  
+            enddo
+            write(22, *) 'no no'
+
         else 
             call padding4FT(photarx       , padFT_photarx)        
             call padding4FT(reline(m,:),padFT_reline)
