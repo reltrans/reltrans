@@ -141,16 +141,16 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
         ener(i) = (ear(i)+ear(i-1))/2.   
     end do    
        
-    path = 'Output/PivotingPL.dat'
+    path = 'Output/PivPL.dat'
     open (unit = 11, file = path, status='replace', action = 'write')
     
-    path = 'Output/LightTravelTime.dat'
+    path = 'Output/Reverb.dat'
     open (unit = 12, file = path, status='replace', action = 'write') 
 
-    path = 'Output/PivotingReflection.dat'
+    path = 'Output/PivRef.dat'
     open (unit = 13, file = path, status='replace', action = 'write')
     
-    path = 'Output/IonVariations.dat'
+    path = 'Output/IonVar.dat'
     open (unit = 14, file = path, status='replace', action = 'write') 
 
     if (abs(ReIm) .le. 4) then

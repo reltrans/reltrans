@@ -27,7 +27,7 @@ program relbench
     write (60,*) "precision issues in fftw. If the test reports discrepancy in only a handful of bins, consider the "
     write (60,*) "test passed."    
       
-    ! call c_setgetenv("0.3","10.")
+    call c_setgetenv("0.3","10.")
                             
     !tbd: think of a way to compare impulse responses directly 
     !test one: xrb, maxi j1820, single lamp post 

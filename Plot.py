@@ -32,10 +32,10 @@ else:
     label = "Unclear"   
   
 Total = np.genfromtxt("Output/Total.dat") 
-PivotingPL = np.genfromtxt("Output/PivotingPL.dat")
-LightTravelTime = np.genfromtxt("Output/LightTravelTime.dat") 
-PivotingReflection = np.genfromtxt("Output/PivotingReflection.dat")
-IonVariations = np.genfromtxt("Output/IonVariations.dat")
+PivotingPL = np.genfromtxt("Output/PivPL.dat")
+LightTravelTime = np.genfromtxt("Output/Reverb.dat") 
+PivotingReflection = np.genfromtxt("Output/PivRef.dat")
+IonVariations = np.genfromtxt("Output/IonVar.dat")
 Continuum = np.genfromtxt("Output/Continuum_spec.dat")
 
 if (Input[23] != 7):

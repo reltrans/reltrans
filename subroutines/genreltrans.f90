@@ -365,42 +365,28 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                     end do
                     !always: convolution for reverberation/DC spectrum
                     !TBD: add flag here to do this convolution if no reflection time, or different convolution with complex
-                    !xillver if tref > 0 or something.
-
-                    env_test = get_env_int("TEST_RUN",0)   
-                    if (env_test .eq. 1) then
-                       write(*,*) '*********  This is a TEST run  *********'
-                       test = .true.
-                    else
-                       test = .false.
-                       write(*,*) '*********  This is NOT a TEST run  *********'
-                    endif
+                    !xillver if tref > 0 or something.                    
 
                     if (test) then 
                        call conv_one_FFT(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
-                       write(*,*) 'ciao'
                        if(DC .eq. 0 .and. refvar .eq. 1) then
                           call conv_one_FFT(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
                           call conv_one_FFT(dyn,photarx_delta,reline_w2,imline_w2,ReW2(:,:,j),ImW2(:,:,j),DC,nlp)
-                          write(*,*) 'ciao ciao'
                        end if
                        if(DC .eq. 0 .and. ionvar .eq. 1) then
                           call conv_one_FFT(dyn,photarx_dlogxi,reline_w3,imline_w3,ReW3(:,:,j),ImW3(:,:,j),DC,nlp)
-                          write(*,*) 'ciao ciao ciao'
                        end if
                     else
                        call conv_one_FFTw(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
-                       write(*,*) 'ciao fftw'
                        if(DC .eq. 0 .and. refvar .eq. 1) then
                           call conv_one_FFTw(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
                           call conv_one_FFTw(dyn,photarx_delta,reline_w2,imline_w2,ReW2(:,:,j),ImW2(:,:,j),DC,nlp)
-                       write(*,*) 'ciao ciao fftw'
                        end if
                        if(DC .eq. 0 .and. ionvar .eq. 1) then
                           call conv_one_FFTw(dyn,photarx_dlogxi,reline_w3,imline_w3,ReW3(:,:,j),ImW3(:,:,j),DC,nlp)
-                       write(*,*) 'ciao ciao ciao fftw'
                        end if
                     endif
+                    
                     !old call: always convolve every single transfer function in one go
                     !call conv_all_FFTw(dyn,photarx,photarx_delta,photarx_dlogxi,reline_w0,imline_w0,reline_w1,imline_w1,&
                     !     reline_w2,imline_w2,reline_w3,imline_w3,ReW0(:,:,j),ImW0(:,:,j),ReW1(:,:,j),ImW1(:,:,j),&
@@ -413,15 +399,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         call CPU_TIME (time_end)
         print *, 'Convolutions runtime: ', time_end - time_start, ' seconds' 
     endif
-
-    ! do i = 1, nex
-    !    write(10,*) (earx(i) + earx(i-1))*0.5, ReW0(1,i,1)             
-    ! enddo
-    ! write(10, *) 'no no'
-    ! do i = 1, nex
-    !    write(10,*) (earx(i) + earx(i-1))*0.5, ReW0(2,i,1)             
-    ! enddo
-    ! write(10, *) 'no no'
                        
        
     ! Calculate absorption 

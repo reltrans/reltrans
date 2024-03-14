@@ -220,7 +220,7 @@
          write(101,*) 'no no' 
 
 ! Multiply complex numbers together
-      cc = ac * bc / (4 * float(nex)
+      cc = ac * bc / (4 * float(nex))
 
 ! Put back into four1 style arrays
       do i = 1, 4 * nex

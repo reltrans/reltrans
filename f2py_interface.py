@@ -52,9 +52,9 @@ wx = lib.tdreltransx_
 wx.argtypes = [type_float_p, type_int_p, type_float_p, type_int_p, type_float_p]
 wx.restype  = None
 
-w = lib.tdreltransdbl_
-w.argtypes = [type_float_p, type_int_p, type_float_p, type_int_p, type_float_p]
-w.restype  = None
+wDbl = lib.tdreltransdbl_
+wDbl.argtypes = [type_float_p, type_int_p, type_float_p, type_int_p, type_float_p]
+wDbl.restype  = None
 
 wdist = lib.tdrtdist_
 wdist.argtypes = [type_float_p, type_int_p, type_float_p, type_int_p, type_float_p]
@@ -63,7 +63,6 @@ wdist.restype  = None
 wsim_dist = lib.simrtdist_
 wsim_dist.argtypes = [type_float_p, type_int_p, type_float_p, type_int_p, type_float_p]
 wsim_dist.restype  = None
-
 
 def gen_wrap(ear, params, func):
     '''
@@ -104,6 +103,9 @@ def reltransD(ear, params):
 def reltransDCp(ear, params):
     return gen_wrap(ear, params, wDCp)
 
+def reltransDbl(ear, params):
+    return gen_wrap(ear, params,wDbl)
+
 def reltransx(ear, params):
     return gen_wrap(ear, params, wx)
 
@@ -112,3 +114,4 @@ def rtdist(ear, params):
 
 def simrtdist(ear, params):
     return gen_wrap(ear, params, wsim_dist)
+

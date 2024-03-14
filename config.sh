@@ -2,12 +2,12 @@
 
 pwdPATH=$(pwd)
 flib=fftw_comp 
-fftw=fftw-3.3.10
+fftw=fftw-3.3.9
 
 mkdir fftw
-cp $fftw.tar  fftw/
+cp $fftw.tar.gz  fftw/
 cd fftw
-tar -zxvf $fftw.tar
+tar -zxvf $fftw.tar.gz
 
 mkdir $flib
 
