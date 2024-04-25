@@ -137,19 +137,26 @@ program post_process
      & logxieff, gsdr, logner, pnorm)
 
 ! Write both logxi(r) functions out
+  write(96,*)"skip on"
   do i = 1,xe
      re     = (rnmax/rin)**(real(i-1) / real(xe))
      re     = re + (rnmax/rin)**(real(i) / real(xe))
      re     = re * rin * 0.5
      write(96,*)re,logxir(i),logxieff(i),logxieff(i)-logxir(i)
   end do
-
+  write(96,*)"log x"
+  write(96,*)"la y log\gc"
+  write(96,*)"la x r (r\dg\u)"
+  write(96,*)"lw 5"
+  write(96,*)"cs 1.5"
+  
   dlogxi = logxir(2) - logxieff(2)
   write(*,*)"dlogxi = ",dlogxi
   
   Distance = 10**( 0.5*dlogxi ) / boost
   write(*,*)"reltransDCp distance (kpc) = ",Distance
 
+  write(*,*)"fort.96: logxi(r) vs r"
   
 end program post_process
 
@@ -343,51 +350,6 @@ subroutine alt_radfunctions_dens(verbose,xe,rin,rnmax,eta_0,logxip,lognep,spin,h
 end subroutine alt_radfunctions_dens
 !-----------------------------------------------------------------------
 
-
-
-
-
-
-  
-! Input reltransDCp parameters
-
-! Set Dkpc, also need A
-
-! call radfunctions_dens(verbose,xe,rin,rnmax,eta_0,logxip,lognep,spin,h,Gamma,honr,rlp,dcosdr&
-!      &,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
-! INPUTS:
-! verbose
-! xe
-! rin
-! 
-
-! OUTPUTS:
-! logxir,gsdr,logner,dfer_arr
-
-! Changes:
-! > Take out clipping.
-
-! Plot logxir(1:xe)
-
-
-! call radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
-!      & lognep, spin, h, honr, rlp, dcosdr, cosd, ndelta, rmin, npts,&
-!      & logxieff, gsdr, logner, pnorm)
-! INPUTS:
-! verbose
-! xe
-! rin
-! 
-
-! OUTPUTS:
-! logxir,gsdr,logner,dfer_arr
-
-! Changes:
-! > Take out clipping.
-! > Make eps isotropic -- don't need to do tis, it's automatically done!
-! > include boost
-
-! Plot logxieff(1:xe)
 
 
 
