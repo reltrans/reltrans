@@ -512,7 +512,7 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
      re     = re * rin * 0.5
      re1(i) = re
      !Density
-     logner(i) = zA_logne(re,rin,lognep)     
+     logner(i) = adensity * zA_logne(re,rin,lognep) + (1-adensity) * lognep
      !Interpolate functions from rpl grid
      kk     = get_index(rlp,ndelta,re,rmin,npts)
      cosfac = interper(rlp,dcosdr,ndelta,re,kk)
