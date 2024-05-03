@@ -8,13 +8,62 @@ include 'subroutines/header.h'
 
 program post_process
   !Code to extract Distance parameter out of reltransDCp fits
-  use env_variables
+use env_variables
   implicit none
-  real param(15),par(32)
-  integer Cp, dset, nlp, xe, verbose, nex, i
+  logical chainmode
+  real param(15)
+  integer xe,verbose
+  double precision dist,distance
+
+! Input parameters
+                      !C     !B
+  param(1)  = 11.1126    !9.6   !10.1       !h
+  param(2)  = 0.998   !0.998 !0.998      !a
+  param(3)  = 37.2524    !43.6  !34.1       !inc
+  param(4)  = 5.43081347    !25.1  !8.35       !rin
+  param(5)  = 2e4     !1e3   !1e3        !rout
+  param(6)  = 0.0     !0.0   !0.0        !zcos
+  param(7)  = 1.69994   !1.7   !1.714      !Gamma
+  param(8)  = 3.35450   !3.07  !3.452      !logxi
+  param(9)  = 2.48467     !0.88  !2.1        !Afe
+  param(10) = 18.6000    !19.55 !15.6       !lognep
+  param(11) = 181.115   !386.0 !122.0      !kTe
+  param(12) = 0.0     !0.0   !0.0        !Nh
+  param(13) = 0.292266    !0.34  !0.38       !boost
+  param(14) = 25.4543    !13.9  !25.5       !Mass
+  param(15) = 9.70325e-2   !0.106 !0.095      !Anorm
+
+! log(ne) Model B fit would need to have to get Dkpc = 2.2
+! is 18.91853751380274
+  
+! Settings
+  chainmode = .true.  !Reading in a chain (true) or just entering one parameter set (false)
+  xe       = 20       !Number of radial zones
+  adensity = 1        !1 = zone A ne; 0 = const ne
+  verbose  = 0
+
+  dist = distance(param,xe,verbose)
+  write(*,*)"reltransDCp distance (kpc) = ",dist
+
+
+  ! write(*,*)"fort.96: logxi(r) vs r"
+  
+end program post_process
+
+  
+!-----------------------------------------------------------------------
+function distance(param,xe,verbose)
+  implicit none
+  !Output
+  double precision distance
+  !Inputs
+  real param(15)
+  integer xe,verbose
+  !Internal
+  integer          :: refvar,Cp,dset,nex,nlp,i
   parameter (nex=2**12,nlp=1)
-  real            , parameter :: Emin = 1e-2, Emax = 3e3
-  real dloge,earx(0:nex)
+  real             :: par(32),dloge,earx(0:nex)
+  real, parameter  :: Emin = 1e-2, Emax = 3e3
   double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0
   double precision :: a, inc, rin, rout, zcos, Gamma, h(nlp)
   real             :: logxi, Dkpc, Afe, lognep, Ecut_obs
@@ -22,7 +71,7 @@ program post_process
   real             :: beta_p, Nh, boost, Mass, Anorm
   double precision :: qboost,b1,b2,muobs
   real             :: floHz, fhiHz, DelA, DelAB(nlp), g(nlp), Ecut_s
-  integer          :: ReIm, resp_matr, refvar, ndelta, npts(nlp), m
+  integer          :: ReIm, resp_matr, ndelta, npts(nlp), m
   parameter (ndelta=1000)
   double precision :: rlp(ndelta,nlp),dcosdr(ndelta,nlp),tlp(ndelta,nlp)
   double precision :: cosd(ndelta,nlp),cosdout(nlp),mudisk,rh,rmin,disco
@@ -30,44 +79,12 @@ program post_process
   double precision :: cosdelta_obs(nlp),fcons,contx_int(nlp)
   integer          :: Cp_cont
   real             :: contx(nex,nlp),E,dE
-  double precision, allocatable :: logxir(:), gsdr(:), logner(:),logxieff(:)
-  double precision :: pnorm,pnormer,re,dlogxi,Distance
-
+  double precision :: logxir(xe),gsdr(xe),logner(xe),logxieff(xe)
+  double precision :: pnorm,pnormer,re,dlogxi
   
-! Input parameters
-                      !C     !B
-  param(1)  = 10.1    !9.6   !10.1       !h
-  param(2)  = 0.998   !0.998 !0.998      !a
-  param(3)  = 34.1    !43.6  !34.1       !inc
-  param(4)  = 8.35    !25.1  !8.35       !rin
-  param(5)  = 1e3     !1e3   !1e3        !rout
-  param(6)  = 0.0     !0.0   !0.0        !zcos
-  param(7)  = 1.714   !1.7   !1.714      !Gamma
-  param(8)  = 3.452   !3.07  !3.452      !logxi
-  param(9)  = 2.1     !0.88  !2.1        !Afe
-  param(10) = 15.6    !19.55 !15.6       !lognep
-  param(11) = 122.0   !386.0 !122.0      !kTe
-  param(12) = 0.0     !0.0   !0.0        !Nh
-  param(13) = 0.38    !0.34  !0.38       !boost
-  param(14) = 25.5    !13.9  !25.5       !Mass
-  param(15) = 0.095   !0.106 !0.095      !Anorm
-
-! log(ne) Model B fit would need to have to get Dkpc = 2.2
-! is 18.91853751380274
-  
-! Settings
-  xe       = 20       !Number of radial zones
-  adensity = 1        !1 = zone A ne; 0 = const ne
-  verbose  = 0
-  dset     = 0
+! Hardwired setting (makes no difference)
   refvar   = 1
-
-! Allocate radial arrays
-  allocate( logxir(xe) )
-  allocate( gsdr(xe)   )
-  allocate( logner(xe) )
-  allocate( logxieff(xe) )
-  
+    
 ! Create general parameter array
   call dummy_reltransDCp(param,par,Cp,dset)
 
@@ -76,7 +93,7 @@ program post_process
   do i = 0, nex
      earx(i) = Emin * (Emax/Emin)**(real(i)/real(nex))
   end do
-
+  
 ! Set the parameters
   call set_param(dset,par,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Ecut_obs,&
            eta_0,eta,beta_p,Nh,boost,qboost,Mass,honr,b1,b2,floHz,fhiHz,ReIm,DelA,DelAB,&
@@ -105,7 +122,7 @@ program post_process
 ! Calculate functions required for emissivity
 ! Calculate dcos/dr and time lags vs r for the lamppost model
   call getdcos(a,h,mudisk,ndelta,nlp,rout,npts,rlp,dcosdr,tlp,cosd,cosdout) 
-
+  
 ! Calculate integral of continuum spectrum plus relative quantities (cutoff energies, lensing/gfactors, luminosity, etc)
   call init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_obs,Cp_cont,Cp,fcons,Gamma,&
          Dkpc,Mass,earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)
@@ -116,19 +133,10 @@ program post_process
   logxir = logxir + log10(boost)
 
 ! Setup the rtdist version by integrating the spectrum
-  write(*,*)"Setting up rtdist version"
-  
-  ! Dkpc   = 2.7      !Parameter for Model C
-  ! qboost = 0.34     !Parameter for Model C
   Dkpc   = 1.0
   dset   = 1
   call init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,gso,muobs,lens,tauso,cosdelta_obs,Cp_cont,Cp,fcons,Gamma,&
        Dkpc,Mass,earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)
-      
-  write(*,*)"Dkpc=",Dkpc
-  write(*,*)"fcons=",fcons
-  write(*,*)"qboost=",qboost
-  write(*,*)"b1,b2=",b1,b2
 
 ! Call rtdist logxi(r) subroutine
   pnorm = pnormer(b1,b2,qboost)
@@ -137,28 +145,28 @@ program post_process
      & logxieff, gsdr, logner, pnorm)
 
 ! Write both logxi(r) functions out
-  write(96,*)"skip on"
-  do i = 1,xe
-     re     = (rnmax/rin)**(real(i-1) / real(xe))
-     re     = re + (rnmax/rin)**(real(i) / real(xe))
-     re     = re * rin * 0.5
-     write(96,*)re,logxir(i),logxieff(i),logxieff(i)-logxir(i)
-  end do
-  write(96,*)"log x"
-  write(96,*)"la y log\gc"
-  write(96,*)"la x r (r\dg\u)"
-  write(96,*)"lw 5"
-  write(96,*)"cs 1.5"
+  ! write(96,*)"skip on"
+  ! do i = 1,xe
+  !    re     = (rnmax/rin)**(real(i-1) / real(xe))
+  !    re     = re + (rnmax/rin)**(real(i) / real(xe))
+  !    re     = re * rin * 0.5
+  !    write(96,*)re,logxir(i),logxieff(i),logxieff(i)-logxir(i)
+  ! end do
+  ! write(96,*)"log x"
+  ! write(96,*)"la y log\gc"
+  ! write(96,*)"la x r (r\dg\u)"
+  ! write(96,*)"lw 5"
+  ! write(96,*)"cs 1.5"
   
   dlogxi = logxir(2) - logxieff(2)
-  write(*,*)"dlogxi = ",dlogxi
+  ! write(*,*)"dlogxi = ",dlogxi
   
   Distance = 10**( 0.5*dlogxi ) / boost
-  write(*,*)"reltransDCp distance (kpc) = ",Distance
 
-  write(*,*)"fort.96: logxi(r) vs r"
-  
-end program post_process
+  return
+end function distance
+!-----------------------------------------------------------------------
+ 
 
 
 
@@ -192,6 +200,7 @@ subroutine alt_radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
 
 ! Set disk opening angle
   mudisk   = honr / sqrt( honr**2 + 1.d0  )
+  
 ! Now loop through xe radial bins
   do i = 1,xe
      !Radius
@@ -200,7 +209,7 @@ subroutine alt_radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
      re     = re * rin * 0.5
      re1(i) = re
      !Density
-     logner(i) = zA_logne(re,rin,lognep)     
+     logner(i) = adensity * zA_logne(re,rin,lognep) + (1-adensity) * lognep
      !Interpolate functions from rpl grid
      kk     = get_index(rlp,ndelta,re,rmin,npts)
      cosfac = interper(rlp,dcosdr,ndelta,re,kk)
@@ -227,7 +236,7 @@ subroutine alt_radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
   end do
   !  write(188,*)"no no"
 
-  write(*,*)"max(logxieff)=",maxval(logxieff)
+  ! write(*,*)"max(logxieff)=",maxval(logxieff)
   
 !check max and min for both ionisation and density
   ! logxieff = max( logxieff , 0.d0  )
