@@ -10,10 +10,16 @@ program post_process
   !Code to extract Distance parameter out of reltransDCp fits
 use env_variables
   implicit none
-  logical chainmode
+  logical chainmode,anynull
   real param(15)
   integer xe,verbose
   double precision dist,distance
+  integer unit,status,readwrite,blocksize
+  character (len=500) chainfile,comment,newchainfile
+  integer steps,columns,col,k,newunit
+  real chisquared,parray(15)
+  integer iparam(15),i,colnum,ncols,nhdu,hdutype
+  character (len=16) ttype(1),tform(1),tunit(1)
 
 ! Input parameters
                       !C     !B
@@ -33,6 +39,28 @@ use env_variables
   param(14) = 25.4543    !13.9  !25.5       !Mass
   param(15) = 9.70325e-2   !0.106 !0.095      !Anorm
 
+  chainfile = '/Users/nai47/Dropbox/reltrans/paper_dcp_sys100_mc_newxspec.out'
+  newchainfile = '/Users/nai47/Dropbox/reltrans/new.out'
+
+  !Column number corresponding to each parameter in the chain
+  !(not used if chainmode=false)
+  !0 means that the parameter was fixed to the value in param(:)
+  iparam(1)  = 7           !h
+  iparam(2)  = 0           !a
+  iparam(3)  = 8           !inc
+  iparam(4)  = 9           !rin
+  iparam(5)  = 0           !rout
+  iparam(6)  = 0           !zcos
+  iparam(7)  = 10          !Gamma
+  iparam(8)  = 11          !logxi
+  iparam(9)  = 12          !Afe
+  iparam(10) = 13          !lognep
+  iparam(11) = 14          !kTe
+  iparam(12) = 0           !Nh
+  iparam(13) = 15          !boost
+  iparam(14) = 16          !Mass
+  iparam(15) = 17          !Anorm
+
 ! log(ne) Model B fit would need to have to get Dkpc = 2.2
 ! is 18.91853751380274
   
@@ -45,7 +73,75 @@ use env_variables
   dist = distance(param,xe,verbose)
   write(*,*)"reltransDCp distance (kpc) = ",dist
 
+! Read in chain
+  if( chainmode )then
+     
+     !Open chain file
+     status = 0
+     call ftgiou(unit,status)
+     readwrite = 0
+     call ftopen(unit,chainfile,readwrite,blocksize,status)
+     
+     !Shift to  extension "CHAIN"
+     status = 0
+     call ftmnhd(unit,2,'CHAIN',0,status)
+     if( status .ne. 0 ) stop 'cannot shift to extension CHAIN'
 
+     !Read number of rows and columns
+     call ftgkyj(unit,'NAXIS2',steps,comment,status)
+     if(status .ne. 0) stop 'Cannot determine No of rows'
+     call ftgkyj(unit,'TFIELDS',columns,comment,status)
+     if(status .ne. 0) stop 'Cannot determine No of columns'
+
+     !Copy chain file to new chain file
+     status = 0
+     call copyhdu(unit,newchainfile,newunit)
+     if( status .ne. 0 ) write(*,*)"Could not copy chain file"
+     write(*,*)"unit=",unit
+     write(*,*)"newunit=",newunit
+     
+     !Add a new column to the new CHAIN binary table
+     !First move to the CHAIN extension
+     status = 0
+     call ftmnhd(newunit,2,'CHAIN',0,status)
+     if( status .ne. 0 ) write(*,*)"Couldn't move to CHAIN extension of newchainfile"
+     !Insert the name and type of the new column.
+     status = 0
+     colnum = columns + 1
+     ncols  = 1
+     ttype(1) = 'Dkpc'
+     tform(1) = '1D'
+     tunit(1) = 'kpc'
+     call FTICLS(newunit,colnum,ncols,ttype,tform,status)
+     if( status .ne. 0 ) write(*,*)"FTICLS fucked up"
+  
+     !Go through each step and calculate distance for each one
+     write(*,*)"Calculating distance and appending to chain..."
+     do k = 1,steps
+        status  = 0
+        !Read in parameters
+        call ftgcve(unit,columns,k,1,1,-1.0,chisquared,anynull,status)
+        do i = 1,15
+           if( iparam(i) .gt. 0 )then
+              call ftgcve(unit,iparam(i),k,1,1,-1.0,parray(i),anynull,status)
+           else
+              parray(i) = param(i)
+           end if
+        end do
+        !Calculate distance
+        dist = distance(parray,xe,verbose)        
+        !Append to level 1pt 5 event list
+        call ftpcld(newunit,columns+1,k,1,1,dist,status)
+     end do
+
+  end if
+  
+! Close chain files
+  call ftclos(unit, status)
+  call ftfiou(unit, status)
+  call ftclos(newunit, status)
+  call ftfiou(newunit, status)
+  
   ! write(*,*)"fort.96: logxi(r) vs r"
   
 end program post_process
@@ -166,7 +262,50 @@ function distance(param,xe,verbose)
   return
 end function distance
 !-----------------------------------------------------------------------
- 
+
+
+
+
+
+!-----------------------------------------------------------------------
+subroutine copyhdu(inunit,outfile,outunit)
+! Inputs
+! inunit:  unit number of (alreay opened) input file.
+! outfile: name of output file to be created
+! Outputs
+! outunit: unit number of output file
+  implicit none
+  integer status,inunit,outunit,blocksize,morekeys,hdutype
+  character (len=500) outfile
+  
+! The STATUS parameter must always be initialized.
+  status=0
+
+! Delete the file if it already exists, so we can then recreate it
+! The deletefile subroutine is listed at the end of this file.
+  call deletefile(outfile,status)
+
+! Get  unused Logical Unit Numbers to use to open the FITS file.
+  call ftgiou(outunit,status)
+
+! Create the new empty FITS file (value of blocksize is ignored)
+  blocksize=1
+  call ftinit(outunit,outfile,blocksize,status)
+
+! Skip to the 2nd extension in the input file
+  call ftmahd(inunit,2,hdutype,status)
+  
+! FTCOPY copies the current HDU from the input FITS file to the output
+! file.  The MOREKEY parameter allows one to reserve space for additional
+! header keywords when the HDU is created.   FITSIO will automatically
+! insert more header space if required, so programmers do not have to
+! reserve space ahead of time, although it is more efficient to do so if
+! it is known that more keywords will be appended to the header.
+  morekeys=0
+  call ftcopy(inunit,outunit,morekeys,status)
+
+ end subroutine copyhdu
+!-----------------------------------------------------------------------
 
 
 
@@ -414,66 +553,38 @@ end subroutine dummy_reltransDCp
 
 
 
+!-----------------------------------------------------------------------
+      subroutine deletefile(filename,status)
 
+!C  A simple little routine to delete a FITS file
 
-! !-----------------------------------------------------------------------
-! subroutine my_initialiser(Emin,Emax,dloge,nex,earx,rnmax,d,xe,adensity,verbose)
-! !!!  Initialises the model and writes the header
-! !!!------------------------------------------------------------------
-!   !    Args:
-!   !        firstcall: check if this is the first time the model is called
-!   !        Emin, Emax: (constant) minimum and maximum range of the internal energy grid which is different than the xspec one 
-!   !        dloge: logarithmic resolution of the internal energy grid
-!   !        earx:  internal energy grid array (0:nex) [nex is shared variable in conv_mod]
-!   !        d, rnmax: distance of the source, max radius for which GR ray tracing is used
-!   !        needtrans: check if transfer function has to be calculated
-!   !        me, xe: number of angle and radial zones
-!   !        verbose: check if the verbose env variable is active
-!   !        nphi, nro: (constant) resolution variables, number of pixels on the observer's camera(b and phib)
+      integer status,unit,blocksize
+      character*(*) filename
 
-!   !    Internal variables:
-!   !        i: loop index
-! !!!-------------------------------------------------------------------
-!   implicit none
-!   integer          , intent(in)    :: nex
-!   integer          , intent(out)   :: xe,verbose,adensity
-!   real             , intent(in)    :: Emin, Emax ! constant
-!   real             , intent(out)   :: dloge, earx(0:nex)
-!   double precision , intent(in)    :: rnmax
-!   double precision , intent(out)   :: d
-!   integer i
-!   integer myenv
+!C  Simply return if status is greater than zero
+      if (status .gt. 0)return
 
-! ! Create *logarithmic* working energy grid
-! ! Will need to evaluate xillver on this grid to use the FT convolution code 
-!   dloge = log10( Emax / Emin ) / float(nex)
-!   do i = 0, nex
-!      earx(i) = Emin * (Emax/Emin)**(float(i)/float(nex))
-!   end do
+!C  Get an unused Logical Unit Number to use to open the FITS file
+      call ftgiou(unit,status)
 
-! ! Call environment variables
-!   xe      = myenv("ION_ZONES" , 20)   !Set number of ionisation zones used
-! ! Decide between zone A density profile or constant density profile
-!   adensity = myenv("A_DENSITY",0)
-!   adensity = min( adensity , 1 )
-!   adensity = max( adensity , 0 )
-!   verbose = myenv("REV_VERB",0)     !Set verbose level
-!                                           !0: Xspec output only
-!                                           !1: Also print quantities to terminal
-!                                           !2: Also print model components, radial scalings and impulse response function to 
-!                                           !files in /Output folder
-!   write(*,*) 'RADIAL ZONES', xe
-!   if (adensity .eq. 0.0) then
-!      write(*,*) 'A_DENSITY:', adensity, 'Density profile is constant'
-!   else
-!      write(*,*) 'A_DENSITY:', adensity, 'Density profile is zone A SS73'
-!   endif
-!   write(*,*) 'VERBOSE is ', verbose
+!C  Try to open the file, to see if it exists
+      call ftopen(unit,filename,1,blocksize,status)
 
-! ! Set sensible distance for observer from the BH
-!   d = max( 1.0d4 , 2.0d2 * rnmax**2 )
-        
+      if (status .eq. 0)then
+!C         file was opened;  so now delete it 
+          call ftdelt(unit,status)
+      else if (status .eq. 103)then
+!C         file doesn't exist, so just reset status to zero and clear errors
+          status=0
+          call ftcmsg
+      else
+!C         there was some other error opening the file; delete the file anyway
+          status=0
+          call ftcmsg
+          call ftdelt(unit,status)
+      end if
 
-!   return
-! end subroutine my_initialiser
-! !-----------------------------------------------------------------------
+!C  Free the unit number for later reuse
+      call ftfiou(unit, status)
+    end subroutine deletefile
+!-----------------------------------------------------------------------
