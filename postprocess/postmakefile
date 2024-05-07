@@ -1,8 +1,8 @@
 main = post_process.f90
 
 #lib and other stuff to include to the compiler 
-incs = -I ./fftw/fftw_comp/include/ -ffree-line-length-none
-libs = -L ./fftw/fftw_comp/lib/ -lfftw3 -lm \
+incs = -I ../fftw/fftw_comp/include/ -ffree-line-length-none
+libs = -L ../fftw/fftw_comp/lib/ -lfftw3 -lm \
 	-L ${HEADAS}/lib/ -lfftw3 -lm\
 	-lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS -lCCfits_2.6 #note: older heasoft versions may need lCCfits_2.5 to compile
 fitsio = 
@@ -16,10 +16,10 @@ ccomp = gcc      $(optimization)
 
 # the files to compile 
 FCODE = $(main)
-CCODE = relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c relcache.c
+CCODE = ../relmodels.c ../rellp.c ../relbase.c ../reltable.c ../relutility.c ../donthcomp.c ../xilltable.c ../relcache.c
 
 mod:
-	$(fcomp) $(incs) $(libs) -c amodules.f90
+	$(fcomp) $(incs) $(libs) -c ../amodules.f90
 fobj: $(FCODE)
 	$(fcomp) -c $(FCODE)
 

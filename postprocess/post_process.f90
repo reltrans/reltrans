@@ -1,5 +1,5 @@
 
-include 'subroutines/header.h'
+include 'postheader.h'
 
 ! Compiling and running:
 
@@ -21,6 +21,7 @@ use env_variables
   integer iparam(15),i,colnum,ncols,nhdu,hdutype
   character (len=16) ttype(1),tform(1),tunit(1)
 
+!***********************************************************************
 ! Input parameters
                       !C     !B
   param(1)  = 11.1126    !9.6   !10.1       !h
@@ -40,7 +41,7 @@ use env_variables
   param(15) = 9.70325e-2   !0.106 !0.095      !Anorm
 
   chainfile = '/Users/nai47/Dropbox/reltrans/paper_dcp_sys100_mc_newxspec.out'
-  newchainfile = '/Users/nai47/Dropbox/reltrans/new.out'
+  newchainfile = '/Users/nai47/Dropbox/reltrans/newnew.out'
 
   !Column number corresponding to each parameter in the chain
   !(not used if chainmode=false)
@@ -65,15 +66,18 @@ use env_variables
 ! is 18.91853751380274
   
 ! Settings
-  chainmode = .true.  !Reading in a chain (true) or just entering one parameter set (false)
+  chainmode = .false.  !Reading in a chain (true) or just entering one parameter set (false)
   xe       = 20       !Number of radial zones
   adensity = 1        !1 = zone A ne; 0 = const ne
   verbose  = 0
 
+!***********************************************************************
+
+! Calculate distance for input parameters
   dist = distance(param,xe,verbose)
   write(*,*)"reltransDCp distance (kpc) = ",dist
 
-! Read in chain
+! Read in chain and append distance
   if( chainmode )then
      
      !Open chain file
