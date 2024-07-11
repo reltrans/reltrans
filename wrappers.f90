@@ -15,12 +15,12 @@ include 'subroutines/header.h'
 !-----------------------------------------------------------------------
 subroutine tdreltransDCp(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp
+  integer, parameter :: nlp = 1 !use a single lamp post
+  integer :: ne, ifl, Cp, dset
   real    :: ear(0:ne), param(21), photar(ne), par(32)
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
-  nlp = 1    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
   par(2)  = 0.               !h2
@@ -63,12 +63,12 @@ end subroutine tdreltransDCp
 !-----------------------------------------------------------------------
 subroutine tdreltransD(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp
+  integer, parameter :: nlp = 1 !use a single lamp post
+  integer :: ne, ifl, Cp, dset
   real    :: ear(0:ne), param(21), photar(ne), par(32)
 ! Settings
   Cp   = 1   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
-  nlp = 1    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
   par(2)  = 0.               !h2
@@ -112,12 +112,12 @@ end subroutine tdreltransD
 !-----------------------------------------------------------------------
 subroutine tdreltransx(ear,ne,param,ifl,photar)
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp
+  integer, parameter :: nlp = 1 !use a single lamp post
+  integer :: ne, ifl, Cp, dset
   real    :: ear(0:ne), param(21), photar(ne), par(32)
 ! Settings
   Cp   = 0   !Cp=0 means use the reflionx model with nthcomp and free density
   dset = 0   !dset=0 means distance is not set, logxi set instead
-  nlp = 1    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
   par(2)  = 0.               !h2
@@ -161,12 +161,12 @@ end subroutine tdreltransx
 !-----------------------------------------------------------------------
 subroutine tdreltransDbl(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp
+  integer, parameter :: nlp = 2 !use a double lamp post 
+  integer :: ne, ifl, Cp, dset
   real    :: ear(0:ne), param(27), photar(ne), par(32)
 !Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
-  nlp =2     !use a double lamp post 
 ! Transfer to general parameter array REDO THIS PROPERLY -- EDIT GENRELTRANS AND SET_PARAM FIRST
   par(1)  = param(1)         !h1
   par(2)  = param(2)         !h2
@@ -210,13 +210,13 @@ end subroutine tdreltransDbl
 !-----------------------------------------------------------------------
 subroutine tdrtdist(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp
+  integer, parameter :: nlp = 1 !use a single lamp post
+  integer :: ne, ifl, Cp, dset
   real    :: ear(0:ne), param(25), photar(ne), par(32), getcountrate
   double precision    :: honr,pi,cosi,cos0
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 1   !dset=1 means distance is set, logxi is calculated internally
-  nlp = 1    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
   par(2)  = 0.               !h2
@@ -275,13 +275,13 @@ end subroutine tdrtdist
 !-----------------------------------------------------------------------
 subroutine tdrtdistX(ear, ne, param, ifl, photar)
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp
+  integer, parameter :: nlp = 1 !use a single lamp post
+  integer :: ne, ifl, Cp, dset
   real    :: ear(0:ne), param(25), photar(ne), par(32), getcountrate
   double precision    :: honr,pi,cosi,cos0
 ! Settings
   Cp   = 0   !Cp=0 means use the reflionx model with nthcomp and free density 
   dset = 1   !dset=1 means distance is set, logxi is calculated internally
-  nlp = 1    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
   par(2)  = 0.               !h2
@@ -340,12 +340,13 @@ subroutine simrtdbl(ear, ne, param, ifl, photar)
   use telematrix
   use env_variables
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp, i
+  integer :: ne, ifl, Cp, dset, i
   real    :: ear(0:ne), param(28), photar(ne), par(32)
   real    :: gammac2, Texp, E, dE, getcountrate
   real    :: rephotar(ne), imphotar(ne)
   real, parameter :: Emin = 1e-1, Emax = 300.0
   integer, parameter :: nex=2**12
+  integer, parameter :: nlp = 2 !use a double lamp post
   real :: earx(0:nex),photarx(nex),pow
   real :: Pr,rephotarx(nex),imphotarx(nex),mur,mus
   real :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,br,bs(ne)
@@ -357,7 +358,6 @@ subroutine simrtdbl(ear, ne, param, ifl, photar)
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=1 means distance is set, logxi is calculated internally
-  nlp = 2    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
   par(2)  = param(2)         !h2
@@ -516,12 +516,13 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   use telematrix
   use env_variables
   implicit none
-  integer :: ne, ifl, Cp, dset, nlp, i
+  integer :: ne, ifl, Cp, dset, i
   real    :: ear(0:ne), param(27), photar(ne), par(32)
   real    :: gammac2, Texp, E, dE, getcountrate
   real    :: rephotar(ne), imphotar(ne)
   real, parameter :: Emin = 1e-1, Emax = 300.0
   integer, parameter :: nex=2**12
+  integer, parameter :: nlp = 1 !use a single lamp post
   real :: earx(0:nex),photarx(nex),pow
   real :: Pr,rephotarx(nex),imphotarx(nex),mur,mus
   real :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,br,bs(ne)
@@ -533,7 +534,6 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 1   !dset=1 means distance is set, logxi is calculated internally
-  nlp = 1    !use a single lamp post
 ! Transfer to general parameter array
   par(1)  = param(1)         !h1
   par(2)  = 0.               !h2

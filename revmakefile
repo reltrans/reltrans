@@ -45,7 +45,7 @@ main: clean compile cleanup
 test: clean benchmark cleanup
 
 clean:
-	rm -vrf *.o *.mod *~ subroutines/*~ subroutines/*/*~  fort.* main test_main *.so *.dSYM __pycache__ libreltrans.dylib libreltrans.so
+	rm -vrf *.o *.mod *~ subroutines/*~ subroutines/*/*~  fort.* main test_main *.so *.dSYM __pycache__ libreltrans.dylib libreltrans.so Output/*
 
 cleanup:
 	rm -vf *.o *.mod *~ subroutines/*~ 

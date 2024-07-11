@@ -4,7 +4,7 @@ import f2py_interface as ib
 import os
 
 
-def plot(ax, data_archive, test_model, sub_type = 'Spectrum'):
+def plot(ax, data_archive, test_model, sub_type = 'Spectrum', identifier = ''):
     # Emin = 0.1
     # Emax = 500.0
     # ne = 5001
@@ -13,7 +13,7 @@ def plot(ax, data_archive, test_model, sub_type = 'Spectrum'):
     ax.plot(test_model[0], test_model[1], lw = 3, ls = '-' , label = 'testing reltrans (type: ' + str(sub_type) + ')')
     
     ax.plot(data_archive[0], data_archive[1], lw = 3, linestyle = '--', label = 'archive (old) reltrans (type: ' + str(sub_type) + ')')
-
+    
     ax.set_xscale('log')
     ax.set_xlabel(r'Energy [keV]', fontsize = font )
     ax.tick_params(which='major', width=2, length=8, labelsize = font, pad=10)
@@ -23,6 +23,11 @@ def plot(ax, data_archive, test_model, sub_type = 'Spectrum'):
     ax.yaxis.set_ticks_position('both')
     ax.legend(fontsize = 10)
 
+    with open('Output/compare_' + str(identifier) + '_' + str(sub_type) + '.dat', 'w') as file:
+        for i, _ in enumerate(test_model[0]):
+            line = f'{data_archive[0][i]} {data_archive[1][i]} {test_model[0][i]} {test_model[1][i]}'
+            file.write(line)
+            file.write('\n')
 
 #-----------------------------#
 #set env variables for tests
@@ -48,6 +53,8 @@ ne = 1000
 ear = np.zeros(ne, dtype = np.float32)
 for i in range(ne):
     ear[i] = Emin * (Emax/Emin)**(i/ne)
+
+# ear = np.genfromtxt('Benchmarks/xrb/Spec/Total.dat').T[0]
     
 param = np.zeros(21, dtype = np.float32)
 
@@ -74,12 +81,12 @@ param[19] = 0.0     #gamma
 param[20] = 1       #telescope response
 
 
-# source     = ['xrb','dbl','agn']
-# frange     = [['0,12_0,25', '0,31_0,73', '0,80_2,10', '2,10_5,80', '5,80_16,0'], \
-#               ['0,10_0,40', '0,50_0,60', '1,10_1,40', '3,00_4,20', '3,00_4,20'], \
-#               ['xmm_01_06', 'nus_01_06', 'xmm_06_20', 'nus_06_20', 'xmm_20_90', 'nus_20_90']]
-# mode       = ['Lags', 'Mods', 'Imag', 'Real', 'Spec'] 
-# model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
+source     = ['xrb','dbl','agn']
+frange     = [['0,12_0,25', '0,31_0,73', '0,80_2,10', '2,10_5,80', '5,80_16,0'], \
+              ['0,10_0,40', '0,50_0,60', '1,10_1,40', '3,00_4,20', '3,00_4,20'], \
+              ['xmm_01_06', 'nus_01_06', 'xmm_06_20', 'nus_06_20', 'xmm_20_90', 'nus_20_90']]
+mode       = ['Lags', 'Mods', 'Imag', 'Real', 'Spec'] 
+model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
 
 # source = ['agn']
 # frange = [['xmm_01_06', 'nus_01_06', 'xmm_06_20', 'nus_06_20', 'xmm_20_90', 'nus_20_90']]
@@ -87,14 +94,14 @@ param[20] = 1       #telescope response
 # model_type = ['Total']
 
 # source = ['dbl']
-# frange = [['0,10_0,40']]
+# frange = [['0,10_0,40', '0,50_0,60', '1,10_1,40', '3,00_4,20', '3,00_4,20']]
 # mode       = ['Lags', 'Mods', 'Imag', 'Real', 'Spec'] 
 # model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
 
-source = ['xrb']
-frange = [['0,12_0,25', '0,31_0,73', '0,80_2,10', '2,10_5,80', '5,80_16,0']]
-mode       = ['Lags', 'Mods', 'Imag', 'Real', 'Spec'] 
-model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
+# source = ['xrb']
+# frange = [['0,12_0,25', '0,31_0,73', '0,80_2,10', '2,10_5,80', '5,80_16,0']]
+# mode       = ['Lags', 'Mods', 'Imag', 'Real', 'Spec'] 
+# model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
 
 plt.ion()
 for j, _source in enumerate(source):
@@ -197,7 +204,7 @@ for j, _source in enumerate(source):
 
                     name_model = './Output/' + str(_model_type) + '.dat'
                     data_model = np.genfromtxt(name_model).T
-                    plot(ax, data_archive, data_model, sub_type = _model_type)
+                    plot(ax, data_archive, data_model, sub_type = _model_type, identifier=str(_source) +'_'+ str(_mode)+'_'+str(_frange))
                     # plot(ax, data_archive, photar_test)
             else:
                 name_archive = './Benchmarks/'+str(_source)+'/'+str(_mode)+'/Total.dat'
@@ -208,7 +215,7 @@ for j, _source in enumerate(source):
                 data_model = np.genfromtxt(name_model).T
                 ax.set_title('Plot source: '+ str(_source)+', mode: '+ str(_mode) \
                              + ', freq: ' + str(_frange), fontsize = font)
-                plot(ax, data_archive, data_model)
+                plot(ax, data_archive, data_model, identifier=str(_mode)+'_'+str(_frange))
 
                 
             # ax.set_xlim(0.1, 1e3)
