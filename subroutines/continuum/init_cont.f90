@@ -56,7 +56,6 @@ subroutine init_cont(nlp, a, h, zcos, Ecut_s, Ecut_obs, logxi, logne, gso, &
 
        contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1       
        contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
-       write(*,*) "gso", gso(1)
 
     else 
        do m=1,nlp   

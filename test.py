@@ -9,7 +9,7 @@ def plot(ax, data_archive, test_model, sub_type = 'Spectrum', identifier = ''):
     # Emax = 500.0
     # ne = 5001
     # ear = np.logspace(np.log10(Emin), np.log10(Emax), ne, dtype = np.float32)
-    data = np.genfromtxt(name_archive)            
+    # data = np.genfromtxt(name_archive)            
     ax.plot(test_model[0], test_model[1], lw = 3, ls = '-' , label = 'testing reltrans (type: ' + str(sub_type) + ')')
     
     ax.plot(data_archive[0], data_archive[1], lw = 3, linestyle = '--', label = 'archive (old) reltrans (type: ' + str(sub_type) + ')')
@@ -32,7 +32,7 @@ def plot(ax, data_archive, test_model, sub_type = 'Spectrum', identifier = ''):
 #-----------------------------#
 #set env variables for tests
 os.environ["REV_VERB" ] = "2"
-os.environ["TEST_RUN" ] = "0"
+os.environ["TEST_RUN" ] = "1"
 os.environ["MU_ZONES" ] = "1"
 os.environ["ION_ZONES"] = "20"
 os.environ["A_DENSITY"] = "0"
@@ -102,6 +102,7 @@ model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
 # frange = [['0,12_0,25', '0,31_0,73', '0,80_2,10', '2,10_5,80', '5,80_16,0']]
 # mode       = ['Lags', 'Mods', 'Imag', 'Real', 'Spec'] 
 # model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
+
 
 plt.ion()
 for j, _source in enumerate(source):
@@ -182,6 +183,8 @@ for j, _source in enumerate(source):
                 case 'agn':
                     photar_test = ib.reltransDCp(ear, parameters)
 
+                    #the model has written the outputs in the folder Output
+                    #since we are using REV_VERB = 2 
             print('')
             print('')
             print('')
@@ -202,8 +205,9 @@ for j, _source in enumerate(source):
                     print(f'Then comparing with the stored data: {name_archive}')
                     data_archive = np.genfromtxt(name_archive).T
 
-                    name_model = './Output/' + str(_model_type) + '.dat'
+                    name_model = './Output/' + str(_model_type) + '.dat' #this file has been written during the run of the model
                     data_model = np.genfromtxt(name_model).T
+                    
                     plot(ax, data_archive, data_model, sub_type = _model_type, identifier=str(_source) +'_'+ str(_mode)+'_'+str(_frange))
                     # plot(ax, data_archive, photar_test)
             else:

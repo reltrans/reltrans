@@ -92,6 +92,9 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
         else
            test = .false.
         endif
+        if (test) then 
+           call FNINIT
+        endif
 
         write(*,*)"----------------------------------------------------"
 

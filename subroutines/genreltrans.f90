@@ -92,7 +92,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     double precision :: disco, dgsofac
     ! New  
     double precision :: fcons,get_fcons,contx_temp!,ell13pt6,lacc,get_lacc,
-    real             :: Gamma0,logne,Ecut0,thetae,logxiin
+    real             :: Gamma0,logne,Ecut0,thetae,logxi1, logxi2
     integer          :: Cp_cont
     real time_start,time_end        !runtime stuff
     integer env_test
@@ -102,7 +102,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     data Cpsave/2/
     data nfsave /-1/  
     !Save the first call variables
-    save firstcall, dloge, earx, me, xe, d, verbose
+    save firstcall, dloge, earx, me, xe, d, verbose, test
     save paramsave, fhisave, flosave, nfsave, refvar, ionvar
     save frobs, frrel, Cpsave, needtrans, lens
     save ker_W0, ker_W1, ker_W2, ker_W3, logxir, gsdr, logner
@@ -112,11 +112,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ifl = 1
     ! Initialise some parameters 
     call initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose, test)
-    
-    ! if (test) then 
-    call FNINIT
-    ! endif
-    
+ 
     !Allocate dynamically the array to calculate the trasfer function 
     if (.not. allocated(re1)) allocate(re1(nphi,nro))
     if (.not. allocated(taudo1)) allocate(taudo1(nphi,nro))
@@ -264,8 +260,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     !set up the continuum spectrum plus relative quantities (cutoff energies, lensing/gfactors, luminosity, etc)
     call init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,logxi, lognep, gso,&
                    muobs,lens,tauso,cosdelta_obs,Cp_cont,Cp,fcons,Gamma,&
-                   Dkpc,Mass,earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)    
-
+                   Dkpc,Mass,earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)
     if (verbose .gt. 2) call CPU_TIME (time_start)
     if( needtrans )then
         !Allocate arrays for kernels   
@@ -336,18 +331,16 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                 call rest_frame(earx,nex,Gamma0,Afe,logne,Ecut0,logxi0,thetae,Cp,photarx)
                 !NON LINEAR EFFECTS
                 if (DC .eq. 0) then 
-                    !Gamma variations
-                    logxiin = logxi0 + ionvariation * dlogxi1
-                    call rest_frame(earx,nex,Gamma1,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_1)
-                    logxiin = logxi0 + ionvariation * dlogxi2
-                    call rest_frame(earx,nex,Gamma2,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_2)
-                    photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
-                    !xi variations
-                    logxiin = logxi0 + ionvariation * dlogxi1
-                    call rest_frame(earx,nex,Gamma0,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_1)
-                    logxiin = logxi0 + ionvariation * dlogxi2
-                    call rest_frame(earx,nex,Gamma0,Afe,logne,Ecut0,logxiin,thetae,Cp,photarx_2)
-                    photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10           
+                   !Gamma variations
+                   logxi1 = logxi0 + ionvariation * dlogxi1
+                   call rest_frame(earx,nex,Gamma1,Afe,logne,Ecut0,logxi1,thetae,Cp,photarx_1)
+                   logxi2 = logxi0 + ionvariation * dlogxi2
+                   call rest_frame(earx,nex,Gamma2,Afe,logne,Ecut0,logxi2,thetae,Cp,photarx_2)
+                   photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
+                   !xi variations
+                   call rest_frame(earx,nex,Gamma0,Afe,logne,Ecut0,logxi1,thetae,Cp,photarx_1)
+                   call rest_frame(earx,nex,Gamma0,Afe,logne,Ecut0,logxi2,thetae,Cp,photarx_2)
+                   photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10
                 end if
                 !Loop through frequencies and lamp posts
                 do j = 1,nf
@@ -385,13 +378,12 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                        if(DC .eq. 0 .and. ionvar .eq. 1) then
                           call conv_one_FFTw(dyn,photarx_dlogxi,reline_w3,imline_w3,ReW3(:,:,j),ImW3(:,:,j),DC,nlp)
                        end if
-                    endif
-                    
+                    endif                    
                     !old call: always convolve every single transfer function in one go
                     !call conv_all_FFTw(dyn,photarx,photarx_delta,photarx_dlogxi,reline_w0,imline_w0,reline_w1,imline_w1,&
                     !     reline_w2,imline_w2,reline_w3,imline_w3,ReW0(:,:,j),ImW0(:,:,j),ReW1(:,:,j),ImW1(:,:,j),&
-                    !     ReW2(:,:,j),ImW2(:,:,j),ReW3(:,:,j),ImW3(:,:,j),DC,nlp)                        
-                end do
+                    !     ReW2(:,:,j),ImW2(:,:,j),ReW3(:,:,j),ImW3(:,:,j),DC,nlp)
+                 end do
             end do
         end do
     ! end if

@@ -32,9 +32,9 @@ def plot(ax, data_archive, test_model, sub_type = 'Spectrum', identifier = ''):
 #-----------------------------#
 #set env variables for tests
 os.environ["REV_VERB" ] = "2"
-os.environ["TEST_RUN" ] = "0"
+os.environ["TEST_RUN" ] = "1"
 os.environ["MU_ZONES" ] = "1"
-os.environ["ION_ZONES"] = "20"
+os.environ["ION_ZONES"] = "1"
 os.environ["A_DENSITY"] = "0"
 os.environ["EMIN_REF" ] = "0.3"
 os.environ["EMAX_REF" ] = "10.0"
@@ -58,36 +58,59 @@ for i in range(ne):
     
 param = np.zeros(21, dtype = np.float32)
 
-param[0]  = 6.0     #h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
-param[1]  = 0.998   #a     !BH spin
-param[2]  = 30.0    #inc   !Inclination angle in degrees
-param[3]  = -1.0    #rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
-param[4]  = 1e3     #rout  !Disk outer radius in Rg - will probably hardwire this
-param[5]  = 0.0     #zcos  !Cosmological redshift
-param[6]  = 2.0     #Gamma !Photon index
-param[7]  = 3.0     #logxi !log10xi - ionisation parameter
-param[8]  = 1.0     #Afe   !Iron abundance      
-param[9]  = 15      #kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
-param[10] = 60.0    #kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
-param[11] = 0.0     #Nh
-param[12] = 1.0     #1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
-param[13] = 10.0    #M     !BH mass in solar masses
-param[14] = 0.0     #flo   !Lowest frequency in band (Hz)
-param[15] = 0.0     #fhi   !Highest frequency in band (Hz)
-param[16] = 1.0     #ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
-param[17] = 0.0     #DelA
-param[18] = 0.0     #DelAB
-param[19] = 0.0     #gamma
-param[20] = 1       #telescope response
-
+# param[0]  = 6.0     #h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
+# param[1]  = 0.998   #a     !BH spin
+# param[2]  = 30.0    #inc   !Inclination angle in degrees
+# param[3]  = -1.0    #rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
+# param[4]  = 1e3     #rout  !Disk outer radius in Rg - will probably hardwire this
+# param[5]  = 0.0     #zcos  !Cosmological redshift
+# param[6]  = 2.0     #Gamma !Photon index
+# param[7]  = 3.0     #logxi !log10xi - ionisation parameter
+# param[8]  = 1.0     #Afe   !Iron abundance      
+# param[9]  = 15      #kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
+# param[10] = 60.0    #kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
+# param[11] = 0.0     #Nh
+# param[12] = 1.0     #1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
+# param[13] = 10.0    #M     !BH mass in solar masses
+# param[14] = 0.0     #flo   !Lowest frequency in band (Hz)
+# param[15] = 0.0     #fhi   !Highest frequency in band (Hz)
+# param[16] = 1.0     #ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
+# param[17] = 0.0     #DelA
+# param[18] = 0.0     #DelAB
+# param[19] = 0.0     #gamma
+# param[20] = 1       #telescope response         
+          
+# param[0]  = 29.7014      #h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
+# param[1]  = 0.5          #a     !BH spin
+# param[2]  = 44.2792      #inc   !Inclination angle in degrees
+# param[3]  = -1           #rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
+# param[4]  = 1000         #rout  !Disk outer radius in Rg - will probably hardwire this
+# param[5]  = 0            #zcos  !Cosmological redshift
+# param[6]  = 1.79279      #Gamma !Photon index
+# param[7]  = 1.44735      #logxi !log10xi - ionisation parameter
+# param[8]  = 1            #Afe   !Iron abundance      
+# param[9]  = 19.9874      #kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
+# param[10] = 60           #kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
+# param[11] = 0.0          #Nh
+# param[12] = 1            #1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
+# param[13] = 10           #M     !BH mass in solar masses
+# param[14] = 0.12207      #flo   !Lowest frequency in band (Hz)
+# param[15] = 0.24414      #fhi   !Highest frequency in band (Hz)
+# param[16] = 4            #ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
+# param[17] = -0.0166535   #DelA
+# param[18] = -0.686551    #DelAB
+# param[19] = 0.15228      #gamma
+# param[20] = 1            #telescope response
+              
 
 plt.ion()
-model_type = 'dbl'
 print('')
 print('')
 print('')
 print('---------------------------------------------------------')
-name_input = './Input/ip.dat'
+# name_input = './Benchmarks/xrb/ip_0,12_0,25.dat'
+name_input = './test_parametes.dat'
+model_type = 'xrb'
 print (f'reading input parameters in {name_input} file ')
 parameters = np.genfromtxt(name_input, dtype = np.float32)
 print('')            

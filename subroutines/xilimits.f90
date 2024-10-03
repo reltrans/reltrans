@@ -31,11 +31,13 @@ subroutine xilimits(nex,earx,nlp,contx,DeltaGamma,gso,lens,z,dlogxi1,dlogxi2)
     num2 = 0.0
     den = 0.0
     do i = 1,nex
-        E   = 0.5 * ( earx(i) + earx(i-1) )
-        num2 = num2 + E**(1.0-0.5*DeltaGamma) * contx_sum(i)
-        num1 = num1 + E**(1.0+0.5*DeltaGamma) * contx_sum(i)
-        den  = den  + E * contx_sum(i)
-    end do
+       E   = 0.5 * ( earx(i) + earx(i-1) )
+       if (E .ge. 0.1 .and. E .le. 1e3) then
+          num2 = num2 + E**(1.0-0.5*DeltaGamma) * contx_sum(i)
+          num1 = num1 + E**(1.0+0.5*DeltaGamma) * contx_sum(i)
+          den  = den  + E * contx_sum(i)
+       endif
+     end do
     logS1 = log10(num1/den)
     logS2 = log10(num2/den)
     dlogxi1 = -0.5*DeltaGamma * log10(gsoz) + logS1
