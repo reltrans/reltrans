@@ -251,7 +251,7 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
   par(31) = param(24)        !Anorm
   par(32) = param(25)        !telescope response
 ! Check that we're not looking at the side of the disc
-  honr = par(19)
+  honr = par(20)
   pi   = acos(-1.d0)
   cosi = cos( par(3) * pi / 180.d0 )
   cos0 = honr / sqrt( honr**2 + 1.d0  )  

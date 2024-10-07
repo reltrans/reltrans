@@ -109,13 +109,20 @@ print('')
 print('')
 print('---------------------------------------------------------')
 # name_input = './Benchmarks/xrb/ip_0,12_0,25.dat'
-name_input = './test_parametes.dat'
-model_type = 'xrb'
+# name_input = './test_parametes.dat'
+# model_type = 'xrb'
+name_input = './Benchmarks/test_par_rtdist.dat'
+model_type = 'rtdist'
+
+
 print (f'reading input parameters in {name_input} file ')
 parameters = np.genfromtxt(name_input, dtype = np.float32)
 print('')            
 print('*********************************************************')
 print(f'running model for {model_type}  mode')
+
+# parameters = np.array([6,0.9,57,-2,2e4,0.024917,2.5,1e5,1,17,50.,5e-2,1,3e6,0.02,0,0,0,0,0,0,-0.8,0.3,2.2e-4,1,1.])
+
 
 match model_type:
     case 'xrb':
@@ -124,6 +131,8 @@ match model_type:
         photar_test = ib.reltransDbl(ear, parameters)
     case 'agn':
         photar_test = ib.reltransDCp(ear, parameters)
+    case 'rtdist':
+        photar_test = ib.rtdist(ear, parameters)
 
 print('')
 print('')
