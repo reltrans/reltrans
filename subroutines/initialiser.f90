@@ -129,7 +129,6 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
         if (.not. allocated (tlp   )      ) allocate (tlp   (ndelta,nlp))
         if (.not. allocated (npts)        ) allocate (npts  (       nlp))
         if (.not. allocated (gso)         ) allocate (gso   (       nlp))
-        if (.not. allocated (lens)        ) allocate (lens  (       nlp))
         if (.not. allocated (tauso)       ) allocate (tauso (       nlp))
         if (.not. allocated (cosdelta_obs)) allocate (cosdelta_obs(nlp))
 

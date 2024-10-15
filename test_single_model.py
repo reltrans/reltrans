@@ -85,10 +85,10 @@ print('')
 print('')
 print('---------------------------------------------------------')
 # name_input = './Benchmarks/xrb/ip_0,12_0,25.dat'
-name_input = './Benchmarks/test_parametes.dat'
-model_type = 'xrb'
-# name_input = './Benchmarks/test_par_rtdist.dat'
-# model_type = 'rtdist'
+# name_input = './Benchmarks/test_parametes.dat'
+# model_type = 'xrb'
+name_input = './Benchmarks/test_par_rtdist.dat'
+model_type = 'rtdist'
 
 
 print (f'reading input parameters in {name_input} file ')
@@ -132,7 +132,7 @@ for axis in ['top','bottom','left','right']:
 ax.yaxis.set_ticks_position('both')
 ax.legend(fontsize = 10)
 
-print(photar_test)
+# print(photar_test)
 
             # E = (ear[1:] + ear[:-1]) * 0.5 
             # dE = (ear[1:] - ear[:-1])

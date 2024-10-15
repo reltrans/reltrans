@@ -3,7 +3,7 @@
       implicit none
 
       real   , intent(IN) :: logxi, logne, Gamma, Ecut_obs
-      integer, parameter  :: nex = 50
+      integer, parameter  :: nex = 1000
       real   , parameter  :: pi = acos(-1.0), ergsev  = 1.602197e-12 ! Convert eV to ergs
       integer             :: i, ifl
       real                :: Icomp, inc_flux, Emin, Emax, dloge 
@@ -27,13 +27,12 @@
 
       Ifl=1      
       call donthcomp(energy, nex, nth_par, ifl, spec, photer)
-
-      Icomp = 0.0
+      write(*,*) 'ciao'
+      icomp = 0.0
       do i = 1, nex
          Icomp = Icomp + ((energy(i) + energy(i-1)) * 0.5 * spec(i)) 
       enddo
       inc_flux = 10**(logne + logxi) / (4.0 * pi) / (ergsev * 1000.0) !calculate incident flux in units  [keV/cm^2/s]
       get_norm_cont = inc_flux/ Icomp / 1e20
-
       
     end function get_norm_cont

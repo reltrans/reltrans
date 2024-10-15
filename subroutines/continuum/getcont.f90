@@ -18,10 +18,10 @@
       real   , intent(out)          :: contx(nex)
       double precision , intent(in) :: Gamma
 
-      real   , parameter  :: ergsev  = 1.602197d-12 ! Convert eV to ergs
+      real   , parameter  :: pi = acos(-1.0),ergsev  = 1.602197e-9 ! Convert keV to ergs
       integer :: i, ifl
-      real    :: nth_par(5), photer(nex), E
-      real    :: get_norm_cont
+      real    :: nth_par(5), photer(nex), E, Icomp, inc_flux
+      real    :: get_norm_cont_local
       
 !So far this works only with kTe, so only with nthComp continuum model
       nth_par(1) = real(Gamma)
@@ -31,12 +31,25 @@
       nth_par(5) = 0.d0
       Ifl=1
 
-      write(*,*) 'continuum parameters', nth_par, logxi, logne
+      ! write(*,*) 'continuum parameters', nth_par
       call donthcomp(earx, nex, nth_par, ifl, contx, photer)
-!the continuum needs to be renormalised according to the illuminating flux that was considered in xillver get_norm_cont does the job
-! Plus we divide by a factor that depends on ionisation and density to agree with the first versions of reltrans     
-      contx = contx * get_norm_cont(real(Gamma), Ecut_obs, logxi, logne)
-      contx = contx / 10**(logxi + logne - 15)
+!the continuum needs to be renormalised according to the illuminating flux that was considered in xillver 
+! Plus we divide by a factor that depends on ionisation and density to agree with the first versions of reltrans
+
+      Icomp = 0.0
+      do i = 1, nex
+         E   = 0.5 * ( earx(i) + earx(i-1) )
+         if (E .ge. 0.1 .and. E .le. 1e3) then
+            Icomp = Icomp + ((earx(i) + earx(i-1)) * 0.5 * contx(i))
+         endif
+      enddo
+      inc_flux = 10**(logne + logxi) / (4.0 * pi) / ergsev !calculate incident flux in units  [keV/cm^2/s]
+      get_norm_cont_local = inc_flux/ Icomp / 1e20
+ 
+      ! contx = contx * get_norm_cont(real(Gamma), Ecut_obs, logxi, logne)
+      ! contx = contx  / 10**(logxi + logne - 15)
+      contx = contx * get_norm_cont_local / (10**(logxi + logne - 15))
+      ! write(*,*) 'continuum normalization parameters', get_norm_cont_local, logxi, logne
       return
     end subroutine getcont
 !-----------------------------------------------------------------------

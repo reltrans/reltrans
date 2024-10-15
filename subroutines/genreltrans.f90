@@ -249,21 +249,21 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         allocate( ImG(nex,nf) )
     end if
   
-    !allocate lensing/reflection fraction arrays if necessary
-    if( needtrans ) then
-        if( allocated(frobs) ) deallocate( frobs )
-        allocate (frobs(nlp))
-        if( allocated(frrel) ) deallocate( frrel )
-        allocate (frrel(nlp))
-    end if
 
     if (verbose .gt. 2) call CPU_TIME (time_start)
     if( needtrans )then
+       !allocate lensing/reflection fraction arrays if necessary
+       if( allocated(lens) ) deallocate( lens )
+       allocate (lens(nlp))
+       if( allocated(frobs) ) deallocate( frobs )
+       allocate (frobs(nlp))
+       if( allocated(frrel) ) deallocate( frrel )
+       allocate (frrel(nlp))
        !Calculate the Kernel for the given parameters
        status_re_tau = .true.       
        call rtrans(verbose,dset,nlp,a,h,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,eta_0,&
                     fcons,nro,nphi,nex,dloge,nf,fhi,flo,me,xe,ker_W0,ker_W1,ker_W2,ker_W3,frobs,frrel)
-       print *, 'gso ', gso(1)
+       ! print *, 'gso ', gso(1)
     end if
     if( verbose .gt. 2 ) then
        call CPU_TIME (time_end)
@@ -293,9 +293,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 
      end if
 
-     do i = 1, nex
-        write(60,*) (earx(i-1)+earx(i))*0.5 , contx(i,1)
-     enddo
+     ! do i = 1, nex
+     !    write(60,*) (earx(i-1)+earx(i))*0.5 , contx(i,1)
+     ! enddo
      
     !do this for each lamp post, then find some sort of weird average?
     if( verbose .gt. 0) write(*,*)"Observer's reflection fraction for each source:",boost*frobs

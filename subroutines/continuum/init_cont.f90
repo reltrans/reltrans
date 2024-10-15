@@ -29,10 +29,6 @@ subroutine init_cont(nlp, a, h, zcos, Ecut_s, Ecut_obs, logxi, logne, &
        Cp_cont = Cp
        if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
        call getcont(earx, nex, Gamma, Ecut_obs, logxi, logne, contx(:,1))
-
-       ! do i = 1, nex
-       !    write(88,*) (earx(i-1)+earx(i))*0.5 , contx(i,1)
-       ! enddo
        
        if( dset .eq. 1 ) then
           fcons = get_fcons(h(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
@@ -55,14 +51,14 @@ subroutine init_cont(nlp, a, h, zcos, Ecut_s, Ecut_obs, logxi, logne, &
              write(*,*)"kTe in source restframe (keV)=", Ecut_s
           end if
        end if
+       
        ! do i = 1, nex
-       !    write(32,*) (earx(i) + earx(i-1))*0.5, contx(i,1)/(earx(i) - earx(i-1))* ((earx(i) + earx(i-1))*0.5)**2
+       !    write(61,*) (earx(i-1)+earx(i))*0.5 , contx(i,1)
        ! enddo
-
        contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1       
        contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
-
-    else 
+       ! write(*,*) 'gr continuum parameters ', lens(1), gso(1), gamma, zcos
+    else
        do m=1,nlp   
           !here the observed cutoffs are set from the temperature in the source frame   
           ! gso(m) = real( dgsofac(a,h(m)) )
@@ -84,7 +80,12 @@ subroutine init_cont(nlp, a, h, zcos, Ecut_s, Ecut_obs, logxi, logne, &
              end if
           end if
           contx_int(m) = Eintegrate(Emin,Emax,nex,earx,contx(:,m),dlogE)    
-          contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos)))**Gamma * contx(:,m)   
+          contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos)))**Gamma * contx(:,m)
+
+          ! do i = 1, nex
+          !    write(10,*) (earx(i-1)+earx(i))*0.5, contx(i,m)
+          ! enddo
+          ! write(10,*) 'no no'
        end do
     end if  
     !TBD ADD PROPAGATION LAG HERE

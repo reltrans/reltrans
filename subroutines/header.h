@@ -1,5 +1,4 @@
 include 'subroutines/continuum/getcont.f90'
-include 'subroutines/continuum/get_norm_cont.f90'
 include 'subroutines/continuum/init_cont.f90'
 
 include 'subroutines/utils/conv_one_FFT.f90'
