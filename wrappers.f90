@@ -254,7 +254,7 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
   honr = par(20)
   pi   = acos(-1.d0)
   cosi = cos( par(3) * pi / 180.d0 )
-  cos0 = honr / sqrt( honr**2 + 1.d0  )  
+  cos0 = honr / sqrt( honr**2 + 1.d0  )
 ! Call general code
   if( cos0 .ge. cosi )then
      photar = 0.0   !XSPEC *hates* this. Just do it with limits, and flag here.

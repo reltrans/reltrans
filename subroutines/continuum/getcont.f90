@@ -18,8 +18,9 @@
       real   , intent(out)          :: contx(nex)
       double precision , intent(in) :: Gamma
 
+      real   , parameter  :: ergsev  = 1.602197d-12 ! Convert eV to ergs
       integer :: i, ifl
-      real    :: nth_par(5), photer(nex)
+      real    :: nth_par(5), photer(nex), E
       real    :: get_norm_cont
       
 !So far this works only with kTe, so only with nthComp continuum model
@@ -30,12 +31,12 @@
       nth_par(5) = 0.d0
       Ifl=1
 
+      write(*,*) 'continuum parameters', nth_par, logxi, logne
       call donthcomp(earx, nex, nth_par, ifl, contx, photer)
 !the continuum needs to be renormalised according to the illuminating flux that was considered in xillver get_norm_cont does the job
-! Plus we divide by a factor that depends on ionisation and density to agree with the first versions of reltrans      
+! Plus we divide by a factor that depends on ionisation and density to agree with the first versions of reltrans     
       contx = contx * get_norm_cont(real(Gamma), Ecut_obs, logxi, logne)
       contx = contx / 10**(logxi + logne - 15)
-      
       return
     end subroutine getcont
 !-----------------------------------------------------------------------

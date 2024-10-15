@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose, test)
+subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,nlp,verbose, test)
 !!!  Initialises the model and writes the header
 !!!------------------------------------------------------------------
   !    Args:
@@ -16,15 +16,17 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
   !    Internal variables:
   !        i: loop index
 
-  !   Last change: Gullo - 2020 Jun
+  !   Last change: Gullo - 2024 Oct
 !!!-------------------------------------------------------------------  
   use conv_mod
   use dyn_gr
   use env_variables
   use xillver_tables
+  use radial_grids
+  use gr_continuum
       implicit none
       integer          , intent(out)   :: xe,me,refvar,ionvar,verbose
-      ! integer          , intent(in)    :: nphi, nro !constant
+      integer          , intent(in)    :: nlp !constant
       real             , intent(in)    :: Emin, Emax ! constant
       real             , intent(out)   :: dloge, earx(0:nex)
       double precision , intent(in)    :: rnmax
@@ -111,7 +113,26 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
         write(*,'(A, A)') 'Set the nthComp, high density XILLVER table to ', trim(pathname_xillverDCp)
         
         firstcall = .false.
-        
+
+        !Allocate some useful arrays
+
+        !Allocate arrays for radial profiles 
+        if (.not. allocated (dfer_arr)) allocate (dfer_arr(xe))
+        if (.not. allocated (logxir)  ) allocate (logxir  (xe))
+        if (.not. allocated (gsdr)    ) allocate (gsdr    (xe))
+        if (.not. allocated (logner)  ) allocate (logner  (xe))
+
+        !Allocate GR arrays
+        if (.not. allocated (cosd)        ) allocate (cosd  (ndelta,nlp))
+        if (.not. allocated (dcosdr)      ) allocate (dcosdr(ndelta,nlp))
+        if (.not. allocated (rlp   )      ) allocate (rlp   (ndelta,nlp))
+        if (.not. allocated (tlp   )      ) allocate (tlp   (ndelta,nlp))
+        if (.not. allocated (npts)        ) allocate (npts  (       nlp))
+        if (.not. allocated (gso)         ) allocate (gso   (       nlp))
+        if (.not. allocated (lens)        ) allocate (lens  (       nlp))
+        if (.not. allocated (tauso)       ) allocate (tauso (       nlp))
+        if (.not. allocated (cosdelta_obs)) allocate (cosdelta_obs(nlp))
+
      end if
      return
     end subroutine initialiser

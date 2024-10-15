@@ -42,7 +42,10 @@ MODULE dyn_gr
 !---------------------------------------------------------------------
     implicit none
     logical :: status_re_tau  
-    double precision,dimension(:,:),allocatable :: re1,taudo1,pem1
+    integer, parameter :: ndelta = 1000
+    integer         , dimension(:)  , allocatable :: npts
+    double precision, dimension(:,:), allocatable :: re1,taudo1,pem1
+    double precision, dimension(:,:), allocatable :: dcosdr, cosd, rlp, tlp
     save status_re_tau
 END MODULE dyn_gr
 
@@ -57,6 +60,19 @@ module xillver_tables
     character (len=200) ::  pathname_xillverDCp
     character (len=500) ::  path_name_reflionx_table
 end module xillver_tables
+
+module gr_continuum
+  implicit none
+  double precision, dimension(:), allocatable :: tauso, gso, lens, cosdelta_obs
+  save lens
+end module gr_continuum
+
+module radial_grids
+  implicit none
+  double precision , dimension(:), allocatable :: logxir, logner, gsdr, dfer_arr
+  double precision :: pnorm
+  save logxir, gsdr, logner
+end module radial_grids
 
 module conv_mod
   use, intrinsic :: iso_c_binding

@@ -51,7 +51,7 @@ subroutine rawS(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2
     phase_p = 0.
     tau_d = 0.
     tau_p = 0.
-       
+
     do m=1,nlp 
         if (boost .lt. 0 .and. DC .eq. 1) then             
             do j = 1,nf
@@ -106,6 +106,10 @@ subroutine rawS(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2
                     !separate into real/imaginary parts for compatibility with the rest of the code
                     ReSraw(i,j) = real(Sraw(i,j))
                     ImSraw(i,j) = aimag(Sraw(i,j))
+                    ! write(74,*) E, fac
+                    ! write(75,*) E, gso(m)
+                    ! write(76,*) E, Stemp
+                    ! write(77,*) E, Sraw(i,j)
                 enddo
             enddo 
         endif    

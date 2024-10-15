@@ -63,7 +63,7 @@ subroutine init_cont(nlp, a, h, zcos, Ecut_s, Ecut_obs, logxi, logne, &
        contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
 
     else 
-       do m=1,nlp   
+       do m=1,nlp
           !here the observed cutoffs are set from the temperature in the source frame   
           ! gso(m) = real( dgsofac(a,h(m)) )
           ! call getlens(a,h(m),muobs,lens(m),tauso(m),cosdelta_obs(m))

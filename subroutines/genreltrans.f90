@@ -25,6 +25,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   
     use dyn_gr
     use conv_mod
+    use radial_grids
+    use gr_continuum
     implicit none
     !Constants
     integer         , parameter :: nphi = 200, nro = 200!, ionvar! = 1 
@@ -60,9 +62,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     real, allocatable :: fix(:)
     !relativistic parameters and limit on rin and h
     double precision :: rmin, rh 
-    double precision :: gso(nlp),tauso(nlp),cosdelta_obs(nlp),height(nlp),contx_int(nlp)
+    double precision :: height(nlp),contx_int(nlp)
     !lens needs to be allocatable to save it. 
-    double precision, allocatable :: lens(:),frobs(:),frrel(:)
+    double precision, allocatable :: frobs(:),frrel(:)
     !TRANSFER FUNCTIONS and Cross spectrum dynamic allocation + variables
    ! complex, dimension(:,:,:,:,:), allocatable :: transe, transea
     complex, dimension(:,:,:,:,:), allocatable :: ker_W0,ker_W1,ker_W2,ker_W3
@@ -72,7 +74,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     !double precision :: frobs(nlp), frrel(nlp)  !reflection fraction variables (verbose)
     !Radial and angle profile 
     integer                       :: mubin, rbin, ibin
-    double precision, allocatable :: logxir(:),gsdr(:), logner(:)
     real    :: contx(nex,nlp)
     real    :: mue, logxi0, reline_w0(nlp,nex), imline_w0(nlp,nex), photarx(nex), photerx(nex)
     real    :: absorbx(nex), ImGbar(nex), ReGbar(nex)
@@ -104,14 +105,14 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     !Save the first call variables
     save firstcall, dloge, earx, me, xe, d, verbose, test
     save paramsave, fhisave, flosave, nfsave, refvar, ionvar
-    save frobs, frrel, Cpsave, needtrans, lens
-    save ker_W0, ker_W1, ker_W2, ker_W3, logxir, gsdr, logner
+    save frobs, frrel, Cpsave, needtrans
+    save ker_W0, ker_W1, ker_W2, ker_W3
     save ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3
     save ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG
 
     ifl = 1
     ! Initialise some parameters 
-    call initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,verbose, test)
+    call initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,refvar,ionvar,nlp,verbose,test)
  
     !Allocate dynamically the array to calculate the trasfer function 
     if (.not. allocated(re1)) allocate(re1(nphi,nro))
@@ -129,7 +130,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                        eta_0,eta,beta_p,Nh,boost,qboost,Mass,honr,b1,b2,floHz,fhiHz,ReIm,DelA,DelAB,&
                        g,Anorm,resp_matr,refvar,verbose) 
     end if 
-    
+
+
     muobs = cos( inc * pi / 180.d0 )
 
     !this needs to go in a subroutine - model_mode or something
@@ -249,38 +251,52 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
   
     !allocate lensing/reflection fraction arrays if necessary
     if( needtrans ) then
-        if( allocated(lens) ) deallocate( lens )
-        allocate (lens(nlp))
         if( allocated(frobs) ) deallocate( frobs )
         allocate (frobs(nlp))
         if( allocated(frrel) ) deallocate( frrel )
         allocate (frrel(nlp))
     end if
 
-    !set up the continuum spectrum plus relative quantities (cutoff energies, lensing/gfactors, luminosity, etc)
-    call init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,logxi, lognep, gso,&
-                   muobs,lens,tauso,cosdelta_obs,Cp_cont,Cp,fcons,Gamma,&
-                   Dkpc,Mass,earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)
     if (verbose .gt. 2) call CPU_TIME (time_start)
     if( needtrans )then
-        !Allocate arrays for kernels   
-        if (allocated (logxir)) deallocate (logxir)
-        allocate (logxir(xe))
-        if (allocated (gsdr)) deallocate (gsdr)
-        allocate (gsdr(xe))
-        if (allocated (logner)) deallocate (logner)
-        allocate (logner(xe))
-        !Calculate the Kernel for the given parameters
-        status_re_tau = .true.
-        call rtrans(verbose,dset,nlp,a,h,gso,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,eta_0,&
-                    fcons,contx_int,tauso,lens,cosdelta_obs,nro,nphi,nex,dloge,nf,fhi,flo,me,xe,logxi,lognep,&
-                    ker_W0,ker_W1,ker_W2,ker_W3,frobs,frrel,logxir,gsdr,logner)         
+       !Calculate the Kernel for the given parameters
+       status_re_tau = .true.       
+       call rtrans(verbose,dset,nlp,a,h,muobs,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,eta_0,&
+                    fcons,nro,nphi,nex,dloge,nf,fhi,flo,me,xe,ker_W0,ker_W1,ker_W2,ker_W3,frobs,frrel)
+       print *, 'gso ', gso(1)
     end if
     if( verbose .gt. 2 ) then
-        call CPU_TIME (time_end)
-        print *, 'Transfer function runtime: ', time_end - time_start, ' seconds'
+       call CPU_TIME (time_end)
+       print *, 'Transfer function runtime: ', time_end - time_start, ' seconds'
     end if
-  
+
+    
+    !calculate the ionization/density/gsd radial profiles and get the continuum.
+    !We need to call the continuum AFTER the definition of the radial profiles when
+    !the ionization parameter is DISTANCE (rtdist).
+    !We need to call the continuum AFTER the radial profiles in the rest of the flavuors
+    if( dset .eq. 0 .or. size(h) .eq. 2) then
+       !set up the continuum spectrum plus relative quantities (cutoff energies, lensing/gfactors, luminosity, etc)
+       call init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,logxi, lognep, muobs,Cp_cont,Cp,fcons,Gamma,&
+                   Dkpc,Mass,earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)
+
+       call radfunctions_dens(verbose,xe,rin,rnmax,eta_0,dble(logxi),dble(lognep),a,h,Gamma,honr,&
+            rlp,dcosdr,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
+    else
+        call radfuncs_dist(xe,rin,rnmax,b1,b2,qboost,fcons,&
+                           & dble(lognep),a,h(1),honr,rlp,dcosdr,cosd,ndelta,rmin,npts(1),&
+                           & logxir,gsdr,logner,pnorm)
+        !set up the continuum spectrum plus relative quantities (cutoff energies, lensing/gfactors, luminosity, etc)
+        logxi = logxir(1)
+        call init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,logxi, lognep,muobs,Cp_cont,Cp,fcons,Gamma,&
+                   Dkpc,Mass,earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)
+
+     end if
+
+     do i = 1, nex
+        write(60,*) (earx(i-1)+earx(i))*0.5 , contx(i,1)
+     enddo
+     
     !do this for each lamp post, then find some sort of weird average?
     if( verbose .gt. 0) write(*,*)"Observer's reflection fraction for each source:",boost*frobs
     if( verbose .gt. 0) write(*,*)"Relxill reflection fraction for each source:",frrel    
@@ -312,7 +328,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             Gamma0 = real(Gamma)
             logne  = logner(rbin)
             Ecut0  = real( gsdr(rbin) ) * Ecut_s
-            logxi0 = real( logxir(rbin) )    
+            logxi0 = real( logxir(rbin) )
             if( xe .eq. 1 )then
                 Ecut0  = Ecut_s
                 logne  = lognep
@@ -391,8 +407,21 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         call CPU_TIME (time_end)
         print *, 'Convolutions runtime: ', time_end - time_start, ' seconds' 
     endif
-                       
-       
+
+    ! do i = 1, nex
+    !    E = (earx(i-1) + earx(i))*0.5
+    !    write(10,*) E, reline_w1(1,i)
+    !    write(11,*) E, imline_w1(1,i)
+    !    write(12,*) E, reline_w2(1,i)
+    !    write(10,*) E, reline_w1(1,i)
+    !    write(13,*) E, imline_w2(1,i)
+    !    write(14,*) E, reline_w3(1,i)
+    !    write(15,*) E, imline_w3(1,i)
+    !    write(16,*) E, photarx(i)
+    !    write(17,*) E, photarx_delta(i)
+    !    write(18,*) E, photarx_dlogxi(i)
+    ! enddo
+    
     ! Calculate absorption 
     call tbabs(earx,nex,nh,Ifl,absorbx,photerx)
 
@@ -411,7 +440,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     else if (nlp .gt. 1 .and. beta_p .eq. 0.) then
         call rawG(nex,earx,nf,real(flo),real(fhi),nlp,contx,absorbx,real(tauso),real(gso),ReW0,ImW0,&
                   ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,real(h),real(zcos),real(Gamma),real(eta),boost,ReIm,g,DelAB,&
-                  ionvar,DC,resp_matr,ReGrawa,ImGrawa)                
+                  ionvar,DC,resp_matr,ReGrawa,ImGrawa)
     else
         !Calculate raw FT of the full spectrum without absorption
         call rawS(nex,earx,nf,real(flo),real(fhi),nlp,contx,real(tauso),real(gso),ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
@@ -425,6 +454,15 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         end do        
     end if
 
+    ! do i = 1, nex
+    !    E = (earx(i-1) + earx(i))*0.5
+    !    write(78,*) E, ReW0(1,i,1)
+    ! enddo    
+    ! do i = 1, nex
+    !    E = (earx(i-1) + earx(i))*0.5
+    !    write(79,*) E, ReSraw(i,1)
+    ! enddo
+    
     if( DC .eq. 1 )then
         !Norm is applied internally for DC/time averaged spectrum component of dset=1
         !No need for the immaginary part in DC
@@ -469,7 +507,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ReGbar = ReGbar * fac * (Anorm/real(1.+eta))**2  
         ImGbar = ImGbar * fac * (Anorm/real(1.+eta))**2  
     end if
-    
+
     !Write output depending on ReIm parameter
     if( ReIm .eq. 7 ) then
         do i=1,ne 
