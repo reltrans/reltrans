@@ -27,7 +27,6 @@
 
       Ifl=1      
       call donthcomp(energy, nex, nth_par, ifl, spec, photer)
-      write(*,*) 'ciao'
       icomp = 0.0
       do i = 1, nex
          Icomp = Icomp + ((energy(i) + energy(i-1)) * 0.5 * spec(i)) 

@@ -28,13 +28,13 @@
          ! write(*,*) 'xillver parameters', param6
          call xsatbl(ear, ne, param6, trim(pathname_xillver), ifl, photar, photer)
       else if( Cp .eq. 1 )then     !xillverD
-         ! write(*,*) 'xillver parameters', param6
+         write(*,*) 'xillver parameters', param6
          call xsatbl(ear, ne, param6, trim(pathname_xillverD), ifl, photar, photer)
       else if ( Cp .eq. 2 )then    !xillverDCp
-         ! write(*,*) 'xillver parameters', param7
+         write(*,*) 'xillver parameters', param7
          call xsatbl(ear, ne, param7, trim(pathname_xillverDCp), ifl, photar, photer)
       else
-         ! write(*,*) 'No xillver model available for this configuration'
+         write(*,*) 'No xillver model available for this configuration'
          stop 
       end if
       return

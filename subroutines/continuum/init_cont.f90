@@ -28,7 +28,7 @@ subroutine init_cont(nlp, a, h, zcos, Ecut_s, Ecut_obs, logxi, logne, &
        Ecut_s = real(1.d0+zcos) * Ecut_obs / gso(1)
        Cp_cont = Cp
        if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
-       call getcont(earx, nex, Gamma, Ecut_obs, logxi, logne, contx(:,1))
+       call getcont(Cp, earx, nex, Gamma, Ecut_obs, logxi, logne, contx(:,1))
        
        if( dset .eq. 1 ) then
           fcons = get_fcons(h(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
@@ -50,14 +50,24 @@ subroutine init_cont(nlp, a, h, zcos, Ecut_s, Ecut_obs, logxi, logne, &
           else
              write(*,*)"kTe in source restframe (keV)=", Ecut_s
           end if
+          write(*,*) 'gso factor ', gso(1)
+          write(*,*) 'lensing factor ', lens(1)
+
        end if
        
        ! do i = 1, nex
        !    write(61,*) (earx(i-1)+earx(i))*0.5 , contx(i,1)
        ! enddo
        contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1       
-       contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
-       ! write(*,*) 'gr continuum parameters ', lens(1), gso(1), gamma, zcos
+
+       if (Cp .eq. 2) then
+          ! write(*,*) 'nthcomp illumination'
+          ! contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
+          contx = lens(1) * (gso(1)/(real(1.d0+zcos))) * contx
+       else
+          ! write(*,*) 'powerlaw illumination'
+          contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
+       endif
     else
        do m=1,nlp   
           !here the observed cutoffs are set from the temperature in the source frame   
@@ -68,7 +78,7 @@ subroutine init_cont(nlp, a, h, zcos, Ecut_s, Ecut_obs, logxi, logne, &
           Ecut_obs = Ecut_s * gso(m) / real(1.d0+zcos)
           Cp_cont = Cp 
           if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx        
-          call getcont(earx, nex, Gamma, Ecut_obs, logxi, logne, contx(:,m))
+          call getcont(Cp, earx, nex, Gamma, Ecut_obs, logxi, logne, contx(:,m))
           if (m .gt. 1) contx(:,m) = eta*contx(:,m)  
           !TODO fix this section, calculate luminosities better
           if( verbose .gt. 0 )then
@@ -80,7 +90,12 @@ subroutine init_cont(nlp, a, h, zcos, Ecut_s, Ecut_obs, logxi, logne, &
              end if
           end if
           contx_int(m) = Eintegrate(Emin,Emax,nex,earx,contx(:,m),dlogE)    
-          contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos)))**Gamma * contx(:,m)
+
+          if (Cp .eq. 2) then
+             contx = lens(1) * (gso(1)/(real(1.d0+zcos))) * contx
+          else
+             contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos)))**Gamma * contx(:,m)
+          endif
 
           ! do i = 1, nex
           !    write(10,*) (earx(i-1)+earx(i))*0.5, contx(i,m)

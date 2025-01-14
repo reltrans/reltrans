@@ -274,7 +274,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     !calculate the ionization/density/gsd radial profiles and get the continuum.
     !We need to call the continuum AFTER the definition of the radial profiles when
     !the ionization parameter is DISTANCE (rtdist).
-    !We need to call the continuum AFTER the radial profiles in the rest of the flavuors
+    !We need to call the continuum BEFORE the radial profiles in the rest of the flavuors
     if( dset .eq. 0 .or. size(h) .eq. 2) then
        !set up the continuum spectrum plus relative quantities (cutoff energies, lensing/gfactors, luminosity, etc)
        call init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,logxi, lognep, muobs,Cp_cont,Cp,fcons,Gamma,&
