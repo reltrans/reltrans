@@ -24,24 +24,27 @@ use env_variables
 !***********************************************************************
 ! Input parameters
                       !C     !B
-  param(1)  = 11.1126    !9.6   !10.1       !h
+  param(1)  = 11.2373    !9.6   !10.1       !h
   param(2)  = 0.998   !0.998 !0.998      !a
-  param(3)  = 37.2524    !43.6  !34.1       !inc
-  param(4)  = 5.43081347    !25.1  !8.35       !rin
+  param(3)  = 37.8884    !43.6  !34.1       !inc
+  param(4)  = -4.57009    !25.1  !8.35       !rin
   param(5)  = 2e4     !1e3   !1e3        !rout
   param(6)  = 0.0     !0.0   !0.0        !zcos
-  param(7)  = 1.69994   !1.7   !1.714      !Gamma
-  param(8)  = 3.35450   !3.07  !3.452      !logxi
-  param(9)  = 2.48467     !0.88  !2.1        !Afe
-  param(10) = 18.6000    !19.55 !15.6       !lognep
-  param(11) = 181.115   !386.0 !122.0      !kTe
+  param(7)  = 1.69991   !1.7   !1.714      !Gamma
+  param(8)  = 3.35541    !3.07  !3.452      !logxi
+  param(9)  = 2.50453     !0.88  !2.1        !Afe
+  param(10) = 18.5112     !19.55 !15.6       !lognep
+  param(11) = 178.336   !386.0 !122.0      !kTe
   param(12) = 0.0     !0.0   !0.0        !Nh
-  param(13) = 0.292266    !0.34  !0.38       !boost
-  param(14) = 25.4543    !13.9  !25.5       !Mass
-  param(15) = 9.70325e-2   !0.106 !0.095      !Anorm
+  param(13) = 0.291899  !0.34  !0.38       !boost
+  param(14) = 16.5162    !13.9  !25.5       !Mass
+  param(15) = 9.69647E-02   !0.106 !0.095      !Anorm
 
-  chainfile = '/Users/nai47/Dropbox/reltrans/paper_dcp_sys100_mc_newxspec.out'
-  newchainfile = '/Users/nai47/Dropbox/reltrans/newnew.out'
+  ! chainfile = '/Users/nai47/Dropbox/reltrans/OneDrive_1_24-05-2024/paper_dcp_xtemptied_trimmed.out'
+  chainfile = '/Users/nai47/Dropbox/reltrans/paper_sysf_trimmed_chain_new.out'
+
+  
+  newchainfile = '/Users/nai47/Dropbox/reltrans/paper_sysf_trimmed_chain_new_dist.out'
 
   !Column number corresponding to each parameter in the chain
   !(not used if chainmode=false)
@@ -61,12 +64,9 @@ use env_variables
   iparam(13) = 15          !boost
   iparam(14) = 16          !Mass
   iparam(15) = 17          !Anorm
-
-! log(ne) Model B fit would need to have to get Dkpc = 2.2
-! is 18.91853751380274
   
 ! Settings
-  chainmode = .false.  !Reading in a chain (true) or just entering one parameter set (false)
+  chainmode = .true.  !Reading in a chain (true) or just entering one parameter set (false)
   xe       = 20       !Number of radial zones
   adensity = 1        !1 = zone A ne; 0 = const ne
   verbose  = 0
@@ -79,24 +79,34 @@ use env_variables
 
 ! Read in chain and append distance
   if( chainmode )then
+
+     write(*,*)"In chain mode"
      
      !Open chain file
      status = 0
      call ftgiou(unit,status)
      readwrite = 0
      call ftopen(unit,chainfile,readwrite,blocksize,status)
+
+
+     write(*,*)"Opened chain"
      
      !Shift to  extension "CHAIN"
      status = 0
      call ftmnhd(unit,2,'CHAIN',0,status)
      if( status .ne. 0 ) stop 'cannot shift to extension CHAIN'
 
+     write(*,*)"Shifted to extension CHAIN"
+     
      !Read number of rows and columns
      call ftgkyj(unit,'NAXIS2',steps,comment,status)
      if(status .ne. 0) stop 'Cannot determine No of rows'
      call ftgkyj(unit,'TFIELDS',columns,comment,status)
      if(status .ne. 0) stop 'Cannot determine No of columns'
 
+     write(*,*)"Read number of steps and columns"
+
+     
      !Copy chain file to new chain file
      status = 0
      call copyhdu(unit,newchainfile,newunit)
