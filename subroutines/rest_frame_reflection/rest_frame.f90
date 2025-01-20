@@ -42,6 +42,8 @@ subroutine rest_frame(ear,ne,Gamma,Afe,logne,Ecut,logxi,thetae,Cp,photar)
       xillparDCp(5) = logne !logne
       xillparDCp(6) = thetae !emission angle
       xillparDCp(7) = 0.0    !redshift
+      write(*,*) 'logxi in rest frame ', logxi, xillparDCp(3)
+      write(*,*) 'logne in rest frame ', logne, xillparDCp(5)
       call get_xillver(ear, ne, xillpar, xillparDCp, Cp, photar)
       ! photar = photar / 10**(logxi + logne - 15) !this factor is needed to match the normalisation with the first versions of reltrans
       ! write(*,*) 'xillver normalisation factor 10**(logxi + logne - 15)', 10**(logxi + logne - 15)

@@ -329,6 +329,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             logne  = logner(rbin)
             Ecut0  = real( gsdr(rbin) ) * Ecut_s
             logxi0 = real( logxir(rbin) )
+            write(*,*) 'radial zones ionization', rbin, logxir(rbin), logxi0
             if( xe .eq. 1 )then
                 Ecut0  = Ecut_s
                 logne  = lognep
@@ -345,6 +346,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                 if( me .eq. 1 ) thetae = real(inc)
                 !Call restframe reflection model
                 call rest_frame(earx,nex,Gamma0,Afe,logne,Ecut0,logxi0,thetae,Cp,photarx)
+
                 !NON LINEAR EFFECTS
                 if (DC .eq. 0) then 
                    !Gamma variations
@@ -376,7 +378,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                     !TBD: add flag here to do this convolution if no reflection time, or different convolution with complex
                     !xillver if tref > 0 or something.                    
 
-                    if (test) then 
+                    if (test) then
+                       
                        call conv_one_FFT(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
                        if(DC .eq. 0 .and. refvar .eq. 1) then
                           call conv_one_FFT(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
@@ -388,6 +391,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                     else
                        call conv_one_FFTw(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
                        if(DC .eq. 0 .and. refvar .eq. 1) then
+
                           call conv_one_FFTw(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
                           call conv_one_FFTw(dyn,photarx_delta,reline_w2,imline_w2,ReW2(:,:,j),ImW2(:,:,j),DC,nlp)
                        end if

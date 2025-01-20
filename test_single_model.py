@@ -8,9 +8,9 @@ import os
 #-----------------------------#
 #set env variables for tests
 os.environ["REV_VERB" ] = "2"
-os.environ["TEST_RUN" ] = "1"
+os.environ["TEST_RUN" ] = "0"
 os.environ["MU_ZONES" ] = "1"
-os.environ["ION_ZONES"] = "10"
+os.environ["ION_ZONES"] = "1"
 os.environ["A_DENSITY"] = "0"
 os.environ["EMIN_REF" ] = "0.3"
 os.environ["EMAX_REF" ] = "10.0"
@@ -23,7 +23,7 @@ os.environ["ARF_SET"  ] = "./Benchmarks/resp_matrix/nicer-consim135p-teamonly-ar
 #-----------------------------#
 
 Emin = 0.1
-Emax = 200.0
+Emax = 1000.0
 ne = 1000
 # ear = np.logspace(np.log10(Emin), np.log10(Emax), ne, dtype = np.float32
 ear = np.zeros(ne, dtype = np.float32)
@@ -85,10 +85,10 @@ print('')
 print('')
 print('---------------------------------------------------------')
 # name_input = './Benchmarks/xrb/ip_0,12_0,25.dat'
-# name_input = './Benchmarks/test_parametes.dat'
-# model_type = 'xrb'
-name_input = './Benchmarks/test_par_rtdist.dat'
-model_type = 'rtdist'
+name_input = './Benchmarks/test_parametes2.dat'
+model_type = 'xrb'
+# name_input = './Benchmarks/test_par_rtdist.dat'
+# model_type = 'rtdist'
 
 
 print (f'reading input parameters in {name_input} file ')
@@ -120,7 +120,7 @@ print('')
 fig, ax = plt.subplots(1, 1, figsize=(10, 8))
 font = 20
 
-ax.plot(ear[:-1], photar_test, lw = 3, ls = '-' , label = 'testing reltrans ')
+ax.plot(ear[:-1], ear[:-1]**2*photar_test, lw = 3, ls = '-' , label = 'testing reltrans ')
     
 ax.set_xscale('log')
 ax.set_yscale('log')
