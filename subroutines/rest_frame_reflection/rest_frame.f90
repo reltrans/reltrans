@@ -55,8 +55,9 @@ subroutine rest_frame(ear,ne,Gamma,Afe,logne,Ecut,logxi,thetae,Cp,photar)
    end if
    
    ! do i = 1, ne
-   !    write(33,*) (ear(i) + ear(i-1))*0.5, &
-   !         photar(i)/(ear(i) - ear(i-1)) * ((ear(i) + ear(i-1))*0.5)**2
+   !    ! write(33,*) (ear(i) + ear(i-1))*0.5, &
+   !    !      photar(i)/(ear(i) - ear(i-1)) * ((ear(i) + ear(i-1))*0.5)**2
+   !    write(33,*) (ear(i) + ear(i-1))*0.5, photar(i)
    ! enddo
    
    return
