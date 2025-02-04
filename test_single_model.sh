@@ -1,6 +1,6 @@
 @!/bin/bash
 
-# make -f revmakefile clean
+make -f revmakefile clean
 
 make -f revmakefile lib
 

@@ -41,17 +41,17 @@ param[2]  = 30.0    #inc   !Inclination angle in degrees
 param[3]  = -1.0    #rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
 param[4]  = 1e3     #rout  !Disk outer radius in Rg - will probably hardwire this
 param[5]  = 0.0     #zcos  !Cosmological redshift
-param[6]  = 3.0     #Gamma !Photon index
+param[6]  = 2.0     #Gamma !Photon index
 param[7]  = 3.0     #logxi !log10xi - ionisation parameter
 param[8]  = 1.0     #Afe   !Iron abundance     
 param[9]  = 15      #kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
 param[10] = 60.0    #kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
 param[11] = 0.0     #Nh
-param[12] = -1.0     #1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
+param[12] = 1.0     #1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
 param[13] = 4.6e7    #M     !BH mass in solar masses
 param[14] = 0.0     #flo   !Lowest frequency in band (Hz)
 param[15] = 0.0     #fhi   !Highest frequency in band (Hz)
-param[16] = -1.0     #ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
+param[16] = 1.0     #ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
 param[17] = 0.0     #DelA
 param[18] = 0.0     #DelAB
 param[19] = 0.0     #gamma
@@ -104,10 +104,9 @@ print(f'running model for {model_type}  mode')
 match model_type:
     case 'xrb':
         photar_test = ib.reltransDCp(ear, parameters)
+        # photar_test = ib.reltransPL(ear, parameters)
     case 'dbl':
         photar_test = ib.reltransDbl(ear, parameters)
-    case 'agn':
-        photar_test = ib.reltransDCp(ear, parameters)
     case 'rtdist':
         photar_test = ib.rtdist(ear, parameters)
 
@@ -121,7 +120,7 @@ print('')
 fig, ax = plt.subplots(1, 1, figsize=(10, 8))
 font = 20
 
-ax.plot(ear[:-1], ear[:-1]**2*photar_test, lw = 3, ls = '-' , label = 'testing reltrans ')
+ax.plot(ear[:-1], photar_test, lw = 3, ls = '-' , label = 'testing reltrans ')
     
 ax.set_xscale('log')
 ax.set_yscale('log')

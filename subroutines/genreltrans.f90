@@ -329,7 +329,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             logne  = logner(rbin)
             Ecut0  = real( gsdr(rbin) ) * Ecut_s
             logxi0 = real( logxir(rbin) )
-            write(*,*) 'radial zones ionization', rbin, logxir(rbin), logxi0
             if( xe .eq. 1 )then
                 Ecut0  = Ecut_s
                 logne  = lognep
@@ -448,7 +447,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     else
         !Calculate raw FT of the full spectrum without absorption
         call rawS(nex,earx,nf,real(flo),real(fhi),nlp,contx,real(tauso),real(gso),ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                  real(h),real(zcos),real(Gamma),real(eta),beta_p,boost,g,DelAB,ionvar,DC,ReSraw,ImSraw)
+             real(h),real(zcos),real(Gamma),real(eta),beta_p,boost,g,DelAB,ionvar,DC,ReSraw,ImSraw)
+
         !Include absorption in the model
         do j = 1, nf
             do i = 1, nex

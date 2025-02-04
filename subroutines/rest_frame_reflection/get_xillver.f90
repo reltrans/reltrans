@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-    subroutine get_xillver(ear, ne, param6, param7, Cp, photar)
+    subroutine get_xillver(ear, ne, param_xillPL, param_xillCp, Cp, photar)
 !!! This routine calls the correct version of xillver based on the Cp !!!
 !!!   Arg:
       !  ear: energy grid
@@ -17,7 +17,7 @@
       use xillver_tables
       implicit none
       integer, intent(in)  :: ne, Cp
-      real   , intent(in)  :: ear(0:ne), param6(6), param7(7)
+      real   , intent(in)  :: ear(0:ne), param_xillPL(5), param_xillCp(6)
       real   , intent(out) :: photar(ne)
 
       real                :: photer(ne)
@@ -26,13 +26,14 @@
       ifl = 0
       if( Cp .eq. -1 )then         !xillver
          ! write(*,*) 'xillver parameters', param6
-         call xsatbl(ear, ne, param6, trim(pathname_xillver), ifl, photar, photer)
+         call xsatbl(ear, ne, param_xillPL, trim(pathname_xillver), ifl, photar, photer)
       else if( Cp .eq. 1 )then     !xillverD
-         write(*,*) 'xillver parameters', param6
-         call xsatbl(ear, ne, param6, trim(pathname_xillverD), ifl, photar, photer)
+         ! write(*,*) 'xillver powerlaw parameters', param_xillPL
+         ! write(*,*) trim(pathname_xillverD)
+         call xsatbl(ear, ne, param_xillPL, trim(pathname_xillverD), ifl, photar, photer)
       else if ( Cp .eq. 2 )then    !xillverDCp
-         write(*,*) 'xillver parameters', param7
-         call xsatbl(ear, ne, param7, trim(pathname_xillverDCp), ifl, photar, photer)
+         ! write(*,*) 'xillverCp parameters', param_xillCp
+         call xsatbl(ear, ne, param_xillCp, trim(pathname_xillverDCp), ifl, photar, photer)
       else
          write(*,*) 'No xillver model available for this configuration'
          stop 

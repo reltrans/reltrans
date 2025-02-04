@@ -39,9 +39,9 @@ lib = ct.cdll.LoadLibrary(os.path.dirname(__file__) + "/lib_reltrans.so")
 
 # this line is not strictly speaking needed if you are carefull in the call, but nice to do
 
-wD = lib.tdreltransd_
-wD.argtypes = [type_float_p, type_int_p, type_float_p, type_int_p, type_float_p]
-wD.restype  = None
+wPL = lib.tdreltranspl_
+wPL.argtypes = [type_float_p, type_int_p, type_float_p, type_int_p, type_float_p]
+wPL.restype  = None
 
 wDCp = lib.tdreltransdcp_
 wDCp.argtypes = [type_float_p, type_int_p, type_float_p, type_int_p, type_float_p]
@@ -94,11 +94,11 @@ def gen_wrap(ear, params, func):
 
     return photar
 
-def reltrans(ear, params):
-    return gen_wrap(ear, params, w)
+# def reltrans(ear, params):
+#     return gen_wrap(ear, params, w)
 
-def reltransD(ear, params):
-    return gen_wrap(ear, params, wD)
+def reltransPL(ear, params):
+    return gen_wrap(ear, params, wPL)
 
 def reltransDCp(ear, params):
     return gen_wrap(ear, params, wDCp)
