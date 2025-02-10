@@ -26,14 +26,14 @@
 
       Icomp = 0.0
 
-      if (Cp .eq. 2) then
+      ! if (Cp .eq. 2) then
 !So far this works only with kTe, so only with nthComp continuum model
          nth_par(1) = real(Gamma)
          nth_par(2) = Ecut_obs
          nth_par(3) = 0.05
          nth_par(4) = 1.0
-         ! nth_par(5) = 0.0
-         nth_par(5) = (1.0/ real(gso(1))) - 1.0
+         nth_par(5) = 0.0
+         ! nth_par(5) = (1.0/ real(gso(1))) - 1.0
          Ifl=1
 
       ! write(*,*) 'continuum parameters', nth_par
@@ -55,7 +55,7 @@
          contx = contx * get_norm_cont_local / (10**(logxi + logne - 15))
          ! write(*,*) 'continuum normalization parameters', get_norm_cont_local, logxi, logne
 
-      endif
+      ! endif
 
       if (Cp .eq. 1) then
 

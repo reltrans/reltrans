@@ -59,15 +59,16 @@ subroutine init_cont(nlp, a, h, zcos, Ecut_s, Ecut_obs, logxi, logne, &
        !    write(61,*) (earx(i-1)+earx(i))*0.5 , contx(i,1)
        ! enddo
        contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1       
+       contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
 
-       if (Cp .eq. 2) then
-          ! write(*,*) 'nthcomp illumination'
-          ! contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
-          contx = lens(1) * (gso(1)/(real(1.d0+zcos))) * contx
-       else
-          ! write(*,*) 'powerlaw illumination'
-          contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
-       endif
+       ! if (Cp .eq. 2) then
+       !    ! write(*,*) 'nthcomp illumination'
+       !    ! contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
+       !    contx = lens(1) * (gso(1)/(real(1.d0+zcos))) * contx
+       ! else
+       !    ! write(*,*) 'powerlaw illumination'
+       !    contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
+       ! endif
     else
        do m=1,nlp   
           !here the observed cutoffs are set from the temperature in the source frame   
@@ -91,11 +92,12 @@ subroutine init_cont(nlp, a, h, zcos, Ecut_s, Ecut_obs, logxi, logne, &
           end if
           contx_int(m) = Eintegrate(Emin,Emax,nex,earx,contx(:,m),dlogE)    
 
-          if (Cp .eq. 2) then
-             contx = lens(1) * (gso(1)/(real(1.d0+zcos))) * contx
-          else
-             contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos)))**Gamma * contx(:,m)
-          endif
+          contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos)))**Gamma * contx(:,m)
+          ! if (Cp .eq. 2) then
+          !    contx = lens(1) * (gso(1)/(real(1.d0+zcos))) * contx
+          ! else
+          !    contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos)))**Gamma * contx(:,m)
+          ! endif
 
           ! do i = 1, nex
           !    write(10,*) (earx(i-1)+earx(i))*0.5, contx(i,m)

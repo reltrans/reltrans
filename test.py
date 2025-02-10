@@ -81,12 +81,12 @@ param[19] = 0.0     #gamma
 param[20] = 1       #telescope response
 
 
-source     = ['xrb','dbl','agn']
-frange     = [['0,12_0,25', '0,31_0,73', '0,80_2,10', '2,10_5,80', '5,80_16,0'], \
-              ['0,10_0,40', '0,50_0,60', '1,10_1,40', '3,00_4,20', '3,00_4,20'], \
-              ['xmm_01_06', 'nus_01_06', 'xmm_06_20', 'nus_06_20', 'xmm_20_90', 'nus_20_90']]
-mode       = ['Lags', 'Mods', 'Imag', 'Real', 'Spec'] 
-model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
+# source     = ['xrb','dbl','agn']
+# frange     = [['0,12_0,25', '0,31_0,73', '0,80_2,10', '2,10_5,80', '5,80_16,0'], \
+#               ['0,10_0,40', '0,50_0,60', '1,10_1,40', '3,00_4,20', '3,00_4,20'], \
+#               ['xmm_01_06', 'nus_01_06', 'xmm_06_20', 'nus_06_20', 'xmm_20_90', 'nus_20_90']]
+# mode       = ['Lags', 'Mods', 'Imag', 'Real', 'Spec'] 
+# model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
 
 # source = ['agn']
 # frange = [['xmm_01_06', 'nus_01_06', 'xmm_06_20', 'nus_06_20', 'xmm_20_90', 'nus_20_90']]
@@ -102,10 +102,10 @@ model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
 # mode       =  ['Spec'] 
 # model_type = ['Total']
 
-# source = ['xrb']
-# frange = [['0,12_0,25', '0,31_0,73', '0,80_2,10', '2,10_5,80', '5,80_16,0']]
-# mode       = ['Lags', 'Mods', 'Imag', 'Real', 'Spec'] 
-# model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
+source = ['xrb']
+frange = [['0,12_0,25', '0,31_0,73', '0,80_2,10', '2,10_5,80', '5,80_16,0']]
+mode       = ['Lags', 'Mods', 'Imag', 'Real', 'Spec'] 
+model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
 
 
 plt.ion()
