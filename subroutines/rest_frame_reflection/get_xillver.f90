@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-    subroutine get_xillver(ear, ne, param_xillPL, param_xillCp, Cp, photar)
+    subroutine get_xillver(ear, ne, dim, dimCp, param_xillPL, param_xillCp, Cp, photar)
 !!! This routine calls the correct version of xillver based on the Cp !!!
 !!!   Arg:
       !  ear: energy grid
@@ -16,8 +16,8 @@
 !!! Last change: Gullo - 2023 Nov
       use xillver_tables
       implicit none
-      integer, intent(in)  :: ne, Cp
-      real   , intent(in)  :: ear(0:ne), param_xillPL(5), param_xillCp(6)
+      integer, intent(in)  :: ne, Cp, dim, dimCp
+      real   , intent(in)  :: ear(0:ne), param_xillPL(dim), param_xillCp(dimCp)
       real   , intent(out) :: photar(ne)
 
       real                :: photer(ne)

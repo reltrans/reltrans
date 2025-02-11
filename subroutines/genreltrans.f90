@@ -345,7 +345,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                 if( me .eq. 1 ) thetae = real(inc)
                 !Call restframe reflection model
                 call rest_frame(earx,nex,Gamma0,Afe,logne,Ecut0,logxi0,thetae,Cp,photarx)
-
                 !NON LINEAR EFFECTS
                 if (DC .eq. 0) then 
                    !Gamma variations
@@ -416,7 +415,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     !    write(10,*) E, reline_w1(1,i)
     !    write(11,*) E, imline_w1(1,i)
     !    write(12,*) E, reline_w2(1,i)
-    !    write(10,*) E, reline_w1(1,i)
     !    write(13,*) E, imline_w2(1,i)
     !    write(14,*) E, reline_w3(1,i)
     !    write(15,*) E, imline_w3(1,i)

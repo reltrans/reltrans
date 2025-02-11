@@ -1,13 +1,14 @@
 !-----------------------------------------------------------------------
 subroutine normreflionx(ear,ne,Gamma,Afe,logne,kTe,logxi,thetae,photar)
-!
-! Returns reflionx model renormalised with xillverDCp
-!  
+! !
+! ! Returns reflionx model renormalised with xillverDCp
+! !  
   implicit none
   integer ne,ifl,j,jmax
   parameter (jmax=20)
+  integer, parameter :: dim = 6, dimCp = 7
   real ear(0:ne),Gamma,Afe,logne,kTe,logxi,thetae,photar(ne)
-  real kTbb, param(7), xillpar(6), xillparDCp(7), xillphotar(ne)
+  real kTbb, param(7), xillpar(dim), xillparDCp(dimCp), xillphotar(ne)
   real E,dE,rintegral,xintegral,fac,lognej,lognex
   integer i,Cp,ilo,ihi
 ! Set integration bounds
@@ -46,7 +47,7 @@ subroutine normreflionx(ear,ne,Gamma,Afe,logne,kTe,logxi,thetae,photar)
   xillparDCp(6) = thetae !emission angle
   xillparDCp(7) = 0.0    !redshift
   Cp = 2
-  call get_xillver(ear, ne, xillpar, xillparDCp, Cp, xillphotar)
+  call get_xillver(ear, ne, dim, dimCp, xillpar, xillparDCp, Cp, xillphotar)
 ! Integrate both spectra
   rintegral = 0.0
   xintegral = 0.0
