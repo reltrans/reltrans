@@ -32,8 +32,8 @@
          nth_par(2) = Ecut_obs
          nth_par(3) = 0.05
          nth_par(4) = 1.0
-         nth_par(5) = 0.0
-         ! nth_par(5) = (1.0/ real(gso(1))) - 1.0
+         ! nth_par(5) = 0.0
+         nth_par(5) = (1.0/ real(gso(1))) - 1.0
          Ifl=1
 
       ! write(*,*) 'continuum parameters', nth_par
