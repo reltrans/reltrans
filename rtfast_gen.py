@@ -3,10 +3,8 @@ import f2py_interface as ib
 import numpy as np
 import os
 import scipy
-from sklearn.decomposition import PCA, NMF
+from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from tqdm import tqdm
-import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 
 def lhc_filter(lhc,disk=False,spin=False,inner_r=False):
