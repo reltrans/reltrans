@@ -172,7 +172,7 @@ def main():
     os.environ["ION_ZONES"] = "1"
     os.environ["A_DENSITY"] = "0"
     os.environ["BACKSCL"  ] = "1.0"
-    os.environ["TEST_RUN" ] = "1"
+    os.environ["TEST_RUN" ] = "0"
     nn_dir = "/data/benr/rtfast-training/"
     
     Emin = 0.1
@@ -197,19 +197,24 @@ def main():
             mask = np.any(np.isnan(spectra),axis=1)
             spectra = spectra[~mask]
             
+            
             if i == 0:
+                print("Creating scalers")
                 spec_scaler = StandardScaler()
                 data = spec_scaler.fit_transform(np.log10(spectra))
                 comps = 200
+                print("Creating PCA")
                 pca = PCA(n_components=comps)
                 pca_comps = pca.fit_transform(data)
-                
+                print("Saving PCA and scalers")
                 dump(spec_scaler,nn_dir+"scalers/scaler.bin")
                 dump(pca,nn_dir+"scalers/pca.bin")
             else:
                 data = spec_scaler.transform(np.log10(spectra))
                 pca_comps = pca.transform(data)
+            print("Saving pca components")
             np.savetxt(nn_dir+f"data/pca_comps_{i}.txt",pca_comps)
+            print("Saving parameters")
             np.savetxt(nn_dir+f"data/pars_{i}.txt",lhc)
 
 
