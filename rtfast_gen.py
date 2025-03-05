@@ -161,7 +161,7 @@ def main():
              logNe_range,kte_range]
     range_all = np.asarray(range_all)
     
-    n=int(5e6)
+    n=int(1e3)
     lhc = lhc_generation(n,range_all)
     lhc = nn_pars_to_rtdist(lhc,pars_list,negatives,logged)
     lhc = lhc.astype(np.float32)
@@ -183,7 +183,7 @@ def main():
         egrid[i] = Emin * (Emax/Emin)**(i/ne)
     
     cpu_num = os.cpu_count()
-    lhc_split = np.split(lhc,50)
+    lhc_split = np.split(lhc,int(n/200))
     with Parallel(n_jobs=cpu_num,verbose=1,backend="multiprocessing") as parallel:
         for i,lhc in enumerate(lhc_split):
             print(f"Generating par group {i+1}/{len(lhc_split)}")
