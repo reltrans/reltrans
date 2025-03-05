@@ -67,6 +67,24 @@ def lhc_filter(lhc,disk=False,spin=False,inner_r=False):
         new_lhc = lhc
     return new_lhc
 
+def lhc_generation(size,range_all):
+    if size < 1e5:
+        gen_size = int(1e5)
+    else:
+        gen_size = size
+    lhc = lhc_cycle(gen_size, range_all)
+    percent = 0
+    while lhc.shape[0] < size:
+        if percent <= ((lhc.shape[0]/size)*100 - 10):
+            print(f"Currently {lhc.shape[0]}/{size}.")
+            percent = np.round((lhc.shape[0]/size)*100,0)/10
+            percent = np.floor(percent)*10
+        lhc_temp = lhc_cycle(gen_size, range_all)
+        lhc = np.concatenate((lhc,lhc_temp),axis=0)
+    np.random.shuffle(lhc)
+    lhc = lhc[:size]
+    return lhc
+
 def lhc_cycle(size,range_all):
     sampler = scipy.stats.qmc.LatinHypercube(d=len(range_all))
     sample = sampler.random(n=size)
@@ -144,7 +162,7 @@ def main():
     range_all = np.asarray(range_all)
     
     n=int(5e6)
-    lhc = lhc_cycle(n,range_all)
+    lhc = lhc_generation(n,range_all)
     lhc = nn_pars_to_rtdist(lhc,pars_list,negatives,logged)
     lhc = lhc.astype(np.float32)
     
@@ -165,7 +183,7 @@ def main():
         egrid[i] = Emin * (Emax/Emin)**(i/ne)
     
     cpu_num = os.cpu_count()
-    lhc_split = np.split(lhc,5)
+    lhc_split = np.split(lhc,50)
     all_pca_comps = []
     with Parallel(n_jobs=cpu_num,verbose=10,backend="multiprocessing") as parallel:
         for i,lhc in enumerate(lhc_split):
