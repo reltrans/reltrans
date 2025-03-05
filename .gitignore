@@ -23,3 +23,9 @@ benchmark
 __pycache__
 __pycache__/*
 lib_reltrans.so*
+$
+compile.txt
+data/
+figures/
+rtfast_test.py
+scalers/

@@ -7,7 +7,7 @@
     real, intent(in)    :: reline(nlp,nex), imline(nlp,nex)
     real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
     complex :: FTphotarx(nex_conv), FTreline(nex_conv), FTimline(nex_conv)
-    complex :: FTreconv(4*nex),FTimconv(4*nex)
+    complex :: FTreconv(nex_conv),FTimconv(nex_conv)
     integer :: m, i
     real    :: photmax, depad_conv(nex)
     ! real, parameter :: nexm1 = 1. / real(nex_conv)
@@ -18,9 +18,7 @@
            call pad4FFT(nex, reline(m,:), FTreline)
            FTreconv = (FTreline * FTphotarx) !* nexm1
            call pad4invFFT(dyn,nex,FTreconv,depad_conv)
- 
            ReW_conv(m,:) = ReW_conv(m,:) + depad_conv
-
         else
            call pad4FFT(nex,photarx, FTphotarx)
            call pad4FFT(nex,reline(m,:),FTreline)

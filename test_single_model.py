@@ -8,7 +8,7 @@ import os
 #-----------------------------#
 #set env variables for tests
 os.environ["REV_VERB" ] = "2"
-os.environ["TEST_RUN" ] = "1"
+os.environ["TEST_RUN" ] = "0"
 os.environ["MU_ZONES" ] = "1"
 os.environ["ION_ZONES"] = "10"
 os.environ["A_DENSITY"] = "0"
@@ -23,7 +23,7 @@ os.environ["ARF_SET"  ] = "./Benchmarks/resp_matrix/nicer-consim135p-teamonly-ar
 #-----------------------------#
 
 Emin = 0.1
-Emax = 200.0
+Emax = 1000.0
 ne = 1000
 # ear = np.logspace(np.log10(Emin), np.log10(Emax), ne, dtype = np.float32
 ear = np.zeros(ne, dtype = np.float32)
@@ -40,17 +40,17 @@ param[2]  = 30.0    #inc   !Inclination angle in degrees
 param[3]  = -1.0    #rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
 param[4]  = 1e3     #rout  !Disk outer radius in Rg - will probably hardwire this
 param[5]  = 0.0     #zcos  !Cosmological redshift
-param[6]  = 2.0     #Gamma !Photon index
+param[6]  = 3.0     #Gamma !Photon index
 param[7]  = 3.0     #logxi !log10xi - ionisation parameter
 param[8]  = 1.0     #Afe   !Iron abundance      
 param[9]  = 15      #kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
 param[10] = 60.0    #kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
 param[11] = 0.0     #Nh
-param[12] = 1.0     #1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
-param[13] = 10.0    #M     !BH mass in solar masses
+param[12] = -1.0     #1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
+param[13] = 4.6e7    #M     !BH mass in solar masses
 param[14] = 0.0     #flo   !Lowest frequency in band (Hz)
 param[15] = 0.0     #fhi   !Highest frequency in band (Hz)
-param[16] = 1.0     #ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
+param[16] = -1.0     #ReIm  !1=Re, 2=Im, 3=modulus, 4=time lag (s), 5=folded modulus, 6=folded time lag (s)
 param[17] = 0.0     #DelA
 param[18] = 0.0     #DelAB
 param[19] = 0.0     #gamma
@@ -85,14 +85,15 @@ print('')
 print('')
 print('---------------------------------------------------------')
 # name_input = './Benchmarks/xrb/ip_0,12_0,25.dat'
-# name_input = './Benchmarks/test_parametes.dat'
-# model_type = 'xrb'
-name_input = './Benchmarks/test_par_rtdist.dat'
-model_type = 'rtdist'
+name_input = './Benchmarks/test_parametes.dat'
+model_type = 'xrb'
+# name_input = './Benchmarks/test_par_rtdist.dat'
+# model_type = 'rtdist'
 
 
 print (f'reading input parameters in {name_input} file ')
-parameters = np.genfromtxt(name_input, dtype = np.float32)
+#parameters = np.genfromtxt(name_input, dtype = np.float32)
+parameters = param
 print('')            
 print('*********************************************************')
 print(f'running model for {model_type}  mode')
@@ -120,18 +121,21 @@ print('')
 fig, ax = plt.subplots(1, 1, figsize=(10, 8))
 font = 20
 
-ax.plot(ear[:-1], photar_test, lw = 3, ls = '-' , label = 'testing reltrans ')
+ax.plot(ear[:-1], photar_test, lw = 3, ls = '-' , label = 'testing reltrans')
+print(photar_test)
     
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_xlabel(r'Energy [keV]', fontsize = font )
+ax.set_ylabel(r'Photons cm$^{-2}$ s$^{-1}$ keV$^{-1}$', fontsize = font )
 ax.tick_params(which='major', width=2, length=8, labelsize = font, pad=10)
 ax.tick_params(which='minor', width=2, length=5, labelsize = font, pad=10)
 for axis in ['top','bottom','left','right']:
     ax.spines[axis].set_linewidth(3)
 ax.yaxis.set_ticks_position('both')
 ax.legend(fontsize = 10)
-
+plt.savefig("Output/spec.png")
+plt.close()
 # print(photar_test)
 
             # E = (ear[1:] + ear[:-1]) * 0.5 
@@ -167,5 +171,37 @@ ax.legend(fontsize = 10)
             # ax.set_ylim(0.99, 1.01)
             # ax.set_ylim(1e-2, 1e3)
 
-input('Press Enter')
+depad = np.loadtxt("Output/depad_re.dat")
+plt.plot(depad[:,1])
+plt.xlabel("nex")
+plt.ylabel("photons/cm^2/s/keV?")
+plt.yscale("log")
+plt.savefig("Output/depad.png")
+plt.close()
 
+conv_re = np.loadtxt("Output/convolution_re.dat")
+conv_im = np.loadtxt("Output/convolution_im.dat")
+plt.plot(conv_re[:,1],label="Real")
+plt.plot(conv_im[:,1],label="Imag",ls="--")
+plt.xlabel("nec")
+plt.ylabel("units")
+plt.legend()
+plt.savefig("Output/convolution.png")
+plt.close()
+
+conv = conv_re[:,1]+conv_im[:,1]*1j
+fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+plt.plot(np.angle(conv),label="Argument",lw=0.1)
+plt.xlabel("nec")
+plt.ylabel("Argument")
+plt.legend()
+plt.savefig("Output/convolution_arg.png")
+plt.close()
+
+fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+plt.plot(np.abs(conv),label="Modulus")
+plt.xlabel("nec")
+plt.ylabel("Modulus")
+plt.legend()
+plt.savefig("Output/convolution_mod.png")
+plt.close()

@@ -117,13 +117,13 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     if (nlp .eq. 1) then
        gso(1) = real( dgsofac(spin,h(1)) )
        call getlens(spin,h(1),mu0,lens(1),tauso(1),cosdelta_obs(1))
-       if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"
+       !if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"
     else
        !here the observed cutoffs are set from the temperature in the source frame   
        do m = 1, nlp
           gso(m) = real( dgsofac(spin,h(m)) )
           call getlens(spin,h(m),mu0,lens(m),tauso(m),cosdelta_obs(m))
-          if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
+          !if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
        enddo
     endif
     

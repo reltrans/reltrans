@@ -97,7 +97,7 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
         if (test) then 
            call FNINIT
         endif
-
+        call FNINIT
         write(*,*)"----------------------------------------------------"
 
 ! Set sensible distance for observer from the BH

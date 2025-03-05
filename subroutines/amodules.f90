@@ -254,7 +254,7 @@ contains
     do i = 1, nex
         in(i+1) = line(i)
     end do
-    do i = 2, 3 * nex
+    do i = 2, 7 * nex
         in(i + nex) = 0.
     end do
     
