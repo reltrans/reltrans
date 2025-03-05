@@ -185,7 +185,7 @@ def main():
     cpu_num = os.cpu_count()
     lhc_split = np.split(lhc,50)
     all_pca_comps = []
-    with Parallel(n_jobs=cpu_num,verbose=10,backend="multiprocessing") as parallel:
+    with Parallel(n_jobs=cpu_num,verbose=1,backend="multiprocessing") as parallel:
         for i,lhc in enumerate(lhc_split):
             print(f"Generating par group {i+1}/{len(lhc_split)}")
             spectra =  parallel(delayed(ib.reltransDCp)(egrid,pars.astype(np.float32))

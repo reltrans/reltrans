@@ -2,6 +2,7 @@ exe
 libreltrans.dylib
 Makefile 
 fort.*
+*.txt
 *.o
 *.mod
 reltransFunctionMap.*
