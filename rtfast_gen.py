@@ -1,4 +1,4 @@
-from joblib import dump
+from joblib import dump, load
 import f2py_interface as ib
 import numpy as np
 import os
@@ -159,7 +159,7 @@ def main():
              logNe_range,kte_range]
     range_all = np.asarray(range_all)
     
-    n=int(1e3)
+    n=int(5e6)
     lhc = lhc_generation(n,range_all)
     lhc = nn_pars_to_rtdist(lhc,pars_list,negatives,logged)
     lhc = lhc.astype(np.float32)
@@ -170,7 +170,7 @@ def main():
     os.environ["ION_ZONES"] = "1"
     os.environ["A_DENSITY"] = "0"
     os.environ["BACKSCL"  ] = "1.0"
-    os.environ["TEST_RUN" ] = "0"
+    os.environ["TEST_RUN" ] = "1"
     nn_dir = "/data/benr/rtfast-training/"
     
     Emin = 0.1
@@ -181,10 +181,13 @@ def main():
         egrid[i] = Emin * (Emax/Emin)**(i/ne)
     
     cpu_num = os.cpu_count()
-    lhc_split = np.split(lhc,int(n/200))
-    with Parallel(n_jobs=cpu_num,verbose=1,backend="multiprocessing") as parallel:
-        for i,lhc in enumerate(lhc_split):
-            print(f"Generating par group {i+1}/{len(lhc_split)}")
+    lhc_split = np.split(lhc,int(n/20000))
+    start = 38
+    if start != 0:
+        spec_scaler = load(nn_dir+"scalers/scaler.bin")
+        pca = load(nn_dir+"scalers/pca.bin")
+    for i,lhc in enumerate(lhc_split[start:],start=start):
+        with Parallel(n_jobs=cpu_num-2,verbose=1,backend="multiprocessing") as parallel:
             spectra =  parallel(delayed(ib.reltransDCp)(egrid,pars.astype(np.float32))
                                             for pars in lhc)
             spectra = np.asarray(spectra)
@@ -195,24 +198,18 @@ def main():
             mask = np.any(np.isnan(spectra),axis=1)
             spectra = spectra[~mask]
             
-            
             if i == 0:
-                print("Creating scalers")
                 spec_scaler = StandardScaler()
                 data = spec_scaler.fit_transform(np.log10(spectra))
                 comps = 200
-                print("Creating PCA")
                 pca = PCA(n_components=comps)
                 pca_comps = pca.fit_transform(data)
-                print("Saving PCA and scalers")
                 dump(spec_scaler,nn_dir+"scalers/scaler.bin")
                 dump(pca,nn_dir+"scalers/pca.bin")
             else:
                 data = spec_scaler.transform(np.log10(spectra))
                 pca_comps = pca.transform(data)
-            print("Saving pca components")
             np.savetxt(nn_dir+f"data/pca_comps_{i}.txt",pca_comps)
-            print("Saving parameters")
             np.savetxt(nn_dir+f"data/pars_{i}.txt",lhc)
 
 
