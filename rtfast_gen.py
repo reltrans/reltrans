@@ -182,7 +182,7 @@ def main():
     
     cpu_num = os.cpu_count()
     lhc_split = np.split(lhc,int(n/20000))
-    start = 38
+    start = 0
     if start != 0:
         spec_scaler = load(nn_dir+"scalers/scaler.bin")
         pca = load(nn_dir+"scalers/pca.bin")
