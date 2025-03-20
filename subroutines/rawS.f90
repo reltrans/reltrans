@@ -54,11 +54,10 @@ subroutine rawS(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2
 
     do m=1,nlp 
        if (boost .lt. 0 .and. DC .eq. 1) then
-          write(*,*) 'boost = 0 ', boost 
             do j = 1,nf
-                do i = 1,nex
-                    if (m .gt. 1) ReW0(m,i,j) = eta*ReW0(m,i,j)
-                    ReSraw(i,j) = ReSraw(i,j) + (-boost) * ReW0(m,i,j)
+               do i = 1,nex
+                  if (m .gt. 1) ReW0(m,i,j) = eta*ReW0(m,i,j)
+                  ReSraw(i,j) = ReSraw(i,j) + (-boost) * ReW0(m,i,j)
                 enddo
             enddo  
         else
@@ -111,9 +110,10 @@ subroutine rawS(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2
                     ! write(75,*) E, gso(m)
                     ! write(76,*) E, Stemp
                     ! write(77,*) E, Sraw(i,j)
-                enddo
+                 enddo
             enddo 
         endif    
-    end do
+     end do
+
     return
 end subroutine rawS

@@ -376,7 +376,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                     !TBD: add flag here to do this convolution if no reflection time, or different convolution with complex
                     !xillver if tref > 0 or something.                    
 
-                    if (test) then 
+                    if (test) then
+                       
                        call conv_one_FFT(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
                        if(DC .eq. 0 .and. refvar .eq. 1) then
                           call conv_one_FFT(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
@@ -388,6 +389,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                     else
                        call conv_one_FFTw(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
                        if(DC .eq. 0 .and. refvar .eq. 1) then
+
                           call conv_one_FFTw(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
                           call conv_one_FFTw(dyn,photarx_delta,reline_w2,imline_w2,ReW2(:,:,j),ImW2(:,:,j),DC,nlp)
                        end if
@@ -413,7 +415,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     !    write(10,*) E, reline_w1(1,i)
     !    write(11,*) E, imline_w1(1,i)
     !    write(12,*) E, reline_w2(1,i)
-    !    write(10,*) E, reline_w1(1,i)
     !    write(13,*) E, imline_w2(1,i)
     !    write(14,*) E, reline_w3(1,i)
     !    write(15,*) E, imline_w3(1,i)
@@ -444,7 +445,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     else
         !Calculate raw FT of the full spectrum without absorption
         call rawS(nex,earx,nf,real(flo),real(fhi),nlp,contx,real(tauso),real(gso),ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                  real(h),real(zcos),real(Gamma),real(eta),beta_p,boost,g,DelAB,ionvar,DC,ReSraw,ImSraw)
+             real(h),real(zcos),real(Gamma),real(eta),beta_p,boost,g,DelAB,ionvar,DC,ReSraw,ImSraw)
+
         !Include absorption in the model
         do j = 1, nf
             do i = 1, nex

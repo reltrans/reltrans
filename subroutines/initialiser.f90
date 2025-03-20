@@ -56,7 +56,7 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
 !Will need to evaluate xillver on this grid to use the FT convolution code 
         dloge = log10( Emax / Emin ) / float(nex)
         do i = 0, nex
-          earx(i) = Emin * (Emax/Emin)**(float(i)/float(nex))
+           earx(i) = Emin * (Emax/Emin)**(float(i)/float(nex))
         end do
 
         ! Call environment variables

@@ -61,7 +61,7 @@ end subroutine tdreltransDCp
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-subroutine tdreltransD(ear, ne, param, ifl, photar)
+subroutine tdreltransPL(ear, ne, param, ifl, photar)
   implicit none
   integer, parameter :: nlp = 1 !use a single lamp post
   integer :: ne, ifl, Cp, dset
@@ -105,7 +105,7 @@ subroutine tdreltransD(ear, ne, param, ifl, photar)
 ! Call general code
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   return
-end subroutine tdreltransD
+end subroutine tdreltransPL
 !-----------------------------------------------------------------------
 
 

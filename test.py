@@ -91,7 +91,7 @@ model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
 # source = ['agn']
 # frange = [['xmm_01_06', 'nus_01_06', 'xmm_06_20', 'nus_06_20', 'xmm_20_90', 'nus_20_90']]
 # mode       = ['Lags', 'Mods', 'Imag', 'Real', 'Spec'] 
-# model_type = ['Total']
+# model_type = ['Total', 'IonVar', 'PivPL', 'PivRef', 'Reverb']
 
 # source = ['dbl']
 # frange = [['0,10_0,40', '0,50_0,60', '1,10_1,40', '3,00_4,20', '3,00_4,20']]

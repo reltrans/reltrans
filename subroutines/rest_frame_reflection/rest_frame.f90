@@ -18,8 +18,9 @@ subroutine rest_frame(ear,ne,Gamma,Afe,logne,Ecut,logxi,thetae,Cp,photar)
    integer, intent(in) :: ne, Cp
    real, intent(in)    :: ear(0:ne), Gamma, Afe, logne, Ecut, logxi, thetae
    real, intent(out)   :: photar(ne)
-   real                :: xillpar(6), xillparDCp(7)
-   integer :: i 
+   integer, parameter  :: dim = 6, dimCp = 8
+   real                :: xillpar(dim), xillparDCp(dimCp)
+   ! integer :: j 
    
    if( Cp .ne. 0 )then
       !The model is a xillver model
@@ -34,29 +35,28 @@ subroutine rest_frame(ear,ne,Gamma,Afe,logne,Ecut,logxi,thetae,Cp,photar)
          xillpar(4) = logne !logne
       end if
       xillpar(5) = thetae    !emission angle
-      xillpar(6) = 0.0       !redshift
+      xillpar(6) = 0.0     !redshift!this parameters was here when we called relxill to get xillver
       xillparDCp(1) = Gamma  !photon index
       xillparDCp(2) = Afe    !Afe
       xillparDCp(3) = logxi  !ionization par
       xillparDCp(4) = Ecut   !kTe
       xillparDCp(5) = logne !logne
       xillparDCp(6) = thetae !emission angle
-      xillparDCp(7) = 0.0    !redshift
-      call get_xillver(ear, ne, xillpar, xillparDCp, Cp, photar)
+      xillparDCp(7) = 0.0  !redshift !this parameters was here when we called relxill to get xillver
+
+      ! write(*,*) 'logxi in rest frame ', logxi, xillparDCp(3)
+      ! write(*,*) 'logne in rest frame ', logne, xillparDCp(5)
+      call get_xillver(ear, ne, dim, dimCp, xillpar, xillparDCp, Cp, photar)
       ! photar = photar / 10**(logxi + logne - 15) !this factor is needed to match the normalisation with the first versions of reltrans
       ! write(*,*) 'xillver normalisation factor 10**(logxi + logne - 15)', 10**(logxi + logne - 15)
+
    else
       !The model is reflionx
       !Set density limits
    !   lognex = min(logne,22.0)
       call normreflionx(ear,ne,Gamma,Afe,logne,Ecut,logxi,thetae,photar)
    end if
-   
-   ! do i = 1, ne
-   !    write(33,*) (ear(i) + ear(i-1))*0.5, &
-   !         photar(i)/(ear(i) - ear(i-1)) * ((ear(i) + ear(i-1))*0.5)**2
-   ! enddo
-   
+
    return
  end subroutine rest_frame
 !-----------------------------------------------------------------------
