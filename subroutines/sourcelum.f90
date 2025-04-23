@@ -12,6 +12,7 @@
         integral = integral + E * contx(i)
         if( E .gt. 13.6e-3 .and. E .gt. 13.6 ) F = F + E * contx(i)
       end do
+      ! write(*,*) "for lambda calculation", gso, gamma, integral, mass
       lambda = 1.5217e-3 * gso**(gamma-2.0) * integral / mass
       !write(*,*)"\mathcal{F} = norm * ",integral*1.6e-9,"erg/cm^2/s"
       write(*,*)"Ls/Ledd = norm * (D/kpc)**2 *",lambda

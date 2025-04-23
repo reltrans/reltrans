@@ -1,50 +1,51 @@
 main = main.f90
+# benchmark = main_simple_call.f90
 benchmark = Benchmarks/benchmark.f90
+wrap = wrappers.f90
+amodules = subroutines/amodules.f90
 
 #lib and other stuff to include to the compiler 
-incs = -I ./fftw/fftw_comp/include/ -ffree-line-length-none
-libs = -L ./fftw/fftw_comp/lib/ -lfftw3 -lm \
-	-L ${HEADAS}/lib/ -lfftw3 -lm\
-	-lXSFunctions -lcfitsio -lXSModel -lXSUtil -lXS -lCCfits_2.6 #note: older heasoft versions may need lCCfits_2.5 to compile
-fitsio = 
-optimization = -O3
-debug        = -Wall -pedantic
+PARALL  = -fopenmp
+EXTRA   = -Wall -Wconversion -Wshadow -pedantic
+PROFILE = #-pg -g
+FLAGS_lib = -DHAVE_INLINE -g -fPIC -fno-automatic  -rdynamic -fno-second-underscore  -shared  #$(EXTRA) 
+FLAGS     = -DHAVE_INLINE -g -fPIC -fno-automatic  -rdynamic -fno-second-underscore #$(EXTRA)
+OPT     = -O3
+# LDFLAGS = -L/usr/lib/x86_64-linux-gnu/ -lgslcblas -lcfitsio -lpthread -lm                
+libs =  -L ${HEADAS}/lib/ -lfftw3 -lm -lXSFunctions -lcfitsio -lpthread -lXSModel 
+incs = -I ./fftw/fftw_comp/include/ $(FLAGS) $(libs) 
+incs_lib = -I ./fftw/fftw_comp/include/  $(FLAGS_lib) $(libs) 
 
 
 # set compilers
-fcomp = gfortran $(optimization) #$(debug) 
-ccomp = gcc      $(optimization) 
+fcomp = gfortran-12 $(optimization) #$(debug) 
 
 # the files to compile 
-FCODE = $(main) srevtrans.f90
-CCODE = relmodels.c rellp.c relbase.c reltable.c relutility.c donthcomp.c xilltable.c relcache.c
-FTEST = $(benchmark) srevtrans.f90
+FCODE = $(main) $(wrap)
+FTEST = $(benchmark) $(wrap) 
 
-CBENCH = Benchmarks/setenv.c 
+# CBENCH = Benchmarks/setenv.c 
 
-mod:
-	$(fcomp) $(incs) $(libs) -c amodules.f90
 fobj: $(FCODE)
-	$(fcomp) -c $(FCODE)
+	$(fcomp) $(incs) -c $(FCODE)
+
 ftest: $(FTEST)
-	$(fcomp) -c $(FTEST)
+	$(fcomp) $(incs) -c $(FTEST)
 
-cobj: 
-	$(ccomp) -c $(CCODE)
-cbench: 
-	$(ccomp) -c $(CBENCH)
+lib:
+	$(fcomp) $(incs_lib) $(PROFILE) $(wrap) -o  lib_reltrans.so 
 
-compile: mod fobj cobj
-	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) *.o -o main $(libs)
+compile: fobj
+	 $(fcomp) $(incs) *.o -o main 
+benchmark: ftest
+	 $(fcomp)  $(incs) *.o -o benchmark 
 
-benchmark: mod ftest cobj cbench 
-	 $(fcomp) -fno-second-underscore -fno-automatic -fPIC $(incs) *.o -o benchmark $(libs)
-	 
 main: clean compile cleanup
 
 test: clean benchmark cleanup
 
 clean:
-	rm -vf *.o *.mod *~ subroutines/*~
+	rm -vrf *.o *.mod *~ subroutines/*~ subroutines/*/*~  fort.* main test_main *.so *.dSYM __pycache__ libreltrans.dylib libreltrans.so Output/*
+
 cleanup:
-	rm -vf *.o *.mod *~ subroutines/*~
+	rm -vf *.o *.mod *~ subroutines/*~ 

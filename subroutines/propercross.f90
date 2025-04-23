@@ -87,7 +87,7 @@ subroutine response_and_energy_bounds(resp_matr)
   integer, INTENT(IN) :: resp_matr
   
   real     :: dum
-  real     :: myenv_real
+  real     :: get_env_real
   integer  :: i
   
 !Read from response file
@@ -98,8 +98,8 @@ subroutine response_and_energy_bounds(resp_matr)
      endif
 !Get energy bounds of the reference band
      if( needchans )then
-        Elo = myenv_real("EMIN_REF",0.0)
-        Ehi = myenv_real("EMAX_REF",0.0)
+        Elo = get_env_real("EMIN_REF",0.0)
+        Ehi = get_env_real("EMAX_REF",0.0)
         if (Elo .eq. 0.0) then 
            write(*,*)"Enter lower energy in reference band"
            read(*,*)Elo
@@ -132,8 +132,8 @@ subroutine response_and_energy_bounds(resp_matr)
      endif
 !second response matrix     
      if( needchans2 )then
-        Elo2 = myenv_real("EMIN_REF2",0.0)
-        Ehi2 = myenv_real("EMAX_REF2",0.0)
+        Elo2 = get_env_real("EMIN_REF2",0.0)
+        Ehi2 = get_env_real("EMAX_REF2",0.0)
         if (Elo2 .eq. 0.0) then
            write(*,*)"Enter lower energy in reference band of the second response"
            read(*,*)Elo2

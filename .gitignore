@@ -17,6 +17,9 @@ fftw/*
 xillverCp_v3.5.fits
 main
 test_reltrans
-Output
-Benchmarks/Benchmark_result*
+Output/*
+Benchmarks/*result*
 benchmark
+__pycache__
+__pycache__/*
+lib_reltrans.so*
