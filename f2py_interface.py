@@ -64,6 +64,10 @@ wsim_dist = lib.simrtdist_
 wsim_dist.argtypes = [type_float_p, type_int_p, type_float_p, type_int_p, type_float_p]
 wsim_dist.restype  = None
 
+wsim_relt = lib.simrelt_
+wsim_dist.argtypes = [type_float_p, type_int_p, type_float_p, type_int_p, type_float_p]
+wsim_dist.restype  = None
+
 def gen_wrap(ear, params, func):
     '''
     Takes:
