@@ -1,7 +1,6 @@
 !-----------------------------------------------------------------------
-subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,eta_0,&
-                  fcons,contx_int,tauso,lens,cosdelta_obs,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,rlxi,lognep,&
-                  ker_W0,ker_W1,ker_W2,ker_W3,frobs,frrel,logxir,gsdr,logner)
+subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,eta_0,&
+                  fcons,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,ker_W0,ker_W1,ker_W2,ker_W3,frobs,frrel)
     ! Code to calculate the transfer function for an accretion disk.
     ! This code first does full GR ray tracing for a camera with impact parameters < bmax
     ! It then also does straight line ray tracing for impact parameters >bmax
@@ -26,7 +25,6 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
     ! nf,fhi,flo            nf = Number of logarithmic frequency bins used, range= flo to fhi
     ! me                    Number of mue bins
     ! xe                    Number of logr bins: bins 1:xe-1 are logarithmically spaced, bin xe is everything else
-    ! rlxi                  Maximum value of logxi(r) in the disc
     ! OUTPUT
     ! transe(ne,nf,me,xe)   Transfer function as a function of energy, frequency, emission ngle and radius
     ! transe_a(ne,nf,me,xe) Second transfer function as a function of energy, frequency, emission ngle and radius
@@ -34,33 +32,31 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
     ! frobs                 Observer's reflection fraction
     ! frrel                 Reflection fraction defined by relxilllp
     ! lens                  Lensing factor for direct emission * 4pi p(theta0,phi0)
-    ! logxir(xe),gsdr(xe)   logxi (ionization parameter) and gsd (source to disc blueshift) as a function of radius
     use dyn_gr
     use blcoordinate
+    use radial_grids
+    use gr_continuum
     implicit none
-    integer nro,nphi,ndelta,ne,nf,me,xe,dset,nlp
-    double precision spin,h(nlp),mu0,Gamma,rin,rout,zcos,fhi,flo,honr,gso(nlp)
+    integer nro,nphi,ne,nf,me,xe,dset,nlp
+    double precision spin,h(nlp),mu0,Gamma,rin,rout,zcos,fhi,flo,honr
     double precision b1,b2,qboost
-    double precision fcons,cosdout(nlp),logxir(xe),gsdr(xe),logner(xe),dfer_arr(xe)
-    real rlxi, dloge, lognep
+    double precision fcons,cosdout(nlp)
+    real dloge, lognep
     complex cexp!,transe(0:nlp,ne,nf,me,xe),transe_a(nlp,ne,nf,me,xe)
 
-    integer i,npts(nlp),j,odisc,n,gbin,rbin,mubin,l,m,k,nl
-    parameter (ndelta=1000)
-    double precision domega(nro),d,taudo,g,dlgfacthick,dFe(nlp),newtex
-    double precision tauso(nlp),lens(nlp),cosdelta_obs(nlp),contx_int(nlp)
+    integer i,j,odisc,n,gbin,rbin,mubin,l,m,k,nl
+    double precision domega(nro),d,taudo,g,dlgfacthick,dFe(nlp),newtex,contx_int(nlp)
     !double precision rlp_column(ndelta),dcosdr_column(ndelta),tlp_column(ndelta),cosd_column(ndelta)
-    double precision rlp(ndelta,nlp),dcosdr(ndelta,nlp),tlp(ndelta,nlp),cosd(ndelta,nlp)
     double precision alpha,beta,cos0,sin0,phie,re,gsd(nlp)
     double precision tau(nlp),tausd,emissivity(nlp),cosfac,dglpfacthick,dareafac
     integer kk,fbin,get_index
     double precision rmin,disco,rfunc,scal,velocity(3),mudisk,sysfref
     double precision rnmax,rnmin,rn(nro),phin,mueff,dlogr,interper
     double precision fi(nf),dgsofac,sindisk,mue,demang,frobs(nlp),cosdin,frrel(nlp)
-    double precision pnorm,pnormer,mus,ptf,pfunc_raw,ang_fac
+    double precision pnormer,mus,ptf,pfunc_raw,ang_fac
     integer nron,nphin,nrosav,nphisav,verbose
     double precision spinsav,musav,routsav,mudsav,rnn(nro),domegan(nro)
-    integer myenv
+    integer get_env_int
     double precision lximax
     double precision eta_0
     logical dotrace
@@ -78,7 +74,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
     data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
     save nrosav,nphisav,spinsav,musav,routsav,mudsav
        
-    ! Settings/initialization 
+    ! Settings/initialization
     nron     = 100
     nphin    = 100
     rmin     = disco( spin )
@@ -116,6 +112,20 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
         !open (unit = 201, file = 'Output/Impulse_Integrated2.dat', status='replace', action = 'write')
         !open (unit = 202, file = 'Output/Impulse_Integrated3.dat', status='replace', action = 'write')
     endif 
+
+    !get the GR ray-tracing CONTINUUM parameters which are stored in the module gr_continuum
+    if (nlp .eq. 1) then
+       gso(1) = real( dgsofac(spin,h(1)) )
+       call getlens(spin,h(1),mu0,lens(1),tauso(1),cosdelta_obs(1))
+       if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"
+    else
+       !here the observed cutoffs are set from the temperature in the source frame   
+       do m = 1, nlp
+          gso(m) = real( dgsofac(spin,h(m)) )
+          call getlens(spin,h(m),mu0,lens(m),tauso(m),cosdelta_obs(m))
+          if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
+       enddo
+    endif
     
     ! Set up observer's camera ( alpha = rn sin(phin), beta = mueff rn cos(phin) )
     ! to do full GR ray tracing with      
@@ -215,6 +225,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
                         endif                        
                         !Add to reflection fraction
                         frobs(m) = frobs(m) + 2.0*g**3*gsd(m)*cosfac/dareafac(re,spin)*domega(i)    
+                        ! write(*,*) g, gsd(m), cosfac, dareafac(re, spin), domega(i)
                     end do
                    
                     !tbd: put a second for loop over lps here, now that both emissivity/dfe/tau are known
@@ -381,6 +392,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
         !Finish calculation of observer's reflection fraction
         frobs(m) = frobs(m) / dgsofac(spin,h(m)) / lens(m)
     end do
+
     
     !TBD DOUBLE CHECK WTF IS BEING PRINTED TO FILE HERE I MEAN SERIOUSLY
     !finish saving the impulse response function to file
@@ -419,16 +431,16 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
         enddo
     end if    
 
-    !calculate the ionization/density/gsd radial profiles 
-    if( dset .eq. 0 .or. size(h) .eq. 2) then
-        call radfunctions_dens(verbose,xe,rin,rnmax,eta_0,dble(rlxi),dble(lognep),spin,h,Gamma,honr,rlp&
-                               &,dcosdr,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
-    else
-        call radfuncs_dist(xe,rin,rnmax,b1,b2,qboost,fcons,&
-                           & dble(lognep),spin,h(1),honr,rlp,dcosdr,cosd,ndelta,rmin,npts(1),&
-                           & logxir,gsdr,logner,pnorm)
-    end if
-    !Outputs: logxir(1:xe),gsdr(1:xe), logner(1:xe)
+    ! !calculate the ionization/density/gsd radial profiles 
+    ! if( dset .eq. 0 .or. size(h) .eq. 2) then
+    !     call radfunctions_dens(verbose,xe,rin,rnmax,eta_0,dble(rlxi),dble(lognep),spin,h,Gamma,honr,rlp&
+    !                            &,dcosdr,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
+    ! else
+    !     call radfuncs_dist(xe,rin,rnmax,b1,b2,qboost,fcons,&
+    !                        & dble(lognep),spin,h(1),honr,rlp,dcosdr,cosd,ndelta,rmin,npts(1),&
+    !                        & logxir,gsdr,logner,pnorm)
+    ! end if
+    ! !Outputs: logxir(1:xe),gsdr(1:xe), logner(1:xe)
 
     if (verbose .gt. 1) then
         !close(102)
@@ -443,372 +455,6 @@ subroutine rtrans(verbose,dset,nlp,spin,h,gso,mu0,Gamma,rin,rout,honr,d,rnmax,zc
     return
 end subroutine rtrans
 !-----------------------------------------------------------------------
-
-
-
-!-----------------------------------------------------------------------
-function sysfref(rin,rlp,cosd,ndelta,cosdout)
-! Calculates the relxill definition of reflection fraction        
-! In: rin,rlp,ndelta,cosd,cosdout
-! Out: stsfref
-  implicit none
-  integer ndelta
-  double precision sysfref,rin,rlp(ndelta),cosd(ndelta),cosdout
-  integer n
-  double precision cosdin
-  n = 1
-  do while( rin .gt. rlp(n) )
-    n = n + 1
-  end do
-  !Inperpolate
-  if( n .eq. 1 )then
-    !Need to extrapolate
-    cosdin = (cosd(n+1)-cosd(n))*(rin-rlp(n))/(rlp(n+1)-rlp(n))
-    cosdin = cosdin + cosd(n)
-  else
-    !Can actually interpolate
-    cosdin = (cosd(n)-cosd(n-1))*(rin-rlp(n-1))/(rlp(n)-rlp(n-1))
-    cosdin = cosdin + cosd(n-1)
-  end if
-  sysfref = ( cosdin - cosdout ) / ( 1.0 + cosdout )
-  return
-end function sysfref  
-!-----------------------------------------------------------------------
-
-!-----------------------------------------------------------------------
-subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
-     & lognep, spin, h, honr, rlp, dcosdr, cosd, ndelta, rmin, npts,&
-     & logxieff, gsdr, logner, pnorm)
-! Calculates ionization parameter, g-factor and disc density as a
-! function of disc radius. This subroutine is only called for rtdist
-!
-! In  : xe,rin,rnmax,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
-! Out :
-! logxir(1:xe) -- Effective ionisation as a function of r
-! gsdr(1:xe)   -- Source-to-disc blueshift as a function of r
-! logner(1:xe) -- Log10 of electron density as a function of r
-!note: this does not work with multiple lamposts for now
-
-  use env_variables
-  implicit none
-  integer         , intent(IN)   :: xe, ndelta, npts 
-  double precision, intent(IN)   :: rin, rmin, rnmax, b1, b2, qboost
-  double precision, intent(IN)   :: fcons, lognep, spin, h, honr
-  double precision, intent(IN)   :: rlp(ndelta), dcosdr(ndelta), cosd(ndelta)
-  double precision, intent(INOUT):: logxieff(xe), gsdr(xe), logner(xe)
-  integer          :: i, kk, get_index, myenv, verbose
-  double precision :: pnorm,re,re1(xe),zA_logne,cosfac,mus,interper,newtex,mudisk
-  double precision, parameter :: pi = acos(-1.d0)
-  double precision :: ptf,pfunc_raw,gsd,dglpfacthick,eps_bol,Fx(xe),logxir(xe),mui,dinang
-  double precision :: pnormer,dareafac,lximax
-
-! Set disk opening angle
-  mudisk   = honr / sqrt( honr**2 + 1.d0  )
-! Now loop through xe radial bins
-  do i = 1,xe
-     !Radius
-     re     = (rnmax/rin)**(real(i-1) / real(xe))
-     re     = re + (rnmax/rin)**(real(i) / real(xe))
-     re     = re * rin * 0.5
-     re1(i) = re
-     !Density
-     logner(i) = adensity * zA_logne(re,rin,lognep) + (1-adensity) * lognep
-     !Interpolate functions from rpl grid
-     kk     = get_index(rlp,ndelta,re,rmin,npts)
-     cosfac = interper(rlp,dcosdr,ndelta,re,kk)
-     mus    = interper(rlp,cosd  ,ndelta,re,kk)
-     if( kk .eq. npts )then !Extrapolation onto Newtonian grid
-        cosfac = newtex(rlp,dcosdr,ndelta,re,h,honr,kk)
-        mus    = newtex(rlp,cosd  ,ndelta,re,h,honr,kk)
-     end if
-     !Calculate 13.6 eV - 13.6 keV illuminating flux
-     ptf     = pnorm * pfunc_raw(-mus,b1,b2,qboost)
-     gsd     = dglpfacthick(re,spin,h,mudisk)
-     !gsd     = dglpfac(re,spin,h)
-     gsdr(i) = gsd
-     eps_bol = gsd**2 * 2.0 * pi * ptf
-     eps_bol = eps_bol * cosfac / dareafac(re,spin)
-     Fx(i)   = fcons * 4.0 * pi * eps_bol
-     !Calculate logxi(r)
-     logxir(i) = log10( 4.0 * pi * Fx(i) ) - logner(i)
-     !Now adjust to effective ionization parameter
-     mui         = dinang(spin, re, h, mus)
-     logxieff(i) = logxir(i) - 0.1505 - log10(mui)     
-!     write(188,*)re,logxir(i),logxieff(i)
-     
-  end do
-!  write(188,*)"no no"
-  
-!check max and min for both ionisation and density
-  logxieff = max( logxieff , 0.d0  )
-  logxieff = min( logxieff , 4.7d0 )
-  ! logner   = max( logner , 15.d0  )
-  ! logner   = min( logner , 22.d0 )
-  !...no need to enforce limits on logne since this is done in myreflect()
-  !This is needed because reflionx has a different maximum to xillverDCp
-
-  verbose = myenv("REV_VERB",0)
-  if( verbose .gt. 2 )then
-     !Write out logxir for plots
-     lximax = -huge(lximax)
-     do i = 1,xe
-        write(188,*)re1(i),Fx(i),logxir(i)
-        lximax = max( lximax , logxieff(i) )
-     end do
-     write(188,*)"no no"
-     write(*,*)"MAX LOGXIeff = ",lximax
-  end if
-  
-  return
-end subroutine radfuncs_dist  
-!-----------------------------------------------------------------------
-
-
-
-!-----------------------------------------------------------------------
-function pnormer(b1,b2,boost)
-  implicit none
-  double precision pnormer,b1,b2,boost,pi
-  integer i,imax
-  parameter (imax=1000)
-  double precision integral,mu,pfunc_raw
-  pi = acos(-1.d0)
-  integral = 0.0
-  do i = 1,imax
-     mu       = -1.0 + 2.0*dble(i-1)/dble(imax)
-     integral = integral + pfunc_raw(mu,b1,b2,boost)
-  end do
-  integral = integral * 2.0 / dble(imax)
-  pnormer  = 1.0 / ( 2.0*pi*integral )
-  return
-end function pnormer
-!-----------------------------------------------------------------------
-
-
-!-----------------------------------------------------------------------
-function pfunc_raw(mu,b1,b2,boost)
-  implicit none
-  double precision pfunc_raw,mu,b1,b2,boost
-  double precision calB,norm,pm,mup,p
-  calB = 1.0/boost
-  if( mu .le. 0.0 )then
-     norm = 1.0
-  else
-     norm = calB
-  end if
-  pm = mu/sign(mu,1.d0)
-  if( mu .eq. 0.d0 ) pm = 1.0
-  mup = pm * ( norm**2 * (1.0/mu**2-1.0) + 1.0 )**(-0.5)
-  p   = 1.0 + (b1+abs(b2))*abs(mup) + b2*mup**2
-  p   = p * sqrt( 1.0 + mup**2 * (norm**2-1.0) )
-  pfunc_raw = p  
-  return
-end function pfunc_raw  
-!-----------------------------------------------------------------------
-
-
-
-!-----------------------------------------------------------------------
-subroutine radfunctions_dens(verbose,xe,rin,rnmax,eta_0,logxip,lognep,spin,h,Gamma,honr,rlp,dcosdr&
-     &,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
-    ! In  : xe,rin,rnmax,eta_0,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
-    ! Out : logxir(1:xe), gsdr(1:xe), logner(1:xe)
-    use env_variables
-    implicit none
-    integer         , intent(IN)   :: xe, ndelta, nlp, npts(nlp)
-    double precision, intent(IN)   :: rin,rmin,rnmax,eta_0,logxip,lognep,spin,h(nlp),honr,Gamma,dfer_arr(xe)
-    real                           :: gso(nlp)
-    double precision, intent(IN)   :: rlp(ndelta,nlp), dcosdr(ndelta,nlp), cosd(ndelta,nlp), contx_int(nlp)
-    double precision :: rlp_column(ndelta),dcosdr_column(ndelta),cosd_column(ndelta), dgsofac
-    double precision, intent(INOUT):: logxir(xe), gsdr(xe), logner(xe)
-    integer          :: i, kk, get_index, myenv, l, m, verbose
-    double precision :: rp, logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd(nlp), dglpfacthick
-    double precision :: xi_lp(xe,nlp), logxi_lp(xe,nlp), logxip_lp(nlp), xitot, xiraw, mylogne, mudisk, gsd_temp
-    double precision, allocatable :: rad(:)
-
-    ! Set disk opening angle
-    mudisk   = honr / sqrt( honr**2 + 1.d0  )
-    
-    allocate(rad(xe))
-    !Now calculate logxi itself
-    ! The loop calculates the raw xi and raw n_e.
-    ! This means they are without normalization: only to find the maximum and the minimum. Remember that the max of the ionisation is not the same as the minumim in the density because the flux depends on r
-    !The loops calculates also the correction factor mui
-
-    !TBD: include luminosity ratio between LPs 
-    do i = 1, xe        
-        rad(i) = (rnmax/rin)**(real(i-1) / real(xe))
-        rad(i) = rad(i) + (rnmax/rin)**(real(i) / real(xe))
-        rad(i) = rad(i) * rin * 0.5
-        !Initialize total ionization tracker
-        xitot = 0. 
-        gsd_temp = 0.
-        !Now calculate the raw density (this matters only for high dens model reltransD)
-        logner(i) = adensity * mylogne(rad(i), rin)
-        do m=1,nlp
-            do l=1,ndelta
-                rlp_column(l) = rlp(l,m)
-                dcosdr_column(l) = dcosdr(l,m)
-                cosd_column(l) = cosd(l,m)
-            end do    
-            gso(m) = real( dgsofac(spin,h(m)) )     
-            xi_lp(i,m) = xiraw(rad(i),spin,h(m),honr,rlp_column,dcosdr_column,ndelta,rmin,npts(m),mudisk,gsd(m))            
-            if (m .eq. 2) xi_lp(i,m) = eta_0*xi_lp(i,m)
-            !Calculate the incident angle for this bin
-            kk = get_index(rlp_column, ndelta, rad(i), rmin, npts(m))
-            mus = interper(rlp_column, cosd_column, ndelta, rad(i), kk)
-            if( kk .eq. npts(m) ) mus = newtex(rlp_column, cosd_column, ndelta, rad(i), h(m), honr, kk)
-            mui = dinang(spin, rad(i), h(m), mus)
-            !Correction to account for the radial dependence of incident angle, and for the g factors
-            xi_lp(i,m) = xi_lp(i,m)/(sqrt(2.)*mui)*contx_int(m)*(gso(m))**(Gamma-2)  
-            xitot = xitot + xi_lp(i,m)
-            gsd_temp = gsd_temp + gsd(m)*xi_lp(i,m)
-        end do 
-        !This and the line above calculate the gsd factor along the disk, averaging over the flux the disk sees from each LP 
-        gsdr(i) = gsd_temp/xitot
-        logxir(i) = log10(xitot) - logner(i)     
-    end do
-    !After the loop calculate the max and the min - ionization renormalized wrt to the first LP
-    logxinorm = maxval(logxir)
-    lognenorm = minval(logner)
-    logxir = logxir - (logxinorm - logxip) 
-    logner = logner - (lognenorm - lognep)    
-    
-    do m=1,nlp 
-        do i=1,xe
-            logxi_lp(i,m) = log10(xi_lp(i,m)) - logner(i) - lognenorm - logxinorm + lognep + logxip        
-        end do
-        logxip_lp(m) = max(maxval(logxi_lp(:,m)),0.)
-    end do
-    
-    !Write radii, ionisation (for both and each LP), gamma factors, and log(xi(r))+log(ne(r)) (which is nearly the same as
-    !epsilon(r) for identical coronal spectrra and gamma=2) to file. 
-    !note 1) we need to do this before the ionisation array is set to have a minimum of 0, in order
-    !to recover the correct scaling of the emissivity at large radii
-    !2) in order to correctly compare the dfer_arr array with the single LP case, it has to be renormalized by (1+eta_0)
-    if( verbose .gt. 1 ) then
-        print*, "Peak ionisations from each LP: first " , logxip_lp(1), " second ", logxip_lp(2)
-        open (unit = 27, file = 'Output/RadialScalings.dat', status='replace', action = 'write')
-            do i = 1, xe
-                write(27,*) rad(i), logxir(i), gsdr(i), logxir(i)+logner(i), logxi_lp(i,1), logxi_lp(i,2), dfer_arr(i) 
-            end do 
-        close(27)    
-    end if
-    
-    !check max and min for ionisation 
-    logxir = max( logxir , 0.d0  )
-    logxir = min( logxir , 4.7d0 )
-    
-    deallocate(rad)
-
-    return
-end subroutine radfunctions_dens
-!-----------------------------------------------------------------------
-
-  
-!-----------------------------------------------------------------------
-function logxiraw(re,spin,h,honr,rlp,dcosdr,ndelta,rmin,npts,mudisk,gsd)
-! In: re,spin,h,honr,rlp,dcosdr,ndelta,rmin,npts
-! Out: logxiraw,gsd
-  implicit none
-  integer ndelta,npts,kk,get_index
-  double precision re,spin,h,honr,rlp(ndelta),dcosdr(ndelta),rmin,gsd
-  double precision cosfac,interper,logxiraw,dareafac,dglpfacthick,newtex
-  double precision mudisk
-  !Calculate source to disc blueshift at this radius
-  gsd = dglpfacthick(re,spin,h,mudisk)
-  !gsd = dglpfac(re,spin,h)
-  !Find the rlp bin that corresponds to re
-  kk = get_index(rlp,ndelta,re,rmin,npts)
-  !Interpolate to get |d\cos\delta/dr| at r=re
-  cosfac = interper(rlp,dcosdr,ndelta,re,kk)
-  !Extrapolate to Newtonian if needs be
-  if( kk .eq. npts ) cosfac = newtex(rlp,dcosdr,ndelta,re,h,honr,kk)
-  !Now can do the calculation
-  logxiraw = log10( gsd**2 * cosfac / dareafac(re,spin) )
-  return
-end function logxiraw  
-!-----------------------------------------------------------------------
-
-function xiraw(re,spin,h,honr,rlp,dcosdr,ndelta,rmin,npts,mudisk,gsd)
-    ! In: re,spin,h,honr,rlp,dcosdr,ndelta,rmin,npts
-    ! Out: logxiraw,gsd
-    implicit none
-    integer ndelta,npts,kk,get_index
-    double precision re,spin,h,honr,rlp(ndelta),dcosdr(ndelta),rmin,gsd
-    double precision cosfac,interper,xiraw,dareafac,dglpfacthick,newtex
-    double precision mudisk
-    !Calculate source to disc blueshift at this radius
-    gsd = dglpfacthick(re,spin,h,mudisk)
-    !Find the rlp bin that corresponds to re
-    kk = get_index(rlp,ndelta,re,rmin,npts)
-    !Interpolate to get |d\cos\delta/dr| at r=re
-    cosfac = interper(rlp,dcosdr,ndelta,re,kk)
-    !Extrapolate to Newtonian if needs be
-    if( kk .eq. npts ) cosfac = newtex(rlp,dcosdr,ndelta,re,h,honr,kk)
-    !Now can do the calculation
-    xiraw = gsd**2 * cosfac / dareafac(re,spin) 
-    return
-end function xiraw  
-!-----------------------------------------------------------------------
-  
-
-!-----------------------------------------------------------------------
-function zA_logne(r,rin,lognep)
-! log(ne), where ne is the density.
-! This function is normalised to have a maximum of lognep.
-! We can therefore calculate the ionization parameter by taking
-! 4 \pi * Fx / nemin * zA_one_on_ne
-  implicit none
-  double precision zA_logne,r,rin,lognep,rp
-  rp       = 25./9. * rin
-  zA_logne = lognep + 1.5*log10(r/rp)
-  zA_logne = zA_logne + 2.0*log10( 1.0 - sqrt( rin / rp ) )
-  zA_logne = zA_logne - 2.0*log10( 1.0 - sqrt( rin / r  ) )
-  return
-end function zA_logne
-!-----------------------------------------------------------------------
-
-
-!-----------------------------------------------------------------------
-function mylogne(r,rin)
-! Calculates log10(ne). Don't let r = rin
-  implicit none
-  double precision mylogne,r,rin
-  mylogne = 1.5 * log10(r) - 2.0 * log10( 1.0 - sqrt(rin/r) )
-  return
-end function mylogne 
-!-----------------------------------------------------------------------
-
-
-!-----------------------------------------------------------------------
-function get_index(rlp,ndelta,re,rmin,npts)
-  implicit none
-  integer get_index,ndelta,npts,kk
-  double precision rlp(ndelta),re,rmin
-  kk = 2
-  do while( ( rlp(kk) .le. re .or. rlp(kk-1) .lt. rmin ) .and. kk .lt. npts )
-     kk = kk + 1
-  end do
-  get_index = kk
-  return
-end function get_index
-!-----------------------------------------------------------------------
-
-
-!-----------------------------------------------------------------------
-function interper(rlp,ylp,ndelta,re,kk)
-! Interpolates the array ylp between ylp(kk-1) and ylp(kk)
-! ylp is a function of rlp and rlp(kk-1) .le. re .le. rlp(kk)
-  implicit none
-  integer ndelta,kk
-  double precision interper,rlp(ndelta),ylp(ndelta),re
-  interper = (ylp(kk)-ylp(kk-1))*(re-rlp(kk))/(rlp(kk)-rlp(kk-1))
-  interper = interper + ylp(kk)
-  return
-end function interper
-!-----------------------------------------------------------------------
-
 
 !-----------------------------------------------------------------------
 function newtex(rlp,dcosdr,ndelta,re,h,honr,kk)

@@ -32,10 +32,10 @@ else:
     label = "Unclear"   
   
 Total = np.genfromtxt("Output/Total.dat") 
-PivotingPL = np.genfromtxt("Output/PivotingPL.dat")
-LightTravelTime = np.genfromtxt("Output/LightTravelTime.dat") 
-PivotingReflection = np.genfromtxt("Output/PivotingReflection.dat")
-IonVariations = np.genfromtxt("Output/IonVariations.dat")
+PivotingPL = np.genfromtxt("Output/PivPL.dat")
+LightTravelTime = np.genfromtxt("Output/Reverb.dat") 
+PivotingReflection = np.genfromtxt("Output/PivRef.dat")
+IonVariations = np.genfromtxt("Output/IonVar.dat")
 Continuum = np.genfromtxt("Output/Continuum_spec.dat")
 
 if (Input[23] != 7):
@@ -136,8 +136,8 @@ if(Input[22] != 0 and Input[23] != 7):
     ax1.plot(IonVariations.T[0],IonVariations.T[1],linewidth=2.0,label='Ionisation Variations',color=colors[4],zorder=1)
     ax1.plot(line_array,dashed_line,linestyle='dashed',linewidth=1.0,color='black')
     ax1.legend(loc='best',fontsize=14)
-    ax1.set_xlim([min_x_timing,max_x_timing])
-    ax1.set_ylim([min_y_timing,max_y_timing])
+    # ax1.set_xlim([min_x_timing,max_x_timing])
+    # ax1.set_ylim([min_y_timing,max_y_timing])
     ax1.set_xscale('log', base=10)
     if (Input[23] == 3 or Input[23] == 5):
         ax1.set_yscale('log', base=10)    

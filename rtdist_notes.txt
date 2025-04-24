@@ -21,7 +21,7 @@ REFLIONX_FILE
 If this is not set, it instead asks the user and then saves it for the
 rest of the session (i.e. exactly the same setup as the response
 matrix files). The genreltrans routine is a little more streamlined
-now, calling myreflect(), which is a subroutine that uses either a
+now, calling rest_frame(), which is a subroutine that uses either a
 xillver table or the reflionx table. Reflionx is normalised such that
 it has the same 50-100 keV integral as the corresponding logne=15
 xillverDCp spectrum.
@@ -94,8 +94,8 @@ calculate a new normal vector to the disc.
 standard_outputs.qdp:
 
 Datagroups:
-1&2: lag & spec for "default" parameters before including myreflect()
-3&4: lag & spec for "default" parameters after including myreflect()
+1&2: lag & spec for "default" parameters before including rest_frame()
+3&4: lag & spec for "default" parameters after including rest_frame()
 5&6: lag & spec for "default" parameters but with h/r=0, before changing g-factor routines
 7&8: lag & spec for "default" parameters but with h/r=0, after changing g-factor routines
 9&10: lag & spec for "default" parameters, after changing g-factor routines

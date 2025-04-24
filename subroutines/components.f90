@@ -11,14 +11,14 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     !RT - total reflection lag due to light travel time, pivoting of each reflection signal, and ionization variations  
     
     implicit none
-    integer :: ne,nex,nf,nlp,ionvar,ReIm,resp_matr
-    real :: ear(0:ne),earx(0:nex),corr,contx(nex,nlp),absorbx(nex)
-    real :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
-    real :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
-    real :: g(nlp),DelA,DelAB(nlp),boost,z,Gamma,eta,h(nlp),beta_p
-    real :: gso(nlp),tauso(nlp)
-    real :: fac,ReW0s,ImW0s,ReWbs,ImWbs,ReW3s,ImW3s
-    real :: tempRe,tempIm,dE
+    integer, intent(IN) :: ne,nex,nf,nlp,ionvar,ReIm,resp_matr
+    real   , intent(IN) :: ear(0:ne),earx(0:nex),contx(nex,nlp),absorbx(nex)
+    real   , intent(IN) :: g(nlp),DelA,DelAB(nlp),boost,z,Gamma,eta,h(nlp),beta_p
+    real   , intent(IN) :: gso(nlp),tauso(nlp)
+    real   , intent(INOUT) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
+    real   , intent(INOUT) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
+    real :: fac
+    real :: tempRe,tempIm,dE, corr
     real :: f,flo,fhi,floHz,fhiHz
     double precision :: fc
     double precision, parameter :: pi = acos(-1.d0)
@@ -38,33 +38,59 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     character (len=30) path
     
     !Allocate model component matrixes
-    allocate( ReScont(nex,nf) )
-    allocate( ImScont(nex,nf) )
-    allocate( ReSrev(nex,nf) )
-    allocate( ImSrev(nex,nf) )  
-    allocate( ReSpiv(nex,nf) )
-    allocate( ImSpiv(nex,nf) ) 
-    allocate( ReSion(nex,nf) )
-    allocate( ImSion(nex,nf) ) 
+    if(.not. allocated(ReScont)) allocate( ReScont(nex,nf) )
+    if(.not. allocated(ImScont)) allocate( ImScont(nex,nf) )
+    if(.not. allocated(ReSrev )) allocate( ReSrev (nex,nf) )
+    if(.not. allocated(ImSrev )) allocate( ImSrev (nex,nf) )  
+    if(.not. allocated(ReSpiv )) allocate( ReSpiv (nex,nf) )
+    if(.not. allocated(ImSpiv )) allocate( ImSpiv (nex,nf) ) 
+    if(.not. allocated(ReSion )) allocate( ReSion (nex,nf) )
+    if(.not. allocated(ImSion )) allocate( ImSion (nex,nf) ) 
     !Allocate cross spectra
-    allocate( ReGcont(nex,nf) )
-    allocate( ImGcont(nex,nf) )
-    allocate( ReGrev(nex,nf) )
-    allocate( ImGrev(nex,nf) )  
-    allocate( ReGpiv(nex,nf) )
-    allocate( ImGpiv(nex,nf) ) 
-    allocate( ReGion(nex,nf) )
-    allocate( ImGion(nex,nf) ) 
-  
+    if(.not. allocated(ReGcont)) allocate( ReGcont(nex,nf) )
+    if(.not. allocated(ImGcont)) allocate( ImGcont(nex,nf) )
+    if(.not. allocated(ReGrev )) allocate( ReGrev (nex,nf) )
+    if(.not. allocated(ImGrev )) allocate( ImGrev (nex,nf) )  
+    if(.not. allocated(ReGpiv )) allocate( ReGpiv (nex,nf) )
+    if(.not. allocated(ImGpiv )) allocate( ImGpiv (nex,nf) ) 
+    if(.not. allocated(ReGion )) allocate( ReGion (nex,nf) )
+    if(.not. allocated(ImGion )) allocate( ImGion (nex,nf) ) 
+    
+    ! open (unit = 20, file = 'fort.20', status='replace', action = 'write')
+    ! do m = 1, nlp
+    !    do j = 1, nf
+    !       do i = 1, nex
+    !          write(*,*) m, j, i
+    !          write(20,*) m, j, i, ReW0(m,i,j),ImW0(m,i,j),ReW1(m,i,j),ImW1(m,i,j), ReW2(m,i,j),ImW2(m,i,j),ReW3(m,i,j),ImW3(m,i,j)
+    !       end do
+    !    end do
+    ! enddo
+    ! close(20)
+    
+ 
+    write(*,*) 'inside components'
     !This stores each component contribution in the Re/Im matrices 
     if (nlp .gt. 1 .and. beta_p .eq. 0.) then  
         call components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
                               h,z,Gamma,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
                               ReGpiv,ImGpiv,ReGion,ImGion)
-    else 
+        ! open (unit = 21, file = 'fort.21', status='replace', action = 'write')
+        ! do j = 1, nf
+        !    write(21,*) '-----------------------------', j
+        !    do i = 1, nex
+        !       write(21,*) i, ReGcont(i,j),ImGcont(i,j),ReGrev(i,j),ImGrev(i,j),&
+        !                       ReGpiv(i,j),ImGpiv(i,j),ReGion(i,j),ImGion(i,j)
+        !    end do
+        ! end do
+        ! close(21)
+     else 
         call components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
                         h,z,Gamma,eta,beta_p,boost,g,DelAB,ionvar,ReScont,ImScont,ReSrev,ImSrev,ReSpiv,ImSpiv,&
                         ReSion,ImSion) 
+        ! do i = 1, nex
+        !    write(20,*) ReSion(i),ImSion(i)
+        ! enddo
+
         !Include the effects of absorRTion in each model component matrix           
         do j = 1, nf
             do i = 1, nex
@@ -141,16 +167,16 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
         ener(i) = (ear(i)+ear(i-1))/2.   
     end do    
        
-    path = 'Output/PivotingPL.dat'
+    path = 'Output/PivPL.dat'
     open (unit = 11, file = path, status='replace', action = 'write')
     
-    path = 'Output/LightTravelTime.dat'
+    path = 'Output/Reverb.dat'
     open (unit = 12, file = path, status='replace', action = 'write') 
 
-    path = 'Output/PivotingReflection.dat'
+    path = 'Output/PivRef.dat'
     open (unit = 13, file = path, status='replace', action = 'write')
     
-    path = 'Output/IonVariations.dat'
+    path = 'Output/IonVar.dat'
     open (unit = 14, file = path, status='replace', action = 'write') 
 
     if (abs(ReIm) .le. 4) then
@@ -188,7 +214,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
                 write (11,*) ener(i), atan2(ImScont_print(i),ReScont_print(i)) / ( 2.0*pi*fc )
                 write (12,*) ener(i), atan2(ImSrev_print(i),ReSrev_print(i)) / ( 2.0*pi*fc )
                 write (13,*) ener(i), atan2(ImSpiv_print(i),ReSpiv_print(i)) / ( 2.0*pi*fc ) 
-                write (14,*) ener(i), atan2(ImSion_print(i),ReSion_print(i)) / ( 2.0*pi*fc ) 
+                write (14,*) ener(i), atan2(ImSion_print(i),ReSion_print(i)) / ( 2.0*pi*fc )
             end do
         end if
     else
@@ -219,7 +245,24 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     close(12)
     close(13)
     close(14)  
-    
+
+    if (allocated( ReScont )) deallocate( ReScont )
+    if (allocated( ImScont )) deallocate( ImScont )
+    if (allocated( ReSrev  )) deallocate( ReSrev  )
+    if (allocated( ImSrev  )) deallocate( ImSrev  )
+    if (allocated( ReSpiv  )) deallocate( ReSpiv  )
+    if (allocated( ImSpiv  )) deallocate( ImSpiv  )
+    if (allocated( ReSion  )) deallocate( ReSion  )
+    if (allocated( ImSion  )) deallocate( ImSion  )
+    if (allocated( ReGcont )) deallocate( ReGcont )
+    if (allocated( ImGcont )) deallocate( ImGcont )
+    if (allocated( ReGrev  )) deallocate( ReGrev  )
+    if (allocated( ImGrev  )) deallocate( ImGrev  )
+    if (allocated( ReGpiv  )) deallocate( ReGpiv  )
+    if (allocated( ImGpiv  )) deallocate( ImGpiv  )    
+    if (allocated( ReGion  )) deallocate( ReGion  )
+    if (allocated( ImGion  )) deallocate( ImGion  )
+	    
     return  
 end subroutine write_ComponentS
 
@@ -236,17 +279,24 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
 
     use constants
     implicit none
-    integer nex,nf,ionvar,nlp
-    real earx(0:nex),corr,contx(nex,nlp),contx_sum(nex)
-    real ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
-    real ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
-    real g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp)
-    real E,fac,flo,fhi,beta,f,phase_d,phase_p,tau_d,tau_p,beta_p
-    real ReScont(nex,nf),ImScont(nex,nf),ReSrev(nex,nf),ImSrev(nex,nf)
-    real ReSpiv(nex,nf),ImSpiv(nex,nf),ReSion(nex,nf),ImSion(nex,nf)
-    complex Stemp,Scont(nex,nf),Sreverb(nex,nf),Spivot(nex,nf),Sion(nex,nf)
-    complex cexp_d,cexp_p,cexp_phi,W0,W1,W2,W3
+    integer, intent(IN) :: nex,nf,ionvar,nlp
+    real   , intent(IN) :: earx(0:nex),contx(nex,nlp)
+    real   , intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp), beta_p, flo
+    real   , intent(INOUT) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
+    real   , intent(INOUT) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
+    real   , intent(INOUT) :: ReScont(nex,nf),ImScont(nex,nf),ReSrev(nex,nf),ImSrev(nex,nf)
+    real   , intent(INOUT) :: ReSpiv(nex,nf),ImSpiv(nex,nf),ReSion(nex,nf),ImSion(nex,nf)
+    real E,fac,fhi,beta,f,phase_d,phase_p,tau_d,tau_p
+    real corr, contx_sum(nex)
+    complex, dimension(:,:), allocatable :: Scont,Sreverb,Spivot,Sion
+    ! complex Stemp,Scont(nex,nf),Sreverb(nex,nf),Spivot(nex,nf),Sion(nex,nf)
+    complex Stemp,cexp_d,cexp_p,cexp_phi,W0,W1,W2,W3
     integer i,j,m
+
+    if(.not. allocated(Scont  )) allocate(Scont   (nex,nf) )
+    if(.not. allocated(Sreverb)) allocate(Sreverb (nex,nf) )
+    if(.not. allocated(Spivot )) allocate(Spivot  (nex,nf) )
+    if(.not. allocated(Sion   )) allocate(Sion    (nex,nf) )  
     
     Scont = 0.
     Sreverb = 0.
@@ -315,6 +365,10 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
     ImSpiv = aimag(Spivot)
     ReSion = real(Sion)
     ImSion = aimag(Sion)
+    if(allocated(Scont  )) deallocate(Scont  )
+    if(allocated(Sreverb)) deallocate(Sreverb)
+    if(allocated(Spivot )) deallocate(Spivot )
+    if(allocated(Sion   )) deallocate(Sion   )  
     
     return
 end subroutine
@@ -324,30 +378,58 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
                             ReGpiv,ImGpiv,ReGion,ImGion)
     use constants
     implicit none
-    integer nex,nf,ionvar,nlp,ReIm,resp_matr
-    real earx(0:nex),corr,contx(nex,nlp),contx_sum(nex),absorbx(nex)
-    real ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
-    real ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
-    real g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp)
+    integer, intent(IN) :: nex,nf,ionvar,nlp,ReIm,resp_matr
+    real, intent(IN) :: earx(0:nex),contx(nex,nlp),absorbx(nex)
+    real, intent(IN) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
+    real, intent(IN) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
+    real, intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp)
     real E,fac,flo,fhi,beta,f,phase_d,tau_d
+    real contx_sum(nex),corr
     !these are the component arrays for each lamp post separately, before the cross spectrum
-    real ReScont(nlp,nex,nf),ImScont(nlp,nex,nf),ReSrev(nlp,nex,nf),ImSrev(nlp,nex,nf)
-    real ReSpiv(nlp,nex,nf),ImSpiv(nlp,nex,nf),ReSion(nlp,nex,nf),ImSion(nlp,nex,nf)   
+    real, dimension(:,:,:), allocatable :: ReSpiv,ImSpiv,ReScont,ImScont,ReSrev,ImSrev, ReSion,ImSion
+    ! real ReScont(nlp,nex,nf),ImScont(nlp,nex,nf),ReSrev(nlp,nex,nf),ImSrev(nlp,nex,nf)
     !these are the  component arrays for each lamp post separately, after the cross spectrum
-    real ReGcont_temp(nlp,nex,nf),ImGcont_temp(nlp,nex,nf),ReGrev_temp(nlp,nex,nf),ImGrev_temp(nlp,nex,nf)
-    real ReGpiv_temp(nlp,nex,nf),ImGpiv_temp(nlp,nex,nf),ReGion_temp(nlp,nex,nf),ImGion_temp(nlp,nex,nf)    
-    !these are the arrays containing the sum of the two lamp posts for zero coherence
-    real ReGcont(nex,nf),ImGcont(nex,nf),ReGrev(nex,nf),ImGrev(nex,nf)
-    real ReGpiv(nex,nf),ImGpiv(nex,nf),ReGion(nex,nf),ImGion(nex,nf)
+
+    real, dimension(:,:,:), allocatable :: ReGcont_temp,ImGcont_temp,ReGrev_temp,ImGrev_temp
+    real, dimension(:,:,:), allocatable :: ReGpiv_temp,ImGpiv_temp,ReGion_temp,ImGion_temp
+    ! real ReGcont_temp(nlp,nex,nf),ImGcont_temp(nlp,nex,nf),ReGrev_temp(nlp,nex,nf),ImGrev_temp(nlp,nex,nf)
+    ! real ReGpiv_temp(nlp,nex,nf),ImGpiv_temp(nlp,nex,nf),ReGion_temp(nlp,nex,nf),ImGion_temp(nlp,nex,nf)    
+    !these are the arrays containing the sum of the two lamp posts for zero coherence 
+    real, intent(INOUT) :: ReGcont(nex,nf),ImGcont(nex,nf),ReGrev(nex,nf),ImGrev(nex,nf)
+    real, intent(INOUT) :: ReGpiv(nex,nf),ImGpiv(nex,nf),ReGion(nex,nf),ImGion(nex,nf)
     !this complex stuff is purely to make writing the phases easier
-    complex Stemp,Scont(nlp,nex,nf),Sreverb(nlp,nex,nf),Spivot(nlp,nex,nf),Sion(nlp,nex,nf)
-    complex cexp_d,cexp_phi,W0,W1,W2,W3
+    complex, dimension(:,:,:), allocatable :: Scont,Sreverb,Spivot,Sion
+    ! complex Stemp,Scont(nlp,nex,nf),Sreverb(nlp,nex,nf),Spivot(nlp,nex,nf),Sion(nlp,nex,nf)
+    complex Stemp, cexp_d,cexp_phi,W0,W1,W2,W3
     integer i,j,m
-        
-    Scont = 0.
+
+    if(.not. allocated(ReGcont_temp)) allocate(ReGcont_temp(nlp,nex,nf) )
+    if(.not. allocated(ImGcont_temp)) allocate(ImGcont_temp(nlp,nex,nf) )
+    if(.not. allocated(ReGrev_temp )) allocate(ReGrev_temp (nlp,nex,nf) )
+    if(.not. allocated(ImGrev_temp )) allocate(ImGrev_temp (nlp,nex,nf) )  
+    if(.not. allocated(ReGpiv_temp )) allocate(ReGpiv_temp (nlp,nex,nf) )
+    if(.not. allocated(ImGpiv_temp )) allocate(ImGpiv_temp (nlp,nex,nf) )
+    if(.not. allocated(ReGion_temp )) allocate(ReGion_temp (nlp,nex,nf) )
+    if(.not. allocated(ImGion_temp )) allocate(ImGion_temp (nlp,nex,nf) )  
+    if(.not. allocated(ReScont     )) allocate(ReScont     (nlp,nex,nf) )
+    if(.not. allocated(ImScont     )) allocate(ImScont     (nlp,nex,nf) )
+    if(.not. allocated(ReSrev      )) allocate(ReSrev      (nlp,nex,nf) )
+    if(.not. allocated(ImSrev      )) allocate(ImSrev      (nlp,nex,nf) )  
+    if(.not. allocated(ReSpiv      )) allocate(ReSpiv      (nlp,nex,nf) )
+    if(.not. allocated(ImSpiv      )) allocate(ImSpiv      (nlp,nex,nf) )
+    if(.not. allocated(ReSion      )) allocate(ReSion      (nlp,nex,nf) )
+    if(.not. allocated(ImSion      )) allocate(ImSion      (nlp,nex,nf) )  
+
+    if(.not. allocated(Scont       )) allocate(Scont       (nlp,nex,nf) )
+    if(.not. allocated(Sreverb     )) allocate(Sreverb     (nlp,nex,nf) )
+    if(.not. allocated(Spivot      )) allocate(Spivot      (nlp,nex,nf) )
+    if(.not. allocated(Sion        )) allocate(Sion        (nlp,nex,nf) )  
+
+    Scont   = 0.
     Sreverb = 0.
-    Spivot = 0.
-    Scont = 0.
+    Spivot  = 0.
+    Scont   = 0.
+    Sion    = 0.
     
     ReGcont = 0.
     ImGcont = 0.
@@ -402,6 +484,16 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
     ReSion = real(Sion)
     ImSion = aimag(Sion)
 
+    ! open (unit = 22, file = 'fort.22', status='replace', action = 'write')
+    ! do m = 1, nlp
+    !    do j = 1, nf
+    !       do i = 1, nex
+    !          write(22,*) m,j,i, Sion(m,i,j), ReSion(m,i,j),ImSion(m,i,j)
+    !       end do
+    !    end do
+    ! enddo
+    ! close(22)
+    
     do m=1,nlp 
         if (ReIm .gt. 0.0) then 
             call propercross(nex,nf,earx,ReScont(m,:,:),ImScont(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:),resp_matr)
@@ -436,8 +528,29 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
                 ImGion(i,j) = ImGion(i,j) + ImGion_temp(m,i,j)
             end do
         end do
-    end do         
-                      
+    end do          
+
+    if(allocated(ReGcont_temp)) deallocate(ReGcont_temp)
+    if(allocated(ImGcont_temp)) deallocate(ImGcont_temp)
+    if(allocated(ReGrev_temp )) deallocate(ReGrev_temp )
+    if(allocated(ImGrev_temp )) deallocate(ImGrev_temp )  
+    if(allocated(ReGpiv_temp )) deallocate(ReGpiv_temp )
+    if(allocated(ImGpiv_temp )) deallocate(ImGpiv_temp )
+    if(allocated(ReGion_temp )) deallocate(ReGion_temp )
+    if(allocated(ImGion_temp )) deallocate(ImGion_temp )  
+    if(allocated(ReScont     )) deallocate(ReScont     )
+    if(allocated(ImScont     )) deallocate(ImScont     )
+    if(allocated(ReSrev      )) deallocate(ReSrev      )
+    if(allocated(ImSrev      )) deallocate(ImSrev      )  
+    if(allocated(ReSpiv      )) deallocate(ReSpiv      )
+    if(allocated(ImSpiv      )) deallocate(ImSpiv      )
+    if(allocated(ReSion      )) deallocate(ReSion      )
+    if(allocated(ImSion      )) deallocate(ImSion      )  
+    if(allocated(Scont       )) deallocate(Scont       )
+    if(allocated(Sreverb     )) deallocate(Sreverb     )
+    if(allocated(Spivot      )) deallocate(Spivot      )
+    if(allocated(Sion        )) deallocate(Sion        )  
+                     
     return
 end subroutine
                       

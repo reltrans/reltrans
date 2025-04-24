@@ -243,13 +243,13 @@ subroutine energy_bounds(nex,Emin,Emax,Ea1,Ea2,Eb1,Eb2)
     integer, intent(out):: Ea1,Ea2,Eb1,Eb2 
     real, intent(in)    :: Emin,Emax
     real                :: band1_Elo,band1_Ehi,band2_Elo,band2_Ehi
-    real     :: myenv_real, dum
+    real     :: get_env_real, dum
      
     if( needchans ) then
-        band1_Elo = myenv_real("EMIN_REF",0.0)
-        band1_Ehi = myenv_real("EMAX_REF",0.0)
-        band2_Elo = myenv_real("EMIN_REF2",0.0)
-        band2_Ehi = myenv_real("EMAX_REF2",0.0)
+        band1_Elo = get_env_real("EMIN_REF",0.0)
+        band1_Ehi = get_env_real("EMAX_REF",0.0)
+        band2_Elo = get_env_real("EMIN_REF2",0.0)
+        band2_Ehi = get_env_real("EMAX_REF2",0.0)
         if (band1_Elo .eq. 0.0) then
             write(*,*)"Enter lower energy in the first band"
             read(*,*) band1_Elo
