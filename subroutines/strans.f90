@@ -26,12 +26,12 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     ! me                    Number of mue bins
     ! xe                    Number of logr bins: bins 1:xe-1 are logarithmically spaced, bin xe is everything else
     ! OUTPUT
-    ! transe(ne,nf,me,xe)   Transfer function as a function of energy, frequency, emission ngle and radius
-    ! transe_a(ne,nf,me,xe) Second transfer function as a function of energy, frequency, emission ngle and radius
-    !                            This is for the non-linear effects
+    ! ker_W0(nlp,ne,nf,me,xe)  Transfer function W0 - linear transfer function
+    ! ker_W1(nlp,ne,nf,me,xe)  Transfer function W1 - one aspect of photon index variations
+    ! ker_W2(nlp,ne,nf,me,xe)  Transfer function W2 - other aspect of photon index variations
+    ! ker_W3(nlp,ne,nf,me,xe)  Transfer function W3 - ionization variations
     ! frobs                 Observer's reflection fraction
     ! frrel                 Reflection fraction defined by relxilllp
-    ! lens                  Lensing factor for direct emission * 4pi p(theta0,phi0)
     use dyn_gr
     use blcoordinate
     use radial_grids
