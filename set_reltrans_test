@@ -9,7 +9,8 @@ export EMAX_REF=10.0
 export EMIN_REF2=0.3
 export EMAX_REF2=10.0
 export SEED_SIM=-2851043
-export BACKSCL=1.0 
+export BACKSCL=1.0
+export TEST_RUN=0
 
 export RMF_SET=./Benchmarks/resp_matrix/nicer-rmf6s-teamonly-array50.rmf
 export ARF_SET=./Benchmarks/resp_matrix/nicer-consim135p-teamonly-array50.arf
