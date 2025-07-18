@@ -1,40 +1,49 @@
-  subroutine conv_one_FFT(dyn,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
+  subroutine conv_one_FFT(dyn,earx,Gamma,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
     use conv_mod
     implicit none
     integer, intent(in) :: DC, nlp 
     real                :: dyn
-    real, intent(in)    :: photarx(nex)
+    real, intent(in)    :: photarx(nex),earx(nex),Gamma
     real, intent(in)    :: reline(nlp,nex), imline(nlp,nex)
     real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
     complex :: FTphotarx(nex_conv), FTreline(nex_conv), FTimline(nex_conv)
     complex :: FTreconv(4*nex),FTimconv(4*nex)
     integer :: m, i
-    real    :: photmax, depad_conv(nex)
+    real    :: photmax, depad_conv(nex), E
     ! real, parameter :: nexm1 = 1. / real(nex_conv)
     
     do m=1,nlp  
-        if (DC .eq. 1 ) then
-           call pad4FFT(nex, photarx, FTphotarx)
-           call pad4FFT(nex, reline(m,:), FTreline)
-           FTreconv = (FTreline * FTphotarx) !* nexm1
-           call pad4invFFT(dyn,nex,FTreconv,depad_conv)
- 
-           ReW_conv(m,:) = ReW_conv(m,:) + depad_conv
+       if (DC .eq. 1 ) then
+          call pad4FFT(nex, photarx, FTphotarx)
+          call pad4FFT(nex, reline(m,:), FTreline)
+          FTreconv = (FTreline * FTphotarx) !* nexm1
+          call pad4invFFT(dyn,nex,FTreconv,depad_conv)
 
-        else
-           call pad4FFT(nex,photarx, FTphotarx)
-           call pad4FFT(nex,reline(m,:),FTreline)
-           call pad4FFT(nex,imline(m,:),FTimline)
-           FTreconv = (FTreline * FTphotarx) !* nexm1
-           FTimconv = (FTimline * FTphotarx) !* nexm1
-           call pad4invFFT(dyn,nex,FTreconv,depad_conv)
-           ReW_conv(m,:) = ReW_conv(m,:) + depad_conv
-           call pad4invFFT(dyn,nex,FTimconv,depad_conv) 
-           ImW_conv(m,:) = ImW_conv(m,:) + depad_conv 
+          do i = 1,nex
+             E             = 0.5 * ( earx(i) + earx(i-1) )
+             ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
+          end do
+           
+       else
+          call pad4FFT(nex,photarx, FTphotarx)
+          call pad4FFT(nex,reline(m,:),FTreline)
+          call pad4FFT(nex,imline(m,:),FTimline)
+          FTreconv = (FTreline * FTphotarx) !* nexm1
+          FTimconv = (FTimline * FTphotarx) !* nexm1
+          call pad4invFFT(dyn,nex,FTreconv,depad_conv)
+           
+          do i = 1,nex
+             E             = 0.5 * ( earx(i) + earx(i-1) )
+             ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
+          end do
+           
+          call pad4invFFT(dyn,nex,FTimconv,depad_conv) 
 
-           ! call FTcnv(nex, reline(m,:), photarx, ReW_conv(m,:))
-           ! call FTcnv(nex, imline(m,:), photarx, ImW_conv(m,:))
-
+          do i = 1,nex
+             E             = 0.5 * ( earx(i) + earx(i-1) )
+             ImW_conv(m,i) = ImW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
+          end do
+          
         endif
     end do
 
