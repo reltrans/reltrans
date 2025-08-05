@@ -216,8 +216,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                         gsd(m) = dglpfacthick(re,spin,h(m),mudisk) !source to disk g factor
                         emissivity(m) = gsd(m)**Gamma * 2.d0 * pi * ptf
                         emissivity(m) = emissivity(m) * cosfac / dareafac(re,spin)                  
-                        !dFe(m) = emissivity(m) * (g/(1.d0+zcos))**3 * domega(i)     !!!!!!!!!!!!!!!!!!!!!!!!!
-                        dFe(m) = emissivity(m) * (g/(1.d0+zcos))**(2.+Gamma) * domega(i)  !!!!!!!!!!!!!!!!!!!!
+                        dFe(m) = emissivity(m) * (g/(1.d0+zcos))**(2.+Gamma) * domega(i)
                         !calculate extra factors that go into the transfer functions for double lps
                         if (nlp .gt. 1) then
                             thetafac(m) = emissivity(m)*gso(m)**(Gamma-2.)*gsd(m)**(2.-Gamma)                      
@@ -256,8 +255,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                             !single lamp post case, double check this later
                         endif     
                         !this is just to make the formatting below less ugly     
-                        !normfac = real((g/(1.d0+zcos))**3*domega(i))                 !!!!!!!!!!!!!!!!!
-                        normfac = real((g/(1.d0+zcos))**(2.+Gamma)*domega(i))         !!!!!!!!!!!!!!!!!
+                        normfac = real((g/(1.d0+zcos))**(2.+Gamma)*domega(i))
                         !Add to the transfer function integral
                         do fbin = 1,nf
                             cexp = cmplx(cos(real(2.d0*pi*tau(nl)*fi(fbin))),sin(real(2.d0*pi*tau(nl)*fi(fbin))))
@@ -319,8 +317,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                     gsd(m) = dglpfacthick(re,spin,h(m),mudisk)
                     emissivity(m) = gsd(m)**Gamma * 2.d0 * pi * ptf
                     emissivity(m) = emissivity(m) * cosfac / dareafac(re,spin)
-                    !dFe(m) = emissivity(m) * (g/(1.d0+zcos))**3 * domegan(i)     !!!!!!!!!!!!!!!!!!!!!!!!!
-                    dFe(m) = emissivity(m) * (g/(1.d0+zcos))**(2.+Gamma) * domegan(i)  !!!!!!!!!!!!!!!!!!!!
+                    dFe(m) = emissivity(m) * (g/(1.d0+zcos))**(2.+Gamma) * domegan(i)
                     if (nlp .gt. 1) then
                         thetafac(m) = emissivity(m)*gso(m)**(Gamma-2.)*gsd(m)**(2.-Gamma)                      
                     else !single lamp post case, double check this later
@@ -354,8 +351,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                         !single lamp post case, double check this later
                     endif  
                     !this is just to make the formatting below less ugly     
-                    !normfac = real((g/(1.d0+zcos))**3*domegan(i))                 !!!!!!!!!!!!!!!!!
-                    normfac = real((g/(1.d0+zcos))**(2.+Gamma)*domegan(i))         !!!!!!!!!!!!!!!!!
+                    normfac = real((g/(1.d0+zcos))**(2.+Gamma)*domegan(i))
                     !Add to the transfer function integral
                     do fbin = 1,nf
                         cexp = cmplx(cos(real(2.d0*pi*tau(nl)*fi(fbin))),sin(real(2.d0*pi*tau(nl)*fi(fbin))))
