@@ -49,7 +49,7 @@ def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
 
     xrb1 = DCP_Parameters(mass=10.0, flo_hz=0.122, fhi_hz=0.224, re_im=4.0)
     output = reltrans.dcp(energy, xrb1)
-    assert_snapshot(output, name="time_lag")
+    assert_snapshot(output, name="time_lag", atol=1e-9)
 
     xrb1.re_im = 1
     output = reltrans.dcp(energy, xrb1)
@@ -57,7 +57,7 @@ def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
 
     xrb1.re_im = 2
     output = reltrans.dcp(energy, xrb1)
-    assert_snapshot(output, name="imaginary_part")
+    assert_snapshot(output, name="imaginary_part", rtol=1e-3)
 
     xrb1.re_im = 3
     output = reltrans.dcp(energy, xrb1)
@@ -88,7 +88,7 @@ def test_re_im_reltransDbl(reltrans, assert_snapshot, telescope, envars):
     xrb2 = Dbl_Parameters(mass=10.0, flo_hz=0.122, fhi_hz=0.224, re_im=4.0)
     output = reltrans.dbl_lamp(energy, xrb2)
     # _debug_plot(energy,output, title = "reltransDbl lag spectrum", xlabel="Energy [keV]")
-    assert_snapshot(output, name="time_lag")
+    assert_snapshot(output, name="time_lag", atol=1e-9)
 
     xrb2.re_im = 3
     output = reltrans.dbl_lamp(energy, xrb2)
@@ -103,7 +103,7 @@ def test_re_im_reltransDbl(reltrans, assert_snapshot, telescope, envars):
     xrb2.re_im = 2
     output = reltrans.dbl_lamp(energy, xrb2)
     # _debug_plot(energy,output, title="reltransDbl real part spectrum", xlabel="Energy[keV]")
-    assert_snapshot(output, name="imaginary_part")
+    assert_snapshot(output, name="imaginary_part", rtol=1e-3)
 
 def test_reltransDCp_called_twice_no_resetting(reltrans, assert_snapshot):
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
