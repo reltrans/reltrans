@@ -246,6 +246,7 @@ subroutine sum_impulse_components(                                             &
     use radial_grids
     use gr_continuum
     use constants
+    use emissivities
     implicit none
     logical, intent(in) :: non_relativistic
     integer, intent(in) :: r_length, phi_length, n_lamposts, nf, ne, me, xe
@@ -355,8 +356,9 @@ subroutine sum_impulse_components(                                             &
 
                 ! Calculate flux from pixel
                 gsd(m) = dglpfacthick(re,spin,h(m),mudisk)
-                emissivity(m) = gsd(m)**Gamma * 2.d0 * pi * ptf
-                emissivity(m) = emissivity(m) * cosfac / dareafac(re,spin)
+                emissivity(m) = determine_emissivity(                          &
+                    re, spin, gamma, cosfac, ptf, gsd(m)                       &
+                )
 
                 dFe(m) = emissivity(m) * (g/(1.d0+zcos))**(2.+Gamma) * domega(i)
 
