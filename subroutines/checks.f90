@@ -39,8 +39,20 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
   double precision, parameter   :: dtol = 1e-10
   logical         , intent(out) :: needtrans,needconv
   integer :: i
+
+  ! functions
+  integer :: get_env_int
   needtrans = .false.
   needconv  = .false.
+
+  ! Optionally disable the caches
+  if (0 .ne. get_env_int("REV_NOSAV", 0)) then
+      print *, "Applying cache overwrite"
+      needtrans = .true.
+      needconv = .true.
+      return
+  end if
+
 ! First check the parameter entries
   do i = 1,9
      if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
