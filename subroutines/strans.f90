@@ -47,6 +47,9 @@ module m_rtrans
         ! h(nlp): lamppost heights
         double precision, pointer :: h(:) => null()
         double precision, pointer :: fi(:) => null()
+
+        ! number of time bins
+        integer:: nt = 2**9
     end type t_impulse_args
 
     type :: t_outputs
@@ -61,7 +64,6 @@ module m_rtrans
         double precision, pointer :: frobs(:) => null()
         double precision, pointer :: dFe(:) => null()
     end type t_outputs
-
 contains
 
     ! Bind views to various input arrays to the `t_impulse_args` derived type
@@ -152,7 +154,6 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,     &
     complex ker_W0(nlp,ne,nf,me,xe),ker_W1(nlp,ne,nf,me,xe),ker_W2(nlp,ne,nf,me,xe),ker_W3(nlp,ne,nf,me,xe)
     
     !arrays to save the transfer function
-    integer, parameter :: nt = 2**9
     integer            :: tbin
     double precision   :: sumresp, E
 
@@ -186,7 +187,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,     &
     
     ! This also sets up the time and energy axes
     ! and assigns the dlogt and dg global variables
-    call response_allocate(args%ne, nt, args%dlogt, args%dg)
+    call response_allocate(args%ne, args%nt, args%dlogt, args%dg)
     
     !set up saving the impulse response function if user desieres
     !note: the ideal parameters to plot the transfer function are nro~=7000,nphi~=7000,nt~=2e9,nex~=2e10
@@ -323,6 +324,9 @@ subroutine sum_impulse_components(args, non_relativistic, r_length,            &
     ! emission angle (mubin), disk radial 
     ! bin (rbin) from the m-th/nl-th lamp post
 
+    ! TODO: for ring-like corona, pre-load the correct time-dependent emissivity
+    ! profile here, before the loop over observer coordinates
+
     do i = 1,r_length
         do j = 1,phi_length
             phin  = (j-0.5) * 2.d0 * pi / dble(phi_length)
@@ -358,12 +362,156 @@ subroutine sum_impulse_components(args, non_relativistic, r_length,            &
                 ceiling( log10(re/args%rin) / args%dlogr ),                    &
                 1, args%xe)
 
-            call sum_multiple_lampposts(args, i, non_relativistic, r_length,   &
-                phi_length, re, alpha, beta, taudo, g, r_grid,  &
+            ! call sum_multiple_lampposts(args, i, non_relativistic, r_length,   &
+            !     phi_length, re, alpha, beta, taudo, g, r_grid,                 &
+            !     domega, gbin, rbin, ret)
+
+            call sum_ringlike_corona(args, i, non_relativistic, r_length,      &
+                phi_length, re, alpha, beta, taudo, g, r_grid,                 &
                 domega, gbin, rbin, ret)
         end do
     end do
 end subroutine sum_impulse_components
+
+subroutine sum_ringlike_corona(                                                &
+    args, i, non_relativistic, r_length, phi_length, re,                       &
+    alpha, beta, taudo, g, r_grid, domega, gbin, rbin, ret)
+    use dyn_gr
+    use radial_grids
+    use gr_continuum
+    use constants
+    use emissivities
+    use impulseresponse
+    use m_rtrans
+    implicit none
+
+    logical, intent(in) :: non_relativistic
+    type(t_impulse_args), intent(in) :: args
+    integer, intent(in) :: i, r_length, phi_length, gbin, rbin
+    double precision, intent(in) :: r_grid(r_length)
+    double precision, intent(in) :: domega(r_length)
+    double precision, intent(in) :: alpha, beta, taudo, g, re
+
+    type(t_outputs), intent(inout) :: ret
+
+    ! functions
+    double precision :: dareafac, demang, dglpfacthick
+    integer :: clamp_i
+
+    double precision :: sin0, mue, cosfac, sindisk, phie
+    integer :: gbin_resp, tbin, mubin, fbin
+    real :: gsd, normfac
+    complex :: cexp
+
+    ! the minimum and maximum time source-to-disc time at a particular radius
+    double precision :: r_tmin, r_tmax
+    double precision :: r_dt, tausd, tau, emissivity
+
+    ! this is a fixed number for now, representing the number of bins in time
+    integer :: r_nt = 100, ti
+
+    ! for the emissivity slice at a particular radius on the disc
+    double precision, pointer :: emissivity_slice(:)
+    integer :: n_emissivity
+
+    ! TODO: the weighting of this doesn't make sense in the current plan,
+    ! because the 100 time values of the emissivity could all fall into 1 time
+    ! bin, in which case it would contribute too much emissivity to that bin
+    ! - i'm not sure if that's totally correct, but there's definitely something
+    !   else that needs to be done with the weighting
+
+    if (args%nlp .ne. 1) then
+        print *, "panic: expected only one corona for ring-like corona "
+        error stop 1
+    end if
+
+    ! Add to reflection fraction
+    ret%frobs(1) = ret%frobs(1)                                                &
+               + 2.0*g**3*gsd*cosfac/dareafac(re,args%spin)*domega(i)
+
+    ! Calculate flux from pixel
+    gsd = dglpfacthick(re,args%spin,args%h(1),args%mudisk)
+
+    normfac = real((g/(1.d0+args%zcos))**(2.+args%Gamma)*domega(i))
+
+    ! the observed energy bin for the response matrix
+    gbin_resp = clamp_i(ceiling(g/args%dg), 1, args%ne)
+
+    ! calculate emission angle and work out which mue bin to add to
+    mue = demang(args%spin,args%mu0,re,alpha,beta)
+    mubin = ceiling(mue * dble(args%me))
+
+    ! obtain the time extrema
+    call get_emissivity_t_extrema(re, r_tmin, r_tmax)
+
+    ! get all emissivity values at a particular radius on the disc
+    call get_emissivity_slice(re, emissivity_slice, n_emissivity)
+
+    ! loop from r_tmin to r_tmax
+    r_dt = (r_tmax - r_tmin) / float(r_nt)
+    do ti = 0,r_nt
+        ! the source to disc time of the current azimuthal bin
+        tausd = r_tmin + (r_dt * ti)
+
+        ! get the emissivity of the current azimuthal bin
+        emissivity = ring_emissivity(emissivity_slice, n_emissivity,           &
+            ti / float(r_nt))
+
+        if (non_relativistic) then
+            ! TODO: for the non-relativistic case, can likely also consider the
+            ! corona to be a lamppost, since the spread of time values will be
+            ! small, likely of order the size of the ring
+            ! - this should be checked, else a full non-relatvistic version that
+            !   loops over each azimuth used
+            tau = sqrt(re**2+(args%h(1)-args%honr*re)**2)                      &
+                     - re*(sin0*sindisk*cos(phie)+args%mu0*args%mudisk )       &
+                     + args%h(1)*args%mu0
+            tau = (1.d0+args%zcos)*tau
+        else
+            tau = (1.d0 + args%zcos) * (tausd + taudo - tauso(1))
+        endif
+
+        ret%dFe(1) = ret%dFe(1) + (                                            &
+            emissivity * (g/(1.d0+args%zcos))**(2.+args%Gamma) * domega(i)     &
+        )
+
+        dfer_arr(rbin) = dfer_arr(rbin) + ret%dFe(1)
+
+        ! Add to the transfer function integral
+        do fbin = 1,args%nf
+            cexp = cmplx(                                                      &
+                cos(real(2.d0*pi*tau*args%fi(fbin))),                          &
+                sin(real(2.d0*pi*tau*args%fi(fbin)))                           &
+            )
+
+            ret%w0(1,gbin,fbin,mubin,rbin)                                     &
+                = ret%w0(1,gbin,fbin,mubin,rbin)                               &
+                    + real(ret%dFe(1))*cexp
+
+            ! TODO: the below are all particular to the lamppost corona, and do
+            ! not apply to the ring-like corona currently
+
+            ret%w1(1,gbin,fbin,mubin,rbin)                                     &
+                = ret%w1(1,gbin,fbin,mubin,rbin)                               &
+                    + real(log(gsd))*real(ret%dFe(1))*cexp
+
+            ret%w2(1,gbin,fbin,mubin,rbin)                                     &
+                = ret%w2(1,gbin,fbin,mubin,rbin)                               &
+                    + emissivity*normfac*cexp
+
+            ret%w3(1,gbin,fbin,mubin,rbin)                                     &
+                = ret%w3(1,gbin,fbin,mubin,rbin)                               &
+                    + emissivity*normfac*cexp
+        end do
+
+        ! find the appropriate energy and time bins
+        tbin = clamp_i(ceiling(log10(tau / time_axis(0)) / args%dlogt),        &
+            1, args%nt)
+
+        ! kernel of the impulse response function
+        response(gbin_resp,tbin) = response(gbin_resp,tbin) + ret%dFe(1)
+    end do
+end subroutine sum_ringlike_corona
 
 subroutine sum_multiple_lampposts(                                             &
         args, i, non_relativistic, r_length, phi_length, re,                   &
@@ -376,11 +524,10 @@ subroutine sum_multiple_lampposts(                                             &
     use impulseresponse
     use m_rtrans
     implicit none
+
     logical, intent(in) :: non_relativistic
     type(t_impulse_args), intent(in) :: args
-
     integer, intent(in) :: i, r_length, phi_length, gbin, rbin
-    ! lamppost heights
     double precision, intent(in) :: r_grid(r_length)
     double precision, intent(in) :: domega(r_length)
     double precision, intent(in) :: alpha, beta, taudo, g, re
@@ -388,7 +535,6 @@ subroutine sum_multiple_lampposts(                                             &
     type(t_outputs), intent(inout) :: ret
 
     ! time grid bits, should be passed in
-    integer, parameter :: nt = 2**9
     integer            :: tbin, fbin
 
     ! functions
@@ -523,7 +669,7 @@ subroutine sum_multiple_lampposts(                                             &
         ! find the appropriate energy and time bins
         gbin_resp = clamp_i(ceiling(g/args%dg), 1, args%ne)
         tbin = clamp_i(ceiling(log10(tau(m) / time_axis(0)) / args%dlogt),     &
-            1, nt)
+            1, args%nt)
 
         ! kernel of the impulse response function
         response(gbin_resp,tbin) = response(gbin_resp,tbin) + ret%dFe(m)
