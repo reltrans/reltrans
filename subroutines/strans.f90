@@ -18,6 +18,9 @@ module m_rtrans
         ! dloge: energy delta energy
         real :: dloge
 
+        ! use ring-like corona emissivity
+        logical :: ring_like = .false.
+
         ! Gamma: photon index
         ! mu0: cosine of the observer's inclination angle
         double precision :: Gamma, mu0
@@ -157,6 +160,9 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,     &
     integer            :: tbin
     double precision   :: sumresp, E
 
+    ! functions
+    integer :: get_env_int
+
     type(t_impulse_args) :: args
     type(t_outputs) :: ret
 
@@ -167,6 +173,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,     &
         qboost = qboost, b1 = b1, b2 = b2, rnmax = rnmax, spin = spin,         &
         eta_0 = eta_0, mueff = mueff, dloge = dloge,                           &
         ! TODO: these are uninitialized
+        ring_like = (1 .eq. get_env_int("REV_RING", 0)),                       &
         dlogr = 0.0, dlogt = 0.0, dg = 0.0)
     call impulse_bind_views(args, h, fi)
 
@@ -362,13 +369,15 @@ subroutine sum_impulse_components(args, non_relativistic, r_length,            &
                 ceiling( log10(re/args%rin) / args%dlogr ),                    &
                 1, args%xe)
 
-            ! call sum_multiple_lampposts(args, i, non_relativistic, r_length,   &
-            !     phi_length, re, alpha, beta, taudo, g, r_grid,                 &
-            !     domega, gbin, rbin, ret)
-
-            call sum_ringlike_corona(args, i, non_relativistic, r_length,      &
-                phi_length, re, alpha, beta, taudo, g, r_grid,                 &
-                domega, gbin, rbin, ret)
+            if (args%ring_like) then
+                call sum_ringlike_corona(args, i, non_relativistic, r_length,  &
+                    phi_length, re, alpha, beta, taudo, g, r_grid,             &
+                    domega, gbin, rbin, ret)
+            else
+                call sum_multiple_lampposts(args, i, non_relativistic,         &
+                    r_length, phi_length, re, alpha, beta, taudo, g, r_grid,   &
+                    domega, gbin, rbin, ret)
+            endif
         end do
     end do
 end subroutine sum_impulse_components
@@ -421,7 +430,7 @@ subroutine sum_ringlike_corona(                                                &
     !   else that needs to be done with the weighting
 
     if (args%nlp .ne. 1) then
-        print *, "panic: expected only one corona for ring-like corona "
+        print *, "panic: expected only one corona for ring-like corona"
         error stop 1
     end if
 
