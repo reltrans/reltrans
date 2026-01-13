@@ -9,53 +9,26 @@ module emissivities
             double precision :: em
         end function external_emissivity
 
-        subroutine external_emissivity_t_extrema(re, r_tmin, r_tmax) bind(C)
-            double precision, intent(in) :: re
-            double precision, intent(out) :: r_tmin, r_tmax
-        end subroutine external_emissivity_t_extrema
+        subroutine external_emissivity_time(re, phi, em, tau) bind(C)
+            double precision, intent(in) :: re, phi
+            double precision, intent(out) :: em, tau
+        end subroutine external_emissivity_time
 
-        subroutine external_get_emissivity_slice(                              &
-            re, emissivity_slice, n_emissivity) bind(C)
-            double precision, intent(in) :: re
-            double precision, pointer, intent(out) :: emissivity_slice(:)
-            integer, intent(out) :: n_emissivity
-        end subroutine external_get_emissivity_slice
-
-        double precision function external_ring_emissivity(emissivity_slice,   &
-                n_emissivity, p) bind(C) result(em)
-            double precision, intent (in) :: emissivity_slice(:)
-            integer, intent(in) :: n_emissivity
-            real, intent(in) :: p
-        end function external_ring_emissivity
     end interface
 
     procedure(external_emissivity), pointer ::                                 &
         ext_emissivity => null()
-    procedure(external_emissivity_t_extrema), pointer ::                       &
-        ext_emissivity_t_extrema => null()
-    procedure(external_get_emissivity_slice), pointer ::                       &
-        ext_get_emissivity_slice => null()
-    procedure(external_ring_emissivity), pointer ::                            &
-        ext_ring_emissivity => null()
+    procedure(external_emissivity_time), pointer ::                            &
+        ext_emissivity_time => null()
 
 contains
 
     ! Used to assign the external emissivity pointer to register the callback
     ! function
-    subroutine set_ext_emissivity_t_extrema(fp) bind(C)
-        procedure(external_emissivity_t_extrema), pointer, intent(in) :: fp
-        ext_emissivity_t_extrema => fp
-    end subroutine set_ext_emissivity_t_extrema
-
-    subroutine set_ext_get_emissivity_slice(fp) bind(C)
-        procedure(external_get_emissivity_slice), pointer, intent(in) :: fp
-        ext_get_emissivity_slice => fp
-    end subroutine set_ext_get_emissivity_slice
-
-    subroutine set_ext_ring_emissivity(fp) bind(C)
-        procedure(external_ring_emissivity), pointer, intent(in) :: fp
-        ext_ring_emissivity => fp
-    end subroutine set_ext_ring_emissivity
+    subroutine set_ext_emissivity_time(fp) bind(C)
+        procedure(external_emissivity_time), pointer, intent(in) :: fp
+        ext_emissivity_time => fp
+    end subroutine set_ext_emissivity_time
 
     subroutine set_ext_emissivity(fp) bind(C)
         procedure(external_emissivity), pointer, intent(in) :: fp
@@ -63,17 +36,9 @@ contains
     end subroutine set_ext_emissivity
 
     ! Used to clear the global emissivity pointer and set it to null
-    subroutine free_ext_emissivity_t_extrema() bind(C)
-        ext_emissivity_t_extrema => null()
-    end subroutine free_ext_emissivity_t_extrema
-
-    subroutine free_ext_get_emissivity_slice() bind(C)
-        ext_get_emissivity_slice => null()
-    end subroutine free_ext_get_emissivity_slice
-
-    subroutine free_ext_ring_emissivity() bind(C)
-        ext_ring_emissivity => null()
-    end subroutine free_ext_ring_emissivity
+    subroutine free_ext_emissivity_time() bind(C)
+        ext_emissivity_time => null()
+    end subroutine free_ext_emissivity_time
 
     subroutine free_ext_emissivity() bind(C)
         ext_emissivity => null()
@@ -102,45 +67,17 @@ contains
 
     ! Get the extrema source-to-disc time at a particular emissision radius on
     ! the disc `re`
-    subroutine get_emissivity_t_extrema(re, r_tmin, r_tmax)
-        double precision, intent(in) :: re
-        double precision, intent(out) :: r_tmin, r_tmax
-        if (associated(ext_emissivity_t_extrema)) then
-            call ext_emissivity_t_extrema(re, r_tmin, r_tmax)
+    subroutine get_emissivity_time(re, phi, em, tau)
+        double precision, intent(in) :: re, phi
+        double precision, intent(out) :: em, tau
+        if (associated(ext_emissivity_time)) then
+            call ext_emissivity_time(re, phi, em, tau)
         else
-            print *, "WARN: ext_emissivity_t_extrema not associated"
+            print *, "WARN: ext_emissivity_time not associated"
+            tau = 0.d0
+            em = 0.d0
         end if
-    end subroutine get_emissivity_t_extrema
-
-    ! Get all emissivity values at a particular radius on the disc. Points the
-    ! `emissivity_slice` pointer to the start of those elements, and sets
-    ! `n_emissivity` to the number of items.
-    ! TODO: the backing emissivity structure **must be** column major, so that
-    ! each column is a particular re, else the pointer trick won't work
-    subroutine get_emissivity_slice(re, emissivity_slice, n_emissivity)
-        double precision, intent(in) :: re
-        double precision, pointer, intent(out) :: emissivity_slice(:)
-        integer, intent(out) :: n_emissivity
-        if (associated(ext_get_emissivity_slice)) then
-            call ext_get_emissivity_slice(re, emissivity_slice, n_emissivity)
-        else
-            print *, "WARN: ext_get_emissivity_slice not associated"
-        end if
-    end subroutine get_emissivity_slice
-
-    ! Given an emissivity slice for a particular radius on the disc, interpolate
-    ! the emissivity at `p`, where `p ∊ [0, 1]`
-    double precision function ring_emissivity(emissivity_slice,                &
-            n_emissivity, p) result(em)
-        double precision, intent (in) :: emissivity_slice(:)
-        integer, intent(in) :: n_emissivity
-        real, intent(in) :: p
-        if (associated(ext_ring_emissivity)) then
-            em = ext_ring_emissivity(emissivity_slice, n_emissivity, p)
-        else
-            print *, "WARN: ext_ring_emissivity not associated"
-        end if
-    end function ring_emissivity
+    end subroutine get_emissivity_time
 
 end module emissivities
 

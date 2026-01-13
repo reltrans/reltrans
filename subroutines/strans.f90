@@ -412,22 +412,14 @@ subroutine sum_ringlike_corona(                                                &
     real :: gsd, normfac
     complex :: cexp
 
-    ! the minimum and maximum time source-to-disc time at a particular radius
-    double precision :: r_tmin, r_tmax
-    double precision :: r_dt, tausd, tau, emissivity
+    double precision :: tausd, tau, emissivity
 
-    ! this is a fixed number for now, representing the number of bins in time
-    integer :: r_nt = 100, ti
-
-    ! for the emissivity slice at a particular radius on the disc
-    double precision, pointer :: emissivity_slice(:)
-    integer :: n_emissivity
-
-    ! TODO: the weighting of this doesn't make sense in the current plan,
-    ! because the 100 time values of the emissivity could all fall into 1 time
-    ! bin, in which case it would contribute too much emissivity to that bin
-    ! - i'm not sure if that's totally correct, but there's definitely something
-    !   else that needs to be done with the weighting
+    ! this is a fixed number for now, representing the number of bins in azimuth
+    integer, parameter :: r_nphi = 50
+    double precision, parameter :: dphi = 2 * pi / float(r_nphi)
+    ! index counting which phi bin we are currently considering
+    integer :: phi_i
+    double precision :: phi
 
     if (args%nlp .ne. 1) then
         print *, "panic: expected only one corona for ring-like corona"
@@ -450,21 +442,14 @@ subroutine sum_ringlike_corona(                                                &
     mue = demang(args%spin,args%mu0,re,alpha,beta)
     mubin = ceiling(mue * dble(args%me))
 
-    ! obtain the time extrema
-    call get_emissivity_t_extrema(re, r_tmin, r_tmax)
+    ! loop over all azmithal bins
+    do phi_i = 1,r_nphi
+        phi = phi_i * dphi
 
-    ! get all emissivity values at a particular radius on the disc
-    call get_emissivity_slice(re, emissivity_slice, n_emissivity)
-
-    ! loop from r_tmin to r_tmax
-    r_dt = (r_tmax - r_tmin) / float(r_nt)
-    do ti = 0,r_nt
         ! the source to disc time of the current azimuthal bin
-        tausd = r_tmin + (r_dt * ti)
-
-        ! get the emissivity of the current azimuthal bin
-        emissivity = ring_emissivity(emissivity_slice, n_emissivity,           &
-            ti / float(r_nt))
+        call get_emissivity_time(re, phi, emissivity, tausd)
+        ! normalise
+        emissivity = emissivity / float(r_nphi)
 
         if (non_relativistic) then
             ! TODO: for the non-relativistic case, can likely also consider the
@@ -480,7 +465,7 @@ subroutine sum_ringlike_corona(                                                &
             tau = (1.d0 + args%zcos) * (tausd + taudo - tauso(1))
         endif
 
-        ret%dFe(1) = ret%dFe(1) + (                                            &
+        ret%dFe(1) = (                                                         &
             emissivity * (g/(1.d0+args%zcos))**(2.+args%Gamma) * domega(i)     &
         )
 
