@@ -30,7 +30,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     implicit none
     !Constants
     ! integer         , parameter :: nphi = 200, nro = 200!, ionvar! = 1 
-    integer         , parameter :: nphi = 200, nro = 200
+    integer         , parameter :: nphi = 500, nro = 500
     real            , parameter :: Emin = 1e-2, Emax = 3e3, dyn = 1e-7
     double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0, &
                                    dlogf = 0.09 !This is a resolution parameter (base 10)       
@@ -298,7 +298,13 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         !the rawS subroutine to calculate the cross-spectrum
         ionvariation = 1
         !Loop over radius, emission angle and frequency
+        open(10, file='data_test_relline.dat')
+        open(11, file='data_test_xillver.dat')
+        write(10,*) 'skip on'
+        write(11,*) 'skip on'
+
         do rbin = 1, xe  !Loop over radial zones
+           write(*,*) "radius zone ", rbin
             !Set parameters with radial dependence
             Gamma0 = real(Gamma)
             logne  = logner(rbin)
@@ -345,8 +351,15 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                             imline_w2(m,i) = aimag( ker_W2(m,i,j,mubin,rbin) )
                             reline_w3(m,i) = real( ker_W3(m,i,j,mubin,rbin) )
                             imline_w3(m,i) = aimag( ker_W3(m,i,j,mubin,rbin) )
+                            E = (earx(i-1) + earx(i))*0.5
+                            write(10,*) E, reline_w1(1,i)
+                            write(11,*) E,  photarx(i)
+                            
                         end do  
-                    end do
+                     end do
+                     write(10,*) 'no no'
+                     write(11,*) 'no no'
+
                     if (test) then
                        call conv_one_FFT(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
                        if(DC .eq. 0 .and. refvar .eq. 1) then
@@ -376,6 +389,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         print *, 'Convolutions runtime: ', time_end - time_start, ' seconds' 
     endif
 
+    close(10)
+    close(11)
+    
     ! do i = 1, nex
     !    E = (earx(i-1) + earx(i))*0.5
        ! write(10,*) E, reline_w1(1,i)

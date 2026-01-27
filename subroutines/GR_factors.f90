@@ -48,7 +48,7 @@
       dArbydr = ( r**4+a**2*r**2+2*a**2*r ) / Dm
       dArbydr = 2*pi*sqrt(dArbydr)
       dareafac = dlorfac(r,a) * dArbydr
-      write(22,*) 1/dlorfac(r,a)
+      ! write(22,*) 1/dlorfac(r,a)
       return
       end
 !-----------------------------------------------------------------------

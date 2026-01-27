@@ -134,8 +134,14 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     rnmin  = rfunc(spin,mu0)
     !Grid to do in full GR
     call getrgrid(rnmin,rnmax,mueff,nro,nphi,rn,domega)
+    ! call getrgrid(rnmin,rout,mueff,nro,nphi,rn,domega)
     !Grid for Newtonian approximation
-    call getrgrid(rnmax,rout,mueff,nron,nphin,rnn,domegan)
+    if (rnmax .lt. rout) then
+       call getrgrid(rnmax,rout,mueff,nron,nphin,rnn,domegan)
+    else
+       rnn = -1.0
+    endif
+    
 
     ! Trace rays in full GR for the small camera (ie with relativistic effects) from the osberver to the disk,
     !which is why it doesnt depend on h
@@ -180,6 +186,9 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     !loop over all photon directions (l), disk radii (i), disk azimuth (j), and calculate the contribution to the
     !transfer function/convolution kernel in energy (gbin), frequency (fbin), emission angle (mubin), disk radial 
     !bin (rbin) from the m-th/nl-th lamp post
+
+    open(21, file = 'data_test_GR_loop.dat')
+    open(31, file = 'data_test_pem_re_values.dat')
     
     ! Construct the transfer function by summing over all pixels
     odisc    = 1       !flag to ensure the chosen disk radius is between rin and rout
@@ -192,6 +201,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
             alpha = rn(i) * sin(phin)
             beta  = -rn(i) * cos(phin) * mueff
             !If the ray hits the disk, calculate flux and time lag
+            write(31,*) i, j, pem1(j,i), re1(j,i)
             if( pem1(j,i) .gt. 0.0d0 )then
                 re    = re1(j,i)
                 if( re .gt. rin .and. re .lt. rout )then
@@ -236,7 +246,8 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                        emissivity(m) = gsd(m)**Gamma * 2.d0 * pi * ptf
                        emissivity(m) = emissivity(m) * cosfac / dareafac(re,spin)
                        dFe(m) = emissivity(m) * g**3 * domega(i) / (1.d0+zcos)**3
-                       
+
+                       ! write(*,*) 'printing to file 21 the GR loop quantities'
                        write(21,*) re, phin, alpha, beta, gsd(m), cosfac, dareafac(re,spin), emissivity(m), g
                         
                        !calculate extra factors that go into the transfer functions for double lps
@@ -317,6 +328,12 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
         end do
     end do
 
+    close(21)
+    close(31)
+    
+    open(22, file = 'data_test_NW_loop.dat') 
+
+    if (rnn(1) .ne. -1.0) then
     ! Now trace rays for that bigger camera (obviously a lot easier because it's Newtonian)
     do i = 1,nron
         do j = 1,nphin
@@ -348,6 +365,12 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                     emissivity(m) = gsd(m)**Gamma * 2.d0 * pi * ptf
                     emissivity(m) = emissivity(m) * cosfac / dareafac(re,spin)
                     dFe(m) = emissivity(m) * g**3 * domegan(i) / (1.d0+zcos)**3
+
+
+                    ! write(*,*) 'printing to file 22 the Newtonian loop quantities'
+                    write(22,*) re, phin, alpha, beta, gsd(m), cosfac, dareafac(re,spin), emissivity(m), g
+
+
                     if (nlp .gt. 1) then
                         thetafac(m) = emissivity(m)*gso(m)**(Gamma-2.)*gsd(m)**(2.-Gamma)                      
                     else !single lamp post case, double check this later
@@ -411,7 +434,10 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
             end if
         end do
     end do
+
+    end if
     
+    close(22)
     do m=1,nlp 
         ! Calculate 4pi p(theta0,phi0) = ang_fac
         ang_fac = 4.d0 * pi * pnorm * pfunc_raw(-cosdelta_obs(m),b1,b2,qboost)

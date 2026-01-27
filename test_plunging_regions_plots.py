@@ -10,7 +10,7 @@ import os
 os.environ["REV_VERB" ] = "1"
 os.environ["TEST_RUN" ] = "0"
 os.environ["MU_ZONES" ] = "1"
-os.environ["ION_ZONES"] = "1"
+os.environ["ION_ZONES"] = "20"
 os.environ["A_DENSITY"] = "0"
 os.environ["EMIN_REF" ] = "0.3"
 os.environ["EMAX_REF" ] = "10.0"
@@ -35,8 +35,8 @@ for i in range(ne):
 param = np.zeros(21, dtype = np.float32)
 
 
-param[0]  = 6.0    #h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
-param[1]  = 0.     #a     !BH spin
+param[0]  = 3.0001    #h     !Source height **-ve means in units of BH horizon, +ve means in Rg***
+param[1]  = 0.0     #a     !BH spin
 param[2]  = 30.0    #inc   !Inclination angle in degrees
 param[3]  = 1.0    #rin   !Disk inner radius **-ve means in units of ISCO, +ve means in Rg***
 param[4]  = 2e4     #rout  !Disk outer radius in Rg - will probably hardwire this
@@ -61,25 +61,38 @@ param[20] = 1       #telescope response
 print()
 print()
 print()
-model_type = 'reltransDCp'
 
 parameters = param
 print('*********************************************************')
 print('Start runnign reltrans')            
 
+h_list = [3.0001, 5.0, 10.0, 25.0, 100.]
+spin_list = [0.0, 0.5, 0.99]
+
+# for a in spin_list:
+#     for h in h_list:
+        # param[0] = h
+        # param[1] = a
+        # photar_test = ib.reltransDCp(ear, parameters)
+        # namefile_GR = f'GR_quantities_h{int(param[0])}_a{param[1]:.1f}_gamma{param[6]:.1f}_incl{int(param[2])}_rinRh.dat'
+        # namefile_NW = f'NW_quantities_h{int(param[0])}_a{param[1]:.1f}_gamma{param[6]:.1f}_incl{int(param[2])}_rinRh.dat'
+        # os.system(f'mv GR_loop.dat {namefile_GR}')
+        # os.system(f'mv NW_loop.dat {namefile_NW}')
+        # print()
+        # print(f'Parameters that change: spin = {param[1]} and h = {param[0]}')
 
 
-match model_type:
-    case 'reltransDCp':
-        photar_test = ib.reltransDCp(ear, parameters)
-        # photar_test = ib.reltransPL(ear, parameters)
-    case 'rtransDbl':
-        photar_test = ib.reltransDbl(ear, parameters)
-    case 'rtdist':
-        photar_test = ib.rtdist(ear, parameters)
-
+param[0] = 10.0 #h
+param[1] = 0.0 #a
+param[4]  = 200 #Rout
+photar_test = ib.reltransDCp(ear, parameters)
+namefile_GR = f'data_test_GR_quantities_h{int(param[0])}_a{param[1]:.1f}_gamma{param[6]:.1f}_incl{int(param[2])}_rinRh.dat'
+namefile_NW = f'data_test_NW_quantities_h{int(param[0])}_a{param[1]:.1f}_gamma{param[6]:.1f}_incl{int(param[2])}_rinRh.dat'
+os.system(f'mv data_test_GR_loop.dat {namefile_GR}')
+os.system(f'mv data_test_NW_loop.dat {namefile_NW}')
 print()
-print()
+print(f'Parameters that change: spin = {param[1]} and h = {param[0]}')
+        
 print()
 print('RELTRANS finished!')
 print('*********************************************************')
@@ -95,7 +108,7 @@ plt.ion()
 fig, ax = plt.subplots(1, 1, figsize=(10, 8))
 font = 20
 
-ax.plot(ear[:-1], photar_test, lw = 3, ls = '-' , label = 'testing reltrans ')
+ax.plot(ear[:-1], photar_test* ear[:-1]**2, lw = 3, ls = '-' , label = 'testing reltrans ')
     
 ax.set_xscale('log')
 ax.set_yscale('log')
@@ -107,40 +120,6 @@ for axis in ['top','bottom','left','right']:
 ax.yaxis.set_ticks_position('both')
 ax.legend(fontsize = 10)
 
-# print(photar_test)
-
-            # E = (ear[1:] + ear[:-1]) * 0.5 
-            # dE = (ear[1:] - ear[:-1])
-
-            # if (_mode != 'Spec'):        
-            #     ax.set_title('Plot source: '+ str(_source)+', mode: '+ str(_mode) \
-            #                  + ', freq: ' + str(_frange), fontsize = font)
-            #     for _model_type in model_type:
-            #         name_archive = './Benchmarks/' + str(_source) + '/' \
-            #             + str(_mode) + '/' + str(_model_type) + '_' + \
-            #             str(_frange) + '.dat'
-            #         print(f'Then comparing with the stored data: {name_archive}')
-            #         data_archive = np.genfromtxt(name_archive).T
-
-            #         name_model = './Output/' + str(_model_type) + '.dat'
-            #         data_model = np.genfromtxt(name_model).T
-            #         plot(ax, data_archive, data_model, sub_type = _model_type, identifier=str(_mode)+'_'+str(_frange))
-            #         # plot(ax, data_archive, photar_test)
-            # else:
-            #     name_archive = './Benchmarks/'+str(_source)+'/'+str(_mode)+'/Total.dat'
-            #     print(f'Then comparing with the stored data: {name_archive}')
-            #     data_archive = np.genfromtxt(name_archive).T       
-
-            #     name_model = './Output/Total.dat'
-            #     data_model = np.genfromtxt(name_model).T
-            #     ax.set_title('Plot source: '+ str(_source)+', mode: '+ str(_mode) \
-            #                  + ', freq: ' + str(_frange), fontsize = font)
-            #     plot(ax, data_archive, data_model, identifier=str(_mode)+'_'+str(_frange))
-
-                
-            # ax.set_xlim(0.1, 1e3)
-            # ax.set_ylim(0.99, 1.01)
-            # ax.set_ylim(1e-2, 1e3)
 
 input('Press Enter')
 

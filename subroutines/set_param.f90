@@ -65,7 +65,7 @@ subroutine set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Af
   !Check the inner radius and the heigh of the source 
     !Set minimum r  and convert rin and h to rg
     rh     = 1.d0+sqrt(1.d0-a**2)
-    write(*,*) 'parameters'
+    ! write(*,*) 'parameters'
     if( abs(a) .gt. 0.999 ) a = sign(a,1.d0) * 0.999
     ! rmin   = disco( a )
     risco = disco(a)

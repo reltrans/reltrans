@@ -27,7 +27,7 @@ echo " load libreltrans.dylib" | xspec
 
 #cleaning up
 rm -vf *~ *.o
-rm -vf *FunctionMap.* lpack_* *tcl
+rm -vf *FunctionMap.* lpack_*
 rm -vf *.mod
 rm -vf Makefile
 
