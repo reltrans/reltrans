@@ -7,6 +7,7 @@ which you can import from anywhere in your system
 import ctypes as ct
 import os.path
 import numpy as np
+from typing import Callable, Any
 
 #######################################################################
 # prepare a few pointer types for fortran
@@ -65,19 +66,20 @@ wsim_dist.argtypes = [type_float_p, type_int_p, type_float_p, type_int_p, type_f
 wsim_dist.restype  = None
 
 wsim_relt = lib.simrelt_
-wsim_dist.argtypes = [type_float_p, type_int_p, type_float_p, type_int_p, type_float_p]
-wsim_dist.restype  = None
+wsim_relt.argtypes = [type_float_p, type_int_p, type_float_p, type_int_p, type_float_p]
+wsim_relt.restype  = None
 
-def gen_wrap(ear, params, func):
+def gen_wrap(ear: np.ndarray, params: np.ndarray, func: Callable[..., None]) -> np.ndarray:
     '''
-    Takes:
+    Generic wrapper for reltrans Fortran subroutines.
 
-    ear   : numpy array of energies
-    params: array of parameters (double)
+    Args:
+        ear (np.ndarray): Array of energy bin edges (keV).
+        params (np.ndarray): Array of model parameters (float32).
+        func (Callable): The ctypes function object to call.
 
     Returns:
-
-    photar: numpy.array (double)
+        np.ndarray: Calculated photon flux array (float32).
     '''
 
     # to be extra sure you could put the following
@@ -101,21 +103,81 @@ def gen_wrap(ear, params, func):
 # def reltrans(ear, params):
 #     return gen_wrap(ear, params, w)
 
-def reltransPL(ear, params):
+def reltransPL(ear: np.ndarray, params: np.ndarray) -> np.ndarray:
+    '''
+    Calculate transfer function for Power Law illumination.
+
+    Args:
+        ear (np.ndarray): Energy bin edges (keV).
+        params (np.ndarray): Model parameters.
+
+    Returns:
+        np.ndarray: Photon flux.
+    '''
     return gen_wrap(ear, params, wPL)
 
-def reltransDCp(ear, params):
+def reltransDCp(ear: np.ndarray, params: np.ndarray) -> np.ndarray:
+    '''
+    Calculate transfer function for Disc-Corona (DCp) geometry.
+
+    Args:
+        ear (np.ndarray): Energy bin edges (keV).
+        params (np.ndarray): Model parameters.
+
+    Returns:
+        np.ndarray: Photon flux.
+    '''
     return gen_wrap(ear, params, wDCp)
 
-def reltransDbl(ear, params):
+def reltransDbl(ear: np.ndarray, params: np.ndarray) -> np.ndarray:
+    '''
+    Calculate transfer function for Double Lamp Post geometry.
+
+    Args:
+        ear (np.ndarray): Energy bin edges (keV).
+        params (np.ndarray): Model parameters.
+
+    Returns:
+        np.ndarray: Photon flux.
+    '''
     return gen_wrap(ear, params,wDbl)
 
-def reltransx(ear, params):
+def reltransx(ear: np.ndarray, params: np.ndarray) -> np.ndarray:
+    '''
+    Calculate transfer function for generic geometry X.
+
+    Args:
+        ear (np.ndarray): Energy bin edges (keV).
+        params (np.ndarray): Model parameters.
+
+    Returns:
+        np.ndarray: Photon flux.
+    '''
     return gen_wrap(ear, params, wx)
 
-def rtdist(ear, params):
+def rtdist(ear: np.ndarray, params: np.ndarray) -> np.ndarray:
+    '''
+    Calculate Ray Tracing distance effects.
+
+    Args:
+        ear (np.ndarray): Energy bin edges (keV).
+        params (np.ndarray): Model parameters.
+
+    Returns:
+        np.ndarray: Photon flux.
+    '''
     return gen_wrap(ear, params, wdist)
 
-def simrtdist(ear, params):
+def simrtdist(ear: np.ndarray, params: np.ndarray) -> np.ndarray:
+    '''
+    Simulate Ray Tracing distance effects.
+
+    Args:
+        ear (np.ndarray): Energy bin edges (keV).
+        params (np.ndarray): Model parameters.
+
+    Returns:
+        np.ndarray: Photon flux.
+    '''
     return gen_wrap(ear, params, wsim_dist)
 
