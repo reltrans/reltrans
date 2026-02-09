@@ -16,8 +16,11 @@ You can find the documentation at this `link <https://reltransdocs.readthedocs.i
 The documentation provides detailed installation and setup in instructions, and 
 describes the various flavours of the model that are available to the users. 
 
+
 Reporting errors and requesting features
 ========================================
+
+New to reltrans? Check out our step-by-step notebooks in the `tutorials/ <tutorials/>`_ directory.
 
 We welcome comments and contributions from the community. The best way to get in 
 touch is via the `issues_` page, which you can use both to report bugs or odd
