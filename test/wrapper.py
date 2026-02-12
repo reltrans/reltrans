@@ -44,17 +44,67 @@ def get_reltrans_library_path(lib_name="libreltrans") -> str:
 
     return lib_name
 
-
 def _wrap_call(f, energy: np.ndarray, params: np.ndarray) -> np.ndarray:
+    """
+    Safely wrap native Fortran call.
+
+    Performs strict validation on inputs before calling the shared library.
+    """
+    if not isinstance(energy, np.ndarray):
+        raise TypeError("Energy must be a NumPy array.")
+
+    if energy.ndim != 1:
+        raise ValueError("Energy array must be 1-dimensional.")
+
+    if energy.size < 2:
+        raise ValueError("Energy array must contain at least two elements.")
+
+    if not np.issubdtype(energy.dtype, np.floating):
+        raise TypeError("Energy array must be of floating dtype.")
+
+    if not np.all(np.isfinite(energy)):
+        raise ValueError("Energy array contains non-finite values.")
+
+    if np.any(energy <= 0):
+        raise ValueError("Energy values must be strictly positive.")
+
+    if not np.all(np.diff(energy) > 0):
+        raise ValueError("Energy array must be strictly increasing.")
+
+    EXPECTED_PARAM_COUNT = 21
+
+    if not isinstance(params, np.ndarray):
+        raise TypeError("Parameters must be a NumPy array.")
+
+    if params.ndim != 1:
+        raise ValueError("Parameters array must be 1-dimensional.")
+
+    if params.size != EXPECTED_PARAM_COUNT:
+        raise ValueError(
+            f"Expected {EXPECTED_PARAM_COUNT} parameters for DCP model, "
+            f"got {params.size}."
+        )
+
+    if not np.issubdtype(params.dtype, np.floating):
+        raise TypeError("Parameters array must be of floating dtype.")
+
+    if not np.all(np.isfinite(params)):
+        raise ValueError("Parameters array contains non-finite values.")
+
     ne = len(energy) - 1
     output = np.zeros(ne, dtype=np.float32)
+
     f(
-        energy.ctypes.data_as(f_float),
+        energy.astype(np.float32).ctypes.data_as(f_float),
         ct.byref(ct.c_int(ne)),
-        params.ctypes.data_as(f_float),
+        params.astype(np.float32).ctypes.data_as(f_float),
         ct.byref(ct.c_int(1)),
         output.ctypes.data_as(f_float),
     )
+
+    if output.size != ne:
+        raise RuntimeError("Native call returned unexpected output size.")
+
     return output
 
 
