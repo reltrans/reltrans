@@ -23,6 +23,25 @@ We welcome comments and contributions from the community. The best way to get in
 touch is via the `issues_` page, which you can use both to report bugs or odd
 model behaviour, and to request or discuss features. 
 
+Development Setup
+=================
+
+Reltrans requires HEASOFT/XSPEC libraries for native compilation.
+
+Diagnostics
+-----------
+
+If you encounter issues building the native library, you can run:
+
+    python -m reltrans.diagnostics
+
+This reports:
+
+- Operating system
+- HEADAS environment variable
+- Expected shared library path
+- Whether the library exists
+
 Citing Reltrans
 ===============
 
