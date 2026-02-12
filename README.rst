@@ -26,21 +26,46 @@ model behaviour, and to request or discuss features.
 Development Setup
 =================
 
-Reltrans requires HEASOFT/XSPEC libraries for native compilation.
+Reltrans requires HEASOFT / XSPEC libraries for native compilation.
+
+Before building, ensure the following tools are available:
+
+- gfortran
+- FFTW (Fortran headers, e.g. fftw3.f03)
+- HEASOFT installed and initialized (HEADAS environment variable set)
+- xspec available in your PATH
+
+Building
+--------
+
+From the project root directory:
+
+::
+
+    make
 
 Diagnostics
 -----------
 
-If you encounter issues building the native library, you can run:
+If you encounter issues while building the native library, you can run:
+
+::
 
     python -m reltrans.diagnostics
 
-This reports:
+This will report:
 
 - Operating system
-- HEADAS environment variable
+- CPU architecture (arm64 / x86_64)
+- HEADAS environment variable status
+- Whether gfortran is available
+- Whether xspec is available
+- Whether FFTW Fortran headers are found
 - Expected shared library path
-- Whether the library exists
+- Whether the compiled library exists
+
+If the library is missing, the diagnostics output will guide you through the required steps.
+
 
 Citing Reltrans
 ===============
