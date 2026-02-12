@@ -105,7 +105,28 @@ class DCP_Parameters:
 
 class Reltrans:
     def __init__(self, path=None):
-        self.lib_reltrans = ct.cdll.LoadLibrary(path or get_reltrans_library_path())
+        import platform
+        import os
+
+        try:
+            self.lib_reltrans = ct.cdll.LoadLibrary(path or get_reltrans_library_path())
+        except OSError as e:
+            system = platform.system()
+            arch = platform.machine()
+            headas = os.environ.get("HEADAS")
+
+            raise RuntimeError(
+                "\nFailed to load reltrans native library.\n\n"
+                f"Operating System : {system}\n"
+                f"Architecture     : {arch}\n"
+                f"HEADAS set       : {'Yes' if headas else 'No'}\n\n"
+                "Possible reasons:\n"
+                " - The native library has not been built (run `make`).\n"
+                " - HEASoft is not installed or HEADAS is not sourced.\n"
+                " - Required dependencies (e.g. FFTW, XSPEC) are missing.\n\n"
+                "Please ensure your build environment is correctly configured.\n"
+            ) from e
+
         self.lib_reltrans.tdreltransdcp_.argtypes = [
             f_float,
             f_int,
