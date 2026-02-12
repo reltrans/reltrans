@@ -16,6 +16,23 @@ You can find the documentation at this `link <https://reltransdocs.readthedocs.i
 The documentation provides detailed installation and setup in instructions, and 
 describes the various flavours of the model that are available to the users. 
 
+Development Setup
+=================
+
+Reltrans requires HEASOFT/XSPEC libraries for native compilation.
+
+If the shared library is not built, native tests will be skipped automatically.
+
+To enable native tests:
+
+1. Install and source HEASOFT.
+2. Run ``make`` in the reltrans root directory.
+3. Run ``pytest``.
+
+If the shared library is missing, the test suite will provide
+diagnostic information including the expected library path
+and the detected ``HEADAS`` environment variable.
+
 Reporting errors and requesting features
 ========================================
 

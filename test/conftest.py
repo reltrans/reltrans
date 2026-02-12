@@ -83,23 +83,47 @@ def envars() -> EnvironmentVariables:
     yield ev
     ev._restore()
 
-
 @pytest.fixture(scope="session")
 def reltrans() -> wrapper.Reltrans:
     """
-    Obtain the reltrans library wrapper class.
+    Session-scoped fixture returning a single Reltrans instance.
 
-    By returning a session scoped fixture, this class is essentially a
-    singleton, and the same instance is used by all tests. This avoids having
-    to load the reltrans library several times, and allows the reltrans cached
-    to be reused between tests (eliding loading the xillver tables over and
-    over).
-
-    **Caveat**: this does mean values cached in one reltrans invocation will be
-    potentially reachable by other tests.
+    If the shared library is not available, tests are skipped gracefully
+    with a clear diagnostic message.
     """
-    # only initialise the library once
-    return wrapper.Reltrans()
+    import os
+    import pytest
+    import pathlib
+    import platform
+
+    if os.environ.get("RELTRANS_DEV"):
+        pytest.skip("Skipping native library tests in dev mode")
+
+    system = platform.system()
+    lib_name = "libreltrans.so" if system == "Linux" else "libreltrans.dylib"
+
+    project_root = pathlib.Path(__file__).resolve().parents[1]
+    expected_path = project_root / "build" / "lib" / lib_name
+
+    if not expected_path.exists():
+        pytest.skip(
+            "\nReltrans shared library not found.\n"
+            f"Expected location: {expected_path}\n"
+            f"HEADAS: {os.environ.get('HEADAS')}\n\n"
+            "To enable native tests:\n"
+            "  1. Ensure HEASOFT is installed and sourced.\n"
+            "  2. Run `make` in the reltrans root directory.\n"
+        )
+
+    try:
+        return wrapper.Reltrans()
+    except OSError as e:
+        pytest.skip(
+            "\nReltrans library failed to load.\n"
+            f"Error: {e}\n"
+            f"HEADAS: {os.environ.get('HEADAS')}\n"
+        )
+
 
 
 @pytest.fixture
