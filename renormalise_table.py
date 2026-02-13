@@ -93,7 +93,7 @@ if (query_yes_no('Do you agree?')):
                     hdul.writeto(norm_table_name)
                     print(f'The script created a new table called {norm_table_name}')
                     print()
-                except:
+                except Exception:
                     print(f'Table {norm_table_name} has not been created since it already exists')
         except:
             print(f'There is no table called {fits_image_filename}')
