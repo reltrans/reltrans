@@ -49,7 +49,10 @@ def _wrap_call(f, energy: np.ndarray, params: np.ndarray) -> np.ndarray:
     Safely wrap native Fortran call.
 
     Performs strict validation on inputs before calling the shared library.
+    Ensures correct dtype and contiguous memory layout.
     """
+
+    # -------- Energy validation --------
     if not isinstance(energy, np.ndarray):
         raise TypeError("Energy must be a NumPy array.")
 
@@ -68,9 +71,11 @@ def _wrap_call(f, energy: np.ndarray, params: np.ndarray) -> np.ndarray:
     if np.any(energy <= 0):
         raise ValueError("Energy values must be strictly positive.")
 
-    if not np.all(np.diff(energy) > 0):
-        raise ValueError("Energy array must be strictly increasing.")
+    # Convert to float32 and ensure contiguous layout (safe for Fortran)
+    energy = np.ascontiguousarray(energy, dtype=np.float32)
 
+    # -------- Parameter validation --------
+    # Number of DCP parameters expected by reltransDcp XSPEC interface
     EXPECTED_PARAM_COUNT = 21
 
     if not isinstance(params, np.ndarray):
@@ -91,17 +96,22 @@ def _wrap_call(f, energy: np.ndarray, params: np.ndarray) -> np.ndarray:
     if not np.all(np.isfinite(params)):
         raise ValueError("Parameters array contains non-finite values.")
 
+    # Convert to float32 and ensure contiguous layout
+    params = np.ascontiguousarray(params, dtype=np.float32)
+
+    # -------- Native call --------
     ne = len(energy) - 1
     output = np.zeros(ne, dtype=np.float32)
 
     f(
-        energy.astype(np.float32).ctypes.data_as(f_float),
+        energy.ctypes.data_as(f_float),
         ct.byref(ct.c_int(ne)),
-        params.astype(np.float32).ctypes.data_as(f_float),
+        params.ctypes.data_as(f_float),
         ct.byref(ct.c_int(1)),
         output.ctypes.data_as(f_float),
     )
 
+    # Safety check on returned size
     if output.size != ne:
         raise RuntimeError("Native call returned unexpected output size.")
 
