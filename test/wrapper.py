@@ -35,7 +35,7 @@ def get_reltrans_library_path(lib_name="libreltrans") -> str:
     elif system == "Darwin":
         lib_name = lib_name + ".dylib"
     else:
-        raise Exception("Unsupported OS " + system)
+        raise RuntimeError(f"Unsupported OS: {system}")
 
     lib_path = build_dir / lib_name
     print(str(lib_path.absolute()))
