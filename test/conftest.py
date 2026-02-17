@@ -7,7 +7,12 @@ import dataclasses
 from typing import Any
 
 import pytest
-import wrapper
+
+try:
+    import wrapper
+    WRAPPER_AVAILABLE = True
+except ModuleNotFoundError:
+    WRAPPER_AVAILABLE = False
 
 import numpy as np
 
@@ -85,7 +90,8 @@ def envars() -> EnvironmentVariables:
 
 
 @pytest.fixture(scope="session")
-def reltrans() -> wrapper.Reltrans:
+def reltrans():
+
     """
     Obtain the reltrans library wrapper class.
 
@@ -163,3 +169,8 @@ def telescope() -> TelescopeData:
     return TelescopeData(
         arf_path=str(arf_path.absolute()), rmf_path=str(rmf_path.absolute())
     )
+def pytest_runtest_setup(item):
+    if "integration" in item.keywords and not WRAPPER_AVAILABLE:
+        pytest.skip("Native wrapper not available.")
+
+

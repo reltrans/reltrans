@@ -1,7 +1,18 @@
 import pytest
 import numpy as np
-from wrapper import DCP_Parameters
+try:
+    from wrapper import DCP_Parameters
+    WRAPPER_AVAILABLE = True
+except ModuleNotFoundError:
+    WRAPPER_AVAILABLE = False
 
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.regression,
+]
+
+if not WRAPPER_AVAILABLE:
+    pytest.skip("Native wrapper not available.", allow_module_level=True)
 
 def _debug_plot(energy, output, title=""):
     """Used when creating new tests for quickly looking at the data to make
