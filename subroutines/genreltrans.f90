@@ -27,6 +27,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use conv_mod
     use radial_grids
     use gr_continuum
+    use error_handler
     implicit none
     !Constants
     integer         , parameter :: nphi = 200, nro = 200!, ionvar! = 1 
@@ -183,14 +184,14 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     rh     = 1.d0+sqrt(1.d0-a**2)
     if( verbose .gt. 0 ) write(*,*)"rin (Rg)=",rin
     if( rin .lt. rmin )then
-        write(*,*)"Warning! rin<ISCO! Set to ISCO"
+        call log_warning("Warning! rin < ISCO! Setting to ISCO")
         rin = rmin
     end if
     do m=1,nlp 
         if( h(m) .lt. 0.d0 ) h(m) = abs(h(m)) * rh
         if( verbose .gt. 0 ) write(*,*)"h (Rg)=",h(m)
         if( h(m) .lt. 1.5d0*rh )then
-            write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
+            call log_warning("Warning! h < 1.5*rh! Setting to 1.5*rh")
             h(m) = 1.5d0 * rh
         end if 
     end do
