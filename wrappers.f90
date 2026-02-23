@@ -9,15 +9,20 @@
 !CURRENT BRANCH
 ! This branch is adding the multiple flavours to the reltrans model
 
+include 'subroutines/error_handler.f90'
 include 'subroutines/amodules.f90'
 include 'subroutines/header.h'
           
 !-----------------------------------------------------------------------
 subroutine tdreltransDCp(ear, ne, param, ifl, photar)
+  use error_handler
   implicit none
   integer, parameter :: nlp = 1 !use a single lamp post
   integer :: ne, ifl, Cp, dset
   real    :: ear(0:ne), param(21), photar(ne), par(32)
+  
+  call reset_error()
+  
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
@@ -55,7 +60,12 @@ subroutine tdreltransDCp(ear, ne, param, ifl, photar)
   par(31) = 1.0              !Anorm
   par(32) = param(21)        !telescope response
 ! Call general code
-  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
+  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)
+  
+  if (has_error()) then
+      call return_zero_spectrum(photar, ne)
+  end if
+  
   return
 end subroutine tdreltransDCp
 !-----------------------------------------------------------------------
@@ -210,11 +220,15 @@ end subroutine tdreltransDbl
 
 !-----------------------------------------------------------------------
 subroutine tdrtdist(ear, ne, param, ifl, photar)
+  use error_handler
   implicit none
   integer, parameter :: nlp = 1 !use a single lamp post
   integer :: ne, ifl, Cp, dset
   real    :: ear(0:ne), param(25), photar(ne), par(32), getcountrate
   double precision    :: honr,pi,cosi,cos0
+  
+  call reset_error()
+  
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 1   !dset=1 means distance is set, logxi is calculated internally
@@ -259,12 +273,16 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
 ! Call general code
   if( cos0 .ge. cosi )then
      photar = 0.0   !XSPEC *hates* this. Just do it with limits, and flag here.
-     write(*,*)"Warning! Disc thickness is too high for this inclinaiton!"
+     call log_error("Warning! Disc thickness is too high for this inclinaiton!")
      write(*,*)"Model output set to zero -- XSPEC *hates* this and may get lost"
      write(*,*)"leading to crash and seg fault. Better to set hard max on inc, incmax"
      write(*,*)"and set honr_max to cos(incmax)/sqrt(1-cos^2(incmax))."
+     call return_zero_spectrum(photar, ne)
   else
-     call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
+     call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)
+     if (has_error()) then
+         call return_zero_spectrum(photar, ne)
+     end if
   end if
   
   return
@@ -275,11 +293,15 @@ end subroutine tdrtdist
 
 !-----------------------------------------------------------------------
 subroutine tdrtdistX(ear, ne, param, ifl, photar)
+  use error_handler
   implicit none
   integer, parameter :: nlp = 1 !use a single lamp post
   integer :: ne, ifl, Cp, dset
   real    :: ear(0:ne), param(25), photar(ne), par(32), getcountrate
   double precision    :: honr,pi,cosi,cos0
+  
+  call reset_error()
+  
 ! Settings
   Cp   = 0   !Cp=0 means use the reflionx model with nthcomp and free density 
   dset = 1   !dset=1 means distance is set, logxi is calculated internally
@@ -324,12 +346,16 @@ subroutine tdrtdistX(ear, ne, param, ifl, photar)
 ! Call general code
   if( cos0 .ge. cosi )then
      photar = 0.0   !XSPEC *hates* this. Just do it with limits, and flag here.
-     write(*,*)"Warning! Disc thickness is too high for this inclinaiton!"
+     call log_error("Warning! Disc thickness is too high for this inclinaiton!")
      write(*,*)"Model output set to zero -- XSPEC *hates* this and may get lost"
      write(*,*)"leading to crash and seg fault. Better to set hard max on inc, incmax"
      write(*,*)"and set honr_max to cos(incmax)/sqrt(1-cos^2(incmax))."
+     call return_zero_spectrum(photar, ne)
   else
-     call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
+     call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)
+     if (has_error()) then
+         call return_zero_spectrum(photar, ne)
+     end if
   end if
   
   return
