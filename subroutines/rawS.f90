@@ -1,4 +1,4 @@
-subroutine rawS(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,h,z,Gamma,eta,&
+subroutine raw_full_spectrum(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,h,z,Gamma,eta,&
                 beta_p,boost,g,DelAB,ionvar,DC,ReSraw,ImSraw)
     ! Calculates the FT of the spectrum before multiplying by the absorption model
     !
@@ -116,4 +116,4 @@ subroutine rawS(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2
      end do
 
     return
-end subroutine rawS
+end subroutine raw_full_spectrum
