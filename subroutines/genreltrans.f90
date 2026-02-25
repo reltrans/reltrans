@@ -357,7 +357,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! Variables of the subroutine
     ! initializer
     integer :: m, prev_nf, Cpsave, i, j, Cp_cont
-    double precision :: d, muobs
+    double precision :: d
     real :: f, fac, dE, ear(0:ne)
     ! relativistic parameters and limit on rin and h
     ! lens needs to be allocatable to save it.
@@ -418,8 +418,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! temperature from the coronal frame(s), but for the single
     ! LP we use the temperature in the observer frame
 
-    muobs = cos(model_args%inc * pi / 180.d0)
-
     ! Decide if this is the DC component/time averaged spectrum or not
     if (config%flo .lt. tiny(config%flo) .or. config%fhi .lt. tiny(config%fhi))then
         config%DC = 1
@@ -450,13 +448,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        if (allocated(frrel)) deallocate(frrel)
        allocate (frrel(nlp))
        ! Calculate the Kernel for the given parameters
-       call rtrans(config%verbose, dset, nlp, model_args%a, model_args%h,      &
-           muobs, model_args%Gamma, model_args%rin, model_args%rout,           &
-           model_args%honr, d, rnmax, model_args%zcos, model_args%b1,          &
-           model_args%b2, model_args%qboost, model_args%eta_0, fcons,          &
-           config%nro, config%nphi, nex, config%dloge, config%nf,config%fhi,   &
-           config%flo, config%me, config%xe, arrays%ker_W0,arrays%ker_W1,      &
-           arrays%ker_W2, arrays%ker_W3, frobs, frrel)
+       call rtrans(config, model_args, arrays, dset, d, nex, frobs, frrel)
+       ! print *, 'gso ', gso(1)
     end if
     if (config%verbose .gt. 2) then
        call CPU_TIME (time_end)
@@ -475,7 +468,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        ! energies, lensing/gfactors, luminosity, etc)
        call init_cont(nlp, model_args%a, model_args%h, model_args%zcos,        &
            model_args%Cutoff_s, model_args%Cutoff_obs, model_args%logxi,       &
-           model_args%lognep, muobs, Cp_cont, model_args%Cp, fcons,            &
+           model_args%lognep, model_args%muobs, Cp_cont, model_args%Cp, fcons, &
            model_args%Gamma,model_args%Dkpc, model_args%Mass,arrays%earx,      &
            config%Emin,config%Emax, arrays%contx, config%dloge,                &
            config%verbose, dset,model_args%Anorm, arrays%contx_int,            &
@@ -493,7 +486,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         model_args%logxi = logxir(1)
         call init_cont(nlp, model_args%a, model_args%h, model_args%zcos,       &
             model_args%Cutoff_s, model_args%Cutoff_obs, model_args%logxi,      &
-            model_args%lognep, muobs, Cp_cont, model_args%Cp, fcons,           &
+            model_args%lognep, model_args%muobs, Cp_cont, model_args%Cp, fcons,&
             model_args%Gamma,model_args%Dkpc, model_args%Mass,arrays%earx,     &
             config%Emin,config%Emax, arrays%contx, config%dloge,               &
             config%verbose, dset,model_args%Anorm, arrays%contx_int,           &
