@@ -5,6 +5,8 @@
 #include <string.h>
 #include <time.h>
 
+#define CLOCKS_PER_MILI (CLOCKS_PER_SEC / 1000)
+
 // TODO: is there a header file for these function definitions?
 
 // either way, forward declare this as an extern, and let it be the linker's
@@ -42,7 +44,7 @@ RT_DCP_Params default_parameters() {
       .h = 6.0,
       .a = 0.998,
       .inc = 30.0,
-      .rin = 1.0,
+      .rin = -1.0,
       .rout = 1e3,
       .zcos = 0.0,
       .gamma = 2.0,
@@ -90,11 +92,6 @@ int main() {
 
   RT_DCP_Params params = default_parameters();
 
-  params.mass = 10.0;
-  params.flo_hz = 0.122;
-  params.fhi_hz = 0.224;
-  params.re_im = 1.0;
-
   // logarithmic energy grid
   for (int i = 0; i < e_num; ++i) {
     energy[i] = e_min * powf(e_max / e_min, ((float)i) / e_num);
@@ -106,31 +103,42 @@ int main() {
   clock_t time = clock();
   int ifl = 1;
   e_num -= 1;
+  // Run once to load everything in
   tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
   time = clock() - time;
 
-  printf("Total Call: %.6f seconds\n", ((double)time) / CLOCKS_PER_SEC);
+  size_t num_trials = 100;
+
+  float total_time = 0;
+  float *times_millis = malloc(sizeof(float) * 100);
+
   // run it a few times
-  for (size_t i = 0; i < 100; ++i) {
-      // zero the output buffer
-      memset(output, 0, e_num);
+  for (size_t i = 0; i < num_trials; ++i) {
+    // zero the output buffer
+    memset(output, 0, e_num);
 
-      clock_t time = clock();
-      int ifl = 1;
-      tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
-      time = clock() - time;
-      printf("Total Call %ld: %.6f seconds\n", i, ((double)time) / CLOCKS_PER_SEC);
+    // To avoid caching
+    params.a = 0.998 * i / num_trials;
 
-      if (i == 0) {
-          memcpy(comparison, output, sizeof(*comparison) * e_num);
-      } else {
-          for (size_t j = 0; j < e_num; ++j) {
-              if (fabs((output[j] - comparison[j]) / (comparison[j] + 1e-5)) < 0.005) {
-                  printf(" - [%ld] %.8f != %.8f\n", j, comparison[j], output[j]);
-              }
-          }
-      }
+    clock_t time = clock();
+    int ifl = 1;
+    tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
+    time = clock() - time;
+
+    times_millis[i] = (float)time / CLOCKS_PER_MILI;
+    total_time += times_millis[i];
   }
+
+  float average_time = total_time / num_trials;
+  float deviation = 0;
+  for (size_t i = 0; i < num_trials; ++i) {
+    float res = (times_millis[i] - average_time);
+    deviation += res * res;
+  }
+
+  deviation = sqrtf(deviation / num_trials);
+
+  printf("Average call time: %.4f +/- %.4f ms\n", average_time, deviation);
 
   printf("Serialising output to file...\n");
   FILE *fp = fopen(output_file, "w");
