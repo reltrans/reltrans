@@ -139,13 +139,13 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,     &
     double precision fcons,cosdout(nlp)
     real dloge
 
-    integer gbin,mubin,m
+    integer m
     double precision domega(nro),d,dFe(nlp)
     !double precision rlp_column(ndelta),dcosdr_column(ndelta),tlp_column(ndelta),cosd_column(ndelta)
     double precision cos0,sin0
     integer fbin
     double precision disco,rfunc,scal,velocity(3),sysfref
-    double precision rnmax,rnmin,rn(nro),mueff,dlogr
+    double precision rnmax,rnmin,rn(nro),mueff
     double precision fi(nf),dgsofac,sindisk,frobs(nlp),frrel(nlp)
     double precision pnormer,pfunc_raw,ang_fac
     integer nron,nphin,verbose
@@ -155,10 +155,6 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,     &
 
     !new stuff - move back above once it's implemented properly    
     complex ker_W0(nlp,ne,nf,me,xe),ker_W1(nlp,ne,nf,me,xe),ker_W2(nlp,ne,nf,me,xe),ker_W3(nlp,ne,nf,me,xe)
-    
-    !arrays to save the transfer function
-    integer            :: tbin
-    double precision   :: sumresp, E
 
     ! functions
     integer :: get_env_int
@@ -675,7 +671,7 @@ function newtex(rlp,dcosdr,ndelta,re,h,honr,kk)
 ! Extrapolates using Newtonian value
   implicit none
   integer ndelta,kk
-  double precision newtex,rlp(ndelta),dcosdr(ndelta),re,h,honr,cosfac
+  double precision newtex,rlp(ndelta),dcosdr(ndelta),re,h,honr
   newtex = dcosdr(kk) *  ( (h-honr*rlp(kk))**2 + rlp(kk)**2 )**1.5 / rlp(kk)
   newtex = newtex * re / ( (h-honr*re     )**2 + re**2      )**1.5
   return

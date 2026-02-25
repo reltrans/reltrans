@@ -2,16 +2,21 @@
 
 ! A module for the handling various emissivity functions and datas.
 module emissivities
+    use iso_c_binding, only: c_double
+
     implicit none
+
     abstract interface
         function external_emissivity(re, spin) bind(C) result(em)
-            double precision, intent(in) :: re, spin
-            double precision :: em
+            import :: c_double
+            real(c_double), intent(in) :: re, spin
+            real(c_double) :: em
         end function external_emissivity
 
         subroutine external_emissivity_time(re, phi, em, tau) bind(C)
-            double precision, intent(in) :: re, phi
-            double precision, intent(out) :: em, tau
+            import :: c_double
+            real(c_double), intent(in) :: re, phi
+            real(c_double), intent(out) :: em, tau
         end subroutine external_emissivity_time
 
     end interface
