@@ -186,6 +186,7 @@ class Formatter:
                 new_text = re.sub(r"\s\s+", " ", new_text)
                 new_text = re.sub(r"\s*=(?!>)\s*", " = ", new_text)
                 new_text = re.sub(r"\s*,\s*", ", ", new_text)
+                new_text = re.sub(r"\s*(?!\*)\*\s*", " * ", new_text)
                 lines.append(dataclasses.replace(line, line=new_text))
         self.lines = lines
 
