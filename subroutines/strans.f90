@@ -52,7 +52,7 @@ module m_rtrans
         double precision, pointer :: fi(:) => null()
 
         ! number of time bins
-        integer:: nt = 2**9
+        integer :: nt = 2**9
     end type t_impulse_args
 
     type :: t_outputs
@@ -60,9 +60,9 @@ module m_rtrans
         ! w1, w2: power law index pivoting
         ! w3: ionisation pivoting
         ! all of these share the same dimensions
-        complex, pointer ::                                                    &
-            w0(:, :, :, :, :) => null(), w1(:, :, :, :, :) => null(),          &
-            w2(:, :, :, :, :) => null(), w3(:, :, :, :, :) => null()
+        complex, pointer :: w0(:, :, :, :, :) => null(), w1(:, :, :, :,        &
+             :) => null(), w2(:, :, :, :, :) => null(), w3(:, :, :, :,         &
+             :) => null()
         ! frobs(nlp): observer reflection fractions
         double precision, pointer :: frobs(:) => null()
         double precision, pointer :: dFe(:) => null()
@@ -81,9 +81,8 @@ contains
     ! Bind views to various output arrays to the `t_outputs` derived type
     subroutine outputs_bind_views(self, w0, w1, w2, w3, frobs, dFe)
         type(t_outputs), intent(inout) :: self
-        complex, target, intent(in) ::                                         &
-            w0(:, :, :, :, :), w1(:, :, :, :, :),                              &
-            w2(:, :, :, :, :), w3(:, :, :, :, :)
+        complex, target, intent(in) :: w0(:, :, :, :, :), w1(:, :, :, :, :),   &
+             w2(:, :, :, :, :), w3(:, :, :, :, :)
         double precision, target, intent(in) :: frobs(:), dFe(:)
         self%w0 => w0
         self%w1 => w1
@@ -100,16 +99,16 @@ contains
         self%w1 = 0.
         self%w2 = 0.
         self%w3 = 0.
-        self%frobs= 0.0
-        self%dFe= 0.0
+        self%frobs = 0.0
+        self%dFe = 0.0
     end subroutine outputs_zero_arrays
 
 end module m_rtrans
 
 !-----------------------------------------------------------------------
-subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,     &
-        zcos,b1,b2,qboost,eta_0,fcons,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,      &
-        ker_W0,ker_W1,ker_W2,ker_W3,frobs,frrel)
+subroutine rtrans(verbose, dset, nlp, spin, h, mu0, Gamma, rin, rout, honr,    &
+     d, rnmax, zcos, b1, b2, qboost, eta_0, fcons, nro, nphi, ne, dloge, nf,   &
+     fhi, flo, me, xe, ker_W0, ker_W1, ker_W2, ker_W3, frobs, frrel)
     ! Code to calculate the transfer function for an accretion disk.
     ! This code first does full GR ray tracing for a camera with impact parameters < bmax
     ! It then also does straight line ray tracing for impact parameters >bmax
@@ -133,28 +132,29 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,     &
     use impulseresponse
     use m_rtrans
     implicit none
-    integer nro,nphi,ne,nf,me,xe,dset,nlp
-    double precision spin,h(2),mu0,Gamma,rin,rout,zcos,fhi,flo,honr
-    double precision b1,b2,qboost
-    double precision fcons,cosdout(nlp)
+    integer nro, nphi, ne, nf, me, xe, dset, nlp
+    double precision spin, h(2), mu0, Gamma, rin, rout, zcos, fhi, flo, honr
+    double precision b1, b2, qboost
+    double precision fcons, cosdout(nlp)
     real dloge
 
     integer m
-    double precision domega(nro),d,dFe(nlp)
+    double precision domega(nro), d, dFe(nlp)
     !double precision rlp_column(ndelta),dcosdr_column(ndelta),tlp_column(ndelta),cosd_column(ndelta)
-    double precision cos0,sin0
+    double precision cos0, sin0
     integer fbin
-    double precision disco,rfunc,scal,velocity(3),sysfref
-    double precision rnmax,rnmin,rn(nro),mueff
-    double precision fi(nf),dgsofac,sindisk,frobs(nlp),frrel(nlp)
-    double precision pnormer,pfunc_raw,ang_fac
-    integer nron,nphin,verbose
-    double precision rnn(nro),domegan(nro)
+    double precision disco, rfunc, scal, velocity(3), sysfref
+    double precision rnmax, rnmin, rn(nro), mueff
+    double precision fi(nf), dgsofac, sindisk, frobs(nlp), frrel(nlp)
+    double precision pnormer, pfunc_raw, ang_fac
+    integer nron, nphin, verbose
+    double precision rnn(nro), domegan(nro)
     double precision eta_0
     logical dotrace
 
-    !new stuff - move back above once it's implemented properly    
-    complex ker_W0(nlp,ne,nf,me,xe),ker_W1(nlp,ne,nf,me,xe),ker_W2(nlp,ne,nf,me,xe),ker_W3(nlp,ne,nf,me,xe)
+    !new stuff - move back above once it's implemented properly
+    complex :: ker_W0(nlp, ne, nf, me, xe), ker_W1(nlp, ne, nf, me, xe),       &
+         ker_W2(nlp, ne, nf, me, xe), ker_W3(nlp, ne, nf, me, xe)
 
     ! functions
     integer :: get_env_int
@@ -164,13 +164,13 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,     &
 
     ! Setup the common arguments structure
     args = t_impulse_args(nf = nf, ne = ne, me = me, xe = xe, nlp = nlp,       &
-        Gamma = Gamma, rmin = disco(spin), mu0 = mu0, rin = rin, rout = rout,  &
-        mudisk = honr / sqrt(honr**2 + 1.d0), zcos=zcos, honr=honr,            &
-        qboost = qboost, b1 = b1, b2 = b2, rnmax = rnmax, spin = spin,         &
-        eta_0 = eta_0, mueff = mueff, dloge = dloge,                           &
+        Gamma = Gamma, rmin = disco(spin), mu0 = mu0, rin = rin,               &
+        rout = rout, mudisk = honr / sqrt(honr**2 + 1.d0), zcos = zcos,        &
+        honr = honr, qboost = qboost, b1 = b1, b2 = b2, rnmax = rnmax,         &
+        spin = spin, eta_0 = eta_0, mueff = mueff, dloge = dloge,              &
         ! TODO: these are uninitialized
-        ring_like = (1 .eq. get_env_int("REV_RING", 0)),                       &
-        dlogr = 0.0, dlogt = 0.0, dg = 0.0)
+        ring_like = (1 .eq. get_env_int("REV_RING", 0)), dlogr = 0.0,          &
+            dlogt = 0.0, dg = 0.0)
     call impulse_bind_views(args, h, fi)
 
     ! Setup the output arrays
@@ -178,81 +178,84 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,     &
     call outputs_bind_views(ret, ker_W0, ker_W1, ker_W2, ker_W3, frobs, dFe)
 
     ! Settings/initialization
-    nron     = 100
-    nphin    = 100
-    scal     = 1.d0
+    nron = 100
+    nphin = 100
+    scal = 1.d0
     velocity = 0.d0
-    sindisk  = sqrt( 1.d0 - args%mudisk**2 )
+    sindisk = sqrt(1.d0 - args%mudisk**2)
 
     ! Zero the outputs
     dfer_arr = 0.
     call outputs_zero_arrays(ret)
-    
+
     ! This also sets up the time and energy axes
     ! and assigns the dlogt and dg global variables
     call response_allocate(args%ne, args%nt, args%dlogt, args%dg)
-    
+
     !set up saving the impulse response function if user desieres
     !note: the ideal parameters to plot the transfer function are nro~=7000,nphi~=7000,nt~=2e9,nex~=2e10
 
     !get the GR ray-tracing CONTINUUM parameters which are stored in the module gr_continuum
     if (args%nlp .eq. 1) then
-       gso(1) = real( dgsofac(args%spin,args%h(1)) )
-       call getlens(args%spin,args%h(1),args%mu0,lens(1),tauso(1),cosdelta_obs(1))
-       if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"
+       gso(1) = real(dgsofac(args%spin, args%h(1)))
+       call getlens(args%spin, args%h(1), args%mu0, lens(1), tauso(1),         &
+            cosdelta_obs(1))
+       if (tauso(1) .ne. tauso(1)) stop "tauso is NaN"
     else
-       !here the observed cutoffs are set from the temperature in the source frame   
+       !here the observed cutoffs are set from the temperature in the source frame
        do m = 1, args%nlp
-          gso(m) = real( dgsofac(args%spin,args%h(m)) )
-          call getlens(args%spin,args%h(m),args%mu0,lens(m),tauso(m),cosdelta_obs(m))
-          if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
+          gso(m) = real(dgsofac(args%spin, args%h(m)))
+          call getlens(args%spin, args%h(m), args%mu0, lens(m), tauso(m),      &
+               cosdelta_obs(m))
+          if (tauso(m) .ne. tauso(m)) stop "tauso is NaN"
        enddo
     endif
-    
+
     ! Set up observer's camera ( alpha = rn sin(phin), beta = mueff rn cos(phin) )
-    ! to do full GR ray tracing with      
-    args%mueff  = max( args%mu0 , 0.3d0 )
-    rnmin  = rfunc(args%spin,args%mu0)
+    ! to do full GR ray tracing with
+    args%mueff = max(args%mu0, 0.3d0)
+    rnmin = rfunc(args%spin, args%mu0)
     !Grid to do in full GR
-    call getrgrid(rnmin,args%rnmax,args%mueff,nro,nphi,rn,domega)
+    call getrgrid(rnmin, args%rnmax, args%mueff, nro, nphi, rn, domega)
     !Grid for Newtonian approximation
-    call getrgrid(args%rnmax,args%rout,args%mueff,nron,nphin,rnn,domegan)
-    
-    ! Trace rays in full GR for the small camera (ie with relativistic effects)
-    ! from the osberver to the disk, which is why it doesnt depend on h
-       dotrace = .false.
+    call getrgrid(args%rnmax, args%rout, args%mueff, nron, nphin, rnn, domegan)
+
+    ! Trace rays in full GR for the small camera (ie with relativistic effects) from the osberver to the disk,
+    !which is why it doesnt depend on h
+        dotrace = .false.
        if( abs(spinsav-args%spin)  .gt. tiny(args%spin)   ) dotrace = .true.
        if( abs(musav-args%mu0)     .gt. tiny(args%mu0)    ) dotrace = .true.
        if( abs(routsav-args%rout)  .gt. tiny(args%rout)   ) dotrace = .true.
-       if( abs(mudsav-args%mudisk) .gt. tiny(args%mudisk) ) dotrace = .true.         
-       if( dotrace )then
-          call GRtrace( nro,nphi,rn,args%mueff,args%mu0,args%spin,args%rmin, &
-              args%rout,args%mudisk,d)
-          spinsav = args%spin
-          musav   = args%mu0
-          routsav = args%rout
-          mudsav  = args%mudisk
+       if( abs(mudsav-args%mudisk) .gt. tiny(args%mudisk) ) dotrace = .true.
+       if (dotrace)then
+            call GRtrace(nro, nphi, rn, args%mueff, args%mu0, args%spin,       &
+                 args%rmin, args%rout, args%mudisk, d)
+            spinsav = args%spin
+            musav = args%mu0
+            routsav = args%rout
+            mudsav = args%mudisk
        end if
+
     ! Set frequency array
-    do fbin = 1,nf
+    do fbin = 1, nf
         args%fi(fbin) = flo * (fhi/flo)**((float(fbin)-0.5d0)/dble(nf))
     end do
-    if( fhi .lt. tiny(fhi) ) args%fi(1) = 0.0d0
+    if (fhi .lt. tiny(fhi)) args%fi(1) = 0.0d0
 
     !initialize radius grid, angles, and transfer functions
-    args%dlogr    = log10(args%rnmax/args%rin) / real(args%xe-1)
-    cos0     = args%mu0
-    sin0     = sqrt(1.0-cos0**2)
+    args%dlogr = log10(args%rnmax/args%rin) / real(args%xe-1)
+    cos0 = args%mu0
+    sin0 = sqrt(1.0-cos0**2)
 
     ! Calculate dcos/dr and time lags vs r for the lamppost model
-    call getdcos(args%spin,args%h,args%mudisk,ndelta,args%nlp,args%rout,npts,  &
-        rlp,dcosdr,tlp,cosd,cosdout) 
+    call getdcos(args%spin, args%h, args%mudisk, ndelta, args%nlp,             &
+         args%rout, npts, rlp, dcosdr, tlp, cosd, cosdout)
 
-    ! set continuum normalisations depending on model flavour 
-    if( dset .eq. 0 )then
-        pnorm = 1.d0 / ( 4.d0 * pi )
+    ! set continuum normalisations depending on model flavour
+    if (dset .eq. 0)then
+        pnorm = 1.d0 / (4.d0 * pi)
     else
-        pnorm = pnormer(args%b1,args%b2,args%qboost)  
+        pnorm = pnormer(args%b1, args%b2, args%qboost)
     end if
 
     ! the only arguments that change here are .false., nro, nphi, rn, domega
@@ -261,16 +264,16 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,     &
     ! then for the non-relativistic flat-space version
     call sum_impulse_components(args, .true., nron, nphin, rnn, domegan, ret)
 
-    do m=1,args%nlp
+    do m = 1, args%nlp
         ! Calculate 4pi p(theta0,phi0) = ang_fac
-        ang_fac = 4.d0 * pi * pnorm                                            &
-            * pfunc_raw(-cosdelta_obs(m),args%b1,args%b2,args%qboost)
+        ang_fac = 4.d0 * pi * pnorm* pfunc_raw(-cosdelta_obs(m), args%b1,      &
+            args%b2, args%qboost)
         ! Adjust the lensing factor (easiest way to keep track)
-        lens(m) = lens(m) * ang_fac                 
+        lens(m) = lens(m) * ang_fac
         ! Calculate the relxill reflection fraction for one columncosdout
-        frrel(m) = sysfref(args%rin,rlp(:,m),cosd(:,m),ndelta,cosdout(m))    
+        frrel(m) = sysfref(args%rin, rlp(:, m), cosd(:, m), ndelta, cosdout(m))
         !Finish calculation of observer's reflection fraction
-        ret%frobs(m) = ret%frobs(m) / dgsofac(args%spin,args%h(m)) / lens(m)
+        ret%frobs(m) = ret%frobs(m) / dgsofac(args%spin, args%h(m)) / lens(m)
     end do
 
     ! Deal with edge effects
@@ -292,7 +295,7 @@ end function clamp_i
 ! TODO: this should really be using a derived type to pass arguments around, but
 ! that's more refactoring for some(time|one) else.
 subroutine sum_impulse_components(args, non_relativistic, r_length,            &
-        phi_length, r_grid, domega, ret)
+     phi_length, r_grid, domega, ret)
     use dyn_gr
     use radial_grids
     use gr_continuum
@@ -324,27 +327,27 @@ subroutine sum_impulse_components(args, non_relativistic, r_length,            &
     ! loop over all photon directions (l), disk radii (i), disk azimuth (j), and
     ! calculate the contribution to the
     ! transfer function/convolution kernel in energy (gbin), frequency (fbin),
-    ! emission angle (mubin), disk radial 
+    ! emission angle (mubin), disk radial
     ! bin (rbin) from the m-th/nl-th lamp post
 
     ! TODO: for ring-like corona, pre-load the correct time-dependent emissivity
     ! profile here, before the loop over observer coordinates
 
-    do i = 1,r_length
-        do j = 1,phi_length
-            phin  = (j-0.5) * 2.d0 * pi / dble(phi_length)
+    do i = 1, r_length
+        do j = 1, phi_length
+            phin = (j-0.5) * 2.d0 * pi / dble(phi_length)
             alpha = r_grid(i) * sin(phin)
-            beta  = -r_grid(i) * cos(phin) * args%mueff
+            beta = -r_grid(i) * cos(phin) * args%mueff
 
             ! If the ray hits the disk, calculate flux and time lag
             if (non_relativistic) then
-                call drandphithick(alpha,beta,args%mu0,args%mudisk,re,phie)
+                call drandphithick(alpha, beta, args%mu0, args%mudisk, re, phie)
             else
-                if (pem1(j,i) .le. 0.0d0) then
+                if (pem1(j, i) .le. 0.0d0) then
                     cycle
                 endif
-                re = re1(j,i)
-                taudo = taudo1(j,i)
+                re = re1(j, i)
+                taudo = taudo1(j, i)
             endif
 
             if (re .lt. args%rin .and. re .gt. args%rout) then
@@ -353,34 +356,32 @@ subroutine sum_impulse_components(args, non_relativistic, r_length,            &
             endif
 
             ! disc to observer energy shift
-            g = dlgfacthick(args%spin,args%mu0,alpha,re,args%mudisk)
+            g = dlgfacthick(args%spin, args%mu0, alpha, re, args%mudisk)
 
             ! Work out energy bin
-            gbin = clamp_i(                                                    &
-                ceiling(log10(g/(1.d0+args%zcos)) / args%dloge) + args%ne/2,   &
+            gbin = clamp_i(ceiling(log10(g                                     &
+                /(1.d0+args%zcos)) / args%dloge) + args%ne/2,                  &
                 1, args%ne)
 
             ! Work out radial bin
-            rbin = clamp_i(                                                    &
-                ceiling( log10(re/args%rin) / args%dlogr ),                    &
-                1, args%xe)
+            rbin = clamp_i(ceiling(log10(re/args%rin) / args%dlogr), 1, args%xe)
 
             if (args%ring_like) then
-                call sum_ringlike_corona(args, i, non_relativistic, r_length,  &
-                    phi_length, re, alpha, beta, taudo, g, r_grid,             &
-                    domega, gbin, rbin, ret)
+                call sum_ringlike_corona(args, i, non_relativistic,            &
+                     r_length, phi_length, re, alpha, beta, taudo, g,          &
+                     r_grid, domega, gbin, rbin, ret)
             else
                 call sum_multiple_lampposts(args, i, non_relativistic,         &
-                    r_length, phi_length, re, alpha, beta, taudo, g, r_grid,   &
-                    domega, gbin, rbin, ret)
+                     r_length, phi_length, re, alpha, beta, taudo, g,          &
+                     r_grid, domega, gbin, rbin, ret)
             endif
         end do
     end do
 end subroutine sum_impulse_components
 
-subroutine sum_ringlike_corona(                                                &
-    args, i, non_relativistic, r_length, phi_length, re,                       &
-    alpha, beta, taudo, g, r_grid, domega, gbin, rbin, ret)
+subroutine sum_ringlike_corona(args, i, non_relativistic, r_length,            &
+     phi_length, re, alpha, beta, taudo, g, r_grid, domega, gbin, rbin,        &
+     ret)
     use dyn_gr
     use radial_grids
     use gr_continuum
@@ -423,11 +424,11 @@ subroutine sum_ringlike_corona(                                                &
     end if
 
     ! Add to reflection fraction
-    ret%frobs(1) = ret%frobs(1)                                                &
-               + 2.0*g**3*gsd*cosfac/dareafac(re,args%spin)*domega(i)
+    ret%frobs(1) = ret%frobs(1)+ 2.0*g**3*gsd*cosfac/dareafac(re,              &
+        args%spin)*domega(i)
 
     ! Calculate flux from pixel
-    gsd = dglpfacthick(re,args%spin,args%h(1),args%mudisk)
+    gsd = dglpfacthick(re, args%spin, args%h(1), args%mudisk)
 
     normfac = real((g/(1.d0+args%zcos))**(2.+args%Gamma)*domega(i))
 
@@ -435,11 +436,11 @@ subroutine sum_ringlike_corona(                                                &
     gbin_resp = clamp_i(ceiling(g/args%dg), 1, args%ne)
 
     ! calculate emission angle and work out which mue bin to add to
-    mue = demang(args%spin,args%mu0,re,alpha,beta)
+    mue = demang(args%spin, args%mu0, re, alpha, beta)
     mubin = ceiling(mue * dble(args%me))
 
     ! loop over all azmithal bins
-    do phi_i = 1,r_nphi
+    do phi_i = 1, r_nphi
         phi = phi_i * dphi
 
         ! the source to disc time of the current azimuthal bin
@@ -453,59 +454,57 @@ subroutine sum_ringlike_corona(                                                &
             ! small, likely of order the size of the ring
             ! - this should be checked, else a full non-relatvistic version that
             !   loops over each azimuth used
-            tau = sqrt(re**2+(args%h(1)-args%honr*re)**2)                      &
-                     - re*(sin0*sindisk*cos(phie)+args%mu0*args%mudisk )       &
-                     + args%h(1)*args%mu0
+            tau = sqrt(re                                                      &
+                **2                                                            &
+                +(args%h(1)                                                    &
+                -args%honr                                                     &
+                *re)**2)                                                       &
+                - re                                                           &
+                *(sin0*sindisk*cos(phie)                                       &
+                +args%mu0*args%mudisk)+ args%h(1)*args%mu0
             tau = (1.d0+args%zcos)*tau
         else
             tau = (1.d0 + args%zcos) * (tausd + taudo - tauso(1))
         endif
 
-        ret%dFe(1) = (                                                         &
-            emissivity * (g/(1.d0+args%zcos))**(2.+args%Gamma) * domega(i)     &
-        )
+        ret%dFe(1) = (emissivity                                               &
+            * (g/(1.d0+args%zcos))**(2.+args%Gamma) * domega(i))
 
         dfer_arr(rbin) = dfer_arr(rbin) + ret%dFe(1)
 
         ! Add to the transfer function integral
-        do fbin = 1,args%nf
-            cexp = cmplx(                                                      &
-                cos(real(2.d0*pi*tau*args%fi(fbin))),                          &
-                sin(real(2.d0*pi*tau*args%fi(fbin)))                           &
-            )
+        do fbin = 1, args%nf
+            cexp = cmplx(cos(real(2.d0*pi*tau*args%fi(fbin))),                 &
+                sin(real(2.d0*pi*tau*args%fi(fbin))))
 
-            ret%w0(1,gbin,fbin,mubin,rbin)                                     &
-                = ret%w0(1,gbin,fbin,mubin,rbin)                               &
-                    + real(ret%dFe(1))*cexp
+            ret%w0(1, gbin, fbin, mubin, rbin) = ret%w0(1, gbin, fbin,         &
+                mubin, rbin)+ real(ret%dFe(1))*cexp
 
             ! TODO: the below are all particular to the lamppost corona, and do
             ! not apply to the ring-like corona currently
 
-            ret%w1(1,gbin,fbin,mubin,rbin)                                     &
-                = ret%w1(1,gbin,fbin,mubin,rbin)                               &
-                    + real(log(gsd))*real(ret%dFe(1))*cexp
+            ret%w1(1, gbin, fbin, mubin, rbin) = ret%w1(1, gbin, fbin,         &
+                mubin, rbin)+ real(log(gsd))*real(ret%dFe(1))*cexp
 
-            ret%w2(1,gbin,fbin,mubin,rbin)                                     &
-                = ret%w2(1,gbin,fbin,mubin,rbin)                               &
-                    + emissivity*normfac*cexp
+            ret%w2(1, gbin, fbin, mubin, rbin) = ret%w2(1, gbin, fbin,         &
+                mubin, rbin)+ emissivity*normfac*cexp
 
-            ret%w3(1,gbin,fbin,mubin,rbin)                                     &
-                = ret%w3(1,gbin,fbin,mubin,rbin)                               &
-                    + emissivity*normfac*cexp
+            ret%w3(1, gbin, fbin, mubin, rbin) = ret%w3(1, gbin, fbin,         &
+                mubin, rbin)+ emissivity*normfac*cexp
         end do
 
         ! find the appropriate energy and time bins
-        tbin = clamp_i(ceiling(log10(tau / time_axis(0)) / args%dlogt),        &
-            1, args%nt)
+        tbin = clamp_i(ceiling(log10(tau / time_axis(0)) / args%dlogt), 1,     &
+            args%nt)
 
         ! kernel of the impulse response function
-        response(gbin_resp,tbin) = response(gbin_resp,tbin) + ret%dFe(1)
+        response(gbin_resp, tbin) = response(gbin_resp, tbin) + ret%dFe(1)
     end do
 end subroutine sum_ringlike_corona
 
-subroutine sum_multiple_lampposts(                                             &
-        args, i, non_relativistic, r_length, phi_length, re,                   &
-        alpha, beta, taudo, g, r_grid, domega, gbin, rbin, ret)
+subroutine sum_multiple_lampposts(args, i, non_relativistic, r_length,         &
+     phi_length, re, alpha, beta, taudo, g, r_grid, domega, gbin, rbin,        &
+     ret)
     use dyn_gr
     use radial_grids
     use gr_continuum
@@ -525,11 +524,11 @@ subroutine sum_multiple_lampposts(                                             &
     type(t_outputs), intent(inout) :: ret
 
     ! time grid bits, should be passed in
-    integer            :: tbin, fbin
+    integer :: tbin, fbin
 
     ! functions
-    double precision :: newtex, dglpfacthick, demang, interper,                &
-        dareafac, pfunc_raw
+    double precision :: newtex, dglpfacthick, demang, interper, dareafac,      &
+         pfunc_raw
     integer :: get_index, clamp_i
 
     double precision :: sin0, sindisk
@@ -544,57 +543,62 @@ subroutine sum_multiple_lampposts(                                             &
     integer :: m, mubin, kk, gbin_resp
     complex :: cexp
 
-    do m = 1,args%nlp
+    do m = 1, args%nlp
 
-        kk = get_index(rlp(:,m),ndelta,re,args%rmin,npts(m))
+        kk = get_index(rlp(:, m), ndelta, re, args%rmin, npts(m))
 
         ! Time lag between direct and reflected photons
         if (non_relativistic) then
-            tau(m) = sqrt(re**2+(args%h(m)-args%honr*re)**2)                   &
-                     - re*(sin0*sindisk*cos(phie)+args%mu0*args%mudisk )       &
-                     + args%h(1)*args%mu0
+            tau(m) = sqrt(re                                                   &
+                **2                                                            &
+                +(args%h(m)                                                    &
+                -args%honr                                                     &
+                *re)**2)                                                       &
+                - re                                                           &
+                *(sin0*sindisk*cos(phie)                                       &
+                +args%mu0*args%mudisk)+ args%h(1)*args%mu0
             tau(m) = (1.d0+args%zcos)*tau(m)
         else
             ! Interpolate (or extrapolate) the time function
-            tausd = interper(rlp(:,m),tlp(:,m),ndelta,re,kk)
+            tausd = interper(rlp(:, m), tlp(:, m), ndelta, re, kk)
             tau(m) = (1.d0+args%zcos)*(tausd+taudo-tauso(1))
         endif
 
         ! Interpolate |dcos\delta/dr| function
-        cosfac = interper(rlp(:,m),dcosdr(:,m),ndelta,re,kk)
-        mus = interper(rlp(:,m),cosd(:,m),ndelta,re,kk)
+        cosfac = interper(rlp(:, m), dcosdr(:, m), ndelta, re, kk)
+        mus = interper(rlp(:, m), cosd(:, m), ndelta, re, kk)
 
         if (kk .eq. npts(m)) then
-            cosfac = newtex(rlp(:,m),dcosdr(:,m),                              &
-                ndelta,re,args%h(m),args%honr,kk)
-            mus = newtex(rlp(:,m),cosd(:,m),ndelta,re,args%h(m),args%honr,kk)
+            cosfac = newtex(rlp(:, m), dcosdr(:, m), ndelta, re, args%h(m),    &
+                args%honr, kk)
+            mus = newtex(rlp(:, m), cosd(:, m), ndelta, re, args%h(m),         &
+                args%honr, kk)
         end if
 
         ! Calculate angular emissivity
-        ptf = pnorm * pfunc_raw(-mus,args%b1,args%b2,args%qboost)
+        ptf = pnorm * pfunc_raw(-mus, args%b1, args%b2, args%qboost)
 
         ! Calculate flux from pixel
-        gsd(m) = dglpfacthick(re,args%spin,args%h(m),args%mudisk)
+        gsd(m) = dglpfacthick(re, args%spin, args%h(m), args%mudisk)
 
         ! TODO: write into emissivity(:, m) where the emissivity
         ! now holds the times as well from the time-dependent emissivity
         ! functions
-        emissivity(m) = determine_emissivity(                                  &
-            re, args%spin, args%gamma, cosfac, ptf, gsd(m)                     &
-        )
+        emissivity(m) = determine_emissivity(re, args%spin, args%gamma,        &
+            cosfac, ptf, gsd(m))
 
         ! calculate extra factors that go into the transfer functions
         ! for double lps
         if (args%nlp .gt. 1) then
-            thetafac(m) = emissivity(m)*gso(m)**(args%Gamma-2.)                &
-                          * gsd(m)**(2.-args%Gamma)
+            thetafac(m) = emissivity(m)                                        &
+                *gso(m)**(args%Gamma-2.)* gsd(m)**(2.-args%Gamma)
         else
             ! single lamp post case, double check this later
             thetafac(m) = 1.
         endif
         ! Add to reflection fraction
-        ret%frobs(m) = ret%frobs(m)                                            &
-                   + 2.0*g**3*gsd(m)*cosfac/dareafac(re,args%spin)*domega(i)
+        ret%frobs(m) = ret%frobs(m)+ 2.0*g**3*gsd(m)*cosfac/dareafac(re,       &
+            args%spin)*domega(i)
     enddo
 
     ! This loop combines information from the two lampposts, and so
@@ -604,24 +608,24 @@ subroutine sum_multiple_lampposts(                                             &
     ! TODO: extend to add a loop over the emissivity time, except that
     ! it is not compatible with the existing use, as the dimensions of
     ! the emissivity would be different
-    do m=1,args%nlp
-        ret%dFe(m) = emissivity(m) * (g/(1.d0+args%zcos))**(2.+args%Gamma)     &
-            * domega(i)
+    do m = 1, args%nlp
+        ret%dFe(m) = emissivity(m)                                             &
+            * (g/(1.d0+args%zcos))**(2.+args%Gamma)* domega(i)
 
         ! Add to the radial dependence of the transfer function TBD MAKE
         ! SURE THIS IS RIGHT
 
         dfer_arr(rbin) = dfer_arr(rbin) + ret%dFe(m)
         ! Calculate emission angle and work out which mue bin to add to
-        mue = demang(args%spin,args%mu0,re,alpha,beta)
-        mubin = ceiling( mue * dble(args%me) )
+        mue = demang(args%spin, args%mu0, re, alpha, beta)
+        mubin = ceiling(mue * dble(args%me))
         !calculate the extra factors for w2/3
         if (args%nlp .gt. 1) then
-            emisfac = (emissivity(1)+args%eta_0*emissivity(2))                 &
-                      / (1.+args%eta_0)
+            emisfac = (emissivity(1)+args%eta_0*emissivity(2))/ (1.+args%eta_0)
 
-            kfac = (emissivity(1)+args%eta_0*emissivity(2))                    &
-                   / (thetafac(1)+args%eta_0*thetafac(2))
+            kfac = (emissivity(1)                                              &
+                +args%eta_0                                                    &
+                *emissivity(2))/ (thetafac(1)+args%eta_0*thetafac(2))
         else
             emisfac = emissivity(1)
             kfac = emissivity(1)
@@ -630,50 +634,44 @@ subroutine sum_multiple_lampposts(                                             &
 
         normfac = real((g/(1.d0+args%zcos))**(2.+args%Gamma)*domega(i))
         ! Add to the transfer function integral
-        do fbin = 1,args%nf
-            cexp = cmplx(                                                      &
-                     cos(real(2.d0*pi*tau(m)*args%fi(fbin))),                  &
-                     sin(real(2.d0*pi*tau(m)*args%fi(fbin)))                   &
-            )
+        do fbin = 1, args%nf
+            cexp = cmplx(cos(real(2.d0*pi*tau(m)*args%fi(fbin))),              &
+                sin(real(2.d0*pi*tau(m)*args%fi(fbin))))
 
-            ret%w0(m,gbin,fbin,mubin,rbin)                                     &
-                = ret%w0(m,gbin,fbin,mubin,rbin)                               &
-                  + real(ret%dFe(m))*cexp
+            ret%w0(m, gbin, fbin, mubin, rbin) = ret%w0(m, gbin, fbin,         &
+                mubin, rbin)+ real(ret%dFe(m))*cexp
 
-            ret%w1(m,gbin,fbin,mubin,rbin)                                     &
-                = ret%w1(m,gbin,fbin,mubin,rbin)                               &
-                  + real(log(gsd(m)))*real(ret%dFe(m))*cexp
+            ret%w1(m, gbin, fbin, mubin, rbin) = ret%w1(m, gbin, fbin,         &
+                mubin, rbin)+ real(log(gsd(m)))*real(ret%dFe(m))*cexp
 
             ! tbd redo these transfer functions
-            ret%w2(m,gbin,fbin,mubin,rbin)                                     &
-                = ret%w2(m,gbin,fbin,mubin,rbin)                               &
-                  + emisfac*normfac*cexp
+            ret%w2(m, gbin, fbin, mubin, rbin) = ret%w2(m, gbin, fbin,         &
+                mubin, rbin)+ emisfac*normfac*cexp
 
-            ret%w3(m,gbin,fbin,mubin,rbin)                                     &
-                = ret%w3(m,gbin,fbin,mubin,rbin)                               &
-                  + kfac*thetafac(m)*normfac*cexp
+            ret%w3(m, gbin, fbin, mubin, rbin) = ret%w3(m, gbin, fbin,         &
+                mubin, rbin)+ kfac*thetafac(m)*normfac*cexp
         end do
     end do
 
-    do m=1,args%nlp
+    do m = 1, args%nlp
         ! find the appropriate energy and time bins
         gbin_resp = clamp_i(ceiling(g/args%dg), 1, args%ne)
         tbin = clamp_i(ceiling(log10(tau(m) / time_axis(0)) / args%dlogt),     &
             1, args%nt)
 
         ! kernel of the impulse response function
-        response(gbin_resp,tbin) = response(gbin_resp,tbin) + ret%dFe(m)
+        response(gbin_resp, tbin) = response(gbin_resp, tbin) + ret%dFe(m)
     end do
 end subroutine sum_multiple_lampposts
 
 !-----------------------------------------------------------------------
-function newtex(rlp,dcosdr,ndelta,re,h,honr,kk)
+function newtex(rlp, dcosdr, ndelta, re, h, honr, kk)
 ! Extrapolates using Newtonian value
   implicit none
-  integer ndelta,kk
-  double precision newtex,rlp(ndelta),dcosdr(ndelta),re,h,honr
-  newtex = dcosdr(kk) *  ( (h-honr*rlp(kk))**2 + rlp(kk)**2 )**1.5 / rlp(kk)
-  newtex = newtex * re / ( (h-honr*re     )**2 + re**2      )**1.5
+  integer ndelta, kk
+  double precision newtex, rlp(ndelta), dcosdr(ndelta), re, h, honr
+  newtex = dcosdr(kk) * ((h-honr*rlp(kk))**2 + rlp(kk)**2)**1.5 / rlp(kk)
+  newtex = newtex * re / ((h-honr*re)**2 + re**2)**1.5
   return
-end function newtex  
+end function newtex
 !-----------------------------------------------------------------------
