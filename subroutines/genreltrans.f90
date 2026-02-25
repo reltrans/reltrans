@@ -12,10 +12,10 @@ contains
         integer, intent(in) :: nlp
         type(t_config), intent(in) :: config
         ! allocate arrays for radial profiles
-        allocate(dfer_arr(config%xe))
-        allocate(logxir(config%xe))
-        allocate(gsdr(config%xe))
-        allocate(logner(config%xe))
+        allocate(dfer_arr(config%ion_zones))
+        allocate(logxir(config%ion_zones))
+        allocate(gsdr(config%ion_zones))
+        allocate(logner(config%ion_zones))
 
         ! allocate GR arrays
         allocate (cosd(ndelta,nlp))
@@ -139,13 +139,13 @@ contains
         ! the rawS subroutine to calculate the cross-spectrum
         ionvariation = 1
         ! Loop over radius, emission angle and frequency
-        do rbin = 1, config%xe !Loop over radial zones
+        do rbin = 1, config%ion_zones !Loop over radial zones
             ! Set parameters with radial dependence
             Gamma0 = real(model_args%Gamma)
             logne = logner(rbin)
             Cutoff_0 = real(gsdr(rbin)) * model_args%Cutoff_s
             logxi0 = real(logxir(rbin))
-            if (config%xe .eq. 1)then
+            if (config%ion_zones .eq. 1)then
                 Cutoff_0 = model_args%Cutoff_s
                 logne = model_args%lognep
                 logxi0 = model_args%logxi
@@ -154,11 +154,11 @@ contains
             if (logxi0 .eq. 0.0 .or. config%ionvar .eq. 0) then
                 ionvariation = 0.0
             end if
-            do mubin = 1, config%me !loop over emission angle zones
+            do mubin = 1, config%mu_zones !loop over emission angle zones
                 ! Calculate input emission angle
-                mue = (real(mubin) - 0.5) / real(config%me)
+                mue = (real(mubin) - 0.5) / real(config%mu_zones)
                 thetae = acos(mue) * 180.0 / real(pi)
-                if (config%me .eq. 1) thetae = real(model_args%inc)
+                if (config%mu_zones .eq. 1) thetae = real(model_args%inc)
                 ! Call restframe reflection model
                 call rest_frame(arrays%earx, nex, Gamma0, model_args%Afe,      &
                     logne,Cutoff_0, logxi0, thetae, model_args%Cp, photarx)
@@ -395,7 +395,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
            model_args%honr, d, rnmax, model_args%zcos, model_args%b1,          &
            model_args%b2, model_args%qboost, model_args%eta_0, fcons,          &
            config%nro, config%nphi, nex, config%dloge, config%nf,config%fhi,   &
-           config%flo, config%me, config%xe, arrays%ker_W0,arrays%ker_W1,      &
+           config%flo, config%mu_zones, config%ion_zones, arrays%ker_W0,arrays%ker_W1,      &
            arrays%ker_W2, arrays%ker_W3, frobs, frrel)
        ! print *, 'gso ', gso(1)
     end if
@@ -422,14 +422,14 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
            config%verbose, dset,model_args%Anorm, arrays%contx_int,            &
            model_args%eta)
 
-       call radfunctions_dens(config%verbose, config%xe, model_args%rin,       &
+       call radfunctions_dens(config%verbose, config%ion_zones, model_args%rin,       &
            rnmax, model_args%eta_0, dble(model_args%logxi),                    &
            dble(model_args%lognep), model_args%a, model_args%h,                &
            model_args%Gamma, model_args%honr, rlp, dcosdr, cosd,               &
            arrays%contx_int,ndelta, nlp, config%rmin, npts, logxir, gsdr,      &
            logner, dfer_arr)
     else
-        call radfuncs_dist(config%xe, model_args%rin, rnmax,model_args%b1,     &
+        call radfuncs_dist(config%ion_zones, model_args%rin, rnmax,model_args%b1,     &
             model_args%b2, model_args%qboost, fcons,                           &
             & dble(model_args%lognep), model_args%a, model_args%h(1),          &
             model_args%honr, rlp, dcosdr, cosd, ndelta, config%rmin,npts(1),   &
@@ -490,7 +490,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                 arrays%ImGbar)
         end if
     else if (nlp .gt. 1 .and. model_args%beta_p .eq. 0.) then
-        call rawG(nex, arrays%earx, config%nf, real(config%flo),               &
+        call raw_cross_spectrum(nex, arrays%earx, config%nf, real(config%flo),               &
             real(config%fhi), nlp, arrays%contx, absorbx, real(tauso),         &
             real(gso),arrays%ReW0, arrays%ImW0, arrays%ReW1,arrays%ImW1,       &
             arrays%ReW2,arrays%ImW2, arrays%ReW3,arrays%ImW3,                  &
@@ -500,7 +500,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             model_args%resp_matr, arrays%ReGrawa,arrays%ImGrawa)
     else
         ! Calculate raw FT of the full spectrum without absorption
-        call rawS(nex, arrays%earx, config%nf, real(config%flo),               &
+        call raw_full_spectrum(nex, arrays%earx, config%nf, real(config%flo),               &
             real(config%fhi), nlp, arrays%contx, real(tauso), real(gso),       &
             arrays%ReW0, arrays%ImW0, arrays%ReW1, arrays%ImW1,arrays%ReW2,    &
             arrays%ImW2, arrays%ReW3, arrays%ImW3,real(model_args%h),          &
@@ -534,7 +534,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ! In this case, calculate the lag-energy spectrum
         ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band
         ! parameters
-        ! note: this must be done by rawG for two incoherent lamp posts, hence
+        ! note: this must be done by raw_cross_spectrum for two incoherent lamp posts, hence
         ! the skip below
         if (nlp .eq. 1 .or. model_args%beta_p .ne. 0.) then
             if (model_args%ReIm .gt. 0.0) then
