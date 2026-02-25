@@ -26,6 +26,11 @@ class SourceLine:
     assignment: Bool = False
     is_open: Bool = False
 
+    # Starts with `subroutine` or `function`
+    function_declaration: Bool = False
+    # Declares a variable
+    declaration: Bool = False
+
     @staticmethod
     def from_string(line: str) -> "SourceLine":
         stripped = line.lstrip()
@@ -33,13 +38,8 @@ class SourceLine:
         stripped = stripped.rstrip()
 
         is_comment = re.match(r"^!.*", stripped) is not None
-        if is_comment:
-            stripped = stripped.lstrip("!").lstrip()
 
-        if not is_comment:
-            has_comment = re.match(r".*!.*", stripped) is not None
-        else:
-            has_comment = False
+        has_comment = re.match(r".*!.*", stripped) is not None
 
         is_cont = re.match(r".*&$", stripped) is not None
         if not is_comment and is_cont:
@@ -49,11 +49,15 @@ class SourceLine:
         is_write = re.match(r"^write .*", stripped) is not None
         is_assignment = re.match(r"^.*=.*", stripped) is not None
         is_open = re.match(r"^open\s.*", stripped) is not None
+        is_function_declaration = (
+            re.match(r"^(subroutine|function)\s.*", stripped) is not None
+        )
+        is_var_declaration = re.match(r"^.*::.*", stripped) is not None
 
         return SourceLine(
             line=stripped,
             comment=is_comment,
-            has_comment=has_comment,
+            has_comment=is_comment or has_comment,
             source=not is_comment,
             indent=indent,
             cont=is_cont,
@@ -61,6 +65,8 @@ class SourceLine:
             write=is_write,
             assignment=is_assignment and not is_open,
             is_open=is_open,
+            function_declaration=is_function_declaration,
+            declaration=is_var_declaration,
         )
 
     def __len__(self) -> int:
@@ -72,6 +78,12 @@ class SourceLine:
         comparison.
         """
         return self.line.strip().startswith(s)
+
+    def source_wrappable(self) -> bool:
+        """
+        Is this a line of code that can be line wrapped?
+        """
+        return self.call or self.function_declaration or self.declaration
 
     def word_wrap(self, width) -> list["SourceLine"]:
         return [
@@ -106,7 +118,6 @@ class SourceLine:
                 kwargs["indent"] += indent_width
 
         lines.append(dataclasses.replace(self, line=new.strip(), **kwargs))
-        lines[-1].cont = False
 
         return lines
 
@@ -167,10 +178,14 @@ class Formatter:
                 lines.append(line)
             else:
                 new_text = line.line
+                if line.declaration:
+                    new_text = re.sub(r"\s*::\s*", " :: ", new_text)
                 new_text = new_text.replace("if(", "if (")
                 new_text = re.sub(r"\(\s+", "(", new_text)
                 new_text = re.sub(r"\s+\)", ")", new_text)
                 new_text = re.sub(r"\s\s+", " ", new_text)
+                new_text = re.sub(r"\s*=(?!>)\s*", " = ", new_text)
+                new_text = re.sub(r"\s*,\s*", ", ", new_text)
                 lines.append(dataclasses.replace(line, line=new_text))
         self.lines = lines
 
@@ -191,8 +206,6 @@ class Formatter:
             if text == "":
                 lines.append(text)
                 continue
-            if line.comment:
-                text = "! " + text
             text = (" " * line.indent) + text
             if line.cont:
                 text = text.ljust(self.text_width - 1) + "&"
@@ -205,11 +218,15 @@ class Formatter:
         for l in self.lines:
             if len(l) > self.text_width:
                 if l.comment:
-                    lines += l.word_wrap(self.text_width)
-                elif not l.has_comment and l.call:
+                    # lines += l.word_wrap(self.text_width)
+                    lines.append(l)
+                elif not l.has_comment and l.source_wrappable():
                     lines += l.source_wrap(self.text_width)
                 elif not l.has_comment and l.assignment:
-                    lines += l.maths_wrap(self.text_width)
+                    maths_lines = l.source_wrap(self.text_width)
+                    for ml in maths_lines:
+                        lines += ml.maths_wrap(self.text_width)
+                    lines[-1].cont = False
                 else:
                     lines.append(l)
             else:
