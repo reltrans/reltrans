@@ -20,7 +20,7 @@ module common_types
         integer :: verbose = 0
         ! firstcall: is this the first time the model has been called?
         logical :: firstcall = .true., needtrans = .true., needconv = .true.,test = .false.
-        integer :: me, xe, nex, m, ionvar, refvar
+        integer :: mu_zones, ion_zones, nex, m, ionvar, refvar
 
         ! TODO: are these really constants, or are they hidden variables?
         ! constants
@@ -164,8 +164,8 @@ contains
         type(t_config), intent(inout) :: config
         integer :: get_env_int
         character (len=200) :: get_env_char
-        config%me = get_env_int("MU_ZONES", 1)
-        config%xe = get_env_int("ION_ZONES", 20)
+        config%mu_zones = get_env_int("MU_ZONES", 1)
+        config%ion_zones = get_env_int("ION_ZONES", 20)
         ! verbose:
         ! 0: XSPEC output only
         ! 1: Print quantities to terminal + 0
@@ -246,16 +246,16 @@ contains
 
             ! reallocate the transfer function arrays
             if (allocated(arrays%ker_W0)) deallocate(arrays%ker_W0)
-            allocate(arrays%ker_W0(model_args%nlp,nex,config%nf,config%me,config%xe))
+            allocate(arrays%ker_W0(model_args%nlp,nex,config%nf,config%mu_zones,config%ion_zones))
 
             if (allocated(arrays%ker_W1)) deallocate(arrays%ker_W1)
-            allocate(arrays%ker_W1(model_args%nlp,nex,config%nf,config%me,config%xe))
+            allocate(arrays%ker_W1(model_args%nlp,nex,config%nf,config%mu_zones,config%ion_zones))
 
             if (allocated(arrays%ker_W2)) deallocate(arrays%ker_W2)
-            allocate(arrays%ker_W2(model_args%nlp,nex,config%nf,config%me,config%xe))
+            allocate(arrays%ker_W2(model_args%nlp,nex,config%nf,config%mu_zones,config%ion_zones))
 
             if (allocated(arrays%ker_W3)) deallocate(arrays%ker_W3)
-            allocate(arrays%ker_W3(model_args%nlp,nex,config%nf,config%me,config%xe))
+            allocate(arrays%ker_W3(model_args%nlp,nex,config%nf,config%mu_zones,config%ion_zones))
 
             if (allocated(arrays%ReW0)) deallocate(arrays%ReW0)
             allocate(arrays%ReW0(model_args%nlp,nex,config%nf))

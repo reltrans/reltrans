@@ -1,6 +1,6 @@
 !-----------------------------------------------------------------------
 subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,eta_0,&
-                  fcons,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,ker_W0,ker_W1,ker_W2,ker_W3,frobs,frrel)
+                  fcons,nro,nphi,ne,dloge,nf,fhi,flo,mu_zones,ion_zones,ker_W0,ker_W1,ker_W2,ker_W3,frobs,frrel)
     ! Code to calculate the transfer function for an accretion disk.
     ! This code first does full GR ray tracing for a camera with impact parameters < bmax
     ! It then also does straight line ray tracing for impact parameters >bmax
@@ -23,13 +23,13 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     ! nro,nphi              Number of pixels on the observer's camera (b and phib)
     ! ne, dloge             Number of energy bins and maximum energy (compatible with FFT convolution)
     ! nf,fhi,flo            nf = Number of logarithmic frequency bins used, range= flo to fhi
-    ! me                    Number of mue bins
-    ! xe                    Number of logr bins: bins 1:xe-1 are logarithmically spaced, bin xe is everything else
+    ! mu_zones                  Number of mue bins
+    ! ion_zones                 Number of logr bins: bins 1:ion_zones-1 are logarithmically spaced, bin ion_zones is everything else
     ! OUTPUT
-    ! ker_W0(nlp,ne,nf,me,xe)  Transfer function W0 - linear transfer function
-    ! ker_W1(nlp,ne,nf,me,xe)  Transfer function W1 - one aspect of photon index variations
-    ! ker_W2(nlp,ne,nf,me,xe)  Transfer function W2 - other aspect of photon index variations
-    ! ker_W3(nlp,ne,nf,me,xe)  Transfer function W3 - ionization variations
+    ! ker_W0(nlp,ne,nf,mu_zones,ion_zones)  Transfer function W0 - linear transfer function
+    ! ker_W1(nlp,ne,nf,mu_zones,ion_zones)  Transfer function W1 - one aspect of photon index variations
+    ! ker_W2(nlp,ne,nf,mu_zones,ion_zones)  Transfer function W2 - other aspect of photon index variations
+    ! ker_W3(nlp,ne,nf,mu_zones,ion_zones)  Transfer function W3 - ionization variations
     ! frobs                 Observer's reflection fraction
     ! frrel                 Reflection fraction defined by relxilllp
     use dyn_gr
@@ -37,7 +37,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     use radial_grids
     use gr_continuum
     implicit none
-    integer nro,nphi,ne,nf,me,xe,dset,nlp
+    integer nro,nphi,ne,nf,mu_zones,ion_zones,dset,nlp
     double precision spin,h(nlp),mu0,Gamma,rin,rout,zcos,fhi,flo,honr
     double precision b1,b2,qboost
     double precision fcons,cosdout(nlp)
@@ -62,7 +62,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     logical dotrace
 
     !new stuff - move back above once it's implemented properly    
-    complex ker_W0(nlp,ne,nf,me,xe),ker_W1(nlp,ne,nf,me,xe),ker_W2(nlp,ne,nf,me,xe),ker_W3(nlp,ne,nf,me,xe)
+    complex ker_W0(nlp,ne,nf,mu_zones,ion_zones),ker_W1(nlp,ne,nf,mu_zones,ion_zones),ker_W2(nlp,ne,nf,mu_zones,ion_zones),ker_W3(nlp,ne,nf,mu_zones,ion_zones)
     real emisfac,thetafac(nlp),kfac,normfac
     
     !arrays to save the transfer function
@@ -160,7 +160,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     if( fhi .lt. tiny(fhi) ) fi(1) = 0.0d0
 
     !initialize radius grid, angles, and transfer functions
-    dlogr    = log10(rnmax/rin) / real(xe-1)
+    dlogr    = log10(rnmax/rin) / real(ion_zones-1)
     cos0     = mu0
     sin0     = sqrt(1.0-cos0**2)
     frobs    = 0.0 !Initialised observer's reflection fraction
@@ -237,12 +237,12 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                         !Work out radial bin
                         rbin = ceiling( log10(re/rin) / dlogr )
                         rbin = MAX( rbin , 1  )
-                        rbin = MIN( rbin , xe )
+                        rbin = MIN( rbin , ion_zones )
                         !Add to the radial dependence of the transfer function TBD MAKE SURE THIS IS RIGHT
                         dfer_arr(rbin) = dfer_arr(rbin) + dFe(nl)                 
                         !Calculate emission angle and work out which mue bin to add to
                         mue   = demang(spin,mu0,re,alpha,beta)
-                        mubin = ceiling( mue * dble(me) )
+                        mubin = ceiling( mue * dble(mu_zones) )
                         !calculate the extra factors for w2/3
                         !if (nl .eq. 1 .and. nlp .gt. 1) then
                         !    emisfac = emissivity(1)+eta_0*emissivity(2)                          
@@ -335,12 +335,12 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                     !Work out radial bin
                     rbin = ceiling( log10(re/rin) / dlogr )
                     rbin = MAX( rbin , 1  )
-                    rbin = MIN( rbin , xe )
+                    rbin = MIN( rbin , ion_zones )
                     !Add to the radial dependence of the transfer function
                     dfer_arr(rbin) = dfer_arr(rbin) + dFe(nl)                     
                     !Calculate emission angle and work out which mue bin to add to
                     mue = demang(spin,mu0,re,alpha,beta)
-                    mubin = ceiling( mue * dble(me) )
+                    mubin = ceiling( mue * dble(mu_zones) )
                     !calculate the extra factors for w2/3
                     if (nlp .gt. 1) then
                         emisfac = (emissivity(1)+eta_0*emissivity(2))/(1.+eta_0)
