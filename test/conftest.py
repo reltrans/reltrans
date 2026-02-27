@@ -122,9 +122,14 @@ def assert_snapshot() -> callable:
     the calling function (i.e. the test case) and may optionally have a `name`
     argument appended so that `assert_snapshot()` may be used multiple times
     with different data by the same test.
+
+    The tolerances have been empirically determined during the refactoring. It
+    turns out the order of operations incrues different rounding errors, which,
+    as reltrans functions over a very large numerical range (that is, very many
+    orders of magnitude), build up to the ~0.1% percent level.
     """
 
-    def _assert_snapshot_equal(data: np.ndarray, name="", rtol=1e-4, atol=0) -> bool:
+    def _assert_snapshot_equal(data: np.ndarray, name="", rtol=2e-4, atol=0) -> bool:
         calling_context = inspect.stack()[1][3]
 
         snapshot_name = calling_context
