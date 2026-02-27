@@ -6,7 +6,7 @@ module m_rtrans
     use common_types
     implicit none
 
-    type :: new_args
+    type :: t_rtrans_args
         type(t_config), pointer :: conf => null()
         type(t_model_arguments), pointer :: model => null()
         type(t_arrays), pointer :: arrays => null()
@@ -27,14 +27,15 @@ module m_rtrans
 
         ! These are set as part of initialising the impulse response matrix
         double precision :: dlogt = 0.0, dg = 0.0
-    end type new_args
+    end type t_rtrans_args
 
 contains
 
-    ! Bind views to various input arrays to the `t_impulse_args` derived type
+    ! Bind the arguments into `t_rtrans_args`, and compute some of the other
+    ! values. This initialises and sets up all fields of the structure.
     subroutine bind_arguments(args, config, model_args, arrays, frobs, dFe,    &
          fi, ne)
-        type(new_args), intent(inout) :: args
+        type(t_rtrans_args), intent(inout) :: args
         type(t_config), target, intent(in) :: config
         type(t_model_arguments), target, intent(in) :: model_args
         type(t_arrays), target, intent(in) :: arrays
@@ -62,7 +63,7 @@ contains
 
     ! Zeros all the output arrays
     subroutine outputs_zero_arrays(args)
-        type(new_args), intent(inout) :: args
+        type(t_rtrans_args), intent(inout) :: args
         args%arrays%ker_W0 = 0.
         args%arrays%ker_W1 = 0.
         args%arrays%ker_W2 = 0.
@@ -109,7 +110,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     double precision, intent(inout) :: frobs(model_args%nlp),                  &
          frrel(model_args%nlp)
 
-    type(new_args) :: args
+    type(t_rtrans_args) :: args
 
     integer m
     double precision cosdout(model_args%nlp)
@@ -242,6 +243,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
 end subroutine rtrans
 !-----------------------------------------------------------------------
 
+! Clamps an integer value between some high and low value.
 integer function clamp_i(v, low, high) result(o)
     integer, intent(in) :: v, low, high
     o = max(low, v)
@@ -250,9 +252,6 @@ end function clamp_i
 
 ! This is an attempt to cleanup the strans function to put common code into a
 ! common subroutine so that there are fewer edits needed to add args behaviours
-!
-! TODO: this should really be using a derived type to pass arguments around, but
-! that's more refactoring for some(time|one) else.
 subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
      r_grid, domega, args)
     use dyn_gr
@@ -273,7 +272,7 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
     double precision :: dlgfacthick
     integer :: clamp_i
 
-    type(new_args), intent(inout) :: args
+    type(t_rtrans_args), intent(inout) :: args
 
     double precision :: re, alpha, beta, phie, phin
     ! photon time from/to
@@ -356,7 +355,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     double precision, intent(in) :: domega(r_length)
     double precision, intent(in) :: alpha, beta, taudo, g, re
 
-    type(new_args), intent(inout) :: args
+    type(t_rtrans_args), intent(inout) :: args
 
     ! functions
     double precision :: dareafac, demang, dglpfacthick
@@ -483,9 +482,8 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
     double precision, intent(in) :: domega(r_length)
     double precision, intent(in) :: alpha, beta, taudo, g, re
 
-    type(new_args), intent(inout) :: args
+    type(t_rtrans_args), intent(inout) :: args
 
-    ! time grid bits, should be passed in
     integer :: tbin, fbin
 
     ! functions
