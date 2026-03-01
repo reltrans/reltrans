@@ -45,21 +45,13 @@ def compile(*source_files: str):
     wrapper_o = os.path.join(BUILD_DIR, "wrappers.o")
     cmd = cmd_fortran()
     cmd += source_files
-    cmd += ["-c", "-o", wrapper_o]
-
-    print(cmd)
-    subprocess.run(cmd, check=True)
-
-    cmd = cmd_fortran()
-    cmd += [wrapper_o]
-    cmd += ["-o", os.path.join(BUILD_DIR, "pyreltrans")]
+    cmd += ["-o", os.path.join(BUILD_DIR, "libpyreltrans.so")]
     cmd += linux_ldflags()
     cmd += xspectrampoline_helpers.get_linker_flags(
         ["XSFunctions", "XSModel", "fftw3", "cfitsio"],
         rpath_relative=True,
     )
 
-    print(cmd)
     subprocess.run(cmd, check=True)
 
 
