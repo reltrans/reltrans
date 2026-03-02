@@ -490,7 +490,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                 arrays%ImGbar)
         end if
     else if (nlp .gt. 1 .and. model_args%beta_p .eq. 0.) then
-        call raw_cross_spectrum(nex, arrays%earx, config%nf, real(config%flo),               &
+        call full_cross_spectrum_absorbed_resp(nex, arrays%earx,                &
+            config%nf, real(config%flo),                                        &
             real(config%fhi), nlp, arrays%contx, absorbx, real(tauso),         &
             real(gso),arrays%ReW0, arrays%ImW0, arrays%ReW1,arrays%ImW1,       &
             arrays%ReW2,arrays%ImW2, arrays%ReW3,arrays%ImW3,                  &
@@ -500,7 +501,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             model_args%resp_matr, arrays%ReGrawa,arrays%ImGrawa)
     else
         ! Calculate raw FT of the full spectrum without absorption
-        call raw_full_spectrum(nex, arrays%earx, config%nf, real(config%flo),               &
+        call raw_cross_spectrum(nex, arrays%earx, config%nf,                    &
+            real(config%flo),                                                   &
             real(config%fhi), nlp, arrays%contx, real(tauso), real(gso),       &
             arrays%ReW0, arrays%ImW0, arrays%ReW1, arrays%ImW1,arrays%ReW2,    &
             arrays%ImW2, arrays%ReW3, arrays%ImW3,real(model_args%h),          &
@@ -534,7 +536,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ! In this case, calculate the lag-energy spectrum
         ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band
         ! parameters
-        ! note: this must be done by raw_cross_spectrum for two incoherent lamp posts, hence
+        ! note: this must be done by full_cross_spectrum_absorbed_resp for two
+        ! incoherent lamp posts, hence
         ! the skip below
         if (nlp .eq. 1 .or. model_args%beta_p .ne. 0.) then
             if (model_args%ReIm .gt. 0.0) then

@@ -1,4 +1,4 @@
-subroutine raw_full_spectrum(nex, earx, nf, flo, fhi, nlp, contx,              &
+subroutine raw_cross_spectrum(nex, earx, nf, flo, fhi, nlp, contx,             &
                 tauso, gso, ReW0, ImW0, ReW1, ImW1, ReW2, ImW2,               &
                 ReW3, ImW3, h, z, Gamma, eta,                                  &
                 beta_p, boost, g, DelAB, ionvar, DC, ReSraw, ImSraw)
@@ -118,4 +118,4 @@ subroutine raw_full_spectrum(nex, earx, nf, flo, fhi, nlp, contx,              &
      end do
 
     return
-end subroutine raw_full_spectrum
+end subroutine raw_cross_spectrum
