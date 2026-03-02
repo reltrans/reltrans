@@ -1,5 +1,7 @@
-subroutine raw_cross_spectrum(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,h,z,Gamma,eta,&
-                boost,ReIm,g,DelAB,ionvar,DC,resp_matr,ReGraw,ImGraw)
+subroutine raw_cross_spectrum(nex, earx, nf, flo, fhi, nlp, contx,             &
+                absorbx, tauso, gso, ReW0, ImW0, ReW1, ImW1, ReW2, ImW2,      &
+                ReW3, ImW3, h, z, Gamma, eta,                                  &
+                boost, ReIm, g, DelAB, ionvar, DC, resp_matr, ReGraw, ImGraw)
                 
     use constants
     implicit none

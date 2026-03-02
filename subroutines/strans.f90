@@ -62,7 +62,10 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     logical dotrace
 
     !new stuff - move back above once it's implemented properly    
-    complex ker_W0(nlp,ne,nf,mu_zones,ion_zones),ker_W1(nlp,ne,nf,mu_zones,ion_zones),ker_W2(nlp,ne,nf,mu_zones,ion_zones),ker_W3(nlp,ne,nf,mu_zones,ion_zones)
+    complex ker_W0(nlp,ne,nf,mu_zones,ion_zones),                              &
+        ker_W1(nlp,ne,nf,mu_zones,ion_zones),                              &
+        ker_W2(nlp,ne,nf,mu_zones,ion_zones),                              &
+        ker_W3(nlp,ne,nf,mu_zones,ion_zones)
     real emisfac,thetafac(nlp),kfac,normfac
     
     !arrays to save the transfer function
