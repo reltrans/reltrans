@@ -194,6 +194,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     odisc    = 1       !flag to ensure the chosen disk radius is between rin and rout
     i        = nro + 1
     check_disk_exist = .false. 
+    ! do while(i .gt. 1)
     do while( odisc .eq. 1 .and. i .gt. 1 )    !main loops of the subroutine: first is for GR
         i = i - 1                              !i counts over the camera until it reaches the disk inner radius
         if (check_disk_exist)  odisc = 0
@@ -251,7 +252,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                        dFe(m) = emissivity(m) * g**3 * domega(i) / (1.d0+zcos)**3
 
                        ! write(*,*) 'printing to file 21 the GR loop quantities'
-                       write(21,*) re, phin, alpha, beta, gsd(m), cosfac, dareafac(re,spin), emissivity(m), g
+                       ! write(21,*) re, phin, alpha, beta, gsd(m), cosfac, dareafac(re,spin), emissivity(m), g
                         
                        !calculate extra factors that go into the transfer functions for double lps
                        if (nlp .gt. 1) then
