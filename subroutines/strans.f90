@@ -60,7 +60,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     integer get_env_int
     double precision lximax
     double precision eta_0
-    logical dotrace
+    logical dotrace, check_disk_exist
 
     !new stuff - move back above once it's implemented properly    
     complex ker_W0(nlp,ne,nf,me,xe),ker_W1(nlp,ne,nf,me,xe),ker_W2(nlp,ne,nf,me,xe),ker_W3(nlp,ne,nf,me,xe)
@@ -187,25 +187,28 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     !transfer function/convolution kernel in energy (gbin), frequency (fbin), emission angle (mubin), disk radial 
     !bin (rbin) from the m-th/nl-th lamp post
 
-    open(21, file = 'data_test_GR_loop.dat')
-    open(31, file = 'data_test_pem_re_values.dat')
+    ! open(21, file = 'data_test_GR_loop.dat')
+    ! open(31, file = 'data_test_pem_re_values.dat')
     
     ! Construct the transfer function by summing over all pixels
     odisc    = 1       !flag to ensure the chosen disk radius is between rin and rout
     i        = nro + 1
+    check_disk_exist = .false. 
     do while( odisc .eq. 1 .and. i .gt. 1 )    !main loops of the subroutine: first is for GR
         i = i - 1                              !i counts over the camera until it reaches the disk inner radius
-        odisc = 0
+        if (check_disk_exist)  odisc = 0
+           
         do j = 1,NPHI                          !azimuth over BH on the disk
             phin  = (j-0.5) * 2.d0 * pi / dble(nphi)
             alpha = rn(i) * sin(phin)
             beta  = -rn(i) * cos(phin) * mueff
             !If the ray hits the disk, calculate flux and time lag
-            write(31,*) i, j, pem1(j,i), re1(j,i)
+            ! write(31,*) i, j, pem1(j,i), re1(j,i)
             if( pem1(j,i) .gt. 0.0d0 )then
                 re    = re1(j,i)
                 if( re .gt. rin .and. re .lt. rout )then
-                    odisc = 1
+                   odisc = 1
+                   check_disk_exist = .true.
                     do m=1,nlp
                        taudo = taudo1(j,i)
                        if (re .gt. risco) then
@@ -328,10 +331,10 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
         end do
     end do
 
-    close(21)
-    close(31)
+    ! close(21)
+    ! close(31)
     
-    open(22, file = 'data_test_NW_loop.dat') 
+    ! open(22, file = 'data_test_NW_loop.dat') 
 
     if (rnn(1) .ne. -1.0) then
     ! Now trace rays for that bigger camera (obviously a lot easier because it's Newtonian)
@@ -368,7 +371,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
 
 
                     ! write(*,*) 'printing to file 22 the Newtonian loop quantities'
-                    write(22,*) re, phin, alpha, beta, gsd(m), cosfac, dareafac(re,spin), emissivity(m), g
+                    ! write(22,*) re, phin, alpha, beta, gsd(m), cosfac, dareafac(re,spin), emissivity(m), g
 
 
                     if (nlp .gt. 1) then
@@ -437,7 +440,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
 
     end if
     
-    close(22)
+    ! close(22)
     do m=1,nlp 
         ! Calculate 4pi p(theta0,phi0) = ang_fac
         ang_fac = 4.d0 * pi * pnorm * pfunc_raw(-cosdelta_obs(m),b1,b2,qboost)
