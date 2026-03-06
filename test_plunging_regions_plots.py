@@ -39,7 +39,7 @@ def isco_radius(a, prograde=True):
 def plot_features(ax, xaxis_label = 'Energy [keV]',\
                   yaxis_label = 'keV * photons / $cm^2$ / s / keV ', font = 20):
     # ax.set_xlim(0.1,80) 
-    ax.set_xlim(0.1,300) 
+    # ax.set_xlim(0.1,300) 
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_xlabel(f'{xaxis_label}', fontsize = font)
@@ -126,13 +126,11 @@ param[3]  = 1.0    #rin
 param[4]  = 2000.0  #Rout
 param[12] = 1.0 #boost 
 ax.set_title(f'h {param[0]:.1f}, a {param[1]:.3f}, incl {param[2]:.1f}', fontsize = font)
-
 photar_full_model = ib.reltransDCp(ear, param)
 ax.plot(ear[:-1], photar_full_model* ear[:-1]**Epower , lw = 3, ls = '-' , label = f'Rin-Rout: {param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
 param[3]  = isco_radius(param[1])    #rin  
 param[4]  = 2000 #Rout
-
 photar_isco_model = ib.reltransDCp(ear, param)
 ax.plot(ear[:-1], photar_isco_model* ear[:-1]**Epower , lw = 3, ls = '--' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
@@ -143,7 +141,7 @@ photar_PLregion_model = ib.reltransDCp(ear, param)
 ax.plot(ear[:-1], photar_PLregion_model* ear[:-1]**Epower , lw = 3, ls = '-' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
 plot_features(ax)
-# plt.savefig(f'test_compare_h{param[0]:.1f}_a{param[1]:.1f}_incl{param[2]:.1f}.pdf', format='pdf',bbox_inches='tight')
+plt.savefig(f'Mercan_first_test_compare_h{param[0]:.1f}_a{param[1]:.1f}_incl{param[2]:.1f}.pdf', format='pdf',bbox_inches='tight')
 
 ##############################################################################
 
@@ -154,13 +152,11 @@ param[3]  = 1.0    #rin
 param[4]  = 2000.0  #Rout
 param[12] = 1.0 #boost 
 ax.set_title(f'h {param[0]:.1f}, a {param[1]:.3f}, incl {param[2]:.1f}', fontsize = font)
-
 photar_full_model = ib.reltransDCp(ear, param)
 ax.plot(ear[:-1], photar_full_model* ear[:-1]**Epower , lw = 3, ls = '-' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
 param[3]  = isco_radius(param[1])    #rin  
 param[4]  = 2000 #Rout
-
 photar_isco_model = ib.reltransDCp(ear, param)
 ax.plot(ear[:-1], photar_isco_model* ear[:-1]**Epower , lw = 3, ls = '--' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
@@ -183,13 +179,11 @@ param[3]  = 1.0    #rin
 param[4]  = 2000.0  #Rout
 param[12] = 1.0 #boost 
 ax.set_title(f'h {param[0]:.1f}, a {param[1]:.3f}, incl {param[2]:.1f}', fontsize = font)
-
 photar_full_model = ib.reltransDCp(ear, param)
 ax.plot(ear[:-1], photar_full_model* ear[:-1]**Epower , lw = 3, ls = '-' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
 param[3]  = isco_radius(param[1])    #rin  
 param[4]  = 2000 #Rout
-
 photar_isco_model = ib.reltransDCp(ear, param)
 ax.plot(ear[:-1], photar_isco_model* ear[:-1]**Epower , lw = 3, ls = '--' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
