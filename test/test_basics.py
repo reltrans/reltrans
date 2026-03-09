@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from wrapper import DCP_Parameters, Dbl_Parameters, rtdist_Parameters
+from pyreltrans import DCP_Parameters, Dbl_Parameters, rtdist_Parameters
 
 
 def _debug_plot(energy, output, title="", xlabel="", ylabel="", yscale="linear", xscale="log"):
@@ -17,7 +17,7 @@ def _debug_plot(energy, output, title="", xlabel="", ylabel="", yscale="linear",
     plt.title(title)
     plt.show()
 
-    
+
 def test_basic_invocation(reltrans, assert_snapshot):
     """A smoke test to check whether the default values are working."""
     reltrans.reset()
@@ -26,14 +26,15 @@ def test_basic_invocation(reltrans, assert_snapshot):
     # _debug_plot(energy,output, "reltransDCp time-averaged spectrum [default parameters]")
     assert_snapshot(output)
 
+
 def test_basic_absorption_invocation(reltrans, assert_snapshot):
     """A smoke test to check whether absorption is being correctly applied."""
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dcp(energy, DCP_Parameters(nh = 0.2))
     # _debug_plot(energy,output, "reltransDCp time-averaged spectrum [default parameters]")
     assert_snapshot(output)
-    
-    
+
+
 def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     model are working. This test requires an RMF and ARF, which is provided by
@@ -62,7 +63,7 @@ def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
     output = reltrans.dcp(energy, xrb1)
     assert_snapshot(output, name="magnitude")
 
-    
+
 def test_basic_invocation_reltransDbl(reltrans, assert_snapshot, envars):
     """A smoke test to check whether the default values are working."""
     reltrans.reset()
@@ -71,7 +72,7 @@ def test_basic_invocation_reltransDbl(reltrans, assert_snapshot, envars):
     # _debug_plot(energy,output, "rtdist time-averaged spectrum [default parameters]", xlabel="Energy [keV]", xscale='log', yscale='log')
     assert_snapshot(output)
 
-    
+
 def test_re_im_reltransDbl(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     reltransDbl model are working. This test requires an RMF and ARF, which is provided by
@@ -110,7 +111,7 @@ def test_reltransDCp_called_twice_no_resetting(reltrans, assert_snapshot):
     output_dcp = reltrans.dcp(energy, DCP_Parameters())
     output_dcp2 = reltrans.dcp(energy, DCP_Parameters())
     np.testing.assert_allclose(output_dcp, output_dcp2, rtol=1e-4)
-    
+
 def test_reltransDCp_called_twice_after_resetting(reltrans, assert_snapshot):
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     reltrans.reset()
@@ -119,7 +120,7 @@ def test_reltransDCp_called_twice_after_resetting(reltrans, assert_snapshot):
     output_dcp2 = reltrans.dcp(energy, DCP_Parameters())
     np.testing.assert_allclose(output_dcp, output_dcp2, rtol=1e-4)
 
-    
+
 def test_resetting_between_flavours(reltrans):
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     reltrans.reset()
@@ -165,7 +166,7 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
     rout = 1000.0
     mudisk = 0.0
     distance = 18000000.0
-    
+
     rn , domega = reltrans.getrgrid(rnmin, rnmax, mueff, nro, nphi)
 
     reltrans.set_re   (nro,nphi)
@@ -182,9 +183,9 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
         mudisk=mudisk,
         d=distance,
     )
-    re    = reltrans.get_re   (nro,nphi)  
-    taudo = reltrans.get_taudo(nro,nphi)  
-    pem   = reltrans.get_pem  (nro,nphi)  
+    re    = reltrans.get_re   (nro,nphi)
+    taudo = reltrans.get_taudo(nro,nphi)
+    pem   = reltrans.get_pem  (nro,nphi)
     assert_snapshot(re, name="re1", rtol=2e-4)
     assert_snapshot(taudo, name="taudo1", rtol=2e-4)
     assert_snapshot(pem, name="pem1", rtol=2e-4)
@@ -198,7 +199,7 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
 #     # _debug_plot(energy,output, "rtdist time-averaged spectrum [default parameters]")
 #     assert_snapshot(output)
 
-    
+
 # def test_re_im_rtdist(reltrans, assert_snapshot, telescope, envars):
 #     """Test the re_im parameter to assert that all the different outputs of the
 #     RTDIST model are working. This test requires an RMF and ARF, which is provided by

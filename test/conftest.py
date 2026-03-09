@@ -7,7 +7,7 @@ import dataclasses
 from typing import Any
 
 import pytest
-import wrapper
+import pyreltrans
 
 import numpy as np
 
@@ -85,7 +85,7 @@ def envars() -> EnvironmentVariables:
 
 
 @pytest.fixture(scope="session")
-def reltrans() -> wrapper.Reltrans:
+def reltrans() -> pyreltrans.Reltrans:
     """
     Obtain the reltrans library wrapper class.
 
@@ -99,7 +99,7 @@ def reltrans() -> wrapper.Reltrans:
     potentially reachable by other tests.
     """
     # only initialise the library once
-    return wrapper.Reltrans()
+    return pyreltrans.Reltrans()
 
 
 @pytest.fixture
