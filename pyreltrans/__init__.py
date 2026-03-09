@@ -5,6 +5,7 @@ import ctypes as ct
 import pathlib
 import warnings
 import importlib.resources
+import xspectrampoline_helpers as helpers
 
 import numpy as np
 
@@ -12,10 +13,10 @@ f_double = ct.POINTER(ct.c_double)
 f_float = ct.POINTER(ct.c_float)
 f_int = ct.POINTER(ct.c_int)
 
-_pyreltrans_dir = importlib.resources.files("pyreltrans")
+_pyreltrans_dir = helpers.get_artifact_dir("pyreltrans")
 
 
-def get_reltrans_library_path(lib_name="libpyreltrans") -> str:
+def get_reltrans_library_path(lib_name="libreltrans") -> str:
     """
     Get the reltrans library path as a string. Checks common locations from the
     reltrans root directory. This can be overwritten using the `RELTRANS_PATH`
@@ -30,15 +31,7 @@ def get_reltrans_library_path(lib_name="libpyreltrans") -> str:
         warnings.warn(f"Using RELTRANS_PATH variable: {lib_path}")
         return lib_path
 
-    system = platform.system()
-    if system == "Linux":
-        lib_name = lib_name + ".so"
-    elif system == "Darwin":
-        lib_name = lib_name + ".dylib"
-    else:
-        raise Exception("Unsupported OS " + system)
-
-    lib_path = _pyreltrans_dir / lib_name
+    lib_path = _pyreltrans_dir / f"{lib_name}.{helpers.SHARED_LIB_EXT}"
     if lib_path.is_file():
         return str(lib_path.absolute())
 

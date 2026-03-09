@@ -11,6 +11,7 @@ else:
     raise Exception(f"Unsupported platform: '{sys.platform}'")
 
 package_name = "pyreltrans"
+library_name = "reltrans"
 version = "0.1.0"
 
 setup(
@@ -24,5 +25,5 @@ setup(
     version=version,
     packages=[package_name],
     include_package_data=True,
-    package_data={package_name: [f"./build/lib/lib{package_name}.{SHARED_EXT}"]},
+    package_data={package_name: [f"./build/lib/lib{library_name}.{SHARED_EXT}"]},
 )
