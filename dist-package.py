@@ -28,7 +28,7 @@ def get_ldflags():
     elif TARGET == "macos":
         import site
         site_packages_path = site.getsitepackages()[0]
-        return ["-lgfortran", f"-Wl,-rpath,{site_packages_path}/xspectrampoline/LibXSPEC_v6_35_1/lib/"]
+        return ["-lgfortran"]
     else:
         raise "unreachable"
 
@@ -84,12 +84,22 @@ def compile(*source_files: str) -> str:
     cmd += source_files
     cmd += ["-o", output_path]
     cmd += get_ldflags()
-    cmd += xspectrampoline_helpers.get_linker_flags(
+    ld_flags = xspectrampoline_helpers.get_linker_flags(
         ["XSFunctions", "XSModel", "fftw3", "cfitsio"],
         # Use relative rpaths so that when it is installed into the Python
         # envrionment it can find the xspectrampoline libraries.
         rpath_relative=True,
+        target=TARGET,
     )
+    ld_flags = [
+        (
+            str(xspectrampoline_helpers._libxspec_path / "lib" / "libfftw3.a")
+            if "libfftw3" in i
+            else i
+        )
+        for i in ld_flags
+    ]
+    cmd += ld_flags
 
     subprocess.run(cmd, check=True)
     shutil.copyfile(
