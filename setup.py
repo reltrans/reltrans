@@ -3,6 +3,13 @@ import os
 import pathlib
 from setuptools import setup
 
+if sys.platform.startswith("linux"):
+    SHARED_EXT = "so"
+elif sys.platform == "darwin":
+    SHARED_EXT = "dylib"
+else:
+    raise Exception(f"Unsupported platform: '{sys.platform}'")
+
 package_name = "pyreltrans"
 version = "0.1.0"
 
@@ -17,5 +24,5 @@ setup(
     version=version,
     packages=[package_name],
     include_package_data=True,
-    package_data={package_name: ["libpyreltrans.so"]}
+    package_data={package_name: [f"./build/lib/lib{package_name}.{SHARED_EXT}"]},
 )
