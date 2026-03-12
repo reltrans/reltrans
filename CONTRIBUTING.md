@@ -94,12 +94,12 @@ f_double = ct.POINTER(ct.c_double)
 written in plain `lower_snake_case`. Avoid cryptic abbreviations:
 
 ```python
-# ✅ Good
+# use the full model name in lower_snake_case
 reltrans_pl(ear, params)
 reltrans_dcp(ear, params)
 reltrans_dbl(ear, params)
 
-# ❌ Avoid — hard to understand at a glance
+# not like this — cryptic and inconsistently capitalised
 wPL(...)
 wDCp(...)
 ```
@@ -249,11 +249,11 @@ Tests live in `test/` and are run with `pytest`. Here are the conventions:
   describes what it checks:
 
   ```python
-  # ✅ Good
+  # the name should tell you what the test is checking
   def test_basic_invocation(reltrans, assert_snapshot): ...
   def test_re_im_returns_time_lag(reltrans, assert_snapshot): ...
 
-  # ❌ Avoid
+  # these tell you nothing about what is being tested
   def test1(): ...
   def myTest(): ...
   ```
