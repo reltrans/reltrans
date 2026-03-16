@@ -1,8 +1,13 @@
 !-----------------------------------------------------------------------
 subroutine radfunctions_dens(config, model_args, arrays)
-    ! In  : xe,rin,rnmax,eta_0,logxip,spin,h,honr,rlp,dcosdr,cosd,ndelta,rmin,npts
-    ! logxir(xe),gsdr(xe)   logxi (ionization parameter) and gsd (source to disc blueshift) as a function of radius
-    ! Out : logxir(1:xe), gsdr(1:xe), logner(1:xe)
+    ! In  : config      - global configuration (e.g. number of radial grid points: config%xe)
+    !       model_args  - model parameters (e.g. geometry, logxi, lognep, honr, number of LPs: model_args%nlp)
+    !       arrays      - input arrays bundled in t_arrays (if applicable; main radial profiles come from modules)
+    !      Uses/updates module arrays from radial_grids:
+    !       logxir(1:config%xe) - log10 of ionization parameter as a function of radius
+    !       gsdr(1:config%xe)   - source-to-disc blueshift factor as a function of radius
+    !       logner(1:config%xe) - log10 of electron density as a function of radius
+    !       dfer_arr(1:config%xe) - emissivity-related radial scaling array
     use common_types
     use env_variables
     use dyn_gr, only: ndelta, rlp, dcosdr, cosd, npts
