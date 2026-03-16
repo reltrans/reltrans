@@ -19,8 +19,12 @@ subroutine radfunctions_dens(config, model_args, arrays)
 
     real                           :: gso(model_args%nlp)
     double precision :: rlp_column(ndelta),dcosdr_column(ndelta),cosd_column(ndelta), dgsofac
-    integer          :: i, kk, get_index, get_env_int, l, m
-    double precision :: rp, logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd(model_args%nlp), dglpfacthick
+    integer          :: i, kk, get_index, l, m
+    ! old variable declaration
+    ! integer          :: get_env_int
+    double precision :: logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd(model_args%nlp)
+    ! old variable declaration
+    ! double precision :: rp, dglpfacthick
     double precision :: xi_lp(config%xe,model_args%nlp), logxi_lp(config%xe,model_args%nlp), logxip_lp(model_args%nlp)
     double precision :: xitot, xiraw, mylogne, mudisk, gsd_temp
     double precision, allocatable :: rad(:)
@@ -82,7 +86,7 @@ subroutine radfunctions_dens(config, model_args, arrays)
             logxi_lp(i,m) = log10(xi_lp(i,m)) - logner(i) - lognenorm         &
                 - logxinorm + dble(model_args%lognep) + dble(model_args%logxi)
         end do
-        logxip_lp(m) = max(maxval(logxi_lp(:,m)),0.)
+        logxip_lp(m) = max(maxval(logxi_lp(:,m)),0.d0)
     end do
     
     !Write radii, ionisation (for both and each LP), gamma factors, and log(xi(r))+log(ne(r)) (which is nearly the same as
@@ -91,10 +95,13 @@ subroutine radfunctions_dens(config, model_args, arrays)
     !to recover the correct scaling of the emissivity at large radii
     !2) in order to correctly compare the dfer_arr array with the single LP case, it has to be renormalized by (1+eta_0)
     if( config%verbose .gt. 1 ) then
-        print*, "Peak ionisations from each LP: first " , logxip_lp(1), " second ", logxip_lp(2)
+        do m = 1, model_args%nlp
+            print*, "Peak ionisation from LP", m, ": ", logxip_lp(m)
+        end do
         open (unit = 27, file = 'Output/RadialScalings.dat', status='replace', action = 'write')
             do i = 1, config%xe
-                write(27,*) rad(i), logxir(i), gsdr(i), logxir(i)+logner(i), logxi_lp(i,1), logxi_lp(i,2), dfer_arr(i) 
+                write(27,*) rad(i), logxir(i), gsdr(i), logxir(i)+logner(i),   &
+                    (logxi_lp(i,m), m=1,model_args%nlp), dfer_arr(i)
             end do 
         close(27)    
     end if
