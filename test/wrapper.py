@@ -102,6 +102,57 @@ class DCP_Parameters:
     def to_numpy_array(self) -> np.ndarray:
         return np.array(dataclasses.astuple(self), dtype=np.float32)
 
+@dataclasses.dataclass
+class rtdist_Parameters:
+    # Lamp post height
+    h: float = 6.0
+    # Spin
+    a: float = 0.998
+    # Inclination (degrees)
+    inc: float = 30.0
+    # Inner radius
+    rin: float = -1.0
+    # Outer radius
+    rout: float = 1e3
+    # Cosmological redshift
+    zcos: float = 0.0
+    # Photon index
+    gamma: float = 2.0
+    # distance of the soource
+    Dist: float = 1e5
+    # Iron abundance
+    afe: float = 1.0
+    # Electron abundance
+    lognep: float = 15.0
+    # Electron temperature in observer frame
+    kte: float = 60.0
+    # Hydrogen column density
+    nh: float = 0.0
+    # Boosting factor
+    boost: float = 1.0
+    # Black hole mass in solar units
+    mass: float = 4.6e7
+    # emissivity parameter 1
+    honr: float = 0.02
+    # emissivity parameter 1
+    b1: float = 0.0
+    # emissivity parameter 2 
+    b2: float = 0.0
+    # Highest frequency in band
+    fhi_hz: float = 0.0
+    # Highest frequency in band
+    fhi_hz: float = 0.0
+    # 1 -> Re, 2 -> Im, 3 -> modulus, 4 -> time lag, 5 -> folded modulus, 6 -> folded time lag
+    re_im: float = -1.0
+    del_a: float = 0.0
+    del_ab: float = 0.0
+    g: float = 0.0
+    # Anorm 
+    Anorm: float = 7e-05
+    telescope_response: float = 1.0
+
+    def to_numpy_array(self) -> np.ndarray:
+        return np.array(dataclasses.astuple(self), dtype=np.float32)
 
 class Reltrans:
     def __init__(self, path=None):
@@ -123,5 +174,13 @@ class Reltrans:
             parameters.to_numpy_array(),
         )
 
+    def rtdist(self, energy: np.ndarray, parameters: rtdist_Parameters) -> np.ndarray:
+        """A wrapper around the XSPEC interface of rtdist"""
+        return _wrap_call(
+            self.lib_reltrans.tdrtdist_,
+            energy.astype(np.float32),
+            parameters.to_numpy_array(),
+        )
+    
 
-__all__ = [DCP_Parameters, Reltrans, get_reltrans_library_path]
+__all__ = [DCP_Parameters, rtdist_Parameters, Reltrans, get_reltrans_library_path]
