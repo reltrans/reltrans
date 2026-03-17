@@ -3,6 +3,10 @@ ROOTDIR := .
 HEADAS_LIB := ${HEADAS}/lib
 HEADAS_INCLUDE := ${HEADAS}/include
 
+# Derive the version from the most recent git tag, or from .git_archival.txt
+# (automatically populated by git archive / GitHub release tarballs).
+VERSION := $(shell git fetch --tags --quiet 2>/dev/null; git describe --tags --always 2>/dev/null || sed -n 's/describe-name: *//p' .git_archival.txt 2>/dev/null | grep -v 'Format:')
+
 # These may be set when invoking `make`, such as `make DEBUG=1 SANITIZE=1`.
 # The `DEBUG` option compiles a debug build of reltrans (see below).
 DEBUG = 0
@@ -22,7 +26,8 @@ ALL_RELTRANS_SOURCE_FILES = $(shell find $(ROOTDIR)/subroutines -name '*.f90')
 
 CFLAGS := -fno-omit-frame-pointer
 
-FFLAGS := -DHAVE_INLINE -fPIC -fno-automatic -fno-second-underscore \
+FFLAGS := -cpp -DHAVE_INLINE \
+		  -fPIC -fno-automatic -fno-second-underscore \
 		  -fno-omit-frame-pointer \
 		  -fopenmp \
 		  -I$(BUILD)/include \
@@ -30,6 +35,11 @@ FFLAGS := -DHAVE_INLINE -fPIC -fno-automatic -fno-second-underscore \
 		  -I$(HEADAS_INCLUDE)/fftw \
 		  -J$(BUILD)/cache \
 		  -I$(BUILD)/cache
+
+# Only pass the version macro if git found a tag
+ifneq ($(VERSION),)
+FFLAGS += -DRELTRANS_VERSION='"$(VERSION)"'
+endif
 
 LDFLAGS := -lXSFunctions -lXSModel -lfftw3 -lcfitsio \
 		   -L$(BUILD)/lib -L$(HEADAS_LIB)
