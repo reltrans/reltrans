@@ -33,8 +33,9 @@ contains
     end subroutine setup_global_arrays
 
     subroutine print_header()
+        use reltrans_version_mod
         write(*,*)"----------------------------------------------------"
-        write(*,*)"This is RELTRANS v1.0.0: a transfer function model for"
+        write(*,*)"This is RELTRANS " // reltrans_version // ": a transfer function model for"
         write(*,*)"X-ray reverberation mapping."
         write(*,*)"Please cite Ingram et al (2019) MNRAS 488 p324-347, "
         write(*,*)"Mastroserio et al (2021) MNRAS 507 p55-73, and "
