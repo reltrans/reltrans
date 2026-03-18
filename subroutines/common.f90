@@ -188,7 +188,23 @@ contains
         path_tables = get_env_char("RELTRANS_TABLES", './')
         write(pathname_xillver, '(A, A, A)') trim(path_tables), '/', trim(xillver)
         write(pathname_xillverDCp, '(A, A, A)') trim(path_tables), '/', trim(xillverDCp)
-    end subroutine read_environment_variables
+
+        write(*,*)"----------------------------------------------------"
+        write(*,*)" *** ENVIRONMENT VARIABLES *** "
+        write(*,*)
+        write(*,*) 'RADIAL ZONES', config%xe
+        write(*,*) 'ANGLE ZONES', config%me
+        if (adensity .eq. 0.0) then
+            write(*,*) 'A_DENSITY:', adensity, 'Density profile is constant'
+        else
+            write(*,*) 'A_DENSITY:', adensity, 'Density profile is zone A SS73'
+        endif
+        write(*,*) 'VERBOSE is ', config%verbose
+        write(*,*) 'REFVAR is ', config%refvar
+        write(*,*) 'IONVAR is ', config%ionvar 
+        write(*,*)"----------------------------------------------------"
+
+      end subroutine read_environment_variables
 
     ! Initialise all of the configuration fields that can be derived after
     ! `read_environment_variables` has been called, and allocate the arrays
