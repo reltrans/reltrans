@@ -192,8 +192,8 @@ contains
         write(*,*)"----------------------------------------------------"
         write(*,*)" *** ENVIRONMENT VARIABLES *** "
         write(*,*)
-        write(*,*) 'RADIAL ZONES', config%xe
-        write(*,*) 'ANGLE ZONES', config%me
+        write(*,*) 'RADIAL ZONES', config%ion_zones
+        write(*,*) 'ANGLE ZONES', config%mu_zones
         if (adensity .eq. 0.0) then
             write(*,*) 'A_DENSITY:', adensity, 'Density profile is constant'
         else
