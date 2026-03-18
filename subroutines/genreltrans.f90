@@ -422,12 +422,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
            config%verbose, dset,model_args%Anorm, arrays%contx_int,            &
            model_args%eta)
 
-       call radfunctions_dens(config%verbose, config%xe, model_args%rin,       &
-           rnmax, model_args%eta_0, dble(model_args%logxi),                    &
-           dble(model_args%lognep), model_args%a, model_args%h,                &
-           model_args%Gamma, model_args%honr, rlp, dcosdr, cosd,               &
-           arrays%contx_int,ndelta, nlp, config%rmin, npts, logxir, gsdr,      &
-           logner, dfer_arr)
+       call radfunctions_dens(config, model_args, arrays)
     else
         call radfuncs_dist(config%xe, model_args%rin, rnmax,model_args%b1,     &
             model_args%b2, model_args%qboost, fcons,                           &
