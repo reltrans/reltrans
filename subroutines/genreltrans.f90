@@ -1,4 +1,4 @@
-module m_genreltrans
+﻿module m_genreltrans
     use common_types
     implicit none
 
@@ -524,26 +524,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if (model_args%ReIm .eq. 7) then
         ! tbd - implement zero cohernece in lag_freq
         if (nlp .gt. 1 .and. model_args%beta_p .eq. 0.) then
-            call lag_freq_nocoh(nex, arrays%earx, config%nf, arrays%fix,       &
-                 real(config%flo), real(config%fhi), config%Emin,              &
-                 config%Emax, nlp, arrays%contx, absorbx, real(tauso),         &
-                 real(gso), arrays%ReW0, arrays%ImW0, arrays%ReW1,             &
-                 arrays%ImW1, arrays%ReW2, arrays%ImW2, arrays%ReW3,           &
-                 arrays%ImW3, real(model_args%h), real(model_args%zcos),       &
-                 real(model_args%Gamma), real(model_args%eta),                 &
-                 model_args%boost, model_args%g, model_args%DelAB,             &
-                 config%ionvar, arrays%ReGbar, arrays%ImGbar)
+            call lag_freq_nocoh(config, model_args, arrays, absorbx)
         else
-            call lag_freq(nex, arrays%earx, config%nf, arrays%fix,             &
-                 real(config%flo), real(config%fhi), config%Emin,              &
-                 config%Emax, nlp, arrays%contx, absorbx, real(tauso),         &
-                 real(gso), arrays%ReW0, arrays%ImW0, arrays%ReW1,             &
-                 arrays%ImW1, arrays%ReW2, arrays%ImW2, arrays%ReW3,           &
-                 arrays%ImW3, real(model_args%h), real(model_args%zcos),       &
-                 real(model_args%Gamma), real(model_args%eta),                 &
-                 model_args%beta_p, model_args%boost, model_args%g,            &
-                 model_args%DelAB, config%ionvar, arrays%ReGbar,               &
-                 arrays%ImGbar)
+            call lag_freq(config, model_args, arrays, absorbx)
         end if
     else if (nlp .gt. 1 .and. model_args%beta_p .eq. 0.) then
         call rawG(nex, arrays%earx, config%nf, real(config%flo),               &
