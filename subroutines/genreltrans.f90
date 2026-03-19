@@ -411,7 +411,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! the ionization parameter is DISTANCE (rtdist).
     ! We need to call the continuum BEFORE the radial profiles in the rest of
     ! the flavuors
-    if (dset .eq. 0 .or. size(model_args%h) .eq. 2) then
+    if (dset .eq. 0) then
        ! set up the continuum spectrum plus relative quantities (cutoff
        ! energies, lensing/gfactors, luminosity, etc)
        call init_cont(nlp, model_args%a, model_args%h, model_args%zcos,        &
