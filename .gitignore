@@ -23,4 +23,4 @@ benchmark
 __pycache__
 __pycache__/*
 lib_reltrans.so*
-run_test.py
+run_model.py
