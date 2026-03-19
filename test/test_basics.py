@@ -17,13 +17,14 @@ def test_basic_invocation(reltrans, assert_snapshot):
     """A smoke test to check whether the default values are working."""
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dcp(energy, DCP_Parameters())
+    # _debug_plot(energy,output, "reltransDCp time-averaged spectrum [default parameters]")
     assert_snapshot(output)
 
 def test_basic_invocation_rtdist(reltrans, assert_snapshot):
     """A smoke test to check whether the default values are working."""
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.rtdist(energy, rtdist_Parameters())
-    _debug_plot(energy,output, "rtdist")
+    # _debug_plot(energy,output, "rtdist time-averaged spectrum [default parameters]")
     assert_snapshot(output)
 
 def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
