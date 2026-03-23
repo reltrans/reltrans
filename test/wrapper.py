@@ -139,7 +139,7 @@ class rtdist_Parameters:
     # emissivity parameter 2 
     b2: float = 0.0
     # Highest frequency in band
-    fhi_hz: float = 0.0
+    flo_hz: float = 0.0
     # Highest frequency in band
     fhi_hz: float = 0.0
     # 1 -> Re, 2 -> Im, 3 -> modulus, 4 -> time lag, 5 -> folded modulus, 6 -> folded time lag
