@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from wrapper import DCP_Parameters, rtdist_Parameters
+from wrapper import DCP_Parameters, Dbl_Parameters, rtdist_Parameters
 
 
 def _debug_plot(energy, output, title="", xlabel="", ylabel="", yscale="linear", xscale="log"):
@@ -24,13 +24,20 @@ def test_basic_invocation(reltrans, assert_snapshot):
     # _debug_plot(energy,output, "reltransDCp time-averaged spectrum [default parameters]")
     assert_snapshot(output)
 
+def test_basic_invocation_reltransDbl(reltrans, assert_snapshot, envars):
+    """A smoke test to check whether the default values are working."""
+    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
+    output = reltrans.dbl_lamp(energy, Dbl_Parameters())
+    _debug_plot(energy,output, "rtdist time-averaged spectrum [default parameters]", xlabel="Energy [keV]", xscale='log', yscale='log')
+    # assert_snapshot(output)
+
 def test_basic_invocation_rtdist(reltrans, assert_snapshot, envars):
     """A smoke test to check whether the default values are working."""
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.rtdist(energy, rtdist_Parameters())
     # _debug_plot(energy,output, "rtdist time-averaged spectrum [default parameters]")
     assert_snapshot(output)
-
+    
 def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     model are working. This test requires an RMF and ARF, which is provided by
@@ -90,3 +97,34 @@ def test_re_im_rtdist(reltrans, assert_snapshot, telescope, envars):
     assert_snapshot(output, name="imaginary_part")
 
     
+def test_re_im_dbl_lamp(reltrans, assert_snapshot, telescope, envars):
+    """Test the re_im parameter to assert that all the different outputs of the
+    reltransDbl model are working. This test requires an RMF and ARF, which is provided by
+    the `telescope` fixture."""
+    energy = np.logspace(np.log10(0.1), np.log10(100), 101)
+
+    envars["RMF_SET"] = telescope.rmf_path
+    envars["ARF_SET"] = telescope.arf_path
+    envars["EMIN_REF"] = "0.3"
+    envars["EMAX_REF"] = "10.0"
+
+    xrb2 = Dbl_Parameters(mass=10.0, flo_hz=0.122, fhi_hz=0.224, re_im=4.0)
+    output = reltrans.dbl_lamp(energy, xrb2)
+    # _debug_plot(energy,output, title = "reltransDbl lag spectrum", xlabel="Energy [keV]")
+    assert_snapshot(output, name="time_lag")
+
+    xrb2.re_im = 3
+    output = reltrans.dbl_lamp(energy, xrb2)
+    # _debug_plot(energy,output, title="reltransDbl imaginary part spectrum", xlabel="Energy[keV]")
+    assert_snapshot(output, name="magnitude")
+
+    xrb2.re_im = 1
+    output = reltrans.dbl_lamp(energy, xrb2)
+    # _debug_plot(energy,output, title="reltransDbl modulus spectrum", xlabel="Energy[keV]")
+    assert_snapshot(output, name="real_part")
+
+    xrb2.re_im = 2
+    output = reltrans.dbl_lamp(energy, xrb2)
+    # _debug_plot(energy,output, title="reltransDbl real part spectrum", xlabel="Energy[keV]")
+    assert_snapshot(output, name="imaginary_part")
+
