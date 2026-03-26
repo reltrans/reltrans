@@ -79,6 +79,8 @@ ear = np.zeros(ne, dtype = np.float32)
 for i in range(ne):
     ear[i] = Emin * (Emax/Emin)**(i/ne)
 
+dE = ear[1:] - ear[:-1]
+E = (ear[1:] + ear[:-1])*0.5
 # ear = np.genfromtxt('Benchmarks/xrb/Spec/Total.dat').T[0]
     
 param = np.zeros(21, dtype = np.float32)
@@ -96,7 +98,7 @@ param[8]  = 1.0     #Afe   !Iron abundance
 param[9]  = 15      #kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
 param[10] = 60.0    #kTe   !Electron temperature ***IN OBSERVER'S RESTFRAME***
 param[11] = 0.0     #Nh
-# param[12] = 1.0     #1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
+param[12] = -1.0     #1onB  !(1/\mathcal{B}): boosting fudge factor that lowers normalisation of reflection spectrum
 param[13] = 4.6e7    #M     !BH mass in solar masses
 param[14] = 0.0     #flo   !Lowest frequency in band (Hz)
 param[15] = 0.0     #fhi   !Highest frequency in band (Hz)
@@ -109,7 +111,7 @@ param[20] = 1       #telescope response
 
 print()
 
-Epower = 1
+Epower = 2
 
 print('*********************************************************')
 print('Start runnign reltrans')            
@@ -124,50 +126,51 @@ param[1]  = 0.998 #a
 param[2]  = 30.0    #inc  
 param[3]  = 1.0    #rin
 param[4]  = 2000.0  #Rout
-param[12] = 1.0 #boost 
-ax.set_title(f'h {param[0]:.1f}, a {param[1]:.3f}, incl {param[2]:.1f}', fontsize = font)
+# param[12] = -1.0 #boost 
+ax.set_title(f'h {param[0]:.1f}, boost {param[12]:.1f}, a {param[1]:.3f}, incl {param[2]:.1f}', fontsize = font)
 photar_full_model = ib.reltransDCp(ear, param)
-ax.plot(ear[:-1], photar_full_model* ear[:-1]**Epower , lw = 3, ls = '-' , label = f'Rin-Rout: {param[3]:.3f}Rg-{param[4]:.3f}Rg')
+ax.plot(E, photar_full_model / dE * E**Epower , lw = 3, ls = '-' , label = f'Rin-Rout: {param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
 param[3]  = isco_radius(param[1])    #rin  
 param[4]  = 2000 #Rout
+# param[12] = -1.0 #boost 
 photar_isco_model = ib.reltransDCp(ear, param)
-ax.plot(ear[:-1], photar_isco_model* ear[:-1]**Epower , lw = 3, ls = '--' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
+ax.plot(E, photar_isco_model / dE * E**Epower , lw = 3, ls = '--' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
 param[3]  = 1.0    #rin  
 param[4]  = isco_radius(param[1]) #Rout
-param[12] = -1.0 #boost 
+# param[12] = -1.0 #boost 
 photar_PLregion_model = ib.reltransDCp(ear, param)
-ax.plot(ear[:-1], photar_PLregion_model* ear[:-1]**Epower , lw = 3, ls = '-' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
+ax.plot(E, photar_PLregion_model / dE * E**Epower , lw = 3, ls = '-' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
 plot_features(ax)
-plt.savefig(f'Mercan_first_test_compare_h{param[0]:.1f}_a{param[1]:.1f}_incl{param[2]:.1f}.pdf', format='pdf',bbox_inches='tight')
+plt.savefig(f'test_compare_h{param[0]:.1f}_boost{param[12]:.1f}_a{param[1]:.1f}_incl{param[2]:.1f}.pdf', format='pdf',bbox_inches='tight')
 
-##############################################################################
+# ##############################################################################
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 8))
 
 param[2]  = 45.0    #inc  
 param[3]  = 1.0    #rin   
 param[4]  = 2000.0  #Rout
-param[12] = 1.0 #boost 
-ax.set_title(f'h {param[0]:.1f}, a {param[1]:.3f}, incl {param[2]:.1f}', fontsize = font)
+# param[12] = -1.0 #boost 
+ax.set_title(f'h {param[0]:.1f}, boost {param[12]:.1f}, a {param[1]:.3f}, incl {param[2]:.1f}', fontsize = font)
 photar_full_model = ib.reltransDCp(ear, param)
-ax.plot(ear[:-1], photar_full_model* ear[:-1]**Epower , lw = 3, ls = '-' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
+ax.plot(E, photar_full_model / dE * E**Epower , lw = 3, ls = '-' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
 param[3]  = isco_radius(param[1])    #rin  
 param[4]  = 2000 #Rout
 photar_isco_model = ib.reltransDCp(ear, param)
-ax.plot(ear[:-1], photar_isco_model* ear[:-1]**Epower , lw = 3, ls = '--' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
+ax.plot(E, photar_isco_model / dE * E**Epower , lw = 3, ls = '--' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
 param[3]  = 1.0    #rin  
 param[4]  = isco_radius(param[1]) #Rout
-param[12] = -1.0 #boost 
+# param[12] = -1.0 #boost 
 photar_PLregion_model = ib.reltransDCp(ear, param)
-ax.plot(ear[:-1], photar_PLregion_model* ear[:-1]**Epower , lw = 3, ls = '-' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
+ax.plot(E, photar_PLregion_model / dE * E**Epower , lw = 3, ls = '-' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
 plot_features(ax, font = font)
-# plt.savefig(f'test_compare_h{param[0]:.1f}_a{param[1]:.1f}_incl{param[2]:.1f}.pdf', format='pdf',bbox_inches='tight')
+plt.savefig(f'test_compare_h{param[0]:.1f}_boost{param[12]:.1f}_a{param[1]:.1f}_incl{param[2]:.1f}.pdf', format='pdf',bbox_inches='tight')
 
 
 ##############################################################################
@@ -177,24 +180,24 @@ fig, ax = plt.subplots(1, 1, figsize=(10, 8))
 param[2]  = 85.0    #inc  
 param[3]  = 1.0    #rin   
 param[4]  = 2000.0  #Rout
-param[12] = 1.0 #boost 
-ax.set_title(f'h {param[0]:.1f}, a {param[1]:.3f}, incl {param[2]:.1f}', fontsize = font)
+# param[12] = -1.0 #boost 
+ax.set_title(f'h {param[0]:.1f}, boost {param[12]:.1f}, a {param[1]:.3f}, incl {param[2]:.1f}', fontsize = font)
 photar_full_model = ib.reltransDCp(ear, param)
-ax.plot(ear[:-1], photar_full_model* ear[:-1]**Epower , lw = 3, ls = '-' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
+ax.plot(E, photar_full_model / dE * E**Epower , lw = 3, ls = '-' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
 param[3]  = isco_radius(param[1])    #rin  
 param[4]  = 2000 #Rout
 photar_isco_model = ib.reltransDCp(ear, param)
-ax.plot(ear[:-1], photar_isco_model* ear[:-1]**Epower , lw = 3, ls = '--' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
+ax.plot(E, photar_isco_model / dE * E**Epower , lw = 3, ls = '--' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
 param[3]  = 1.0    #rin  
 param[4]  = isco_radius(param[1]) #Rout
-param[12] = -1.0 #boost 
+# param[12] = -1.0 #boost 
 photar_PLregion_model = ib.reltransDCp(ear, param)
-ax.plot(ear[:-1], photar_PLregion_model* ear[:-1]**Epower , lw = 3, ls = '-' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
+ax.plot(E, photar_PLregion_model / dE * E**Epower , lw = 3, ls = '-' , label = f'Rin-Rout:{param[3]:.3f}Rg-{param[4]:.3f}Rg')
 
 plot_features(ax, font = font)
-# plt.savefig(f'test_compare_h{param[0]:.1f}_a{param[1]:.1f}_incl{param[2]:.1f}.pdf', format='pdf',bbox_inches='tight')
+plt.savefig(f'test_compare_h{param[0]:.1f}_boost{param[12]:.1f}_a{param[1]:.1f}_incl{param[2]:.1f}.pdf', format='pdf',bbox_inches='tight')
 
 print('*********************************************************')
 print()

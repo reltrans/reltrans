@@ -189,6 +189,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
 
     ! open(21, file = 'data_test_GR_loop.dat')
     ! open(31, file = 'data_test_pem_re_values.dat')
+    ! open(32, file = 'data_test_pem_re_valid_values.dat')
     
     ! Construct the transfer function by summing over all pixels
     odisc    = 1       !flag to ensure the chosen disk radius is between rin and rout
