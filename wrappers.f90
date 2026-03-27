@@ -9,6 +9,15 @@
 !CURRENT BRANCH
 ! This branch is adding the multiple flavours to the reltrans model
 
+! Version Patch(Automated by Makefile)
+#ifndef RELTRANS_VERSION
+#define RELTRANS_VERSION "unknown"
+#endif
+module reltrans_version_mod
+    implicit none
+    character(len=*), parameter :: reltrans_version = RELTRANS_VERSION
+end module reltrans_version_mod
+
 include 'subroutines/amodules.f90'
 include 'subroutines/header.h'
           
