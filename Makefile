@@ -6,6 +6,8 @@ HEADAS_INCLUDE := ${HEADAS}/include
 # Derive the version from the most recent git tag, or from .git_archival.txt
 # (automatically populated by git archive / GitHub release tarballs).
 VERSION := $(shell git fetch --tags --quiet 2>/dev/null; git describe --tags --always 2>/dev/null || sed -n 's/describe-name: *//p' .git_archival.txt 2>/dev/null | grep -v 'Format:')
+VERSION := $(shell echo '$(VERSION)' | sed 's/-.*//')
+
 
 # These may be set when invoking `make`, such as `make DEBUG=1 SANITIZE=1`.
 # The `DEBUG` option compiles a debug build of reltrans (see below).
