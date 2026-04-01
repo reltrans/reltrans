@@ -72,6 +72,19 @@ int main() {
   const float e_max = 1000.0;
   int e_num = 1001;
 
+  setenv("ARF_SET",
+         "./Benchmarks/resp_matrix/"
+         "nicer-consim135p-teamonly-array50.arf",
+         1);
+  setenv("RMF_SET",
+         "./Benchmarks/resp_matrix/"
+         "nicer-rmf6s-teamonly-array50.rmf",
+         1);
+  setenv("EMIN_REF", "0.3", 1);
+  setenv("EMAX_REF", "10.0", 1);
+  setenv("EMIN_REF2", "10.0", 1);
+  setenv("EMAX_REF2", "20.0", 1);
+
   float *energy = malloc(sizeof(float) * e_num);
   if (energy == NULL) {
     LOG_ERR("Failed to allocate energy array");
@@ -91,6 +104,10 @@ int main() {
   }
 
   RT_DCP_Params params = default_parameters();
+  params.re_im = 5.0;
+  params.mass = 10.0;
+  params.flo_hz = 0.122;
+  params.fhi_hz = 1.024;
 
   // logarithmic energy grid
   for (int i = 0; i < e_num; ++i) {
