@@ -5,10 +5,11 @@
         use dyn_gr
         use blcoordinate
       implicit none
-      integer nro,nphi,i,j
+      integer, intent(in) :: nro,nphi
       double precision rn(nro),mueff,mu0,spin,rmin,rout,mudisk,d
       double precision phin,alpha,beta,cos0,sin0,scal,velocity(3),f1234(4),lambda,q
       double precision pem,re,mucros,phie,taudo,sigmacros      
+      integer i,j
       cos0  = mu0
       sin0  = sqrt(1.0-cos0**2)
       scal     = 1.d0

@@ -58,7 +58,8 @@ module common_types
         ! variable for non linear effects
         integer :: DC, ionvariation
         real :: dlogxi1, dlogxi2
-    end type t_config
+
+     end type t_config
 
     type :: t_arrays
         ! earx: internal energy grid array (0:nex)
@@ -74,7 +75,16 @@ module common_types
         real, dimension(:,:,:), allocatable :: ReW2, ImW2, ReW3, ImW3
         real, dimension(:,:), allocatable :: ReSraw, ImSraw, ReSrawa, ImSrawa, ReGrawa, ImGrawa, ReG, ImG
     end type t_arrays
+
+    type(t_config), target, save :: global_config
 contains
+
+    subroutine reset_reltrans() bind(C, name="reset_reltrans")
+      !The routine reset the check variables, in order to force
+      ! a fresh start of the model
+      global_config%firstcall = .true.
+    end subroutine reset_reltrans
+  
 
     ! Unwraps the arguments from a parameter array into `args`.
     subroutine unwrap_arguments(args, nlp, dset, params, cutoff_powerlaw)
@@ -216,10 +226,15 @@ contains
         integer, intent(in) :: nlp
         integer :: i
 
+        if (allocated(arrays%earx  )) deallocate(arrays%earx  )
+        if (allocated(arrays%ReGbar)) deallocate(arrays%ReGbar)
+        if (allocated(arrays%ImGbar)) deallocate(arrays%ImGbar)
         allocate(arrays%earx(0:nex))
         allocate(arrays%ReGbar(nex))
         allocate(arrays%ImGbar(nex))
 
+        if (allocated(arrays%contx    )) deallocate(arrays%contx    )
+        if (allocated(arrays%contx_int)) deallocate(arrays%contx_int)
         allocate(arrays%contx(nex,nlp))
         allocate(arrays%contx_int(nlp))
 

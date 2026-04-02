@@ -57,6 +57,55 @@ def _wrap_call(f, energy: np.ndarray, params: np.ndarray) -> np.ndarray:
     )
     return output
 
+def _wrap_getrgrid(f, rnmin, rnmax, mueff, nro, nphi):
+    # convert scalars
+    rnmin_c = ct.c_double(rnmin)
+    rnmax_c = ct.c_double(rnmax)
+    mueff_c = ct.c_double(mueff)
+    nro_c = ct.c_int(nro)
+    nphi_c = ct.c_int(nphi)
+    # allocate outputs
+    rn = np.zeros(nro, dtype=np.float64)
+    domega = np.zeros(nro, dtype=np.float64)
+    # call Fortran
+    f(
+        ct.byref(rnmin_c),
+        ct.byref(rnmax_c),
+        ct.byref(mueff_c),
+        ct.byref(nro_c),
+        ct.byref(nphi_c),
+        rn.ctypes.data_as(f_double),
+        domega.ctypes.data_as(f_double),
+    )
+    return rn, domega
+
+def _wrap_grtrace(f, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
+    nro = len(rn)
+    # ctypes scalars
+    nro_c = ct.c_int(nro)
+    nphi_c = ct.c_int(nphi)
+
+    mueff_c = ct.c_double(mueff)
+    mu0_c = ct.c_double(mu0)
+    spin_c = ct.c_double(spin)
+    rmin_c = ct.c_double(rmin)
+    rout_c = ct.c_double(rout)
+    mudisk_c = ct.c_double(mudisk)
+    d_c = ct.c_double(d)
+    rn = np.asarray(rn, dtype=np.float64)
+    f(
+        ct.byref(nro_c),
+        ct.byref(nphi_c),
+        rn.ctypes.data_as(f_double),
+        ct.byref(mueff_c),
+        ct.byref(mu0_c),
+        ct.byref(spin_c),
+        ct.byref(rmin_c),
+        ct.byref(rout_c),
+        ct.byref(mudisk_c),
+        ct.byref(d_c),
+    )
+
 
 @dataclasses.dataclass
 class DCP_Parameters:
@@ -109,7 +158,7 @@ class Dbl_Parameters:
     # Second Lamp post height
     h2: float = 50.0
     # Spin
-    a: float = 0.998
+    A: float = 0.998
     # Inclination (degrees)
     inc: float = 30.0
     # Inner radius
@@ -220,6 +269,32 @@ class Reltrans:
         ]
         self.lib_reltrans.tdreltransdcp_.restype = None
 
+        self.lib_reltrans.getrgrid_.argtypes = [
+            ct.POINTER(ct.c_double),  # rnmin
+            ct.POINTER(ct.c_double),  # rnmax
+            ct.POINTER(ct.c_double),  # mueff
+            ct.POINTER(ct.c_int),     # nro
+            ct.POINTER(ct.c_int),     # nphi
+            f_double,                 # rn
+            f_double,                 # domega
+        ]
+        self.lib_reltrans.getrgrid_.restype = None
+
+        self.lib_reltrans.grtrace_.argtypes = [
+            ct.POINTER(ct.c_int),     # nro
+            ct.POINTER(ct.c_int),     # nphi
+            f_double,                 # rn
+            ct.POINTER(ct.c_double),  # mueff
+            ct.POINTER(ct.c_double),  # mu0
+            ct.POINTER(ct.c_double),  # spin
+            ct.POINTER(ct.c_double),  # rmin
+            ct.POINTER(ct.c_double),  # rout
+            ct.POINTER(ct.c_double),  # mudisk
+            ct.POINTER(ct.c_double),  # d
+        ]
+        self.lib_reltrans.grtrace_.restype = None
+
+
     def dcp(self, energy: np.ndarray, parameters: DCP_Parameters) -> np.ndarray:
         """A wrapper around the XSPEC interface of reltransDcp"""
         return _wrap_call(
@@ -244,4 +319,66 @@ class Reltrans:
             parameters.to_numpy_array(),
         )
 
+    def reset(self):
+        # print(f"NAME OF THE LIBRARY {self.lib_reltrans._name}")
+        self.lib_reltrans.reset_reltrans()
+
+    def getrgrid(self, rnmin, rnmax, mueff, nro, nphi):
+        return _wrap_getrgrid(self.lib_reltrans.getrgrid_, rnmin, rnmax, mueff, nro, nphi)
+
+    def grtrace(self, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
+        _wrap_grtrace(self.lib_reltrans.grtrace_, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d)
+
+    def get_re(self, nro, nphi):
+        out = np.zeros(nro * nphi, dtype=np.float64)
+        nro_c = ct.c_int(nro)
+        nphi_c = ct.c_int(nphi)
+        self.lib_reltrans.get_re(
+            out.ctypes.data_as(f_double),
+            ct.byref(nro_c),
+            ct.byref(nphi_c),
+        )
+        # reshape back to 2D
+        # return out.reshape((nro, nphi), order="F")
+        return out
+
+    def set_re(self, nro, nphi):
+        nro_c = ct.c_int(nro)
+        nphi_c = ct.c_int(nphi)
+        self.lib_reltrans.allocate_re(ct.byref(nro_c), ct.byref(nphi_c))
+
+    def get_taudo(self, nro, nphi):
+        out = np.zeros(nro * nphi, dtype=np.float64)
+        nro_c = ct.c_int(nro)
+        nphi_c = ct.c_int(nphi)
+        self.lib_reltrans.get_taudo(
+            out.ctypes.data_as(f_double),
+            ct.byref(nro_c),
+            ct.byref(nphi_c),
+        )
+        return out
+
+    def set_taudo(self, nro, nphi):
+        nro_c = ct.c_int(nro)
+        nphi_c = ct.c_int(nphi)
+        self.lib_reltrans.allocate_taudo(ct.byref(nro_c), ct.byref(nphi_c))
+
+    def get_pem(self, nro, nphi):
+        out = np.zeros(nro * nphi, dtype=np.float64)
+        nro_c = ct.c_int(nro)
+        nphi_c = ct.c_int(nphi)
+        self.lib_reltrans.get_pem(
+            out.ctypes.data_as(f_double),
+            ct.byref(nro_c),
+            ct.byref(nphi_c),
+        )
+        return out
+
+    def set_pem(self, nro, nphi):
+        nro_c = ct.c_int(nro)
+        nphi_c = ct.c_int(nphi)
+        self.lib_reltrans.allocate_pem(ct.byref(nro_c), ct.byref(nphi_c))
+
+
+        
 __all__ = [DCP_Parameters, Dbl_Parameters, rtdist_Parameters, Reltrans, get_reltrans_library_path]

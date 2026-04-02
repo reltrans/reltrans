@@ -32,6 +32,8 @@ end module telematrix2
 module env_variables
   implicit none
   integer :: adensity, idum
+  logical, save :: firstcall, needtrans, needconv, test
+  data firstcall /.true./
   save idum
 end module env_variables
   
@@ -44,9 +46,60 @@ MODULE dyn_gr
     logical :: status_re_tau  
     integer, parameter :: ndelta = 1000
     integer         , dimension(:)  , allocatable :: npts
-    double precision, dimension(:,:), allocatable :: re1,taudo1,pem1
+    double precision, dimension(:,:), allocatable :: re1, taudo1, pem1
     double precision, dimension(:,:), allocatable :: dcosdr, cosd, rlp, tlp
     save status_re_tau
+
+  contains
+
+    subroutine allocate_re1(x,y) bind(C, name="allocate_re")
+      use iso_c_binding
+      implicit none
+      integer(c_int), intent(in) :: x,y 
+      if (allocated(re1)) deallocate(re1)
+      allocate(re1(x,y))
+    end subroutine allocate_re1
+
+    subroutine allocate_taudo1(x,y) bind(C, name="allocate_taudo")
+      use iso_c_binding
+      implicit none
+      integer(c_int), intent(in) :: x,y 
+      if (allocated(taudo1)) deallocate(taudo1)
+      allocate(taudo1(x,y))
+    end subroutine allocate_taudo1
+
+    subroutine allocate_pem1(x,y) bind(C, name="allocate_pem")
+      use iso_c_binding
+      implicit none
+      integer(c_int), intent(in) :: x,y 
+      if (allocated(pem1)) deallocate(pem1)
+      allocate(pem1(x,y))
+    end subroutine allocate_pem1
+
+    subroutine get_re1(out, nro, nphi) bind(C, name="get_re")
+      use iso_c_binding
+      implicit none
+      integer(c_int), intent(in) :: nro, nphi
+      real(c_double), intent(out) :: out(nro*nphi)
+      out = reshape(re1, [nro*nphi])
+    end subroutine get_re1
+    
+    subroutine get_taudo1(out, nro, nphi) bind(C, name="get_taudo")
+      use iso_c_binding
+      implicit none
+      integer(c_int), intent(in) :: nro, nphi
+      real(c_double), intent(out) :: out(nro*nphi)
+      out = reshape(taudo1, [nro*nphi])
+    end subroutine get_taudo1
+
+    subroutine get_pem1(out, nro, nphi) bind(C, name="get_pem")
+      use iso_c_binding
+      implicit none
+      integer(c_int), intent(in) :: nro, nphi
+      real(c_double), intent(out) :: out(nro*nphi)
+      out = reshape(pem1, [nro*nphi])
+    end subroutine get_pem1
+  
 END MODULE dyn_gr
 
 module xillver_tables

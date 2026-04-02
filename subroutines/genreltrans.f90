@@ -12,12 +12,24 @@ contains
         integer, intent(in) :: nlp
         type(t_config), intent(in) :: config
         ! allocate arrays for radial profiles
+        if (allocated(dfer_arr)) deallocate(dfer_arr)
+        if (allocated(logxir  )) deallocate(logxir  )
+        if (allocated(gsdr    )) deallocate(gsdr    )
+        if (allocated(logner  )) deallocate(logner  )
         allocate(dfer_arr(config%xe))
-        allocate(logxir(config%xe))
-        allocate(gsdr(config%xe))
-        allocate(logner(config%xe))
+        allocate(logxir  (config%xe))
+        allocate(gsdr    (config%xe))
+        allocate(logner  (config%xe))
 
         ! allocate GR arrays
+        if (allocated (cosd        )) deallocate (cosd        )
+        if (allocated (dcosdr      )) deallocate (dcosdr      )
+        if (allocated (rlp         )) deallocate (rlp         )
+        if (allocated (tlp         )) deallocate (tlp         )
+        if (allocated (npts        )) deallocate (npts        )
+        if (allocated (gso         )) deallocate (gso         )
+        if (allocated (tauso       )) deallocate (tauso       )
+        if (allocated (cosdelta_obs)) deallocate (cosdelta_obs)
         allocate (cosd(ndelta,nlp))
         allocate (dcosdr(ndelta,nlp))
         allocate (rlp(ndelta,nlp))
@@ -27,6 +39,9 @@ contains
         allocate (tauso(nlp))
         allocate (cosdelta_obs(nlp))
 
+        if (allocated(re1   )) deallocate(re1   )
+        if (allocated(taudo1)) deallocate(taudo1)
+        if (allocated(pem1  )) deallocate(pem1  )
         allocate(re1(config%nphi,config%nro))
         allocate(taudo1(config%nphi,config%nro))
         allocate(pem1(config%nphi,config%nro))
@@ -161,7 +176,12 @@ contains
                 if (config%me .eq. 1) thetae = real(model_args%inc)
                 ! Call restframe reflection model
                 call rest_frame(arrays%earx, nex, Gamma0, model_args%Afe,      &
-                    logne,Cutoff_0, logxi0, thetae, model_args%Cp, photarx)
+                     logne,Cutoff_0, logxi0, thetae, model_args%Cp, photarx)
+                do i=1, nex
+                   E = 0.5 * (arrays%earx(i) + arrays%earx(i-1))
+                   write(20,*) E, photarx(i)
+                enddo
+                write(20,*) 'no no'
                 ! NON LINEAR EFFECTS
                 if (config%DC .eq. 0) then
                    ! Gamma variations
@@ -202,12 +222,15 @@ contains
                          imline_w2(m, i) = aimag(arrays%ker_W2(m, i, j,mubin, rbin))
                          reline_w3(m, i) = real(arrays%ker_W3(m, i, j,mubin, rbin))
                          imline_w3(m, i) = aimag(arrays%ker_W3(m, i, j,mubin, rbin))
+                         E = 0.5 * (arrays%earx(i) + arrays%earx(i-1))
+                         write(21,*) E, reline_w0(m, i)
                       end do
                    end do
+                   write(21,*) 'no no'
                    ! TODO: this test wrapping should be inside the conv functions,
                    ! not at their callsites
                    ! Do the convolution (involves multiplying by E^{1-Gamma})
-                   if (test) then
+                   if (config%test) then
                       call conv_one_FFT(dyn, arrays%earx, Gamma0, Hx,          &
                           reline_w0,imline_w0, arrays%ReW0(:, :, j),           &
                           arrays%ImW0(:, :, j),config%DC, model_args%nlp)
@@ -286,6 +309,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use radial_grids
     use gr_continuum
     use m_genreltrans
+    use env_variables
     implicit none
     ! Constants
     double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0,dlogf = 0.09 !This is a resolution parameter (base 10)
@@ -308,20 +332,19 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     real time_start,time_end !runtime stuff
 
     ! SAVE
-    logical, save :: firstcall, needtrans, needconv, test
     real, save :: paramsave(32)
 
-    data firstcall /.true./
     data Cpsave/2/
     data prev_nf /-1/
     ! Save the first call variables
     save d, fhisave, flosave, prev_nf, frobs, frrel, Cpsave
 
-    type(t_config), save :: config
+    type(t_config), pointer :: config
     type(t_arrays), save :: arrays
     type(t_model_arguments) :: model_args
     ! make arrays static so its values are kept between function calls
 
+    config => global_config
     call unwrap_arguments(model_args, nlp, dset, param, Cp)
     call config_frequency(config, model_args)
     call arguments_check(config, model_args)
@@ -329,15 +352,16 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! TODO: check to make sure nlp hasn't changed, else many arrays need to be
     ! freed and re-allocated
 
-    if (firstcall) then
+    if (config%firstcall) then
         call init_fftw_allconv()
         ! initialise environment and allocate all arrays
         call read_environment_variables(config)
         call setup_global_arrays(config, model_args%nlp)
         call setup_arrays(config, arrays, model_args%nlp)
 
-        firstcall = .false.
-        needtrans = .true.
+        config%firstcall = .false.
+        config%needtrans = .true.
+        config%needconv = .true.
         test = .false.
 
         ! set sensible distance for observer from the BH
@@ -373,14 +397,14 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         config%DC = 0
         model_args%boost = abs(model_args%boost)
     end if
-
+    
     ! Determine if I need to calculate the kernel
     call need_check(model_args%Cp, Cpsave, param, paramsave, config%fhi,       &
-        config%flo,fhisave, flosave, config%nf, prev_nf, needtrans,            &
-        needconv)
+        config%flo,fhisave, flosave, config%nf, prev_nf, config%needtrans,     &
+        config%needconv)
 
     if (config%verbose .gt. 2) call CPU_TIME (time_start)
-    if (needtrans)then
+    if (config%needtrans)then
        ! allocate lensing/reflection fraction arrays if necessary
        if (allocated(lens)) deallocate(lens)
        allocate (lens(nlp))
@@ -404,7 +428,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        print *, 'Transfer function runtime: ', time_end - time_start, ' seconds'
     end if
 
-
+    
     ! calculate the ionization/density/gsd radial profiles and get the continuum.
     ! We need to call the continuum AFTER the definition of the radial profiles
     ! when
@@ -452,7 +476,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if (config%verbose .gt. 0) write(*,*)"Relxill reflection fraction for each source:", frrel
 
     if (config%verbose .gt. 2) call CPU_TIME (time_start)
-    if (needconv)then
+    if (config%needconv)then
         call do_convolutions(config, model_args, arrays)
     end if
     if (config%verbose .gt. 2) then
@@ -683,6 +707,5 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     prev_nf = config%nf
     paramsave = param
     Cpsave = model_args%Cp
-
 end subroutine genreltrans
 ! -----------------------------------------------------------------------

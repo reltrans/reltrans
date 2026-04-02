@@ -20,13 +20,16 @@ subroutine getdcos(a_spin,h,mudisk,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
     ! Note that mudisk = (h/r) / sqrt( (h/r)**2 + 1 )
     use blcoordinate
     implicit none
-    double precision sins,mus,a_spin,h(nlp),lambda,q,scal,mudisk
+
+    double precision, intent(in )   :: a_spin, h(2), mudisk, rout
+    integer         , intent(in )   :: n, nlp
+    integer         , intent(inout) :: npts(nlp)
+    double precision, intent(inout) :: r1(n,nlp)
+    double precision, intent(out)   :: dcosdr(n,nlp), tc(n,nlp), cosd1(n,nlp), cosdout(nlp)
+    integer  m,j,k,counter,nout(nlp)
+    double precision sins,mus,lambda,q,scal
     double precision rhorizon,velocity(3),f1234(4),pp,pr,pt
-    double precision deltamin,deltamax,rout,cosdout(nlp)
-    integer  m,j,n,k,counter,nlp,npts(nlp),nout(nlp)
-    double precision r1(n,nlp)
-    double precision dcosdr(n,nlp),tc(n,nlp)
-    double precision deltas,cosd1(n,nlp),r_min,r_max,disco
+    double precision deltamin,deltamax, deltas,r_min,r_max,disco
     double precision rcros,mucros,phicros,tcros,sigmacros,pcros
     !      double precision cosphi,costheta,d1(n),sinphi,sintheta
     scal     = 1.d0   !Meaningless scaling factor

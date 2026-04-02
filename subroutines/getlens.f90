@@ -14,10 +14,13 @@ subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
 ! delt         Source to observer time lag 
   use blcoordinate
   implicit none
-  double precision sins,mus,a_spin,h,lambda,q,scal
+
+  double precision, intent(in)    :: a_spin,h, muobs
+  double precision, intent(inout) :: cosdelta1
+  double precision, intent(out)   :: lens, delt
+  double precision sins,mus,lambda,q,scal
   double precision velocity(3),f1234(4),pp,pr,pt
-  double precision muobs,delt,drtbis,cosidel
-  double precision ptotal,cosdelta1,dcosdelta,lens
+  double precision ptotal,dcosdelta,drtbis,cosidel
   double precision mua,p,phya,ra,sigmaa,timea,mudiff
   double precision par(3),x1,x2,xacc,mu2
   double precision alpha,beta,b2,d
