@@ -1,3 +1,4 @@
+#include <bits/time.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -5,7 +6,11 @@
 #include <string.h>
 #include <time.h>
 
-#define CLOCKS_PER_MILI (CLOCKS_PER_SEC / 1000)
+// Returns difference in milliseconds.
+float time_difference(struct timespec start, struct timespec end) {
+  return (end.tv_sec - start.tv_sec) * 1e3 +
+         (end.tv_nsec - start.tv_nsec) * 1e-6;
+}
 
 // TODO: is there a header file for these function definitions?
 
@@ -117,17 +122,18 @@ int main() {
   // zero the output buffer
   memset(output, 0, e_num);
 
-  clock_t time = clock();
   int ifl = 1;
   e_num -= 1;
   // Run once to load everything in
   tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
-  time = clock() - time;
 
-  size_t num_trials = 100;
+  size_t num_trials = 20;
 
   float total_time = 0;
-  float *times_millis = malloc(sizeof(float) * 100);
+  float *times_millis = malloc(sizeof(float) * num_trials);
+
+  struct timespec now;
+  struct timespec end;
 
   // run it a few times
   for (size_t i = 0; i < num_trials; ++i) {
@@ -137,18 +143,22 @@ int main() {
     // To avoid caching
     params.a = 0.998 * i / num_trials;
 
-    clock_t time = clock();
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
     int ifl = 1;
     tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
-    time = clock() - time;
 
-    times_millis[i] = (float)time / CLOCKS_PER_MILI;
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    // Convert nano-seconds to mili-seconds.
+    float elapsed = time_difference(now, end);
+    times_millis[i] = elapsed;
     total_time += times_millis[i];
   }
 
   float average_time = total_time / num_trials;
   float deviation = 0;
   for (size_t i = 0; i < num_trials; ++i) {
+    printf("Time %ld: %.4f\n", i, times_millis[i]);
     float res = (times_millis[i] - average_time);
     deviation += res * res;
   }
