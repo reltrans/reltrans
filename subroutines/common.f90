@@ -274,7 +274,7 @@ contains
                     *(model_args%fhiHz                                         &
                     / model_args%floHz)**(real(i) / real(config%nf))
             end do
-
+            
             ! reallocate the transfer function arrays
             if (allocated(arrays%ker_W0)) deallocate(arrays%ker_W0)
             allocate(arrays%ker_W0(model_args%nlp,nex,config%nf,config%me,config%xe))

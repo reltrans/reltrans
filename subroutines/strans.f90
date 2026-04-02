@@ -125,8 +125,6 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
           if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
        enddo
     endif
-
-    write(*,*) "DEBUG: lens, tauso, cosdelta_obs  ", lens, tauso, cosdelta_obs 
     
     ! Set up observer's camera ( alpha = rn sin(phin), beta = mueff rn cos(phin) )
     ! to do full GR ray tracing with      
@@ -136,38 +134,23 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     call getrgrid(rnmin,rnmax,mueff,nro,nphi,rn,domega)
     !Grid for Newtonian approximation
     call getrgrid(rnmax,rout,mueff,nron,nphin,rnn,domegan)
-    ! write(*,*) "DEBUG: rnmin,rnmax,mueff,nro,nphi ", rnmin,rnmax,mueff,nro,nphi
-    ! write(*,*) "DEBUG: rnmax,rout,mueff,nron,nphin ", rnmax,rout,mueff,nron,nphin
-    ! do i=1, nro
-    !    write(30,*) rn(i), domega(i)
-    ! enddo
-    ! do i=1, nro
-    !    write(31,*) rnn(i), domegan(i)
-    ! enddo
-
     ! Trace rays in full GR for the small camera (ie with relativistic effects) from the osberver to the disk,
     !which is why it doesnt depend on h
     ! if(status_re_tau) then !Only if the geodesics grid isn't loaded
-        dotrace = .false.
-        if( abs(spinsav-spin)  .gt. tiny(spin)   ) dotrace = .true.
-        if( abs(musav-mu0)     .gt. tiny(mu0)    ) dotrace = .true.
-        if( abs(routsav-rout)  .gt. tiny(rout)   ) dotrace = .true.
-        if( abs(mudsav-mudisk) .gt. tiny(mudisk) ) dotrace = .true.         
-        if( dotrace )then
+        ! dotrace = .false.
+        ! if( abs(spinsav-spin)  .gt. tiny(spin)   ) dotrace = .true.
+        ! if( abs(musav-mu0)     .gt. tiny(mu0)    ) dotrace = .true.
+        ! if( abs(routsav-rout)  .gt. tiny(rout)   ) dotrace = .true.
+        ! if( abs(mudsav-mudisk) .gt. tiny(mudisk) ) dotrace = .true.         
+        ! if( dotrace )then
             call GRtrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
             spinsav = spin
             musav   = mu0
             routsav = rout
             mudsav  = mudisk
-        end if
         ! end if
-     !  write(*,*) "DEBUG: nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d", nro,nphi,mueff,mu0,spin,rmin,rout,mudisk,d
-     !  do i = 1,nro
-     !    do j = 1,nphi
-     !       write(32,*) pem1(j,i)
-     !    enddo
-     ! enddo
-     
+        ! end if
+        
     ! Set frequency array
     do fbin = 1,nf
         fi(fbin) = flo * (fhi/flo)**((float(fbin)-0.5d0)/dble(nf))
@@ -182,14 +165,6 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
 
     ! Calculate dcos/dr and time lags vs r for the lamppost model
     call getdcos(spin,h,mudisk,ndelta,nlp,rout,npts,rlp,dcosdr,tlp,cosd,cosdout) 
-
-    write(*,*) "DEBUG: spin, h, mudisk, ndelta, nlp, rout", spin, h, mudisk, ndelta, nlp, rout
-    do m=1,nlp
-       do j=1,ndelta
-          write(33,*) rlp(j,m), dcosdr(j,m), tlp(j,m), cosd(j,m)
-       enddo
-    enddo
-    
     
     !set continuum normalisations depending on model flavour 
     if( dset .eq. 0 )then
@@ -216,9 +191,9 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
             if( pem1(j,i) .gt. 0.0d0 )then
                 re    = re1(j,i)
                 if( re .gt. rin .and. re .lt. rout )then
-                    odisc = 1  
+                   odisc = 1
                     do m=1,nlp                           
-                        taudo = taudo1(j,i)           
+                        taudo = taudo1(j,i)
                         g = dlgfacthick(spin,mu0,alpha,re,mudisk) !disk to observer g factor
                         !Find the rlp bin that corresponds to re
                         kk = get_index(rlp(:,m),ndelta,re,rmin,npts(m))
@@ -309,7 +284,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
             end if                
         end do
     end do
-
+          
     ! Now trace rays for that bigger camera (obviously a lot easier because it's Newtonian)
     do i = 1,nron
         do j = 1,nphin
@@ -404,7 +379,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
             end if
         end do
     end do
-    
+
     do m=1,nlp 
         ! Calculate 4pi p(theta0,phi0) = ang_fac
         ang_fac = 4.d0 * pi * pnorm * pfunc_raw(-cosdelta_obs(m),b1,b2,qboost)

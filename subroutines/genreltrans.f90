@@ -177,11 +177,6 @@ contains
                 ! Call restframe reflection model
                 call rest_frame(arrays%earx, nex, Gamma0, model_args%Afe,      &
                      logne,Cutoff_0, logxi0, thetae, model_args%Cp, photarx)
-                do i=1, nex
-                   E = 0.5 * (arrays%earx(i) + arrays%earx(i-1))
-                   write(20,*) E, photarx(i)
-                enddo
-                write(20,*) 'no no'
                 ! NON LINEAR EFFECTS
                 if (config%DC .eq. 0) then
                    ! Gamma variations
@@ -222,11 +217,8 @@ contains
                          imline_w2(m, i) = aimag(arrays%ker_W2(m, i, j,mubin, rbin))
                          reline_w3(m, i) = real(arrays%ker_W3(m, i, j,mubin, rbin))
                          imline_w3(m, i) = aimag(arrays%ker_W3(m, i, j,mubin, rbin))
-                         E = 0.5 * (arrays%earx(i) + arrays%earx(i-1))
-                         write(21,*) E, reline_w0(m, i)
                       end do
                    end do
-                   write(21,*) 'no no'
                    ! TODO: this test wrapping should be inside the conv functions,
                    ! not at their callsites
                    ! Do the convolution (involves multiplying by E^{1-Gamma})
@@ -362,6 +354,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         config%firstcall = .false.
         config%needtrans = .true.
         config%needconv = .true.
+        prev_nf = 0 !this is needed to reallocate arrays with realloc_arrays, if firstcall is set to true externally
         test = .false.
 
         ! set sensible distance for observer from the BH

@@ -156,7 +156,7 @@ class Dbl_Parameters:
     # First Lamp post height
     h1: float = 6.0
     # Second Lamp post height
-    h2: float = 50.0
+    h2: float = 7.0
     # Spin
     A: float = 0.998
     # Inclination (degrees)
