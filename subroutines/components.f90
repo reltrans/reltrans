@@ -1,5 +1,10 @@
-subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                            h,z,Gamma,eta,beta_p,boost,floHz,fhiHz,ReIm,DelA,DelAB,g,ionvar,resp_matr)             
+module m_components
+    implicit none
+
+contains
+
+subroutine write_components(config, model_args, arrays, ear, earx, nf, floHz, fhiHz, absorbx, tauso, gso, &
+                            ReW0, ImW0, ReW1, ImW1, ReW2, ImW2, ReW3, ImW3)             
     !this subroutine separates the components from the model, calculates each cross spectrum including the effects of absorRTion,
     !folds the response matrix if desired, calls the phase correction, averages over frequnecy, and prints each different components
     !to a new file. This code repeats a lot and it's a bit of a monstrosity, mostly because it's annoying to separate the transfer
@@ -9,52 +14,74 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     !LT - light travel time only
     !PR - pivoting reflection of each source
     !RT - total reflection lag due to light travel time, pivoting of each reflection signal, and ionization variations  
-    
+
+    use common_types             
     implicit none
-    integer, intent(IN) :: ne,nex,nf,nlp,ionvar,ReIm,resp_matr
-    real   , intent(IN) :: ear(0:ne),earx(0:nex),contx(nex,nlp),absorbx(nex)
-    real   , intent(IN) :: g(nlp),DelA,DelAB(nlp),boost,z,Gamma,eta,h(nlp),beta_p
-    real   , intent(IN) :: gso(nlp),tauso(nlp)
-    real   , intent(INOUT) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
-    real   , intent(INOUT) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
-    real :: fac
-    real :: tempRe,tempIm,dE, corr
-    real :: f,flo,fhi,floHz,fhiHz
+    ! Pass structured types instead of individual variables
+    type(t_config), intent(IN)     :: config
+    type(t_model_arguments), intent(IN) :: model_args
+    type(t_arrays), intent(IN)      :: arrays
+
+    ! Dimensions and energy grids
+    integer, intent(IN) :: nf
+    real   , intent(IN) :: ear(0:), earx(0:)
+    real   , intent(IN) :: absorbx(:), tauso(:), gso(:)
+    real   , intent(IN) :: floHz, fhiHz
+
+    ! Transfer function arrays (W0-W3)
+    real   , intent(INOUT) :: ReW0(:,:,:), ImW0(:,:,:)
+    real   , intent(INOUT) :: ReW1(:,:,:), ImW1(:,:,:)
+    real   , intent(INOUT) :: ReW2(:,:,:), ImW2(:,:,:)
+    real   , intent(INOUT) :: ReW3(:,:,:), ImW3(:,:,:)
+
+    ! Internal calculation variables
+    real :: fac, tempRe, tempIm, dE, corr
+    real :: f, flo, fhi
     double precision :: fc
     double precision, parameter :: pi = acos(-1.d0)
-    integer :: i,j,m
-    !indiRTdual components transfer functions (S) and cross spectrum (G) dynamic allocation
-    real, dimension(:,:), allocatable :: ReScont,ImScont,ReSrev,ImSrev
-    real, dimension(:,:), allocatable :: ReSpiv,ImSpiv,ImSion,ReSion
-    real, dimension(:,:), allocatable :: ReGcont,ImGcont,ReGrev,ImGrev 
-    real, dimension(:,:), allocatable :: ReGpiv,ImGpiv,ReGion,ImGion
+    integer :: i, j, m, ne
 
-    real :: ReGcont_bar(nex),ImGcont_bar(nex),ReGpiv_bar(nex),ImGpiv_bar(nex)
-    real :: ReGrev_bar(nex),ImGrev_bar(nex),ReGion_bar(nex),ImGion_bar(nex)
-    !Arrays for each component that make up the final output to file    
-    real :: ReScont_print(ne),ImScont_print(ne),ReSpiv_print(ne),ImSpiv_print(ne)
-    real :: ener(ne),ReSrev_print(ne),ImSrev_print(ne),ReSion_print(ne),ImSion_print(ne)
-    !strings to open the output files
-    character (len=30) path
+    ! Component transfer functions and cross spectrum allocation
+    real, dimension(:,:), allocatable :: ReScont, ImScont, ReSrev, ImSrev
+    real, dimension(:,:), allocatable :: ReSpiv, ImSpiv, ImSion, ReSion
+    real, dimension(:,:), allocatable :: ReGcont, ImGcont, ReGrev, ImGrev 
+    real, dimension(:,:), allocatable :: ReGpiv, ImGpiv, ReGion, ImGion
+
+    real, dimension(:), allocatable :: ReGcont_bar, ImGcont_bar, ReGpiv_bar, ImGpiv_bar
+    real, dimension(:), allocatable :: ReGrev_bar, ImGrev_bar, ReGion_bar, ImGion_bar
+
+    ! Final output arrays
+    real, dimension(:), allocatable :: ReScont_print, ImScont_print, ReSpiv_print, ImSpiv_print
+    real, dimension(:), allocatable :: ener, ReSrev_print, ImSrev_print, ReSion_print, ImSion_print
     
-    !Allocate model component matrixes
-    if(.not. allocated(ReScont)) allocate( ReScont(nex,nf) )
-    if(.not. allocated(ImScont)) allocate( ImScont(nex,nf) )
-    if(.not. allocated(ReSrev )) allocate( ReSrev (nex,nf) )
-    if(.not. allocated(ImSrev )) allocate( ImSrev (nex,nf) )  
-    if(.not. allocated(ReSpiv )) allocate( ReSpiv (nex,nf) )
-    if(.not. allocated(ImSpiv )) allocate( ImSpiv (nex,nf) ) 
-    if(.not. allocated(ReSion )) allocate( ReSion (nex,nf) )
-    if(.not. allocated(ImSion )) allocate( ImSion (nex,nf) ) 
-    !Allocate cross spectra
-    if(.not. allocated(ReGcont)) allocate( ReGcont(nex,nf) )
-    if(.not. allocated(ImGcont)) allocate( ImGcont(nex,nf) )
-    if(.not. allocated(ReGrev )) allocate( ReGrev (nex,nf) )
-    if(.not. allocated(ImGrev )) allocate( ImGrev (nex,nf) )  
-    if(.not. allocated(ReGpiv )) allocate( ReGpiv (nex,nf) )
-    if(.not. allocated(ImGpiv )) allocate( ImGpiv (nex,nf) ) 
-    if(.not. allocated(ReGion )) allocate( ReGion (nex,nf) )
-    if(.not. allocated(ImGion )) allocate( ImGion (nex,nf) ) 
+    character (len=30) path
+
+    ne = size(ear) - 1
+    
+    ! Allocate model component matrixes
+    allocate( ReScont(config%nex,nf) )
+    allocate( ImScont(config%nex,nf) )
+    allocate( ReSrev (config%nex,nf) )
+    allocate( ImSrev (config%nex,nf) )
+    allocate( ReSpiv (config%nex,nf) )
+    allocate( ImSpiv (config%nex,nf) )
+    allocate( ReSion (config%nex,nf) )
+    allocate( ImSion (config%nex,nf) )
+
+    ! Allocate cross spectra
+    allocate( ReGcont(config%nex,nf) )
+    allocate( ImGcont(config%nex,nf) )
+    allocate( ReGrev (config%nex,nf) )
+    allocate( ImGrev (config%nex,nf) )
+    allocate( ReGpiv (config%nex,nf) )
+    allocate( ImGpiv (config%nex,nf) )
+    allocate( ReGion (config%nex,nf) )
+    allocate( ImGion (config%nex,nf) )
+
+    allocate(ReGcont_bar(config%nex), ImGcont_bar(config%nex), ReGpiv_bar(config%nex), ImGpiv_bar(config%nex))
+    allocate(ReGrev_bar(config%nex),  ImGrev_bar(config%nex),  ReGion_bar(config%nex), ImGion_bar(config%nex))
+    allocate(ReScont_print(ne), ImScont_print(ne), ReSpiv_print(ne), ImSpiv_print(ne))
+    allocate(ener(ne), ReSrev_print(ne), ImSrev_print(ne), ReSion_print(ne), ImSion_print(ne))
     
     ! open (unit = 20, file = 'fort.20', status='replace', action = 'write')
     ! do m = 1, nlp
@@ -70,10 +97,14 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
  
     write(*,*) 'inside components'
     !This stores each component contribution in the Re/Im matrices 
-    if (nlp .gt. 1 .and. beta_p .eq. 0.) then  
-        call components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                              h,z,Gamma,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
-                              ReGpiv,ImGpiv,ReGion,ImGion)
+    ! Logic updated to check components via model_args object
+    if (model_args%nlp .gt. 1 .and. model_args%beta_p .eq. 0.) then  
+        call components_nocoh(config%nex, earx, nf, real(config%flo), real(config%fhi), model_args%nlp, arrays%contx, absorbx, &
+                              tauso, gso, ReW0, ImW0, ReW1, ImW1, ReW2, ImW2, ReW3, ImW3, &
+                              real(model_args%h), real(model_args%zcos), real(model_args%Gamma), &
+                              real(model_args%eta), model_args%boost, model_args%g, &
+                              model_args%DelAB, config%ionvar, model_args%ReIm, model_args%resp_matr, &
+                              ReGcont, ImGcont, ReGrev, ImGrev, ReGpiv, ImGpiv, ReGion, ImGion)
         ! open (unit = 21, file = 'fort.21', status='replace', action = 'write')
         ! do j = 1, nf
         !    write(21,*) '-----------------------------', j
@@ -84,50 +115,64 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
         ! end do
         ! close(21)
      else 
-        call components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                        h,z,Gamma,eta,beta_p,boost,g,DelAB,ionvar,ReScont,ImScont,ReSrev,ImSrev,ReSpiv,ImSpiv,&
-                        ReSion,ImSion) 
+        call components(config%nex, earx, nf, real(config%flo), real(config%fhi), model_args%nlp, arrays%contx, &
+                        tauso, gso, ReW0, ImW0, ReW1, ImW1, ReW2, ImW2, ReW3, ImW3, &
+                        real(model_args%h), real(model_args%zcos), real(model_args%Gamma), &
+                        real(model_args%eta), model_args%beta_p, &
+                        model_args%boost, model_args%g, model_args%DelAB, config%ionvar, &
+                        ReScont, ImScont, ReSrev, ImSrev, ReSpiv, ImSpiv, ReSion, ImSion) 
         ! do i = 1, nex
         !    write(20,*) ReSion(i),ImSion(i)
         ! enddo
 
         !Include the effects of absorRTion in each model component matrix           
-        do j = 1, nf
-            do i = 1, nex
+       do j = 1, nf
+            do i = 1, config%nex
                 ReScont(i,j) = ReScont(i,j) * absorbx(i)
-                ImScont(i,j) = ImScont(i,j) * absorbx(i)                
-                ReSrev(i,j) = ReSrev(i,j) * absorbx(i)
-                ImSrev(i,j) = ImSrev(i,j) * absorbx(i)
-                ReSpiv(i,j) = ReSpiv(i,j) * absorbx(i)
-                ImSpiv(i,j) = ImSpiv(i,j) * absorbx(i)    
-                ReSion(i,j) = ReSion(i,j) * absorbx(i)
-                ImSion(i,j) = ImSion(i,j) * absorbx(i)
+                ImScont(i,j) = ImScont(i,j) * absorbx(i)
+                ReSrev(i,j)  = ReSrev(i,j)  * absorbx(i)
+                ImSrev(i,j)  = ImSrev(i,j)  * absorbx(i)
+                ReSpiv(i,j)  = ReSpiv(i,j)  * absorbx(i)
+                ImSpiv(i,j)  = ImSpiv(i,j)  * absorbx(i)
+                ReSion(i,j)  = ReSion(i,j)  * absorbx(i)
+                ImSion(i,j)  = ImSion(i,j)  * absorbx(i)
             end do
-        end do    
+        end do 
         !Calculate raw cross-spectrum from S(E,\nu) and the reference band parameters, for each component separately
-        if (ReIm .gt. 0.0) then
-            call propercross(nex,nf,earx,ReScont,ImScont,ReGcont,ImGcont,resp_matr)
-            call propercross(nex,nf,earx,ReSrev,ImSrev,ReGrev,ImGrev,resp_matr)     
-            call propercross(nex,nf,earx,ReSpiv,ImSpiv,ReGpiv,ImGpiv,resp_matr)   
-            call propercross(nex,nf,earx,ReSion,ImSion,ReGion,ImGion,resp_matr)
+        if (model_args%ReIm .gt. 0.0) then
+            call propercross(config%nex, nf, earx, ReScont, ImScont, ReGcont, ImGcont, model_args%resp_matr)
+            call propercross(config%nex, nf, earx, ReSrev,  ImSrev,  ReGrev,  ImGrev,  model_args%resp_matr)     
+            call propercross(config%nex, nf, earx, ReSpiv,  ImSpiv,  ReGpiv,  ImGpiv,  model_args%resp_matr)   
+            call propercross(config%nex, nf, earx, ReSion,  ImSion,  ReGion,  ImGion,  model_args%resp_matr)
         else
-            call propercross_NOmatrix(nex,nf,earx,ReScont,ImScont,ReGcont,ImGcont)
-            call propercross_NOmatrix(nex,nf,earx,ReSrev,ImSrev,ReGrev,ImGrev)
-            call propercross_NOmatrix(nex,nf,earx,ReSpiv,ImSpiv,ReGpiv,ImGpiv)
-            call propercross_NOmatrix(nex,nf,earx,ReSion,ImSion,ReGion,ImGion)
+            call propercross_NOmatrix(config%nex, nf, earx, ReScont, ImScont, ReGcont, ImGcont)
+            call propercross_NOmatrix(config%nex, nf, earx, ReSrev,  ImSrev,  ReGrev,  ImGrev)
+            call propercross_NOmatrix(config%nex, nf, earx, ReSpiv,  ImSpiv,  ReGpiv,  ImGpiv)
+            call propercross_NOmatrix(config%nex, nf, earx, ReSion,  ImSion,  ReGion,  ImGion)
         endif   
-    endif              
+    endif           
     !Apply phase correction parameter to the cross-spectral model (for bad calibration)
     do j = 1,nf
-        do i = 1,nex
-            ReGcont(i,j) = cos(DelA) * ReGcont(i,j) - sin(DelA) * ImGcont(i,j)
-            ImGcont(i,j) = cos(DelA) * ImGcont(i,j) + sin(DelA) * ReGcont(i,j)
-            ReGrev(i,j) = cos(DelA) * ReGrev(i,j) - sin(DelA) * ImGrev(i,j)
-            ImGrev(i,j) = cos(DelA) * ImGrev(i,j) + sin(DelA) * ReGrev(i,j)
-            ReGpiv(i,j) = cos(DelA) * ReGpiv(i,j) - sin(DelA) * ImGpiv(i,j)
-            ImGpiv(i,j) = cos(DelA) * ImGpiv(i,j) + sin(DelA) * ReGpiv(i,j)
-            ReGion(i,j) = cos(DelA) * ReGion(i,j) - sin(DelA) * ImGion(i,j)
-            ImGion(i,j) = cos(DelA) * ImGion(i,j) + sin(DelA) * ReGion(i,j)
+        do i = 1, config%nex
+            tempRe = ReGcont(i,j)
+            tempIm = ImGcont(i,j)
+            ReGcont(i,j) = cos(model_args%DelA) * tempRe - sin(model_args%DelA) * tempIm
+            ImGcont(i,j) = cos(model_args%DelA) * tempIm + sin(model_args%DelA) * tempRe
+
+            tempRe = ReGrev(i,j)
+            tempIm = ImGrev(i,j)
+            ReGrev(i,j) = cos(model_args%DelA) * tempRe - sin(model_args%DelA) * tempIm
+            ImGrev(i,j) = cos(model_args%DelA) * tempIm + sin(model_args%DelA) * tempRe
+
+            tempRe = ReGpiv(i,j)
+            tempIm = ImGpiv(i,j)
+            ReGpiv(i,j) = cos(model_args%DelA) * tempRe - sin(model_args%DelA) * tempIm
+            ImGpiv(i,j) = cos(model_args%DelA) * tempIm + sin(model_args%DelA) * tempRe
+
+            tempRe = ReGion(i,j)
+            tempIm = ImGion(i,j)
+            ReGion(i,j) = cos(model_args%DelA) * tempRe - sin(model_args%DelA) * tempIm
+            ImGion(i,j) = cos(model_args%DelA) * tempIm + sin(model_args%DelA) * tempRe
         end do
     end do
     !Calculate frequency-averaged spectra 
@@ -143,7 +188,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     fac = 2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf))
     do j = 1,nf
         f = floHz * (fhiHz/floHz)**( (real(j)-0.5) / real(nf) )
-        do i = 1,nex 
+        do i = 1,config%nex 
             ReGcont_bar(i) = ReGcont_bar(i) + ReGcont(i,j) / f
             ImGcont_bar(i) = ImGcont_bar(i) + ImGcont(i,j) / f
             ReGrev_bar(i) = ReGrev_bar(i) + ReGrev(i,j) / f
@@ -179,12 +224,12 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     path = 'Output/IonVar.dat'
     open (unit = 14, file = path, status='replace', action = 'write') 
 
-    if (abs(ReIm) .le. 4) then
-        call crebin(nex,earx,ReGcont_bar,ImGcont_bar,ne,ear,ReScont_print,ImScont_print)              
-        call crebin(nex,earx,ReGrev_bar,ImGrev_bar,ne,ear,ReSrev_print,ImSrev_print)
-        call crebin(nex,earx,ReGpiv_bar,ImGpiv_bar,ne,ear,ReSpiv_print,ImSpiv_print)
-        call crebin(nex,earx,ReGion_bar,ImGion_bar,ne,ear,ReSion_print,ImSion_print)
-        if (abs(ReIm) .eq. 1 ) then         !Real part
+    if (abs(model_args%ReIm) .le. 4) then
+        call crebin(config%nex,earx,ReGcont_bar,ImGcont_bar,ne,ear,ReScont_print,ImScont_print)
+        call crebin(config%nex,earx,ReGrev_bar,ImGrev_bar,ne,ear,ReSrev_print,ImSrev_print)
+        call crebin(config%nex,earx,ReGpiv_bar,ImGpiv_bar,ne,ear,ReSpiv_print,ImSpiv_print)
+        call crebin(config%nex,earx,ReGion_bar,ImGion_bar,ne,ear,ReSion_print,ImSion_print)
+        if (abs(model_args%ReIm) .eq. 1 ) then         !Real part
             do i = 1,ne 
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), ReScont_print(i)/dE
@@ -192,7 +237,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
                 write (13,*) ener(i), ReSpiv_print(i)/dE
                 write (14,*) ener(i), ReSion_print(i)/dE
             end do    
-        else if (abs(ReIm) .eq. 2) then     !Imaginary part
+        else if (abs(model_args%ReIm) .eq. 2) then     !Imaginary part
             do i = 1,ne 
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), ImScont_print(i)/dE
@@ -200,7 +245,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
                 write (13,*) ener(i), ImSpiv_print(i)/dE
                 write (14,*) ener(i), ImSion_print(i)/dE
             end do
-        else if (abs(ReIm) .eq. 3) then     !Modulus
+        else if (abs(model_args%ReIm) .eq. 3) then     !Modulus
             do i = 1,ne 
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), sqrt(ReScont_print(i)**2 + ImScont_print(i)**2)/dE
@@ -208,7 +253,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
                 write (13,*) ener(i), sqrt(ReSpiv_print(i)**2 + ImSpiv_print(i)**2)/dE
                 write (14,*) ener(i), sqrt(ReSion_print(i)**2 + ImSion_print(i)**2)/dE
             end do
-        else if (abs(ReIm) .eq. 4) then     !Time lag (s)
+        else if (abs(model_args%ReIm) .eq. 4) then     !Time lag (s)
             do i = 1,ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), atan2(ImScont_print(i),ReScont_print(i)) / ( 2.0*pi*fc )
@@ -218,11 +263,11 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
             end do
         end if
     else
-        call cfoldandbin(nex,earx,ReGcont_bar,ImGcont_bar,ne,ear,ReScont_print,ImScont_print,resp_matr)
-        call cfoldandbin(nex,earx,ReGpiv_bar,ImGpiv_bar,ne,ear,ReSpiv_print,ImSpiv_print,resp_matr) 
-        call cfoldandbin(nex,earx,ReGrev_bar,ImGrev_bar,ne,ear,ReSrev_print,ImSrev_print,resp_matr)
-        call cfoldandbin(nex,earx,ReGion_bar,ImGion_bar,ne,ear,ReSion_print,ImSion_print,resp_matr)
-        if (abs(ReIm) .eq. 5) then          !Modulus
+        call cfoldandbin(config%nex,earx,ReGcont_bar,ImGcont_bar,ne,ear,ReScont_print,ImScont_print,model_args%resp_matr)
+        call cfoldandbin(config%nex,earx,ReGpiv_bar,ImGpiv_bar,ne,ear,ReSpiv_print,ImSpiv_print,model_args%resp_matr)
+        call cfoldandbin(config%nex,earx,ReGrev_bar,ImGrev_bar,ne,ear,ReSrev_print,ImSrev_print,model_args%resp_matr)
+        call cfoldandbin(config%nex,earx,ReGion_bar,ImGion_bar,ne,ear,ReSion_print,ImSion_print,model_args%resp_matr)
+        if (abs(model_args%ReIm) .eq. 5) then          !Modulus
             do i = 1, ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), sqrt(ReScont_print(i)**2 + ImScont_print(i)**2)/dE
@@ -230,7 +275,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
                 write (12,*) ener(i), sqrt(ReSrev_print(i)**2 + ImSrev_print(i)**2)/dE
                 write (14,*) ener(i), sqrt(ReSion_print(i)**2 + ImSion_print(i)**2)/dE
             end do
-        else if (abs(ReIm) .eq. 6) then     !Time lag (s)
+        else if (abs(model_args%ReIm) .eq. 6) then     !Time lag (s)
             do i = 1, ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), atan2(ImScont_print(i),ReScont_print(i)) / ( 2.0*pi*fc )
@@ -262,6 +307,23 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     if (allocated( ImGpiv  )) deallocate( ImGpiv  )    
     if (allocated( ReGion  )) deallocate( ReGion  )
     if (allocated( ImGion  )) deallocate( ImGion  )
+    if (allocated( ReGcont_bar )) deallocate( ReGcont_bar )
+    if (allocated( ImGcont_bar )) deallocate( ImGcont_bar )
+    if (allocated( ReGrev_bar  )) deallocate( ReGrev_bar  )
+    if (allocated( ImGrev_bar  )) deallocate( ImGrev_bar  )
+    if (allocated( ReGpiv_bar  )) deallocate( ReGpiv_bar  )
+    if (allocated( ImGpiv_bar  )) deallocate( ImGpiv_bar  )
+    if (allocated( ReGion_bar  )) deallocate( ReGion_bar  )
+    if (allocated( ImGion_bar  )) deallocate( ImGion_bar  )
+    if (allocated( ReScont_print )) deallocate( ReScont_print )
+    if (allocated( ImScont_print )) deallocate( ImScont_print )
+    if (allocated( ReSpiv_print  )) deallocate( ReSpiv_print  )
+    if (allocated( ImSpiv_print  )) deallocate( ImSpiv_print  )
+    if (allocated( ener          )) deallocate( ener          )
+    if (allocated( ReSrev_print  )) deallocate( ReSrev_print  )
+    if (allocated( ImSrev_print  )) deallocate( ImSrev_print  )
+    if (allocated( ReSion_print  )) deallocate( ReSion_print  )
+    if (allocated( ImSion_print  )) deallocate( ImSion_print  )
 	    
     return  
 end subroutine write_ComponentS
@@ -281,12 +343,13 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
     implicit none
     integer, intent(IN) :: nex,nf,ionvar,nlp
     real   , intent(IN) :: earx(0:nex),contx(nex,nlp)
-    real   , intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp), beta_p, flo
+    real   , intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp), beta_p, flo, fhi
     real   , intent(INOUT) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
     real   , intent(INOUT) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
     real   , intent(INOUT) :: ReScont(nex,nf),ImScont(nex,nf),ReSrev(nex,nf),ImSrev(nex,nf)
     real   , intent(INOUT) :: ReSpiv(nex,nf),ImSpiv(nex,nf),ReSion(nex,nf),ImSion(nex,nf)
-    real E,fac,fhi,beta,f,phase_d,phase_p,tau_d,tau_p
+    real E,fac,beta,f,phase_d,phase_p,tau_d,tau_p
+    real, parameter :: pi_single = acos(-1.0)
     real corr, contx_sum(nex)
     complex, dimension(:,:), allocatable :: Scont,Sreverb,Spivot,Sion
     ! complex Stemp,Scont(nex,nf),Sreverb(nex,nf),Spivot(nex,nf),Sion(nex,nf)
@@ -325,13 +388,13 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
         end if
         do j = 1,nf
             f = flo * (fhi/flo)**(  (real(j)-0.5) / real(nf) )
-            do i = 1,nex
+            do i = 1, nex
                 E   = 0.5 * ( earx(i) + earx(i-1) )
                 fac = log(gso(m)/((1.0+z)*E))
                 !set up phase factors
                 if (m .gt. 1) then
-                    phase_d = 2.*pi*tau_d*f
-                    phase_p = 2.*pi*tau_p*f
+                    phase_d = 2.0*pi_single*tau_d*f
+                    phase_p = 2.0*pi_single*tau_p*f
                 endif    
                 cexp_d = cmplx(cos(phase_d),sin(phase_d))
                 cexp_p = cmplx(cos(phase_p),sin(phase_p)) 
@@ -382,8 +445,9 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
     real, intent(IN) :: earx(0:nex),contx(nex,nlp),absorbx(nex)
     real, intent(IN) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
     real, intent(IN) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
-    real, intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp)
-    real E,fac,flo,fhi,beta,f,phase_d,tau_d
+    real, intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp),flo,fhi
+    real E,fac,beta,f,phase_d,tau_d
+    real, parameter :: pi_single = acos(-1.0)
     real contx_sum(nex),corr
     !these are the component arrays for each lamp post separately, before the cross spectrum
     real, dimension(:,:,:), allocatable :: ReSpiv,ImSpiv,ReScont,ImScont,ReSrev,ImSrev, ReSion,ImSion
@@ -427,8 +491,7 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
 
     Scont   = 0.
     Sreverb = 0.
-    Spivot  = 0.
-    Scont   = 0.
+    Spivot = 0.
     Sion    = 0.
     
     ReGcont = 0.
@@ -451,7 +514,7 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
                 fac = log(gso(m)/((1.0+z)*E))
                 if (m .gt. 1) then
                     tau_d = tauso(m)-tauso(1)
-                    phase_d = 2.*pi*tau_d*f  
+                    phase_d = 2.0*pi_single*tau_d*f  
                 endif
                 cexp_d = cmplx(cos(phase_d),sin(phase_d))     
                 cexp_phi = cmplx(cos(DelAB(m)),sin(DelAB(m)))
@@ -502,9 +565,9 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
             call propercross(nex,nf,earx,ReSion(m,:,:),ImSion(m,:,:),ReGion_temp(m,:,:),ImGion_temp(m,:,:),resp_matr)
         else 
             call propercross_NOmatrix(nex,nf,earx,ReScont(m,:,:),ImScont(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:))
-            call propercross_NOmatrix(nex,nf,earx,ReSrev(m,:,:),ImSrev(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:))
-            call propercross_NOmatrix(nex,nf,earx,ReSpiv(m,:,:),ImSpiv(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:))
-            call propercross_NOmatrix(nex,nf,earx,ReSion(m,:,:),ImSion(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:))
+            call propercross_NOmatrix(nex,nf,earx,ReSrev(m,:,:),ImSrev(m,:,:),ReGrev_temp(m,:,:),ImGrev_temp(m,:,:))
+            call propercross_NOmatrix(nex,nf,earx,ReSpiv(m,:,:),ImSpiv(m,:,:),ReGpiv_temp(m,:,:),ImGpiv_temp(m,:,:))
+            call propercross_NOmatrix(nex,nf,earx,ReSion(m,:,:),ImSion(m,:,:),ReGion_temp(m,:,:),ImGion_temp(m,:,:))
         endif
         do j=1,nf 
             do i=1,nex 
@@ -554,4 +617,6 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
     return
 end subroutine
                       
-                      
+end module m_components
+
+

@@ -9,8 +9,8 @@ contains
         use dyn_gr, only: ndelta, cosd, dcosdr, rlp, tlp, npts, re1, pem1, taudo1
         use gr_continuum, only: tauso, gso, cosdelta_obs
         use radial_grids, only: logxir, gsdr, dfer_arr, logner
-        integer, intent(in) :: nlp
         type(t_config), intent(in) :: config
+        integer, intent(in) :: nlp
         ! allocate arrays for radial profiles
         allocate(dfer_arr(config%xe))
         allocate(logxir(config%xe))
@@ -287,6 +287,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use radial_grids
     use gr_continuum
     use m_genreltrans
+    use m_components
     implicit none
     ! Constants
     double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0,dlogf = 0.09 !This is a resolution parameter (base 10)
@@ -423,7 +424,12 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
            config%verbose, dset,model_args%Anorm, arrays%contx_int,            &
            model_args%eta)
 
-       call radfunctions_dens(config, model_args, arrays)
+       call radfunctions_dens(config%verbose, config%xe, model_args%rin,       &
+           rnmax, model_args%eta_0, dble(model_args%logxi),                    &
+           dble(model_args%lognep), model_args%a, model_args%h,                &
+           model_args%Gamma, model_args%honr, rlp, dcosdr, cosd,               &
+           arrays%contx_int,ndelta, nlp, config%rmin, npts, logxir, gsdr,      &
+           logner, dfer_arr)
     else
         call radfuncs_dist(config%xe, model_args%rin, rnmax,model_args%b1,     &
             model_args%b2, model_args%qboost, fcons,                           &
@@ -627,16 +633,11 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 
     if (config%verbose .gt. 1 .and. abs(model_args%ReIm) .gt. 0 .and. model_args%ReIm .lt. 7) then
         if (config%DC .eq. 0 .and. model_args%beta_p .eq. 0) then
-           call write_components(ne, ear, nex, arrays%earx, config%nf,         &
-               real(config%flo), real(config%fhi), nlp, arrays%contx,          &
-               absorbx,real(tauso), real(gso), arrays%ReW0, arrays%ImW0,       &
-               arrays%ReW1,arrays%ImW1, arrays%ReW2, arrays%ImW2,              &
-               arrays%ReW3,arrays%ImW3, real(model_args%h),                    &
-               real(model_args%zcos),real(model_args%Gamma),                   &
-               real(model_args%eta),model_args%beta_p, model_args%boost,       &
-               model_args%floHz,model_args%fhiHz, model_args%ReIm,             &
-               model_args%DelA,model_args%DelAB, model_args%g,config%ionvar,   &
-               model_args%resp_matr)
+           ! Refactored call to write_components
+        call write_components(config, model_args, arrays, ear, arrays%earx, &
+                      config%nf, model_args%floHz, model_args%fhiHz, absorbx, real(tauso), real(gso), &
+                      arrays%ReW0, arrays%ImW0, arrays%ReW1, arrays%ImW1, &
+                      arrays%ReW2, arrays%ImW2, arrays%ReW3, arrays%ImW3)
         ! catch case here for coherence = 0 or 1
         end if
         ! this writes the full model as returned to Xspec
