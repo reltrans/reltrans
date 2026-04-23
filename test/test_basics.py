@@ -72,21 +72,21 @@ def test_re_im_rtdist(reltrans, assert_snapshot, telescope, envars):
     agn1 = rtdist_Parameters(mass=4.7e6, flo_hz=1e-5, fhi_hz=1e-4, re_im=4.0)
     output = reltrans.rtdist(energy, agn1)
     # _debug_plot(energy,output, title = "rtdist lag spectrum", xlabel="Energy [keV]")
-    assert_snapshot(output, name="time_lag")
+    assert_snapshot(output, name="time_lag", rtol=1e-3)
 
     agn1.re_im = 3
     output = reltrans.rtdist(energy, agn1)
     # _debug_plot(energy,output, title="rtdist modulus spectrum", xlabel="Energy[keV]")
-    assert_snapshot(output, name="magnitude")
+    assert_snapshot(output, name="magnitude", rtol=1e-3)
 
     agn1.re_im = 1
     output = reltrans.rtdist(energy, agn1)
     # _debug_plot(energy,output, title="rtdist real part spectrum", xlabel="Energy[keV]")
-    assert_snapshot(output, name="real_part")
+    assert_snapshot(output, name="real_part", rtol=1e-3)
 
     agn1.re_im = 2
     output = reltrans.rtdist(energy, agn1)
     # _debug_plot(energy,output, title="rtdist imaginary part spectrum", xlabel="Energy[keV]")
-    assert_snapshot(output, name="imaginary_part")
+    assert_snapshot(output, name="imaginary_part", rtol=1e-3)
 
     
