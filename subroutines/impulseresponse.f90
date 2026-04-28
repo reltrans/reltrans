@@ -1,5 +1,18 @@
 ! vim: cc=80 wrap tw=80
+
 module impulseresponse
+    ! The impulseresponse module is for calculating and manipulating the
+    ! 2-dimensional impulse response function. This is not usually computed as
+    ! part of a reltrans invocation, and so is separated from the rest of the
+    ! code base.
+
+    ! The ISO C bindings allows for better (in the sense of more portable)
+    ! interoperability with the C abstract binary interface. That is to say,
+    ! Fortran ints may be compile differently that C ints in terms of bits, so
+    ! the bindings give stable types across systems.
+    !
+    ! `c_loc` is a relatively uncommon one and is for reading the address of a C
+    ! pointer.
     use iso_c_binding, only: c_ptr, c_loc, c_int
     implicit none
 

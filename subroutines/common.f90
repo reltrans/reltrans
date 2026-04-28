@@ -25,7 +25,15 @@ module common_types
         real :: Nh, boost, Mass, floHz, fhiHz, DelA
         integer :: nlp, ReIm, resp_matr, Cp
 
-        double precision :: eta, eta_0
+        ! eta: Fourier frequency dependent normalisation ratio C1(vc) / C2(vc)
+        ! See Lucchini et al. 2023 for details.
+        double precision :: eta
+
+        ! eta_0: Time-averaged normalisation ratio C1 / C2 between the continuum
+        ! of the two lampposts. It sets the continuum cutoff and disc
+        ! ionisation.
+        ! See Lucchini et al. 2023 for details.
+        double precision :: eta_0
 
         ! Asymmetry parameter of angular emissivity function:
         double precision :: qboost

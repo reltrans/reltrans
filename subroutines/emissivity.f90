@@ -2,6 +2,10 @@
 
 ! A module for the handling various emissivity functions and datas.
 module emissivities
+    ! The ISO C bindings allows for better (in the sense of more portable)
+    ! interoperability with the C abstract binary interface. That is to say,
+    ! Fortran ints may be compile differently that C ints in terms of bits, so
+    ! the bindings give stable types across systems.
     use iso_c_binding, only: c_double
 
     implicit none
