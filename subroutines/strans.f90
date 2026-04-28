@@ -143,7 +143,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
         call response_allocate(args%ne, args%conf%nt, args%dlogt, args%dg)
     end if
 
-    !set up saving the impulse response function if user desieres
+    !set up saving the impulse response function if user desires
     !note: the ideal parameters to plot the transfer function are nro~=7000,nphi~=7000,nt~=2e9,nex~=2e10
 
     !get the GR ray-tracing CONTINUUM parameters which are stored in the module gr_continuum
