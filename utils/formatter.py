@@ -95,30 +95,55 @@ class SourceLine:
         ]
 
     def maths_wrap(
-        self, width, maths_tokens=["/", "+", "-", "*"], indent_width=4
+        self, width, maths_tokens=["\\*\\*", "\\=", "/", ",", "\\+", "\\-", "\\*"], indent_width=4
     ) -> "SourceLine":
         kwargs = dict(cont=True, indent=self.indent)
 
+        all_tokens = [re.split(re.compile("(" + "|".join(maths_tokens) + ")"), self.line)]
+        all_tokens = [i for i in iter(*all_tokens)]
+
         lines = []
-        new = self.line
-        while len(new) + self.indent + indent_width >= width:
-            cuts = [(token, new.find(token)) for token in maths_tokens]
-            cuts = [i for i in cuts if i[1] > 0]
+        current_line = all_tokens[0].strip()
+        spacer = True
 
-            if len(cuts) == 0:
-                break
+        i = 1
+        while i < len(all_tokens):
+            token = all_tokens[i].strip()
+            if len(token) == 0:
+                i += 1
+                continue
 
-            token, cut = min(cuts, key=lambda x: x[1])
+            # Lookaheads
+            if i + 1 < len(all_tokens):
+                if all_tokens[i + 1].strip() == ",":
+                    token += ","
+                    i += 1
 
-            text = new[:cut]
-            lines.append(dataclasses.replace(self, line=text.strip(), **kwargs))
-            new = new[cut:]
 
-            if len(lines) == 1:
-                kwargs["indent"] += indent_width
+            if len(current_line) + len(token) + self.indent + indent_width + 1 >= width:
+                lines.append(dataclasses.replace(self, line=current_line.strip(), **kwargs))
+                if len(lines) == 1:
+                    kwargs["indent"] += indent_width
+                current_line = ""
 
-        lines.append(dataclasses.replace(self, line=new.strip(), **kwargs))
+            if token == "**":
+                current_line += token
+                spacer = False
+            elif token == "-":
+                if current_line.endswith("(") or any(current_line.endswith(op) for op in maths_tokens):
+                    current_line += token
+                    spacer = False
+                else:
+                    current_line += " " + token
+            elif spacer == False:
+                current_line += token
+                spacer = True
+            else:
+                current_line += " " + token
 
+            i += 1
+
+        lines.append(dataclasses.replace(self, line=current_line.strip(), **kwargs))
         return lines
 
     def source_wrap(self, width, sep=",", indent_width=4) -> "SourceLine":
@@ -224,9 +249,7 @@ class Formatter:
                 elif not l.has_comment and l.source_wrappable():
                     lines += l.source_wrap(self.text_width)
                 elif not l.has_comment and l.assignment:
-                    maths_lines = l.source_wrap(self.text_width)
-                    for ml in maths_lines:
-                        lines += ml.maths_wrap(self.text_width)
+                    lines += l.maths_wrap(self.text_width)
                     lines[-1].cont = False
                 else:
                     lines.append(l)
