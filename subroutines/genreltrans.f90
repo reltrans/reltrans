@@ -1,4 +1,4 @@
-﻿module m_genreltrans
+module m_genreltrans
     use common_types
     implicit none
 
@@ -14,8 +14,8 @@
     double precision :: flosave   = 0.d0
     double precision :: d_save    = 0.d0
 
-    type(t_config)   :: config_save
-    type(t_arrays)   :: arrays_save
+    type(t_config), target   :: config_save
+    type(t_arrays), target   :: arrays_save
 
 contains
 
@@ -341,6 +341,12 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     logical :: force_recompute
 
     type(t_model_arguments) :: model_args
+    ! Pointer aliases so the subroutine body reads as before
+    type(t_config), pointer :: config
+    type(t_arrays), pointer :: arrays
+
+    config => config_save
+    arrays => arrays_save
 
     call get_environment_variable("REV_NOSAV", nosav_val)
     force_recompute = (nosav_val == "1")
@@ -348,8 +354,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     d = d_save
 
     call unwrap_arguments(model_args, nlp, dset, param, Cp)
-    call config_frequency(config_save, model_args)
-    call arguments_check(config_save, model_args)
+    call config_frequency(config, model_args)
+    call arguments_check(config, model_args)
 
     ! TODO: check to make sure nlp hasn't changed, else many arrays need to be
     ! freed and re-allocated
@@ -357,16 +363,16 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if (firstcall) then
         call init_fftw_allconv()
         ! initialise environment and allocate all arrays
-        call read_environment_variables(config_save)
-        call setup_global_arrays(config_save, model_args%nlp)
-        call setup_arrays(config_save, arrays_save, model_args%nlp)
+        call read_environment_variables(config)
+        call setup_global_arrays(config, model_args%nlp)
+        call setup_arrays(config, arrays, model_args%nlp)
 
         firstcall = .false.
         needtrans = .true.
         test_flag = .false.
 
         ! set sensible distance for observer from the BH
-        d_save = max(1.0d4 , 2.0d2 * config_save%rnmax**2)
+        d_save = max(1.0d4 , 2.0d2 * config%rnmax**2)
         d      = d_save
 
         ! finally, let the people know what they are witnessing!
@@ -376,7 +382,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     d = d_save
 
     ! reallocated frequency dependent arrays
-    call realloc_arrays(config_save, model_args, arrays_save, prev_nf)
+    call realloc_arrays(config, model_args, arrays, prev_nf)
 
     ifl = 1
 
@@ -387,8 +393,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     muobs = cos(model_args%inc * pi / 180.d0)
 
     ! Decide if this is the DC component/time averaged spectrum or not
-    if (config_save%flo .lt. tiny(config_save%flo) .or. config_save%fhi .lt. tiny(config_save%fhi))then
-        config_save%DC = 1
+    if (config%flo .lt. tiny(config%flo) .or. config%fhi .lt. tiny(config%fhi))then
+        config%DC = 1
         model_args%g = 0.0
         model_args%DelAB = 0.0
         model_args%DelA = 0.0
@@ -398,13 +404,13 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ! averaged spectrum
         model_args%beta_p = 1.
     else
-        config_save%DC = 0
+        config%DC = 0
         model_args%boost = abs(model_args%boost)
     end if
 
     ! Determine if I need to calculate the kernel
-    call need_check(model_args%Cp, Cpsave, param, paramsave, config_save%fhi,  &
-        config_save%flo,fhisave, flosave, config_save%nf, prev_nf, needtrans,  &
+    call need_check(model_args%Cp, Cpsave, param, paramsave, config%fhi,  &
+        config%flo,fhisave, flosave, config%nf, prev_nf, needtrans,  &
         needconv)
 
     if (force_recompute) then
@@ -412,7 +418,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         needconv  = .true.
     end if
 
-    if (config_save%verbose .gt. 2) call CPU_TIME (time_start)
+    if (config%verbose .gt. 2) call CPU_TIME (time_start)
     if (needtrans)then
        ! allocate lensing/reflection fraction arrays if necessary
        if (allocated(lens)) deallocate(lens)
@@ -423,17 +429,17 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        allocate (frrel(nlp))
        ! Calculate the Kernel for the given parameters
        status_re_tau = .true.
-       call rtrans(config_save%verbose, dset, nlp, model_args%a, model_args%h, &
+       call rtrans(config%verbose, dset, nlp, model_args%a, model_args%h, &
            muobs, model_args%Gamma, model_args%rin, model_args%rout,           &
            model_args%honr, d, rnmax, model_args%zcos, model_args%b1,          &
            model_args%b2, model_args%qboost, model_args%eta_0, fcons,          &
-           config_save%nro, config_save%nphi, nex, config_save%dloge,          &
-           config_save%nf, config_save%fhi, config_save%flo, config_save%me,   &
-           config_save%xe, arrays_save%ker_W0, arrays_save%ker_W1,             &
-           arrays_save%ker_W2, arrays_save%ker_W3, frobs, frrel)
+           config%nro, config%nphi, nex, config%dloge,          &
+           config%nf, config%fhi, config%flo, config%me,   &
+           config%xe, arrays%ker_W0, arrays%ker_W1,             &
+           arrays%ker_W2, arrays%ker_W3, frobs, frrel)
        ! print *, 'gso ', gso(1)
     end if
-    if (config_save%verbose .gt. 2) then
+    if (config%verbose .gt. 2) then
        call CPU_TIME (time_end)
        print *, 'Transfer function runtime: ', time_end - time_start, ' seconds'
     end if
@@ -451,17 +457,17 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        call init_cont(nlp, model_args%a, model_args%h, model_args%zcos,        &
            model_args%Cutoff_s, model_args%Cutoff_obs, model_args%logxi,       &
            model_args%lognep, muobs, Cp_cont, model_args%Cp, fcons,            &
-           model_args%Gamma,model_args%Dkpc, model_args%Mass,arrays_save%earx, &
-           config_save%Emin,config_save%Emax, arrays_save%contx,               &
-           config_save%dloge, config_save%verbose, dset, model_args%Anorm,     &
-           arrays_save%contx_int, model_args%eta)
+           model_args%Gamma,model_args%Dkpc, model_args%Mass,arrays%earx, &
+           config%Emin,config%Emax, arrays%contx,               &
+           config%dloge, config%verbose, dset, model_args%Anorm,     &
+           arrays%contx_int, model_args%eta)
 
-       call radfunctions_dens(config_save, model_args, arrays_save)
+       call radfunctions_dens(config, model_args, arrays)
     else
-        call radfuncs_dist(config_save%xe, model_args%rin, rnmax,model_args%b1, &
+        call radfuncs_dist(config%xe, model_args%rin, rnmax,model_args%b1, &
             model_args%b2, model_args%qboost, fcons,                           &
             & dble(model_args%lognep), model_args%a, model_args%h(1),          &
-            model_args%honr, rlp, dcosdr, cosd, ndelta, config_save%rmin,      &
+            model_args%honr, rlp, dcosdr, cosd, ndelta, config%rmin,      &
             npts(1), logxir, gsdr, logner, pnorm)
         ! set up the continuum spectrum plus relative quantities (cutoff
         ! energies, lensing/gfactors, luminosity, etc)
@@ -469,103 +475,103 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         call init_cont(nlp, model_args%a, model_args%h, model_args%zcos,       &
             model_args%Cutoff_s, model_args%Cutoff_obs, model_args%logxi,      &
             model_args%lognep, muobs, Cp_cont, model_args%Cp, fcons,           &
-            model_args%Gamma,model_args%Dkpc, model_args%Mass,arrays_save%earx, &
-            config_save%Emin,config_save%Emax, arrays_save%contx,              &
-            config_save%dloge, config_save%verbose, dset, model_args%Anorm,    &
-            arrays_save%contx_int, model_args%eta)
+            model_args%Gamma,model_args%Dkpc, model_args%Mass,arrays%earx, &
+            config%Emin,config%Emax, arrays%contx,              &
+            config%dloge, config%verbose, dset, model_args%Anorm,    &
+            arrays%contx_int, model_args%eta)
 
      end if
 
     ! do this for each lamp post, then find some sort of weird average?
-    if (config_save%verbose .gt. 0) write(*,*)"Observer's reflection fraction for each source:",model_args%boost*frobs
-    if (config_save%verbose .gt. 0) write(*,*)"Relxill reflection fraction for each source:", frrel
+    if (config%verbose .gt. 0) write(*,*)"Observer's reflection fraction for each source:",model_args%boost*frobs
+    if (config%verbose .gt. 0) write(*,*)"Relxill reflection fraction for each source:", frrel
 
-    if (config_save%verbose .gt. 2) call CPU_TIME (time_start)
+    if (config%verbose .gt. 2) call CPU_TIME (time_start)
     if (needconv)then
-        call do_convolutions(config_save, model_args, arrays_save)
+        call do_convolutions(config, model_args, arrays)
     end if
-    if (config_save%verbose .gt. 2) then
+    if (config%verbose .gt. 2) then
         call CPU_TIME (time_end)
         print *, 'Convolutions runtime: ', time_end - time_start, ' seconds'
     endif
 
     ! Calculate absorption
-    call tbabs(arrays_save%earx,nex,nh,Ifl,absorbx,photerx)
+    call tbabs(arrays%earx,nex,nh,Ifl,absorbx,photerx)
 
     ! TBD coherence check - if zero coherence between lamp posts, call a
     ! different subroutine
     if (model_args%ReIm .eq. 7) then
         ! tbd - implement zero cohernece in lag_freq
         if (nlp .gt. 1 .and. model_args%beta_p .eq. 0.) then
-            call lag_freq_nocoh(nex, arrays_save%earx, config_save%nf,          &
-                arrays_save%fix, real(config_save%flo), real(config_save%fhi),  &
-                config_save%Emin, config_save%Emax,                             &
-                nlp, arrays_save%contx, absorbx, real(tauso),real(gso),         &
-                arrays_save%ReW0,arrays_save%ImW0, arrays_save%ReW1,            &
-                arrays_save%ImW1, arrays_save%ReW2,arrays_save%ImW2,            &
-                arrays_save%ReW3,arrays_save%ImW3,                              &
+            call lag_freq_nocoh(nex, arrays%earx, config%nf,          &
+                arrays%fix, real(config%flo), real(config%fhi),  &
+                config%Emin, config%Emax,                             &
+                nlp, arrays%contx, absorbx, real(tauso),real(gso),         &
+                arrays%ReW0,arrays%ImW0, arrays%ReW1,            &
+                arrays%ImW1, arrays%ReW2,arrays%ImW2,            &
+                arrays%ReW3,arrays%ImW3,                              &
                 real(model_args%h),real(model_args%zcos),                       &
                 real(model_args%Gamma),real(model_args%eta),                    &
                 model_args%boost, model_args%g,model_args%DelAB,                &
-                config_save%ionvar, arrays_save%ReGbar,arrays_save%ImGbar)
+                config%ionvar, arrays%ReGbar,arrays%ImGbar)
         else
-            call lag_freq(nex, arrays_save%earx, config_save%nf,                &
-                arrays_save%fix, real(config_save%flo), real(config_save%fhi),  &
-                config_save%Emin, config_save%Emax,                             &
-                nlp, arrays_save%contx, absorbx, real(tauso),real(gso),         &
-                arrays_save%ReW0,arrays_save%ImW0, arrays_save%ReW1,            &
-                arrays_save%ImW1, arrays_save%ReW2,arrays_save%ImW2,            &
-                arrays_save%ReW3,arrays_save%ImW3,                              &
+            call lag_freq(nex, arrays%earx, config%nf,                &
+                arrays%fix, real(config%flo), real(config%fhi),  &
+                config%Emin, config%Emax,                             &
+                nlp, arrays%contx, absorbx, real(tauso),real(gso),         &
+                arrays%ReW0,arrays%ImW0, arrays%ReW1,            &
+                arrays%ImW1, arrays%ReW2,arrays%ImW2,            &
+                arrays%ReW3,arrays%ImW3,                              &
                 real(model_args%h),real(model_args%zcos),                       &
                 real(model_args%Gamma),real(model_args%eta),                    &
                 model_args%beta_p, model_args%boost,model_args%g,               &
-                model_args%DelAB, config_save%ionvar,arrays_save%ReGbar,        &
-                arrays_save%ImGbar)
+                model_args%DelAB, config%ionvar,arrays%ReGbar,        &
+                arrays%ImGbar)
         end if
     else if (nlp .gt. 1 .and. model_args%beta_p .eq. 0.) then
-        call rawG(nex, arrays_save%earx, config_save%nf, real(config_save%flo), &
-            real(config_save%fhi), nlp, arrays_save%contx, absorbx,             &
-            real(tauso), real(gso),arrays_save%ReW0, arrays_save%ImW0,          &
-            arrays_save%ReW1,arrays_save%ImW1, arrays_save%ReW2,                &
-            arrays_save%ImW2, arrays_save%ReW3,arrays_save%ImW3,                &
+        call rawG(nex, arrays%earx, config%nf, real(config%flo), &
+            real(config%fhi), nlp, arrays%contx, absorbx,             &
+            real(tauso), real(gso),arrays%ReW0, arrays%ImW0,          &
+            arrays%ReW1,arrays%ImW1, arrays%ReW2,                &
+            arrays%ImW2, arrays%ReW3,arrays%ImW3,                &
             real(model_args%h),real(model_args%zcos),real(model_args%Gamma),    &
             real(model_args%eta), model_args%boost,model_args%ReIm,             &
-            model_args%g, model_args%DelAB,config_save%ionvar,config_save%DC,   &
-            model_args%resp_matr, arrays_save%ReGrawa,arrays_save%ImGrawa)
+            model_args%g, model_args%DelAB,config%ionvar,config%DC,   &
+            model_args%resp_matr, arrays%ReGrawa,arrays%ImGrawa)
     else
         ! Calculate raw FT of the full spectrum without absorption
-        call rawS(nex, arrays_save%earx, config_save%nf, real(config_save%flo), &
-            real(config_save%fhi), nlp, arrays_save%contx, real(tauso),         &
-            real(gso), arrays_save%ReW0, arrays_save%ImW0,                      &
-            arrays_save%ReW1, arrays_save%ImW1,arrays_save%ReW2,                &
-            arrays_save%ImW2, arrays_save%ReW3, arrays_save%ImW3,               &
+        call rawS(nex, arrays%earx, config%nf, real(config%flo), &
+            real(config%fhi), nlp, arrays%contx, real(tauso),         &
+            real(gso), arrays%ReW0, arrays%ImW0,                      &
+            arrays%ReW1, arrays%ImW1,arrays%ReW2,                &
+            arrays%ImW2, arrays%ReW3, arrays%ImW3,               &
             real(model_args%h), real(model_args%zcos),real(model_args%Gamma),   &
             real(model_args%eta),model_args%beta_p, model_args%boost,           &
-            model_args%g,model_args%DelAB, config_save%ionvar, config_save%DC,  &
-            arrays_save%ReSraw,arrays_save%ImSraw)
+            model_args%g,model_args%DelAB, config%ionvar, config%DC,  &
+            arrays%ReSraw,arrays%ImSraw)
 
         ! Include absorption in the model
-        do j = 1, config_save%nf
+        do j = 1, config%nf
             do i = 1, nex
-                arrays_save%ReSrawa(i,j) = arrays_save%ReSraw(i,j) * absorbx(i)
-                arrays_save%ImSrawa(i,j) = arrays_save%ImSraw(i,j) * absorbx(i)
+                arrays%ReSrawa(i,j) = arrays%ReSraw(i,j) * absorbx(i)
+                arrays%ImSrawa(i,j) = arrays%ImSraw(i,j) * absorbx(i)
             end do
         end do
     end if
 
-    if (config_save%DC .eq. 1)then
+    if (config%DC .eq. 1)then
         ! Norm is applied internally for DC/time averaged spectrum component of
         ! dset=1
         ! No need for the immaginary part in DC
         do i = 1, nex
-            arrays_save%ReGbar(i) = (model_args%Anorm                           &
-                /real(1.+model_args%eta)) * arrays_save%ReSrawa(i,1)
+            arrays%ReGbar(i) = (model_args%Anorm                           &
+                /real(1.+model_args%eta)) * arrays%ReSrawa(i,1)
         end do
     else if (model_args%ReIm .eq. 7) then
         ! if calculating the lag-frequency spectrum, just rebin the arrays
-        call rebinE(arrays_save%fix, arrays_save%ReGbar, config_save%nf,        &
+        call rebinE(arrays%fix, arrays%ReGbar, config%nf,        &
             ear, ReS, ne)
-        call rebinE(arrays_save%fix, arrays_save%ImGbar, config_save%nf,        &
+        call rebinE(arrays%fix, arrays%ImGbar, config%nf,        &
             ear, ImS, ne)
     else
         ! In this case, calculate the lag-energy spectrum
@@ -575,53 +581,53 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ! the skip below
         if (nlp .eq. 1 .or. model_args%beta_p .ne. 0.) then
             if (model_args%ReIm .gt. 0.0) then
-                call propercross(nex, config_save%nf, arrays_save%earx,         &
-                    arrays_save%ReSrawa, arrays_save%ImSrawa,                   &
-                    arrays_save%ReGrawa,arrays_save%ImGrawa,                    &
+                call propercross(nex, config%nf, arrays%earx,         &
+                    arrays%ReSrawa, arrays%ImSrawa,                   &
+                    arrays%ReGrawa,arrays%ImGrawa,                    &
                     model_args%resp_matr)
             else
-                call propercross_NOmatrix(nex, config_save%nf, arrays_save%earx, &
-                    arrays_save%ReSrawa, arrays_save%ImSrawa,                   &
-                    arrays_save%ReGrawa, arrays_save%ImGrawa)
+                call propercross_NOmatrix(nex, config%nf, arrays%earx, &
+                    arrays%ReSrawa, arrays%ImSrawa,                   &
+                    arrays%ReGrawa, arrays%ImGrawa)
             endif
         end if
         ! Apply phase correction parameter to the cross-spectral model (for bad
         ! calibration)
         ! this is where coherence = 0 or = 1 cases merge back
-        do j = 1,config_save%nf
+        do j = 1,config%nf
             do i = 1,nex
-                arrays_save%ReG(i, j) = cos(model_args%DelA)                    &
-                    * arrays_save%ReGrawa(i,j)                                  &
-                    - sin(model_args%DelA) * arrays_save%ImGrawa(i, j)
-                arrays_save%ImG(i, j) = cos(model_args%DelA)                    &
-                    * arrays_save%ImGrawa(i,j)                                  &
-                    + sin(model_args%DelA) * arrays_save%ReGrawa(i, j)
+                arrays%ReG(i, j) = cos(model_args%DelA)                    &
+                    * arrays%ReGrawa(i,j)                                  &
+                    - sin(model_args%DelA) * arrays%ImGrawa(i, j)
+                arrays%ImG(i, j) = cos(model_args%DelA)                    &
+                    * arrays%ImGrawa(i,j)                                  &
+                    + sin(model_args%DelA) * arrays%ReGrawa(i, j)
             end do
         end do
-        arrays_save%ReGbar = 0.0
-        arrays_save%ImGbar = 0.0
+        arrays%ReGbar = 0.0
+        arrays%ImGbar = 0.0
         fac = 2.302585                                                           &
-            * config_save%fc**2 * log10(model_args%fhiHz                        &
+            * config%fc**2 * log10(model_args%fhiHz                        &
             /model_args%floHz) / ((model_args%fhiHz                             &
-            -model_args%floHz) * real(config_save%nf))
-        do j = 1,config_save%nf
+            -model_args%floHz) * real(config%nf))
+        do j = 1,config%nf
             f = model_args%floHz                                                 &
                 * (model_args%fhiHz                                              &
-                /model_args%floHz)**((real(j)-0.5) / real(config_save%nf))
+                /model_args%floHz)**((real(j)-0.5) / real(config%nf))
             do i = 1,nex
-                arrays_save%ReGbar(i) = arrays_save%ReGbar(i)                   &
-                    + arrays_save%ReG(i,j) / f
-                arrays_save%ImGbar(i) = arrays_save%ImGbar(i)                   &
-                    + arrays_save%ImG(i,j) / f
+                arrays%ReGbar(i) = arrays%ReGbar(i)                   &
+                    + arrays%ReG(i,j) / f
+                arrays%ImGbar(i) = arrays%ImGbar(i)                   &
+                    + arrays%ImG(i,j) / f
             end do
         end do
         ! This means that norm for the AC components in the dset=1 model is
         ! power in squared fractional rms format
         ! note: the factor eta is to have the same normalization as the single
         ! LP model, it's 100% arbitrary
-        arrays_save%ReGbar = arrays_save%ReGbar                                  &
+        arrays%ReGbar = arrays%ReGbar                                  &
             * fac * (model_args%Anorm/real(1.+model_args%eta))**2
-        arrays_save%ImGbar = arrays_save%ImGbar                                  &
+        arrays%ImGbar = arrays%ImGbar                                  &
             * fac * (model_args%Anorm/real(1.+model_args%eta))**2
     end if
 
@@ -632,8 +638,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             photar(i) = atan2(ImS(i),ReS(i))/(pi*(ear(i) + ear(i-1)))*dE
         end do
     else if (abs(model_args%ReIm) .le. 4)then
-        call crebin(nex, arrays_save%earx, arrays_save%ReGbar,                  &
-            arrays_save%ImGbar, ne, ear, ReS, ImS) !S is in photar form
+        call crebin(nex, arrays%earx, arrays%ReGbar,                  &
+            arrays%ImGbar, ne, ear, ReS, ImS) !S is in photar form
 
         if (abs(model_args%ReIm) .eq. 1)then !Real part
             photar = ReS
@@ -645,13 +651,13 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         else if (abs(model_args%ReIm) .eq. 4)then !Time lag (s)
             do i = 1,ne
                 dE = ear(i) - ear(i-1)
-                photar(i) = atan2(ImS(i) , ReS(i)) / (2.0*pi*config_save%fc) * dE
+                photar(i) = atan2(ImS(i) , ReS(i)) / (2.0*pi*config%fc) * dE
             end do
             write(*,*)"Warning ReIm=4 should not be used for fitting!"
         end if
     else
-        call cfoldandbin(nex, arrays_save%earx, arrays_save%ReGbar,             &
-            arrays_save%ImGbar, ne, ear, ReS, ImS,                              &
+        call cfoldandbin(nex, arrays%earx, arrays%ReGbar,             &
+            arrays%ImGbar, ne, ear, ReS, ImS,                              &
             model_args%resp_matr) !S is count rate
         if (abs(model_args%ReIm) .eq. 5)then !Modulus
             do i = 1, ne
@@ -661,24 +667,24 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         else if (abs(model_args%ReIm) .eq. 6)then !Time lag (s)
             do i = 1, ne
                 dE = ear(i) - ear(i-1)
-                photar(i) = atan2(ImS(i) , ReS(i)) / (2.0*pi*config_save%fc) * dE
+                photar(i) = atan2(ImS(i) , ReS(i)) / (2.0*pi*config%fc) * dE
             end do
         end if
     end if
 
-    if (config_save%verbose .gt. 1 .and. abs(model_args%ReIm) .gt. 0 .and. model_args%ReIm .lt. 7) then
-        if (config_save%DC .eq. 0 .and. model_args%beta_p .eq. 0) then
-           call write_components(ne, ear, nex, arrays_save%earx, config_save%nf, &
-               real(config_save%flo), real(config_save%fhi), nlp,               &
-               arrays_save%contx, absorbx,real(tauso), real(gso),               &
-               arrays_save%ReW0, arrays_save%ImW0, arrays_save%ReW1,            &
-               arrays_save%ImW1, arrays_save%ReW2, arrays_save%ImW2,            &
-               arrays_save%ReW3,arrays_save%ImW3, real(model_args%h),           &
+    if (config%verbose .gt. 1 .and. abs(model_args%ReIm) .gt. 0 .and. model_args%ReIm .lt. 7) then
+        if (config%DC .eq. 0 .and. model_args%beta_p .eq. 0) then
+           call write_components(ne, ear, nex, arrays%earx, config%nf, &
+               real(config%flo), real(config%fhi), nlp,               &
+               arrays%contx, absorbx,real(tauso), real(gso),               &
+               arrays%ReW0, arrays%ImW0, arrays%ReW1,            &
+               arrays%ImW1, arrays%ReW2, arrays%ImW2,            &
+               arrays%ReW3,arrays%ImW3, real(model_args%h),           &
                real(model_args%zcos),real(model_args%Gamma),                    &
                real(model_args%eta),model_args%beta_p, model_args%boost,        &
                model_args%floHz,model_args%fhiHz, model_args%ReIm,              &
                model_args%DelA,model_args%DelAB, model_args%g,                  &
-               config_save%ionvar, model_args%resp_matr)
+               config%ionvar, model_args%resp_matr)
         ! catch case here for coherence = 0 or 1
         end if
         ! this writes the full model as returned to Xspec
@@ -694,17 +700,17 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ! print continuum for both single and multiple LPs REDO THIS
         open (unit = 24, file = 'Output/Continuum_spec.dat',status='replace', action = 'write')
         do i=1,nex
-            dE = arrays_save%earx(i) - arrays_save%earx(i-1)
+            dE = arrays%earx(i) - arrays%earx(i-1)
             if (nlp .eq. 1) then
-                contx_temp = arrays_save%contx(i,1)/dE
+                contx_temp = arrays%contx(i,1)/dE
             else
                 contx_temp = 0.
                 do m=1,nlp
-                    contx_temp = contx_temp + arrays_save%contx(i,m)
+                    contx_temp = contx_temp + arrays%contx(i,m)
                 end do
                 contx_temp = contx_temp/((1.+model_args%eta)*dE)
             end if
-            write (24,*) (arrays_save%earx(i)+arrays_save%earx(i-1))/2., contx_temp
+            write (24,*) (arrays%earx(i)+arrays%earx(i-1))/2., contx_temp
         end do
         close(24)
     else if (model_args%ReIm .eq. 7) then
@@ -716,9 +722,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         close(14)
     endif
 
-    fhisave = config_save%fhi
-    flosave = config_save%flo
-    prev_nf = config_save%nf
+    fhisave = config%fhi
+    flosave = config%flo
+    prev_nf = config%nf
     paramsave = param
     Cpsave = model_args%Cp
     d_save = d
