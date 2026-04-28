@@ -103,7 +103,7 @@ class DCP_Parameters:
         return np.array(dataclasses.astuple(self), dtype=np.float32)
 
 @dataclasses.dataclass
-class rtdist_Parameters:
+class RTDistParameters:
     # Lamp post height
     h: float = 6.0
     # Spin
@@ -174,7 +174,7 @@ class Reltrans:
             parameters.to_numpy_array(),
         )
 
-    def rtdist(self, energy: np.ndarray, parameters: rtdist_Parameters) -> np.ndarray:
+    def rtdist(self, energy: np.ndarray, parameters: RTDistParameters) -> np.ndarray:
         """A wrapper around the XSPEC interface of rtdist"""
         return _wrap_call(
             self.lib_reltrans.tdrtdist_,
@@ -183,4 +183,4 @@ class Reltrans:
         )
     
 
-__all__ = [DCP_Parameters, rtdist_Parameters, Reltrans, get_reltrans_library_path]
+__all__ = [DCP_Parameters, RTDistParameters, Reltrans, get_reltrans_library_path]

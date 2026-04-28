@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from wrapper import DCP_Parameters, rtdist_Parameters
+from wrapper import DCP_Parameters, RTDistParameters
 
 
 def _debug_plot(energy, output, title="", xlabel="", ylabel="", yscale="linear", xscale="log"):
@@ -27,7 +27,7 @@ def test_basic_invocation(reltrans, assert_snapshot):
 def test_basic_invocation_rtdist(reltrans, assert_snapshot, envars):
     """A smoke test to check whether the default values are working."""
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
-    output = reltrans.rtdist(energy, rtdist_Parameters())
+    output = reltrans.rtdist(energy, RTDistParameters())
     # _debug_plot(energy,output, "rtdist time-averaged spectrum [default parameters]")
     assert_snapshot(output)
 
@@ -69,7 +69,7 @@ def test_re_im_rtdist(reltrans, assert_snapshot, telescope, envars):
     envars["EMIN_REF"] = "0.3"
     envars["EMAX_REF"] = "10.0"
 
-    agn1 = rtdist_Parameters(mass=4.7e6, flo_hz=1e-5, fhi_hz=1e-4, re_im=4.0)
+    agn1 = RTDistParameters(mass=4.7e6, flo_hz=1e-5, fhi_hz=1e-4, re_im=4.0)
     output = reltrans.rtdist(energy, agn1)
     # _debug_plot(energy,output, title = "rtdist lag spectrum", xlabel="Energy [keV]")
     assert_snapshot(output, name="time_lag", rtol=1e-3)
