@@ -283,7 +283,15 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
     ! photon time from/to
     ! tauso is in `gr_continuum`
     double precision :: taudo, g
-    integer :: i, j, gbin, rbin
+    integer :: ri, i, j, gbin, rbin
+    ! Set to true once the disc has been seen by the ray-tracing techniques.
+    ! This is to avoid a bug where a disc with the outer radius truncated below
+    ! the maximum of r_grid would cause the ray-tracing to terminate
+    ! prematurely.
+    logical :: disc_seen = .false.
+    ! Used in the loop to check if all over the points along a particular r_grid
+    ! radius on the image plane hit the accretion disc.
+    logical :: at_least_one_hit
 
     ! loop over all photon directions (l), disk radii (i), disk azimuth (j), and
     ! calculate the contribution to the
@@ -294,7 +302,11 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
     ! TODO: for ring-like corona, pre-load the correct time-dependent emissivity
     ! profile here, before the loop over observer coordinates
 
-    do i = 1, r_length
+    do ri = 1, r_length
+        ! Loop in reverse order over the radial grid, starting at the
+        ! outermost radius.
+        i = r_length - (ri - 1)
+        at_least_one_hit = .false.
         do j = 1, phi_length
             phin = (j-0.5) * 2.d0 * pi / dble(phi_length)
             alpha = r_grid(i) * sin(phin)
@@ -306,6 +318,7 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
                      args%mudisk, re, phie)
             else
                 if (pem1(j, i) .le. 0.0d0) then
+                    ! Did not intersect with the accretion disc.
                     cycle
                 endif
                 re = re1(j, i)
@@ -313,9 +326,13 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
             endif
 
             if (re .lt. args%model%rin .and. re .gt. args%model%rout) then
-                ! not in the disc domain, skip this photon
+                ! Not in the disc domain, skip this photon and move on to the
+                ! next j.
                 cycle
             endif
+
+            ! Mark this photon as hit within disc boundaries.
+            at_least_one_hit = .true.
 
             ! disc to observer energy shift
             g = dlgfacthick(args%model%a, args%model%muobs, alpha, re,         &
@@ -339,6 +356,18 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
                      gbin, rbin, args)
             endif
         end do
+
+        if (disc_seen) then
+            if (.not. at_least_one_hit) then
+                ! Break out of the loop early to avoid unnecessary ray-tracing.
+                exit
+            end if
+        else
+            if (at_least_one_hit) then
+                ! The disc has now been seen.
+                disc_seen = .true.
+            end if
+        end if
     end do
 end subroutine sum_impulse_components
 
