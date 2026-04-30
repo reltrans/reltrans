@@ -25,9 +25,15 @@
 
       ifl = 0
       if( Cp .eq. -1 )then         !xillver
-         call xsatbl(ear, ne, param_xillPL, trim(pathname_xillver), ifl, photar, photer)
+         ! Pass the null terminator for C compatability, as xsatbl is an
+         ! external C function.
+         call xsatbl(ear, ne, param_xillPL,                                    &
+            [trim(pathname_xillver), char(0)], ifl, photar, photer)
       else if ( Cp .eq. 2 )then    !xillverDCp
-         call xsatbl(ear, ne, param_xillCp, trim(pathname_xillverDCp), ifl, photar, photer)
+         ! Pass the null terminator for C compatability, as xsatbl is an
+         ! external C function.
+         call xsatbl(ear, ne, param_xillCp,                                    &
+            [trim(pathname_xillverDCp), char(0)], ifl, photar, photer)
       else
          write(*,*) 'No xillver model available for this configuration'
          stop 
