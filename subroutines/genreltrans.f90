@@ -22,7 +22,7 @@ contains
     !
     ! This wrapper temporarily performs a runtime cast on all of the arrays to
     ! double precision, as the C_tbabs function that we will eventually call
-    ! expects double precision, whilst much of reltrans still uses `real`, wihch
+    ! expects double precision, whilst much of reltrans still uses `real`, which
     ! maps to single precision.
     !
     ! Once the precision has been modified, this function can be simplified.
