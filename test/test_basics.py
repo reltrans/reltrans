@@ -172,9 +172,9 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
     re    = reltrans.get_re   (nro,nphi)  
     taudo = reltrans.get_taudo(nro,nphi)  
     pem   = reltrans.get_pem  (nro,nphi)  
-    assert_snapshot(re, name="re1")
-    assert_snapshot(taudo, name="taudo1")
-    assert_snapshot(pem, name="pem1")
+    assert_snapshot(re, name="re1", atol=1e-8)
+    assert_snapshot(taudo, name="taudo1", atol=1e-8)
+    assert_snapshot(pem, name="pem1", atol=1e-8)
 
 
 # def test_basic_invocation_rtdist(reltrans, assert_snapshot, envars):

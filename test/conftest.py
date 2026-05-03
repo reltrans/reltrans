@@ -118,7 +118,7 @@ def assert_snapshot() -> callable:
     with different data by the same test.
     """
 
-    def _assert_snapshot_equal(data: np.ndarray, name="", rtol=1e-4) -> bool:
+    def _assert_snapshot_equal(data: np.ndarray, name="", rtol=1e-4, atol=0) -> bool:
         calling_context = inspect.stack()[1][3]
 
         snapshot_name = calling_context
@@ -136,7 +136,7 @@ def assert_snapshot() -> callable:
             _create_snapshot(snapshot_name, data)
             return True
 
-        np.testing.assert_allclose(data, snapshot, rtol=rtol)
+        np.testing.assert_allclose(data, snapshot, rtol=rtol, atol=atol)
 
     return _assert_snapshot_equal
 
