@@ -137,20 +137,20 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     ! Trace rays in full GR for the small camera (ie with relativistic effects) from the osberver to the disk,
     !which is why it doesnt depend on h
     ! if(status_re_tau) then !Only if the geodesics grid isn't loaded
-        ! dotrace = .false.
-        ! if( abs(spinsav-spin)  .gt. tiny(spin)   ) dotrace = .true.
-        ! if( abs(musav-mu0)     .gt. tiny(mu0)    ) dotrace = .true.
-        ! if( abs(routsav-rout)  .gt. tiny(rout)   ) dotrace = .true.
-        ! if( abs(mudsav-mudisk) .gt. tiny(mudisk) ) dotrace = .true.         
-        ! if( dotrace )then
-            call GRtrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
-            spinsav = spin
-            musav   = mu0
-            routsav = rout
-            mudsav  = mudisk
-        ! end if
-        ! end if
-        
+    !    dotrace = .false.
+    !    if( abs(spinsav-spin)  .gt. tiny(spin)   ) dotrace = .true.
+    !    if( abs(musav-mu0)     .gt. tiny(mu0)    ) dotrace = .true.
+    !    if( abs(routsav-rout)  .gt. tiny(rout)   ) dotrace = .true.
+    !    if( abs(mudsav-mudisk) .gt. tiny(mudisk) ) dotrace = .true.         
+    !    if( dotrace )then
+          call GRtrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
+    !       spinsav = spin
+    !       musav   = mu0
+    !       routsav = rout
+    !       mudsav  = mudisk
+    !    end if
+    ! end if
+     
     ! Set frequency array
     do fbin = 1,nf
         fi(fbin) = flo * (fhi/flo)**((float(fbin)-0.5d0)/dble(nf))

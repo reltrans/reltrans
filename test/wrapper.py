@@ -156,9 +156,9 @@ class Dbl_Parameters:
     # First Lamp post height
     h1: float = 6.0
     # Second Lamp post height
-    h2: float = 7.0
+    h2: float = 50.0
     # Spin
-    A: float = 0.998
+    A: float = 0.997
     # Inclination (degrees)
     inc: float = 30.0
     # Inner radius
@@ -210,7 +210,7 @@ class rtdist_Parameters:
     # Lamp post height
     h: float = 6.0
     # Spin
-    a: float = 0.998
+    a: float = 0.996
     # Inclination (degrees)
     inc: float = 30.0
     # Inner radius

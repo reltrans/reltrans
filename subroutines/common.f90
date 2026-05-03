@@ -97,7 +97,10 @@ contains
             args%g(i) = params(28 + (i - 1) * nlp)
         end do
         if (dset .eq. 1) then
-            args%Dkpc = params(9)
+           args%Dkpc = params(9)
+           args%logxi = 0.0
+        else
+           args%logxi = params(9)
         end if
         args%h(1) = dble(params(1))
         args%h(2) = dble(params(2))
@@ -108,7 +111,6 @@ contains
         args%rout = dble(params(6))
         args%zcos = dble(params(7))
         args%Gamma = dble(params(8))
-        args%logxi = params(9)
         args%Afe = params(10)
         args%lognep = params(11)
         args%Cutoff_s = params(12)
