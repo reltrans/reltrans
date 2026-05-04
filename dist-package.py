@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import shutil
+import pathlib
 
 import xspectrampoline_helpers
 
@@ -22,11 +23,16 @@ HEADAS = xspectrampoline_helpers.get_HEADAS()
 HEADAS_INCLUDE = os.path.join(HEADAS, "include")
 
 
+def get_version() -> str:
+    return pathlib.Path("VERSION").read_text().strip()
+
+
 def get_ldflags():
     if TARGET == "linux":
         return ["-lm", "-lpthread"]
     elif TARGET == "macos":
         import site
+
         site_packages_path = site.getsitepackages()[0]
         return ["-lgfortran"]
     else:
@@ -45,6 +51,7 @@ def get_fflags() -> list[str]:
 def cmd_fortran() -> list[str]:
     cmd = [
         os.environ.get("FC", "gfortran"),
+        "-cpp",
         f"-I{BUILD_DIR}",
         f"-I{HEADAS_INCLUDE}",
         f"-I{BUILD_DIR}/cache",
@@ -54,8 +61,7 @@ def cmd_fortran() -> list[str]:
         "-fno-automatic",
         "-fno-second-underscore",
         "-fno-omit-frame-pointer",
-        # TODO: is this needed?
-        "-fopenmp",
+        f'-DRELTRANS_VERSION="{get_version()}"',
     ]
     cmd += get_fflags()
     return cmd
