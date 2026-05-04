@@ -1,4 +1,5 @@
 import os
+import sys
 import inspect
 import pathlib
 import logging
@@ -6,16 +7,21 @@ import dataclasses
 
 from typing import Any
 
+# The `test` directory
+ROOT_DIR = pathlib.Path(pathlib.Path(__file__).parent)
+SNAPSHOT_DIR = ROOT_DIR / "_snapshots"
+
 import pytest
-import pyreltrans
+
+try:
+    import pyreltrans
+except ModuleNotFoundError:
+    sys.path.append(str(ROOT_DIR / ".."))
+    import pyreltrans
 
 import numpy as np
 
 logger = logging.getLogger(__name__)
-
-# The `test` directory
-ROOT_DIR = pathlib.Path(pathlib.Path(__file__).parent)
-SNAPSHOT_DIR = ROOT_DIR / "_snapshots"
 
 
 def _get_snapshot(name: str) -> None | np.ndarray:
