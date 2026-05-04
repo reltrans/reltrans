@@ -43,9 +43,6 @@ ifneq ($(VERSION),)
 FFLAGS += -DRELTRANS_VERSION='"$(VERSION)"'
 endif
 
-LDFLAGS := -lXSFunctions -lXSModel -lfftw3 -lcfitsio \
-		   -L$(BUILD)/lib -L$(HEADAS_LIB)
-
 ifeq ($(DEBUG),1)
 	# Compile reltrans in 'debug' mode, which means disabling optimisations and
 	# including debug symbols.
@@ -85,6 +82,10 @@ ifeq ($(TARGET),Darwin)
 	SED_INPLACE = sed -i ''
 endif
 endif
+
+LDFLAGS := -L$(BUILD)/lib -L$(HEADAS_LIB) \
+	-lXSFunctions -lXSModel -lfftw3 $(shell ls -1 $(HEADAS_LIB)/libcfitsio.*$(SHARED_EXT)* | head -n1) \
+	-Wl,-rpath,'$(HEADAS_LIB)'
 
 # the path to the reltrans library for the -L linker flag
 LIB_PATH := $(abspath $(BUILD)/lib)
