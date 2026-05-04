@@ -71,12 +71,18 @@ endif
 ifeq ($(TARGET),Linux)
 	FFLAGS += -shared -export-dynamic
 	LDFLAGS += -lm -lpthread
+	LDRPATH := -Wl,-rpath,'$$ORIGIN/../lib'
+	# These flags are only passed to the executables that are not directly part
+	# of the reltrans library.
+	EXE_LDFLAGS := -lmvec
 	SHARED_EXT := so
 	SED_INPLACE = sed -i
 else
 ifeq ($(TARGET),Darwin)
 	FFLAGS += -dynamiclib
 	LDFLAGS += -lgfortran
+	LDRPATH := -Wl,-rpath,@executable_path/../lib
+	EXE_LDFLAGS :=
 	SHARED_EXT := dylib
 	# MacOS sed needs an extra useless argument
 	SED_INPLACE = sed -i ''
@@ -95,10 +101,17 @@ all: $(BUILD) $(RELTRANS_SHARED_LIBRARY)
 
 exe: $(BUILD)/bin/relcli
 
+dummy: $(BUILD)/bin/dummy
+
 $(BUILD)/bin/relcli: ./utils/cli.c $(BUILD)/lib/libreltrans.$(SHARED_EXT)
-	$(CC) $(CFLAGS) utils/cli.c -o $(BUILD)/bin/relcli \
-		-L$(BUILD)/lib -lgfortran -lc -lm -lmvec \
-		-Wl,-rpath,'$$ORIGIN/../lib' -lreltrans
+	$(CC) $(CFLAGS) utils/cli.c -o $@ \
+		-L$(BUILD)/lib -lgfortran -lc -lm $(EXE_LDFLAGS) \
+		$(LDRPATH) -lreltrans
+
+$(BUILD)/bin/dummy: ./utils/dummy.c $(BUILD)/lib/libreltrans.$(SHARED_EXT)
+	$(CC) $(CFLAGS) utils/dummy.c -o $@ \
+		-L$(BUILD)/lib -lgfortran -lc -lm $(EXE_LDFLAGS) \
+		$(LDRPATH) -lreltrans
 
 # Need to use abspath here so that on MacOS the correct linker identity is
 # generated. Macos does library pathing differently, and the easiest thing to
