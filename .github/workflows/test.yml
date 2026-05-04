@@ -32,10 +32,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
+  # This is the actual unit test runner. It uses the Python pyreltrans wrapper
+  # to run the tests, as that is the most lightweight and portable way to use
+  # Reltrans.
   test:
     runs-on: ${{ matrix.os }}
     name: Test ${{ matrix.os }}
     strategy:
+      # Don't cancel in-progress if one fails.
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
@@ -58,7 +64,7 @@ jobs:
           python3 -m pip install .
       - name: Install GitHub CLI and fetch data files
         run: |
-          apt update && apt install -y gh
+          sudo apt update && sudo apt install -y gh
 
           # Authenticate with GitHub cli
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
@@ -75,3 +81,53 @@ jobs:
           export RELTRANS_TABLES="$(realpath reltrans-data)"
           # Change directory to avoid any namespace / Python module clashes
           ( cd test ; pytest -vvv . )
+
+  # This test is to check that compiling using the Makefile gives something
+  # that works.
+  make-test:
+    runs-on: ${{ matrix.os }}
+    name: Makefile Build ${{ matrix.os }}
+    strategy:
+      # Don't cancel in-progress if one fails.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+      - name: Setup Fortran compilers on MacOS
+        # Only MacOS needs the explicitly setup in the Fortran compilers.
+        if: ${{ contains(matrix.os, 'macos') }}
+        uses: fortran-lang/setup-fortran@v1
+      - name: Install xspectrampoline for HEASoft
+        run: |
+          python3 -m pip install --upgrade xspectrampoline
+
+      # TODO: do something better here:
+      # We also need the fftw.f03 file, since that is currently not shipped
+      # with xspectrampoline
+      - name: Install FFTW (MacOS)
+        if: ${{ contains(matrix.os, 'macos') }}
+        run: |
+          brew install fftw
+          cp $(brew --prefix fftw)/include/fftw3.f03 ./
+      - name: Install FFTW (Linux)
+        if: ${{ contains(matrix.os, 'ubuntu') }}
+        run: |
+          sudo apt update && sudo apt install -y libfftw3-dev
+          cp /usr/include/fftw3.f03 ./
+
+      - name: Compile reltrans and dummy target using the Makefile
+        run: |
+          # Setup the HEADAS environment variable
+          export HEADAS="$(python3 -c 'import xspectrampoline_helpers as helpers ; print(helpers.get_HEADAS())')"
+          make DEBUG=1
+          # Build the dummy target and try to run it
+          make dummy DEBUG=1
+      - name: Run dummy target
+        run: |
+          ./build/bin/dummy
