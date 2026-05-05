@@ -131,7 +131,6 @@ contains
         real :: photarx_dlogxi(nex)
         real :: Hx(nex), photarx_delta(nex)
 
-        ! needtrans = .false.
         ! Initialize arrays for transfer functions
         arrays%ReW0 = 0.0
         arrays%ImW0 = 0.0
@@ -302,6 +301,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use gr_continuum
     use m_genreltrans
     use env_variables
+    use saved_variables
     implicit none
     ! Constants
     double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0,dlogf = 0.09 !This is a resolution parameter (base 10)
@@ -360,6 +360,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ! set sensible distance for observer from the BH
         d = max(1.0d4 , 2.0d2 * config%rnmax**2)
 
+        spinsav = -2.d0 !this is needed to force the run of the GRtrace routine  
+        
         ! finally, let the people know what they are witnessing!
         call print_header()
     end if
@@ -395,7 +397,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     call need_check(model_args%Cp, Cpsave, param, paramsave, config%fhi,       &
         config%flo,fhisave, flosave, config%nf, prev_nf, config%needtrans,     &
         config%needconv)
-
     if (config%verbose .gt. 2) call CPU_TIME (time_start)
     if (config%needtrans)then
        ! allocate lensing/reflection fraction arrays if necessary
@@ -406,7 +407,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        if (allocated(frrel)) deallocate(frrel)
        allocate (frrel(nlp))
        ! Calculate the Kernel for the given parameters
-       status_re_tau = .true.
        call rtrans(config%verbose, dset, nlp, model_args%a, model_args%h,      &
            muobs, model_args%Gamma, model_args%rin, model_args%rout,           &
            model_args%honr, d, rnmax, model_args%zcos, model_args%b1,          &
@@ -414,7 +414,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
            config%nro, config%nphi, nex, config%dloge, config%nf,config%fhi,   &
            config%flo, config%me, config%xe, arrays%ker_W0,arrays%ker_W1,      &
            arrays%ker_W2, arrays%ker_W3, frobs, frrel)
-       ! print *, 'gso ', gso(1)
     end if
     if (config%verbose .gt. 2) then
        call CPU_TIME (time_end)

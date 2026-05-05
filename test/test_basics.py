@@ -65,7 +65,7 @@ def test_basic_invocation_reltransDbl(reltrans, assert_snapshot, envars):
     assert_snapshot(output)
 
     
-def test_re_im_dbl_lamp(reltrans, assert_snapshot, telescope, envars):
+def test_re_im_reltransDbl(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     reltransDbl model are working. This test requires an RMF and ARF, which is provided by
     the `telescope` fixture."""
@@ -97,8 +97,14 @@ def test_re_im_dbl_lamp(reltrans, assert_snapshot, telescope, envars):
     # _debug_plot(energy,output, title="reltransDbl real part spectrum", xlabel="Energy[keV]")
     assert_snapshot(output, name="imaginary_part")
 
+def test_reltransDCp_called_twice_no_resetting(reltrans, assert_snapshot):
+    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
+    reltrans.reset()
+    output_dcp = reltrans.dcp(energy, DCP_Parameters())
+    output_dcp2 = reltrans.dcp(energy, DCP_Parameters())
+    np.testing.assert_allclose(output_dcp, output_dcp2, rtol=1e-4)
     
-def test_basic_invocation_model_iterations(reltrans, assert_snapshot):
+def test_reltransDCp_called_twice_after_resetting(reltrans, assert_snapshot):
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     reltrans.reset()
     output_dcp = reltrans.dcp(energy, DCP_Parameters())
@@ -107,7 +113,7 @@ def test_basic_invocation_model_iterations(reltrans, assert_snapshot):
     np.testing.assert_allclose(output_dcp, output_dcp2, rtol=1e-4)
 
     
-def test_invocation_model_iterations(reltrans):
+def test_resetting_between_flavours(reltrans):
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     reltrans.reset()
     output_dcp = reltrans.dcp(energy, DCP_Parameters())

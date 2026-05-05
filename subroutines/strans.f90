@@ -35,6 +35,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     use blcoordinate
     use radial_grids
     use gr_continuum
+    use saved_variables
     implicit none
     integer nro,nphi,ne,nf,me,xe,dset,nlp
     double precision spin,h(2),mu0,Gamma,rin,rout,zcos,fhi,flo,honr
@@ -53,8 +54,8 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     double precision rnmax,rnmin,rn(nro),phin,mueff,dlogr,interper
     double precision fi(nf),dgsofac,sindisk,mue,demang,frobs(nlp),cosdin,frrel(nlp)
     double precision pnormer,mus,ptf,pfunc_raw,ang_fac
-    integer nron,nphin,nrosav,nphisav,verbose
-    double precision spinsav,musav,routsav,mudsav,rnn(nro),domegan(nro)
+    integer nron,nphin,verbose
+    double precision rnn(nro),domegan(nro)
     integer get_env_int
     double precision lximax
     double precision eta_0
@@ -67,11 +68,9 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     !arrays to save the transfer function
     integer, parameter :: nt = 2**9
     integer            :: tbin
+
     double precision   :: tmin, tmax, sumresp, tar(0:nt), dlogt, dg, E
     double precision, allocatable :: resp(:,:)
-
-    data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
-    save nrosav,nphisav,spinsav,musav,routsav,mudsav
        
     ! Settings/initialization
     nron     = 100
@@ -134,22 +133,21 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     call getrgrid(rnmin,rnmax,mueff,nro,nphi,rn,domega)
     !Grid for Newtonian approximation
     call getrgrid(rnmax,rout,mueff,nron,nphin,rnn,domegan)
-    ! Trace rays in full GR for the small camera (ie with relativistic effects) from the osberver to the disk,
-    !which is why it doesnt depend on h
-    ! if(status_re_tau) then !Only if the geodesics grid isn't loaded
-    !    dotrace = .false.
-    !    if( abs(spinsav-spin)  .gt. tiny(spin)   ) dotrace = .true.
-    !    if( abs(musav-mu0)     .gt. tiny(mu0)    ) dotrace = .true.
-    !    if( abs(routsav-rout)  .gt. tiny(rout)   ) dotrace = .true.
-    !    if( abs(mudsav-mudisk) .gt. tiny(mudisk) ) dotrace = .true.         
-    !    if( dotrace )then
+    
+    ! Trace rays in full GR for the small camera (ie with relativistic effects)
+    ! from the osberver to the disk, which is why it doesnt depend on h
+       dotrace = .false.
+       if( abs(spinsav-spin)  .gt. tiny(spin)   ) dotrace = .true.
+       if( abs(musav-mu0)     .gt. tiny(mu0)    ) dotrace = .true.
+       if( abs(routsav-rout)  .gt. tiny(rout)   ) dotrace = .true.
+       if( abs(mudsav-mudisk) .gt. tiny(mudisk) ) dotrace = .true.         
+       if( dotrace )then
           call GRtrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
-    !       spinsav = spin
-    !       musav   = mu0
-    !       routsav = rout
-    !       mudsav  = mudisk
-    !    end if
-    ! end if
+          spinsav = spin
+          musav   = mu0
+          routsav = rout
+          mudsav  = mudisk
+       end if
      
     ! Set frequency array
     do fbin = 1,nf

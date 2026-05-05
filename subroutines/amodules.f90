@@ -32,26 +32,36 @@ end module telematrix2
 module env_variables
   implicit none
   integer :: adensity, idum
-  logical, save :: firstcall, needtrans, needconv, test
-  data firstcall /.true./
+  logical, save :: test
   save idum
 end module env_variables
-  
+
+module saved_variables
+  implicit none
+  double precision spinsav,musav,routsav,mudsav
+  save spinsav,musav,routsav,mudsav
+end module saved_variables
+
 MODULE dyn_gr
 !---------------------------------------------------------------------
 !  Module containing definitions needed to dynamically allocate 
-!  the values of an array 
+!  the values of the GR ray tracing arrays
+!  re1:    radius where each photons from the camera hit the disk  
+!  taudo1: time of arrival from the observe to the disk (distance is subtracted)  
+!  pem1:   value of root of equation \mu(p)= mu for p, that defines
+!          where the photons is on the geodesic 
+!          pem=-1.D0, if the photon goto infinity.
+!          pem=-2.D0, if the photon fall into event horizon.       
 !---------------------------------------------------------------------
     implicit none
-    logical :: status_re_tau  
     integer, parameter :: ndelta = 1000
     integer         , dimension(:)  , allocatable :: npts
     double precision, dimension(:,:), allocatable :: re1, taudo1, pem1
     double precision, dimension(:,:), allocatable :: dcosdr, cosd, rlp, tlp
-    save status_re_tau
 
   contains
 
+!the follwing functions are being exposed for unit testing purposes
     subroutine allocate_re1(x,y) bind(C, name="allocate_re")
       use iso_c_binding
       implicit none
