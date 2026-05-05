@@ -32,7 +32,6 @@ end module telematrix2
 module env_variables
   implicit none
   integer :: adensity, idum
-  logical, save :: test
   save idum
 end module env_variables
 

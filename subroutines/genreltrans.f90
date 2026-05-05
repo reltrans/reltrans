@@ -118,7 +118,6 @@ contains
 
         double precision, parameter :: pi = acos(-1.d0)
         real, parameter :: dyn = 0.0 !1e-7
-        logical :: test
         real :: Gamma0, Gamma1, Gamma2, Cutoff_0, E, mue, thetae
         real :: Hx_delta(nex),Hx_dlogxi(nex)
         real :: dlogxi1, dlogxi2, logne, logxi0, logxi1, logxi2
@@ -355,7 +354,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         config%needtrans = .true.
         config%needconv = .true.
         prev_nf = 0 !this is needed to reallocate arrays with realloc_arrays, if firstcall is set to true externally
-        test = .false.
 
         ! set sensible distance for observer from the BH
         d = max(1.0d4 , 2.0d2 * config%rnmax**2)
