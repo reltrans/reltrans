@@ -1,5 +1,6 @@
 BUILD  := build
 ROOTDIR := .
+HEADAS ?= $(error HEADAS environment variable is not set)
 HEADAS_LIB := ${HEADAS}/lib
 HEADAS_INCLUDE := ${HEADAS}/include
 
