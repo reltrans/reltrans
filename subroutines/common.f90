@@ -58,7 +58,8 @@ module common_types
         ! variable for non linear effects
         integer :: DC, ionvariation
         real :: dlogxi1, dlogxi2
-    end type t_config
+
+     end type t_config
 
     type :: t_arrays
         ! earx: internal energy grid array (0:nex)
@@ -74,7 +75,16 @@ module common_types
         real, dimension(:,:,:), allocatable :: ReW2, ImW2, ReW3, ImW3
         real, dimension(:,:), allocatable :: ReSraw, ImSraw, ReSrawa, ImSrawa, ReGrawa, ImGrawa, ReG, ImG
     end type t_arrays
+
+    type(t_config), target, save :: global_config
 contains
+
+    subroutine reset_reltrans() bind(C, name="reset_reltrans")
+      !The routine reset the check variables, in order to force
+      ! a fresh start of the model
+      global_config%firstcall = .true.
+    end subroutine reset_reltrans
+  
 
     ! Unwraps the arguments from a parameter array into `args`.
     subroutine unwrap_arguments(args, nlp, dset, params, cutoff_powerlaw)
@@ -87,7 +97,10 @@ contains
             args%g(i) = params(28 + (i - 1) * nlp)
         end do
         if (dset .eq. 1) then
-            args%Dkpc = params(9)
+           args%Dkpc = params(9)
+           args%logxi = 0.0
+        else
+           args%logxi = params(9)
         end if
         args%h(1) = dble(params(1))
         args%h(2) = dble(params(2))
@@ -98,7 +111,6 @@ contains
         args%rout = dble(params(6))
         args%zcos = dble(params(7))
         args%Gamma = dble(params(8))
-        args%logxi = params(9)
         args%Afe = params(10)
         args%lognep = params(11)
         args%Cutoff_s = params(12)
@@ -162,7 +174,7 @@ contains
         use env_variables, only: adensity, idum
         use xillver_tables, only: path_tables, xillver, xillverDCp,pathname_xillver, pathname_xillverDCp
         type(t_config), intent(inout) :: config
-        integer :: get_env_int
+        integer :: get_env_int, temp_test
         character (len=200) :: get_env_char
         config%me = get_env_int("MU_ZONES", 1)
         config%xe = get_env_int("ION_ZONES", 20)
@@ -183,6 +195,13 @@ contains
         ! decide between zone A density profile or constant density profile
         adensity = max(min(get_env_int("A_DENSITY", 0), 1), 0)
 
+        temp_test = get_env_int("TEST_RUN", 0)
+        if (temp_test .eq. 0) then
+           config%test = .false.
+        else
+           config%test = .true.
+        end if
+        
         ! this is from xillver_tables, sets the paths where the tables are read
         ! from
         path_tables = get_env_char("RELTRANS_TABLES", './')
@@ -216,10 +235,15 @@ contains
         integer, intent(in) :: nlp
         integer :: i
 
+        if (allocated(arrays%earx  )) deallocate(arrays%earx  )
+        if (allocated(arrays%ReGbar)) deallocate(arrays%ReGbar)
+        if (allocated(arrays%ImGbar)) deallocate(arrays%ImGbar)
         allocate(arrays%earx(0:nex))
         allocate(arrays%ReGbar(nex))
         allocate(arrays%ImGbar(nex))
 
+        if (allocated(arrays%contx    )) deallocate(arrays%contx    )
+        if (allocated(arrays%contx_int)) deallocate(arrays%contx_int)
         allocate(arrays%contx(nex,nlp))
         allocate(arrays%contx_int(nlp))
 
@@ -259,7 +283,7 @@ contains
                     *(model_args%fhiHz                                         &
                     / model_args%floHz)**(real(i) / real(config%nf))
             end do
-
+            
             ! reallocate the transfer function arrays
             if (allocated(arrays%ker_W0)) deallocate(arrays%ker_W0)
             allocate(arrays%ker_W0(model_args%nlp,nex,config%nf,config%me,config%xe))

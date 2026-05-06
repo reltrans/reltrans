@@ -2,10 +2,14 @@
       subroutine getrgrid(rnmin,rnmax,mueff,nro,nphi,rn,domega)
 ! Calculates an r-grid that will be used to define impact parameters
       implicit none
-      integer nro,nphi,i
-      double precision rnmin,rnmax,mueff,rn(nro),domega(nro)
-      double precision rar(0:nro),dlogr,logr,pi
-      pi     = acos(-1.d0)
+
+      integer         , intent(in)    :: nro, nphi
+      double precision, intent(in)    :: rnmin, rnmax, mueff
+      double precision, intent(out)   :: domega(nro)
+      double precision, intent(inout) :: rn(nro)
+      double precision, parameter     :: pi = acos(-1.0)
+      double precision rar(0:nro), dlogr, logr
+      integer i
       rar(0) = rnmin
       dlogr  = log10( rnmax/rnmin ) / dble(nro)
       do i = 1,NRO

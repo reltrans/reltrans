@@ -10,7 +10,6 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     ! dset                  dset=1 means calculate ionization from distance, dset=0 means ignore distance
     ! nlp                   number of lamp post height considered
     ! spin,h,mu0,Gamma      Physical parameters (spin, source height(S), cos(inclination), photon index)
-    ! nlp                   Number of lampposts considered (for now either 1 or 2)
     ! rin,rout,honr         Physical parameters (disk inner radius, outer radius & scaleheight)
     ! d,rnmax               Physical parameters (distance of the source, max radius for which GR ray tracing is used)
     ! zcos                  Cosmological redshift
@@ -36,16 +35,17 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     use blcoordinate
     use radial_grids
     use gr_continuum
+    use saved_variables
     implicit none
     integer nro,nphi,ne,nf,me,xe,dset,nlp
-    double precision spin,h(nlp),mu0,Gamma,rin,rout,zcos,fhi,flo,honr
+    double precision spin,h(2),mu0,Gamma,rin,rout,zcos,fhi,flo,honr
     double precision b1,b2,qboost
     double precision fcons,cosdout(nlp)
     real dloge, lognep
     complex cexp!,transe(0:nlp,ne,nf,me,xe),transe_a(nlp,ne,nf,me,xe)
 
     integer i,j,odisc,n,gbin,rbin,mubin,l,m,k,nl
-    double precision domega(nro),d,taudo,g,dlgfacthick,dFe(nlp),newtex,contx_int(nlp)
+    double precision domega(nro),d,taudo,g,dlgfacthick,dFe(nlp),newtex
     !double precision rlp_column(ndelta),dcosdr_column(ndelta),tlp_column(ndelta),cosd_column(ndelta)
     double precision alpha,beta,cos0,sin0,phie,re,gsd(nlp)
     double precision tau(nlp),tausd,emissivity(nlp),cosfac,dglpfacthick,dareafac
@@ -54,8 +54,8 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     double precision rnmax,rnmin,rn(nro),phin,mueff,dlogr,interper
     double precision fi(nf),dgsofac,sindisk,mue,demang,frobs(nlp),cosdin,frrel(nlp)
     double precision pnormer,mus,ptf,pfunc_raw,ang_fac
-    integer nron,nphin,nrosav,nphisav,verbose
-    double precision spinsav,musav,routsav,mudsav,rnn(nro),domegan(nro)
+    integer nron,nphin,verbose
+    double precision rnn(nro),domegan(nro)
     integer get_env_int
     double precision lximax
     double precision eta_0
@@ -68,11 +68,9 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     !arrays to save the transfer function
     integer, parameter :: nt = 2**9
     integer            :: tbin
+
     double precision   :: tmin, tmax, sumresp, tar(0:nt), dlogt, dg, E
     double precision, allocatable :: resp(:,:)
-
-    data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
-    save nrosav,nphisav,spinsav,musav,routsav,mudsav
        
     ! Settings/initialization
     nron     = 100
@@ -135,24 +133,22 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     call getrgrid(rnmin,rnmax,mueff,nro,nphi,rn,domega)
     !Grid for Newtonian approximation
     call getrgrid(rnmax,rout,mueff,nron,nphin,rnn,domegan)
-
-    ! Trace rays in full GR for the small camera (ie with relativistic effects) from the osberver to the disk,
-    !which is why it doesnt depend on h
-    if(status_re_tau) then !Only if the geodesics grid isn't loaded
-        dotrace = .false.
-        if( abs(spinsav-spin)  .gt. tiny(spin)   ) dotrace = .true.
-        if( abs(musav-mu0)     .gt. tiny(mu0)    ) dotrace = .true.
-        if( abs(routsav-rout)  .gt. tiny(rout)   ) dotrace = .true.
-        if( abs(mudsav-mudisk) .gt. tiny(mudisk) ) dotrace = .true.         
-        if( dotrace )then
-            call GRtrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
-            spinsav = spin
-            musav   = mu0
-            routsav = rout
-            mudsav  = mudisk
-        end if
-    end if
-
+    
+    ! Trace rays in full GR for the small camera (ie with relativistic effects)
+    ! from the osberver to the disk, which is why it doesnt depend on h
+       dotrace = .false.
+       if( abs(spinsav-spin)  .gt. tiny(spin)   ) dotrace = .true.
+       if( abs(musav-mu0)     .gt. tiny(mu0)    ) dotrace = .true.
+       if( abs(routsav-rout)  .gt. tiny(rout)   ) dotrace = .true.
+       if( abs(mudsav-mudisk) .gt. tiny(mudisk) ) dotrace = .true.         
+       if( dotrace )then
+          call GRtrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
+          spinsav = spin
+          musav   = mu0
+          routsav = rout
+          mudsav  = mudisk
+       end if
+     
     ! Set frequency array
     do fbin = 1,nf
         fi(fbin) = flo * (fhi/flo)**((float(fbin)-0.5d0)/dble(nf))
@@ -167,7 +163,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
 
     ! Calculate dcos/dr and time lags vs r for the lamppost model
     call getdcos(spin,h,mudisk,ndelta,nlp,rout,npts,rlp,dcosdr,tlp,cosd,cosdout) 
-
+    
     !set continuum normalisations depending on model flavour 
     if( dset .eq. 0 )then
         pnorm = 1.d0 / ( 4.d0 * pi )
@@ -193,9 +189,9 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
             if( pem1(j,i) .gt. 0.0d0 )then
                 re    = re1(j,i)
                 if( re .gt. rin .and. re .lt. rout )then
-                    odisc = 1  
+                   odisc = 1
                     do m=1,nlp                           
-                        taudo = taudo1(j,i)           
+                        taudo = taudo1(j,i)
                         g = dlgfacthick(spin,mu0,alpha,re,mudisk) !disk to observer g factor
                         !Find the rlp bin that corresponds to re
                         kk = get_index(rlp(:,m),ndelta,re,rmin,npts(m))
@@ -286,7 +282,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
             end if                
         end do
     end do
-
+          
     ! Now trace rays for that bigger camera (obviously a lot easier because it's Newtonian)
     do i = 1,nron
         do j = 1,nphin
@@ -381,7 +377,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
             end if
         end do
     end do
-    
+
     do m=1,nlp 
         ! Calculate 4pi p(theta0,phi0) = ang_fac
         ang_fac = 4.d0 * pi * pnorm * pfunc_raw(-cosdelta_obs(m),b1,b2,qboost)
@@ -430,17 +426,6 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
             write(200,*) resp(gbin, :)
         enddo
     end if    
-
-    ! !calculate the ionization/density/gsd radial profiles 
-    ! if( dset .eq. 0 .or. size(h) .eq. 2) then
-    !     call radfunctions_dens(verbose,xe,rin,rnmax,eta_0,dble(rlxi),dble(lognep),spin,h,Gamma,honr,rlp&
-    !                            &,dcosdr,cosd,contx_int,ndelta,nlp,rmin,npts,logxir,gsdr,logner,dfer_arr)
-    ! else
-    !     call radfuncs_dist(xe,rin,rnmax,b1,b2,qboost,fcons,&
-    !                        & dble(lognep),spin,h(1),honr,rlp,dcosdr,cosd,ndelta,rmin,npts(1),&
-    !                        & logxir,gsdr,logner,pnorm)
-    ! end if
-    ! !Outputs: logxir(1:xe),gsdr(1:xe), logner(1:xe)
 
     if (verbose .gt. 1) then
         !close(102)

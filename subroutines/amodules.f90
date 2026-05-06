@@ -34,19 +34,81 @@ module env_variables
   integer :: adensity, idum
   save idum
 end module env_variables
-  
+
+module saved_variables
+  implicit none
+  double precision spinsav,musav,routsav,mudsav
+  save spinsav,musav,routsav,mudsav
+end module saved_variables
+
 MODULE dyn_gr
 !---------------------------------------------------------------------
 !  Module containing definitions needed to dynamically allocate 
-!  the values of an array 
+!  the values of the GR ray tracing arrays
+!  re1:    radius where each photons from the camera hit the disk  
+!  taudo1: time of arrival from the observe to the disk (distance is subtracted)  
+!  pem1:   value of root of equation \mu(p)= mu for p, that defines
+!          where the photons is on the geodesic 
+!          pem=-1.D0, if the photon goto infinity.
+!          pem=-2.D0, if the photon fall into event horizon.       
 !---------------------------------------------------------------------
     implicit none
-    logical :: status_re_tau  
     integer, parameter :: ndelta = 1000
     integer         , dimension(:)  , allocatable :: npts
-    double precision, dimension(:,:), allocatable :: re1,taudo1,pem1
+    double precision, dimension(:,:), allocatable :: re1, taudo1, pem1
     double precision, dimension(:,:), allocatable :: dcosdr, cosd, rlp, tlp
-    save status_re_tau
+
+  contains
+
+!the follwing functions are being exposed for unit testing purposes
+    subroutine allocate_re1(x,y) bind(C, name="allocate_re")
+      use iso_c_binding
+      implicit none
+      integer(c_int), intent(in) :: x,y 
+      if (allocated(re1)) deallocate(re1)
+      allocate(re1(x,y))
+    end subroutine allocate_re1
+
+    subroutine allocate_taudo1(x,y) bind(C, name="allocate_taudo")
+      use iso_c_binding
+      implicit none
+      integer(c_int), intent(in) :: x,y 
+      if (allocated(taudo1)) deallocate(taudo1)
+      allocate(taudo1(x,y))
+    end subroutine allocate_taudo1
+
+    subroutine allocate_pem1(x,y) bind(C, name="allocate_pem")
+      use iso_c_binding
+      implicit none
+      integer(c_int), intent(in) :: x,y 
+      if (allocated(pem1)) deallocate(pem1)
+      allocate(pem1(x,y))
+    end subroutine allocate_pem1
+
+    subroutine get_re1(out, nro, nphi) bind(C, name="get_re")
+      use iso_c_binding
+      implicit none
+      integer(c_int), intent(in) :: nro, nphi
+      real(c_double), intent(out) :: out(nro*nphi)
+      out = reshape(re1, [nro*nphi])
+    end subroutine get_re1
+    
+    subroutine get_taudo1(out, nro, nphi) bind(C, name="get_taudo")
+      use iso_c_binding
+      implicit none
+      integer(c_int), intent(in) :: nro, nphi
+      real(c_double), intent(out) :: out(nro*nphi)
+      out = reshape(taudo1, [nro*nphi])
+    end subroutine get_taudo1
+
+    subroutine get_pem1(out, nro, nphi) bind(C, name="get_pem")
+      use iso_c_binding
+      implicit none
+      integer(c_int), intent(in) :: nro, nphi
+      real(c_double), intent(out) :: out(nro*nphi)
+      out = reshape(pem1, [nro*nphi])
+    end subroutine get_pem1
+  
 END MODULE dyn_gr
 
 module xillver_tables
