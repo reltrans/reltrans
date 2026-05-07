@@ -3,7 +3,9 @@ import numpy as np
 from pyreltrans import DCP_Parameters, Dbl_Parameters, rtdist_Parameters
 
 
-def _debug_plot(energy, output, title="", xlabel="", ylabel="", yscale="linear", xscale="log"):
+def _debug_plot(
+    energy, output, title="", xlabel="", ylabel="", yscale="linear", xscale="log"
+):
     """Used when creating new tests for quickly looking at the data to make
     sure it is sensible."""
     import matplotlib.pyplot as plt
@@ -105,12 +107,14 @@ def test_re_im_reltransDbl(reltrans, assert_snapshot, telescope, envars):
     # _debug_plot(energy,output, title="reltransDbl real part spectrum", xlabel="Energy[keV]")
     assert_snapshot(output, name="imaginary_part", rtol=1e-3)
 
+
 def test_reltransDCp_called_twice_no_resetting(reltrans, assert_snapshot):
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     reltrans.reset()
     output_dcp = reltrans.dcp(energy, DCP_Parameters())
     output_dcp2 = reltrans.dcp(energy, DCP_Parameters())
     np.testing.assert_allclose(output_dcp, output_dcp2, rtol=1e-4)
+
 
 def test_reltransDCp_called_twice_after_resetting(reltrans, assert_snapshot):
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
@@ -145,9 +149,9 @@ def test_strans_routines_getrgrid(reltrans, assert_snapshot):
     rnmin = 1.7266670949940284
     rnmax = 300.0
     mueff = 0.86602540378443871
-    nro   = 200
-    nphi  = 200
-    rn , domega = reltrans.getrgrid(rnmin, rnmax, mueff, nro, nphi)
+    nro = 200
+    nphi = 200
+    rn, domega = reltrans.getrgrid(rnmin, rnmax, mueff, nro, nphi)
     assert_snapshot(rn, name="rn")
     assert_snapshot(domega, name="domega")
 
@@ -158,20 +162,20 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
     rnmin = 1.7266670949940284
     rnmax = 300.0
     mueff = 0.86602540378443871
-    nro   = 200
-    nphi  = 200
+    nro = 200
+    nphi = 200
     mu0 = mueff
     spin = 0.998
-    rin  = 1.2369694567256766
+    rin = 1.2369694567256766
     rout = 1000.0
     mudisk = 0.0
     distance = 18000000.0
 
-    rn , domega = reltrans.getrgrid(rnmin, rnmax, mueff, nro, nphi)
+    rn, domega = reltrans.getrgrid(rnmin, rnmax, mueff, nro, nphi)
 
-    reltrans.set_re   (nro,nphi)
-    reltrans.set_taudo(nro,nphi)
-    reltrans.set_pem  (nro,nphi)
+    reltrans.set_re(nro, nphi)
+    reltrans.set_taudo(nro, nphi)
+    reltrans.set_pem(nro, nphi)
     reltrans.grtrace(
         nphi=nphi,
         rn=rn,
@@ -183,9 +187,9 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
         mudisk=mudisk,
         d=distance,
     )
-    re    = reltrans.get_re   (nro,nphi)
-    taudo = reltrans.get_taudo(nro,nphi)
-    pem   = reltrans.get_pem  (nro,nphi)
+    re = reltrans.get_re(nro, nphi)
+    taudo = reltrans.get_taudo(nro, nphi)
+    pem = reltrans.get_pem(nro, nphi)
     assert_snapshot(re, name="re1", rtol=2e-4)
     assert_snapshot(taudo, name="taudo1", rtol=2e-4)
     assert_snapshot(pem, name="pem1", rtol=2e-4)

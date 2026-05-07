@@ -19,17 +19,17 @@ class SourceLine:
     cont: bool = False
 
     # Is a subroutine call
-    call: Bool = False
+    call: bool = False
     # Is a write call
-    write: Bool = False
+    write: bool = False
     # Is an assignment operation
-    assignment: Bool = False
-    is_open: Bool = False
+    assignment: bool = False
+    is_open: bool = False
 
     # Starts with `subroutine` or `function`
-    function_declaration: Bool = False
+    function_declaration: bool = False
     # Declares a variable
-    declaration: Bool = False
+    declaration: bool = False
 
     @staticmethod
     def from_string(line: str) -> "SourceLine":
@@ -95,11 +95,16 @@ class SourceLine:
         ]
 
     def maths_wrap(
-        self, width, maths_tokens=["\\*\\*", "\\=", "/", ",", "\\+", "\\-", "\\*"], indent_width=4
+        self,
+        width,
+        maths_tokens=["\\*\\*", "\\=", "/", ",", "\\+", "\\-", "\\*"],
+        indent_width=4,
     ) -> "SourceLine":
         kwargs = dict(cont=True, indent=self.indent)
 
-        all_tokens = [re.split(re.compile("(" + "|".join(maths_tokens) + ")"), self.line)]
+        all_tokens = [
+            re.split(re.compile("(" + "|".join(maths_tokens) + ")"), self.line)
+        ]
         all_tokens = [i for i in iter(*all_tokens)]
 
         lines = []
@@ -119,9 +124,10 @@ class SourceLine:
                     token += ","
                     i += 1
 
-
             if len(current_line) + len(token) + self.indent + indent_width + 1 >= width:
-                lines.append(dataclasses.replace(self, line=current_line.strip(), **kwargs))
+                lines.append(
+                    dataclasses.replace(self, line=current_line.strip(), **kwargs)
+                )
                 if len(lines) == 1:
                     kwargs["indent"] += indent_width
                 current_line = ""
@@ -130,7 +136,9 @@ class SourceLine:
                 current_line += token
                 spacer = False
             elif token == "-":
-                if current_line.endswith("(") or any(current_line.endswith(op) for op in maths_tokens):
+                if current_line.endswith("(") or any(
+                    current_line.endswith(op) for op in maths_tokens
+                ):
                     current_line += token
                     spacer = False
                 else:
