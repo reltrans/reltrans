@@ -6,6 +6,94 @@ import sys
 import argparse
 
 
+class TokenizeMaths:
+    def __init__(
+        self,
+        string: str,
+        maths_seperators=["\\*\\*", "\\=", "/", ",", "\\+", "\\-", "\\*"],
+    ):
+        """
+        Construct a tokeniser for iterating over mathematical Fortran code. The
+        tokeniser returns tokens that can be used for line wrapping.
+
+        Uses `maths_seperators` for determining which symbols are allowed to be
+        split on. Strips any redundant whitespaces"
+        """
+        self.chunks = re.split(
+            re.compile("(\\s" + "|".join(maths_seperators) + ")"), string
+        )
+        # Filter blanks
+        self.chunks = [
+            token for token in (i.strip() for i in self.chunks) if len(token) != 0
+        ]
+        self.index = 0
+
+    def __iter__(self):
+        self.index = 0
+        return self
+
+    def _as_expontent(self, token):
+        """
+        Ensures that Fortran code like `123d-6` is not split into `123d - 6`.
+        """
+        # Exponent fixes
+        is_number = re.match(r"^[0-9\.]+d$", token)
+        followed_by_plus_minus = re.match(r"^[+\-].*", self.chunks[self.index + 1][0])
+        another_number = re.match(r"^[0-9]+", self.chunks[self.index + 2])
+
+        if is_number and followed_by_plus_minus and another_number:
+            token = "".join(
+                [token, self.chunks[self.index + 1], self.chunks[self.index + 2]]
+            )
+            self.index += 2
+            return token
+        else:
+            return None
+
+    def _as_power(self, token):
+        """
+        Ensures that Fortran code like `a**b` is not split into `a ** b`.
+        """
+        if self.chunks[self.index + 1] == "**":
+            token = "".join([token, "**", self.chunks[self.index + 2]])
+            self.index += 2
+            return token
+        elif self.chunks[self.index + 1] == "*" and self.chunks[self.index + 2] == "*":
+            token = "".join([token, "**", self.chunks[self.index + 3]])
+            self.index += 3
+            return token
+
+        else:
+            return None
+
+    def _map_lookaheads(self, token):
+        for f in (self._as_expontent, self._as_power):
+            r = f(token)
+            if r:
+                return r
+        return None
+
+    def __next__(self):
+        if self.index >= len(self.chunks):
+            raise StopIteration
+
+        token = self.chunks[self.index]
+
+        if self.index + 2 < len(self.chunks):
+            _ahead = self._map_lookaheads(token)
+            if _ahead:
+                token = _ahead
+
+        if self.index + 1 < len(self.chunks):
+            # Comma fixes
+            if self.chunks[self.index + 1] == ",":
+                token += ","
+                self.index += 1
+
+        self.index += 1
+        return token.strip()
+
+
 @dataclasses.dataclass()
 class SourceLine:
     line: str
@@ -102,28 +190,13 @@ class SourceLine:
     ) -> "SourceLine":
         kwargs = dict(cont=True, indent=self.indent)
 
-        all_tokens = [
-            re.split(re.compile("(" + "|".join(maths_tokens) + ")"), self.line)
-        ]
-        all_tokens = [i for i in iter(*all_tokens)]
+        tokenizer = TokenizeMaths(self.line)
 
         lines = []
-        current_line = all_tokens[0].strip()
+        current_line = ""
         spacer = True
 
-        i = 1
-        while i < len(all_tokens):
-            token = all_tokens[i].strip()
-            if len(token) == 0:
-                i += 1
-                continue
-
-            # Lookaheads
-            if i + 1 < len(all_tokens):
-                if all_tokens[i + 1].strip() == ",":
-                    token += ","
-                    i += 1
-
+        for token in tokenizer:
             if len(current_line) + len(token) + self.indent + indent_width + 1 >= width:
                 lines.append(
                     dataclasses.replace(self, line=current_line.strip(), **kwargs)
@@ -132,10 +205,7 @@ class SourceLine:
                     kwargs["indent"] += indent_width
                 current_line = ""
 
-            if token == "**":
-                current_line += token
-                spacer = False
-            elif token == "-":
+            if token == "-":
                 if current_line.endswith("(") or any(
                     current_line.endswith(op) for op in maths_tokens
                 ):
@@ -148,8 +218,6 @@ class SourceLine:
                 spacer = True
             else:
                 current_line += " " + token
-
-            i += 1
 
         lines.append(dataclasses.replace(self, line=current_line.strip(), **kwargs))
         return lines
