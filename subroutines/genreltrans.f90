@@ -358,7 +358,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! initializer
     integer :: m, prev_nf, Cpsave, i, j, Cp_cont
     double precision :: d, muobs
-    real :: Nh, f, fac, dE, ear(0:ne)
+    real :: f, fac, dE, ear(0:ne)
     ! relativistic parameters and limit on rin and h
     ! lens needs to be allocatable to save it.
     double precision, allocatable :: frobs(:),frrel(:)
@@ -515,7 +515,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     endif
 
     ! Calculate absorption
-    call tbabs(arrays%earx,nex,nh,Ifl,absorbx,photerx)
+    call tbabs(arrays%earx,nex,model_args%nh,Ifl,absorbx,photerx)
 
     ! TBD coherence check - if zero coherence between lamp posts, call a
     ! different subroutine
