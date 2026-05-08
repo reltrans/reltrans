@@ -1,13 +1,10 @@
 BUILD  := build
 ROOTDIR := .
+HEADAS ?= $(error HEADAS environment variable is not set)
 HEADAS_LIB := ${HEADAS}/lib
 HEADAS_INCLUDE := ${HEADAS}/include
 
-# Derive the version from the most recent git tag, or from .git_archival.txt
-# (automatically populated by git archive / GitHub release tarballs).
-VERSION := $(shell git fetch --tags --quiet 2>/dev/null; git describe --tags --always 2>/dev/null || sed -n 's/describe-name: *//p' .git_archival.txt 2>/dev/null | grep -v 'Format:')
-VERSION := $(shell echo '$(VERSION)' | sed 's/-.*//')
-
+VERSION := $(shell cat VERSION)
 
 # These may be set when invoking `make`, such as `make DEBUG=1 SANITIZE=1`.
 # The `DEBUG` option compiles a debug build of reltrans (see below).
@@ -40,11 +37,8 @@ FFLAGS := -cpp -DHAVE_INLINE \
 
 # Only pass the version macro if git found a tag
 ifneq ($(VERSION),)
-FFLAGS += -DRELTRANS_VERSION='"$(VERSION)"'
+	FFLAGS += -DRELTRANS_VERSION='"$(VERSION)"'
 endif
-
-LDFLAGS := -lXSFunctions -lXSModel -lfftw3 -lcfitsio \
-		   -L$(BUILD)/lib -L$(HEADAS_LIB)
 
 ifeq ($(DEBUG),1)
 	# Compile reltrans in 'debug' mode, which means disabling optimisations and
@@ -74,17 +68,27 @@ endif
 ifeq ($(TARGET),Linux)
 	FFLAGS += -shared -export-dynamic
 	LDFLAGS += -lm -lpthread
+	LDRPATH := -Wl,-rpath,'$$ORIGIN/../lib'
+	# These flags are only passed to the executables that are not directly part
+	# of the reltrans library.
+	EXE_LDFLAGS := -lmvec
 	SHARED_EXT := so
 	SED_INPLACE = sed -i
 else
 ifeq ($(TARGET),Darwin)
 	FFLAGS += -dynamiclib
 	LDFLAGS += -lgfortran
+	LDRPATH := -Wl,-rpath,@executable_path/../lib
+	EXE_LDFLAGS :=
 	SHARED_EXT := dylib
 	# MacOS sed needs an extra useless argument
 	SED_INPLACE = sed -i ''
 endif
 endif
+
+LDFLAGS := -L$(BUILD)/lib -L$(HEADAS_LIB) \
+	-lXSFunctions -lXSModel -lfftw3 $(shell ls -1 $(HEADAS_LIB)/libcfitsio.*$(SHARED_EXT)* | head -n1) \
+	-Wl,-rpath,'$(HEADAS_LIB)'
 
 # the path to the reltrans library for the -L linker flag
 LIB_PATH := $(abspath $(BUILD)/lib)
@@ -94,10 +98,17 @@ all: $(BUILD) $(RELTRANS_SHARED_LIBRARY)
 
 exe: $(BUILD)/bin/relcli
 
+dummy: $(BUILD)/bin/dummy
+
 $(BUILD)/bin/relcli: ./utils/cli.c $(BUILD)/lib/libreltrans.$(SHARED_EXT)
-	$(CC) $(CFLAGS) utils/cli.c -o $(BUILD)/bin/relcli \
-		-L$(BUILD)/lib -lgfortran -lc -lm -lmvec \
-		-Wl,-rpath,'$$ORIGIN/../lib' -lreltrans
+	$(CC) $(CFLAGS) utils/cli.c -o $@ \
+		-L$(BUILD)/lib -lgfortran -lc -lm $(EXE_LDFLAGS) \
+		$(LDRPATH) -lreltrans
+
+$(BUILD)/bin/dummy: ./utils/dummy.c $(BUILD)/lib/libreltrans.$(SHARED_EXT)
+	$(CC) $(CFLAGS) utils/dummy.c -o $@ \
+		-L$(BUILD)/lib -lgfortran -lc -lm $(EXE_LDFLAGS) \
+		$(LDRPATH) -lreltrans
 
 # Need to use abspath here so that on MacOS the correct linker identity is
 # generated. Macos does library pathing differently, and the easiest thing to

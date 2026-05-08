@@ -4,6 +4,7 @@ import dataclasses
 import ctypes as ct
 import pathlib
 import warnings
+import importlib.resources
 
 import numpy as np
 
@@ -15,8 +16,8 @@ f_int = ct.POINTER(ct.c_int)
 def get_reltrans_library_path(lib_name="libreltrans") -> str:
     """
     Get the reltrans library path as a string. Checks common locations from the
-    reltrans root directory. This can be overwritten using the `RELTRANS_PATH`
-    environment variable.
+    (py)reltrans root directory. This can be overwritten using the
+    `RELTRANS_PATH` environment variable.
 
     If no path is set, this function will return the name of the shared library
     with the hope that `LoadLibrary` will be able to resolve it in the linker
@@ -27,6 +28,20 @@ def get_reltrans_library_path(lib_name="libreltrans") -> str:
         warnings.warn(f"Using RELTRANS_PATH variable: {lib_path}")
         return lib_path
 
+    # Is pyreltrans installed?
+    try:
+        import xspectrampoline_helpers as helpers
+    except ModuleNotFoundError:
+        warnings.warn(
+            "Could not import `xspectrampoline_helpers`. Is `xspectrampoline` pip installed?"
+        )
+    else:
+        _pyreltrans_dir = helpers.get_artifact_dir("pyreltrans")
+        lib_path = _pyreltrans_dir / f"{lib_name}.{helpers.SHARED_LIB_EXT}"
+        if lib_path.is_file():
+            return str(lib_path.absolute())
+
+    # Try to use what is in the `build` directory
     build_dir = pathlib.Path(pathlib.Path(__file__).parent.parent) / "build" / "lib"
 
     system = platform.system()
@@ -38,7 +53,6 @@ def get_reltrans_library_path(lib_name="libreltrans") -> str:
         raise Exception("Unsupported OS " + system)
 
     lib_path = build_dir / lib_name
-    print(str(lib_path.absolute()))
     if lib_path.is_file():
         return str(lib_path.absolute())
 
@@ -56,6 +70,7 @@ def _wrap_call(f, energy: np.ndarray, params: np.ndarray) -> np.ndarray:
         output.ctypes.data_as(f_float),
     )
     return output
+
 
 def _wrap_getrgrid(f, rnmin, rnmax, mueff, nro, nphi):
     # convert scalars
@@ -78,6 +93,7 @@ def _wrap_getrgrid(f, rnmin, rnmax, mueff, nro, nphi):
         domega.ctypes.data_as(f_double),
     )
     return rn, domega
+
 
 def _wrap_grtrace(f, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
     nro = len(rn)
@@ -151,6 +167,7 @@ class DCP_Parameters:
     def to_numpy_array(self) -> np.ndarray:
         return np.array(dataclasses.astuple(self), dtype=np.float32)
 
+
 @dataclasses.dataclass
 class Dbl_Parameters:
     # First Lamp post height
@@ -177,9 +194,9 @@ class Dbl_Parameters:
     lognep: float = 15.0
     # Electron temperature in observer frame
     kte: float = 60.0
-    #Time-averaged normalization ratio C1 / C2 between the two lampposts and sets continuum cutoff and disk disk ionization
+    # Time-averaged normalization ratio C1 / C2 between the two lampposts and sets continuum cutoff and disk disk ionization
     eta_0: float = 1.0
-    #Fourier frequency dependent normalization ratio C1(νc)/ C2(νc)
+    # Fourier frequency dependent normalization ratio C1(νc)/ C2(νc)
     eta: float = 1.0
     # propagation speed delay between the two lampposts if they are coherent (0 if incoherent)
     beta_p: float = 0.0
@@ -204,6 +221,7 @@ class Dbl_Parameters:
 
     def to_numpy_array(self) -> np.ndarray:
         return np.array(dataclasses.astuple(self), dtype=np.float32)
+
 
 @dataclasses.dataclass
 class rtdist_Parameters:
@@ -239,7 +257,7 @@ class rtdist_Parameters:
     honr: float = 0.02
     # emissivity parameter 1
     b1: float = 0.0
-    # emissivity parameter 2 
+    # emissivity parameter 2
     b2: float = 0.0
     # Highest frequency in band
     flo_hz: float = 0.0
@@ -250,16 +268,19 @@ class rtdist_Parameters:
     del_a: float = 0.0
     del_ab: float = 0.0
     g: float = 0.0
-    # Anorm 
+    # Anorm
     Anorm: float = 7e-05
     telescope_response: float = 1.0
 
     def to_numpy_array(self) -> np.ndarray:
         return np.array(dataclasses.astuple(self), dtype=np.float32)
 
+
 class Reltrans:
-    def __init__(self, path=None):
-        self.lib_reltrans = ct.cdll.LoadLibrary(path or get_reltrans_library_path())
+    def __init__(self, path=None, **kwargs):
+        self.lib_reltrans = ct.cdll.LoadLibrary(
+            path or get_reltrans_library_path(**kwargs)
+        )
         self.lib_reltrans.tdreltransdcp_.argtypes = [
             f_float,
             f_int,
@@ -273,17 +294,17 @@ class Reltrans:
             ct.POINTER(ct.c_double),  # rnmin
             ct.POINTER(ct.c_double),  # rnmax
             ct.POINTER(ct.c_double),  # mueff
-            ct.POINTER(ct.c_int),     # nro
-            ct.POINTER(ct.c_int),     # nphi
-            f_double,                 # rn
-            f_double,                 # domega
+            ct.POINTER(ct.c_int),  # nro
+            ct.POINTER(ct.c_int),  # nphi
+            f_double,  # rn
+            f_double,  # domega
         ]
         self.lib_reltrans.getrgrid_.restype = None
 
         self.lib_reltrans.grtrace_.argtypes = [
-            ct.POINTER(ct.c_int),     # nro
-            ct.POINTER(ct.c_int),     # nphi
-            f_double,                 # rn
+            ct.POINTER(ct.c_int),  # nro
+            ct.POINTER(ct.c_int),  # nphi
+            f_double,  # rn
             ct.POINTER(ct.c_double),  # mueff
             ct.POINTER(ct.c_double),  # mu0
             ct.POINTER(ct.c_double),  # spin
@@ -293,7 +314,6 @@ class Reltrans:
             ct.POINTER(ct.c_double),  # d
         ]
         self.lib_reltrans.grtrace_.restype = None
-
 
     def dcp(self, energy: np.ndarray, parameters: DCP_Parameters) -> np.ndarray:
         """A wrapper around the XSPEC interface of reltransDcp"""
@@ -324,10 +344,23 @@ class Reltrans:
         self.lib_reltrans.reset_reltrans()
 
     def getrgrid(self, rnmin, rnmax, mueff, nro, nphi):
-        return _wrap_getrgrid(self.lib_reltrans.getrgrid_, rnmin, rnmax, mueff, nro, nphi)
+        return _wrap_getrgrid(
+            self.lib_reltrans.getrgrid_, rnmin, rnmax, mueff, nro, nphi
+        )
 
     def grtrace(self, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
-        _wrap_grtrace(self.lib_reltrans.grtrace_, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d)
+        _wrap_grtrace(
+            self.lib_reltrans.grtrace_,
+            nphi,
+            rn,
+            mueff,
+            mu0,
+            spin,
+            rmin,
+            rout,
+            mudisk,
+            d,
+        )
 
     def get_re(self, nro, nphi):
         out = np.zeros(nro * nphi, dtype=np.float64)
@@ -380,5 +413,10 @@ class Reltrans:
         self.lib_reltrans.allocate_pem(ct.byref(nro_c), ct.byref(nphi_c))
 
 
-        
-__all__ = [DCP_Parameters, Dbl_Parameters, rtdist_Parameters, Reltrans, get_reltrans_library_path]
+__all__ = [
+    DCP_Parameters,
+    Reltrans,
+    get_reltrans_library_path,
+    Dbl_Parameters,
+    rtdist_Parameters,
+]
