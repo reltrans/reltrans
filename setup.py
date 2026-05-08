@@ -12,7 +12,7 @@ else:
 
 package_name = "pyreltrans"
 library_name = "reltrans"
-version = "0.1.0"
+version = pathlib.Path("VERSION").read_text().strip()
 
 setup(
     # TODO: put some actual contact information here
