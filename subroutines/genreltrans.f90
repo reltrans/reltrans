@@ -5,8 +5,8 @@ module m_genreltrans
     interface
         ! The interface around the XSPEC C_tbabs function.
         ! It will call the C_tbabs symbol in the libXSFunctions shared library.
-        subroutine c_tbabs(earx, nex, params, Ifl, absorbx, photerx,           &
-             str)bind(C, name = "C_tbabs")
+        subroutine c_tbabs(earx, nex, params, Ifl, absorbx, photerx, str)      &
+            bind(C, name = "C_tbabs")
             use iso_c_binding, only: c_double, c_int, c_char
             real(c_double), intent(in) :: earx(nex+1)
             real(c_double), intent(in) :: params(1)
@@ -32,7 +32,7 @@ contains
         integer, intent(in) :: nex, Ifl
 
         double precision :: d_earx(0:nex), d_absorbx(nex), d_photerx(nex),     &
-             d_params(1)
+            d_params(1)
         integer i
 
         do i = 0, nex
@@ -253,21 +253,21 @@ contains
                 do j = 1, config%nf
                    do i = 1, nex
                       do m = 1, model_args%nlp
-                         reline_w0(m , i) = real(arrays%ker_W0(m, i, j,        &
+                         reline_w0(m, i) = real(arrays%ker_W0(m, i, j,         &
                              mubin, rbin))
-                         imline_w0(m , i) = aimag(arrays%ker_W0(m, i, j,       &
+                         imline_w0(m, i) = aimag(arrays%ker_W0(m, i, j,        &
                              mubin, rbin))
-                         reline_w1(m , i) = real(arrays%ker_W1(m, i, j,        &
+                         reline_w1(m, i) = real(arrays%ker_W1(m, i, j,         &
                              mubin, rbin))
-                         imline_w1(m , i) = aimag(arrays%ker_W1(m, i, j,       &
+                         imline_w1(m, i) = aimag(arrays%ker_W1(m, i, j,        &
                              mubin, rbin))
-                         reline_w2(m , i) = real(arrays%ker_W2(m, i, j,        &
+                         reline_w2(m, i) = real(arrays%ker_W2(m, i, j,         &
                              mubin, rbin))
-                         imline_w2(m , i) = aimag(arrays%ker_W2(m, i, j,       &
+                         imline_w2(m, i) = aimag(arrays%ker_W2(m, i, j,        &
                              mubin, rbin))
-                         reline_w3(m , i) = real(arrays%ker_W3(m, i, j,        &
+                         reline_w3(m, i) = real(arrays%ker_W3(m, i, j,         &
                              mubin, rbin))
-                         imline_w3(m , i) = aimag(arrays%ker_W3(m, i, j,       &
+                         imline_w3(m, i) = aimag(arrays%ker_W3(m, i, j,        &
                              mubin, rbin))
                       end do
                    end do
@@ -610,10 +610,10 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ! this is where coherence = 0 or = 1 cases merge back
         do j = 1, config%nf
             do i = 1, nex
-                arrays%ReG(i , j) = cos(model_args%DelA) *                     &
+                arrays%ReG(i, j) = cos(model_args%DelA) *                      &
                     arrays%ReGrawa(i, j) - sin(model_args%DelA) *              &
                     arrays%ImGrawa(i, j)
-                arrays%ImG(i , j) = cos(model_args%DelA) *                     &
+                arrays%ImG(i, j) = cos(model_args%DelA) *                      &
                     arrays%ImGrawa(i, j) + sin(model_args%DelA) *              &
                     arrays%ReGrawa(i, j)
             end do
@@ -624,8 +624,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             model_args%floHz) / ((model_args%fhiHz - model_args%floHz) *       &
             real(config%nf))
         do j = 1, config%nf
-            f = model_args%floHz * (model_args%fhiHz / model_args%floHz)**     &
-                ((real(j) - 0.5) / real(config%nf))
+            f = model_args%floHz * (model_args%fhiHz /                         &
+                model_args%floHz)**((real(j) - 0.5) / real(config%nf))
             do i = 1, nex
                 arrays%ReGbar(i) = arrays%ReGbar(i) + arrays%ReG(i, j) / f
                 arrays%ImGbar(i) = arrays%ImGbar(i) + arrays%ImG(i, j) / f
@@ -635,10 +635,10 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ! power in squared fractional rms format
         ! note: the factor eta is to have the same normalization as the single
         ! LP model, it's 100% arbitrary
-        arrays%ReGbar = arrays%ReGbar * fac * (model_args%Anorm / real(1. +    &
-            model_args%eta))**2
-        arrays%ImGbar = arrays%ImGbar * fac * (model_args%Anorm / real(1. +    &
-            model_args%eta))**2
+        arrays%ReGbar = arrays%ReGbar * fac * (model_args%Anorm / real(1.      &
+            + model_args%eta))**2
+        arrays%ImGbar = arrays%ImGbar * fac * (model_args%Anorm / real(1.      &
+            + model_args%eta))**2
     end if
 
     ! Write output depending on ReIm parameter

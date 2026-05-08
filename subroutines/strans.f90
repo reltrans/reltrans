@@ -197,8 +197,8 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
 
     ! Set frequency array
     do fbin = 1, args%conf%nf
-        args%fi(fbin) = args%conf%flo * (args%conf%fhi / args%conf%flo)**      &
-            ((float(fbin) - 0.5d0) / dble(args%conf%nf))
+        args%fi(fbin) = args%conf%flo * (args%conf%fhi /                       &
+            args%conf%flo)**((float(fbin) - 0.5d0) / dble(args%conf%nf))
     end do
     if (args%conf%fhi .lt. tiny(args%conf%fhi)) args%fi(1) = 0.0d0
 
@@ -444,9 +444,9 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
             ! small, likely of order the size of the ring
             ! - this should be checked, else a full non-relatvistic version that
             !   loops over each azimuth used
-            tau = sqrt(re**2 + (args%model%h(1) - args%model%honr * re)**      &
-                2) - re * (sin0 * sindisk * cos(phie) + args%model%muobs *     &
-                args%mudisk) + args%model%h(1) * args%model%muobs
+            tau = sqrt(re**2 + (args%model%h(1) - args%model%honr *            &
+                re)**2) - re * (sin0 * sindisk * cos(phie) + args%model%muobs  &
+                * args%mudisk) + args%model%h(1) * args%model%muobs
             tau = (1.d0+args%model%zcos)*tau
         else
             tau = (1.d0 + args%model%zcos) * (tausd + taudo - tauso(1))
@@ -462,30 +462,30 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
             cexp = cmplx(cos(real(2.d0 * pi * tau * args%fi(fbin))),           &
                 sin(real(2.d0 * pi * tau * args%fi(fbin))))
 
-            args%arrays%ker_W0(1 , gbin, fbin, mubin, rbin) =                  &
+            args%arrays%ker_W0(1, gbin, fbin, mubin, rbin) =                   &
                 args%arrays%ker_W0(1, gbin, fbin, mubin, rbin) +               &
                 real(args%dFe(1)) * cexp
 
             ! TODO: the below are all particular to the lamppost corona, and do
             ! not apply to the ring-like corona currently
 
-            args%arrays%ker_W1(1 , gbin, fbin, mubin, rbin) =                  &
+            args%arrays%ker_W1(1, gbin, fbin, mubin, rbin) =                   &
                 args%arrays%ker_W1(1, gbin, fbin, mubin, rbin) +               &
                 real(log(gsd)) * real(args%dFe(1)) * cexp
 
-            args%arrays%ker_W2(1 , gbin, fbin, mubin, rbin) =                  &
+            args%arrays%ker_W2(1, gbin, fbin, mubin, rbin) =                   &
                 args%arrays%ker_W2(1, gbin, fbin, mubin, rbin) + emissivity *  &
                 normfac * cexp
 
-            args%arrays%ker_W3(1 , gbin, fbin, mubin, rbin) =                  &
+            args%arrays%ker_W3(1, gbin, fbin, mubin, rbin) =                   &
                 args%arrays%ker_W3(1, gbin, fbin, mubin, rbin) + emissivity *  &
                 normfac * cexp
         end do
 
         if (args%conf%calculate_impulse_response) then
             ! find the appropriate energy and time bins
-            tbin = clamp_i(ceiling(log10(tau / time_axis(0)) / args%dlogt),    &
-                1, args%conf%nt)
+            tbin = clamp_i(ceiling(log10(tau / time_axis(0)) /                 &
+                args%dlogt), 1, args%conf%nt)
             ! kernel of the impulse response function
             response(gbin_resp, tbin) = response(gbin_resp, tbin) + args%dFe(1)
         end if
@@ -536,9 +536,9 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
 
         ! Time lag between direct and reflected photons
         if (non_relativistic) then
-            tau(m) = sqrt(re**2 + (args%model%h(m) - args%model%honr * re)     &
-                **2) - re * (sin0 * sindisk * cos(phie) + args%model%muobs *   &
-                args%mudisk) + args%model%h(1) * args%model%muobs
+            tau(m) = sqrt(re**2 + (args%model%h(m) - args%model%honr *         &
+                re)**2) - re * (sin0 * sindisk * cos(phie) + args%model%muobs  &
+                * args%mudisk) + args%model%h(1) * args%model%muobs
             tau(m) = (1.d0+args%model%zcos)*tau(m)
         else
             ! Interpolate (or extrapolate) the time function
@@ -573,8 +573,8 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
         ! calculate extra factors that go into the transfer functions
         ! for double lps
         if (args%model%nlp .gt. 1) then
-            thetafac(m) = emissivity(m) * gso(m)**(args%model%Gamma - 2.) *    &
-                gsd(m)**(2. - args%model%Gamma)
+            thetafac(m) = emissivity(m) * gso(m)**(args%model%Gamma - 2.)      &
+                * gsd(m)**(2. - args%model%Gamma)
         else
             ! single lamp post case, double check this later
             thetafac(m) = 1.
@@ -592,8 +592,8 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
     ! it is not compatible with the existing use, as the dimensions of
     ! the emissivity would be different
     do m = 1, args%model%nlp
-        args%dFe(m) = emissivity(m) * (g / (1.d0 + args%model%zcos))**(2. +    &
-            args%model%Gamma) * domega(i)
+        args%dFe(m) = emissivity(m) * (g / (1.d0 + args%model%zcos))**(2.      &
+            + args%model%Gamma) * domega(i)
 
         ! Add to the radial dependence of the transfer function TBD MAKE
         ! SURE THIS IS RIGHT
@@ -622,20 +622,20 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
             cexp = cmplx(cos(real(2.d0 * pi * tau(m) * args%fi(fbin))),        &
                 sin(real(2.d0 * pi * tau(m) * args%fi(fbin))))
 
-            args%arrays%ker_W0(m , gbin, fbin, mubin, rbin) =                  &
+            args%arrays%ker_W0(m, gbin, fbin, mubin, rbin) =                   &
                 args%arrays%ker_W0(m, gbin, fbin, mubin, rbin) +               &
                 real(args%dFe(m)) * cexp
 
-            args%arrays%ker_W1(m , gbin, fbin, mubin, rbin) =                  &
+            args%arrays%ker_W1(m, gbin, fbin, mubin, rbin) =                   &
                 args%arrays%ker_W1(m, gbin, fbin, mubin, rbin) +               &
                 real(log(gsd(m))) * real(args%dFe(m)) * cexp
 
             ! tbd redo these transfer functions
-            args%arrays%ker_W2(m , gbin, fbin, mubin, rbin) =                  &
+            args%arrays%ker_W2(m, gbin, fbin, mubin, rbin) =                   &
                 args%arrays%ker_W2(m, gbin, fbin, mubin, rbin) + emisfac *     &
                 normfac * cexp
 
-            args%arrays%ker_W3(m , gbin, fbin, mubin, rbin) =                  &
+            args%arrays%ker_W3(m, gbin, fbin, mubin, rbin) =                   &
                 args%arrays%ker_W3(m, gbin, fbin, mubin, rbin) + kfac *        &
                 thetafac(m) * normfac * cexp
         end do
