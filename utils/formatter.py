@@ -6,6 +6,94 @@ import sys
 import argparse
 
 
+class TokenizeMaths:
+    def __init__(
+        self,
+        string: str,
+        maths_seperators=["\\*\\*", "\\=", "/", ",", "\\+", "\\-", "\\*"],
+    ):
+        """
+        Construct a tokeniser for iterating over mathematical Fortran code. The
+        tokeniser returns tokens that can be used for line wrapping.
+
+        Uses `maths_seperators` for determining which symbols are allowed to be
+        split on. Strips any redundant whitespaces"
+        """
+        self.chunks = re.split(
+            re.compile("(\\s" + "|".join(maths_seperators) + ")"), string
+        )
+        # Filter blanks
+        self.chunks = [
+            token for token in (i.strip() for i in self.chunks) if len(token) != 0
+        ]
+        self.index = 0
+
+    def __iter__(self):
+        self.index = 0
+        return self
+
+    def _as_expontent(self, token):
+        """
+        Ensures that Fortran code like `123d-6` is not split into `123d - 6`.
+        """
+        # Exponent fixes
+        is_number = re.match(r"^[0-9\.]+d$", token)
+        followed_by_plus_minus = re.match(r"^[+\-].*", self.chunks[self.index + 1][0])
+        another_number = re.match(r"^[0-9]+", self.chunks[self.index + 2])
+
+        if is_number and followed_by_plus_minus and another_number:
+            token = "".join(
+                [token, self.chunks[self.index + 1], self.chunks[self.index + 2]]
+            )
+            self.index += 2
+            return token
+        else:
+            return None
+
+    def _as_power(self, token):
+        """
+        Ensures that Fortran code like `a**b` is not split into `a ** b`.
+        """
+        if self.chunks[self.index + 1] == "**":
+            token = "".join([token, "**", self.chunks[self.index + 2]])
+            self.index += 2
+            return token
+        elif self.chunks[self.index + 1] == "*" and self.chunks[self.index + 2] == "*":
+            token = "".join([token, "**", self.chunks[self.index + 3]])
+            self.index += 3
+            return token
+
+        else:
+            return None
+
+    def _map_lookaheads(self, token):
+        for f in (self._as_expontent, self._as_power):
+            r = f(token)
+            if r:
+                return r
+        return None
+
+    def __next__(self):
+        if self.index >= len(self.chunks):
+            raise StopIteration
+
+        token = self.chunks[self.index]
+
+        if self.index + 2 < len(self.chunks):
+            _ahead = self._map_lookaheads(token)
+            if _ahead:
+                token = _ahead
+
+        if self.index + 1 < len(self.chunks):
+            # Comma fixes
+            if self.chunks[self.index + 1] == ",":
+                token += ","
+                self.index += 1
+
+        self.index += 1
+        return token.strip()
+
+
 @dataclasses.dataclass()
 class SourceLine:
     line: str
@@ -19,12 +107,17 @@ class SourceLine:
     cont: bool = False
 
     # Is a subroutine call
-    call: Bool = False
+    call: bool = False
     # Is a write call
-    write: Bool = False
+    write: bool = False
     # Is an assignment operation
-    assignment: Bool = False
-    is_open: Bool = False
+    assignment: bool = False
+    is_open: bool = False
+
+    # Starts with `subroutine` or `function`
+    function_declaration: bool = False
+    # Declares a variable
+    declaration: bool = False
 
     @staticmethod
     def from_string(line: str) -> "SourceLine":
@@ -33,13 +126,8 @@ class SourceLine:
         stripped = stripped.rstrip()
 
         is_comment = re.match(r"^!.*", stripped) is not None
-        if is_comment:
-            stripped = stripped.lstrip("!").lstrip()
 
-        if not is_comment:
-            has_comment = re.match(r".*!.*", stripped) is not None
-        else:
-            has_comment = False
+        has_comment = re.match(r".*!.*", stripped) is not None
 
         is_cont = re.match(r".*&$", stripped) is not None
         if not is_comment and is_cont:
@@ -49,11 +137,15 @@ class SourceLine:
         is_write = re.match(r"^write .*", stripped) is not None
         is_assignment = re.match(r"^.*=.*", stripped) is not None
         is_open = re.match(r"^open\s.*", stripped) is not None
+        is_function_declaration = (
+            re.match(r"^(subroutine|function)\s.*", stripped) is not None
+        )
+        is_var_declaration = re.match(r"^.*::.*", stripped) is not None
 
         return SourceLine(
             line=stripped,
             comment=is_comment,
-            has_comment=has_comment,
+            has_comment=is_comment or has_comment,
             source=not is_comment,
             indent=indent,
             cont=is_cont,
@@ -61,6 +153,8 @@ class SourceLine:
             write=is_write,
             assignment=is_assignment and not is_open,
             is_open=is_open,
+            function_declaration=is_function_declaration,
+            declaration=is_var_declaration,
         )
 
     def __len__(self) -> int:
@@ -73,6 +167,12 @@ class SourceLine:
         """
         return self.line.strip().startswith(s)
 
+    def source_wrappable(self) -> bool:
+        """
+        Is this a line of code that can be line wrapped?
+        """
+        return self.call or self.function_declaration or self.declaration
+
     def word_wrap(self, width) -> list["SourceLine"]:
         return [
             dataclasses.replace(self, line=wrapped)
@@ -83,31 +183,43 @@ class SourceLine:
         ]
 
     def maths_wrap(
-        self, width, maths_tokens=["/", "+", "-", "*"], indent_width=4
+        self,
+        width,
+        maths_tokens=["\\*\\*", "\\=", "/", ",", "\\+", "\\-", "\\*"],
+        indent_width=4,
     ) -> "SourceLine":
         kwargs = dict(cont=True, indent=self.indent)
 
+        tokenizer = TokenizeMaths(self.line)
+
         lines = []
-        new = self.line
-        while len(new) + self.indent + indent_width >= width:
-            cuts = [(token, new.find(token)) for token in maths_tokens]
-            cuts = [i for i in cuts if i[1] > 0]
+        current_line = ""
+        spacer = True
 
-            if len(cuts) == 0:
-                break
+        for token in tokenizer:
+            if len(current_line) + len(token) + self.indent + indent_width + 1 >= width:
+                lines.append(
+                    dataclasses.replace(self, line=current_line.strip(), **kwargs)
+                )
+                if len(lines) == 1:
+                    kwargs["indent"] += indent_width
+                current_line = ""
 
-            token, cut = min(cuts, key=lambda x: x[1])
+            if token == "-":
+                if current_line.endswith("(") or any(
+                    current_line.endswith(op) for op in maths_tokens
+                ):
+                    current_line += token
+                    spacer = False
+                else:
+                    current_line += " " + token
+            elif spacer == False:
+                current_line += token
+                spacer = True
+            else:
+                current_line += " " + token
 
-            text = new[:cut]
-            lines.append(dataclasses.replace(self, line=text.strip(), **kwargs))
-            new = new[cut:]
-
-            if len(lines) == 1:
-                kwargs["indent"] += indent_width
-
-        lines.append(dataclasses.replace(self, line=new.strip(), **kwargs))
-        lines[-1].cont = False
-
+        lines.append(dataclasses.replace(self, line=current_line.strip(), **kwargs))
         return lines
 
     def source_wrap(self, width, sep=",", indent_width=4) -> "SourceLine":
@@ -167,10 +279,15 @@ class Formatter:
                 lines.append(line)
             else:
                 new_text = line.line
+                if line.declaration:
+                    new_text = re.sub(r"\s*::\s*", " :: ", new_text)
                 new_text = new_text.replace("if(", "if (")
                 new_text = re.sub(r"\(\s+", "(", new_text)
                 new_text = re.sub(r"\s+\)", ")", new_text)
                 new_text = re.sub(r"\s\s+", " ", new_text)
+                new_text = re.sub(r"\s*=(?!>)\s*", " = ", new_text)
+                new_text = re.sub(r"\s*,\s*", ", ", new_text)
+                new_text = re.sub(r"\s*(?!\*)\*\s*", " * ", new_text)
                 lines.append(dataclasses.replace(line, line=new_text))
         self.lines = lines
 
@@ -191,8 +308,6 @@ class Formatter:
             if text == "":
                 lines.append(text)
                 continue
-            if line.comment:
-                text = "! " + text
             text = (" " * line.indent) + text
             if line.cont:
                 text = text.ljust(self.text_width - 1) + "&"
@@ -205,11 +320,13 @@ class Formatter:
         for l in self.lines:
             if len(l) > self.text_width:
                 if l.comment:
-                    lines += l.word_wrap(self.text_width)
-                elif not l.has_comment and l.call:
+                    # lines += l.word_wrap(self.text_width)
+                    lines.append(l)
+                elif not l.has_comment and l.source_wrappable():
                     lines += l.source_wrap(self.text_width)
                 elif not l.has_comment and l.assignment:
                     lines += l.maths_wrap(self.text_width)
+                    lines[-1].cont = False
                 else:
                     lines.append(l)
             else:

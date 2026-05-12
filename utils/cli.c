@@ -1,9 +1,16 @@
+#include <bits/time.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+// Returns difference in milliseconds.
+float time_difference(struct timespec start, struct timespec end) {
+  return (end.tv_sec - start.tv_sec) * 1e3 +
+         (end.tv_nsec - start.tv_nsec) * 1e-6;
+}
 
 // TODO: is there a header file for these function definitions?
 
@@ -42,7 +49,7 @@ RT_DCP_Params default_parameters() {
       .h = 6.0,
       .a = 0.998,
       .inc = 30.0,
-      .rin = 1.0,
+      .rin = -1.0,
       .rout = 1e3,
       .zcos = 0.0,
       .gamma = 2.0,
@@ -70,6 +77,19 @@ int main() {
   const float e_max = 1000.0;
   int e_num = 1001;
 
+  setenv("ARF_SET",
+         "./Benchmarks/resp_matrix/"
+         "nicer-consim135p-teamonly-array50.arf",
+         1);
+  setenv("RMF_SET",
+         "./Benchmarks/resp_matrix/"
+         "nicer-rmf6s-teamonly-array50.rmf",
+         1);
+  setenv("EMIN_REF", "0.3", 1);
+  setenv("EMAX_REF", "10.0", 1);
+  setenv("EMIN_REF2", "10.0", 1);
+  setenv("EMAX_REF2", "20.0", 1);
+
   float *energy = malloc(sizeof(float) * e_num);
   if (energy == NULL) {
     LOG_ERR("Failed to allocate energy array");
@@ -89,11 +109,10 @@ int main() {
   }
 
   RT_DCP_Params params = default_parameters();
-
+  params.re_im = 5.0;
   params.mass = 10.0;
   params.flo_hz = 0.122;
-  params.fhi_hz = 0.224;
-  params.re_im = 1.0;
+  params.fhi_hz = 1.024;
 
   // logarithmic energy grid
   for (int i = 0; i < e_num; ++i) {
@@ -103,34 +122,50 @@ int main() {
   // zero the output buffer
   memset(output, 0, e_num);
 
-  clock_t time = clock();
   int ifl = 1;
   e_num -= 1;
+  // Run once to load everything in
   tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
-  time = clock() - time;
 
-  printf("Total Call: %.6f seconds\n", ((double)time) / CLOCKS_PER_SEC);
+  size_t num_trials = 20;
+
+  float total_time = 0;
+  float *times_millis = malloc(sizeof(float) * num_trials);
+
+  struct timespec now;
+  struct timespec end;
+
   // run it a few times
-  for (size_t i = 0; i < 100; ++i) {
-      // zero the output buffer
-      memset(output, 0, e_num);
+  for (size_t i = 0; i < num_trials; ++i) {
+    // zero the output buffer
+    memset(output, 0, e_num);
 
-      clock_t time = clock();
-      int ifl = 1;
-      tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
-      time = clock() - time;
-      printf("Total Call %ld: %.6f seconds\n", i, ((double)time) / CLOCKS_PER_SEC);
+    // To avoid caching
+    params.a = 0.998 * i / num_trials;
 
-      if (i == 0) {
-          memcpy(comparison, output, sizeof(*comparison) * e_num);
-      } else {
-          for (size_t j = 0; j < e_num; ++j) {
-              if (fabs((output[j] - comparison[j]) / (comparison[j] + 1e-5)) < 0.005) {
-                  printf(" - [%ld] %.8f != %.8f\n", j, comparison[j], output[j]);
-              }
-          }
-      }
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
+    int ifl = 1;
+    tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
+
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    // Convert nano-seconds to mili-seconds.
+    float elapsed = time_difference(now, end);
+    times_millis[i] = elapsed;
+    total_time += times_millis[i];
   }
+
+  float average_time = total_time / num_trials;
+  float deviation = 0;
+  for (size_t i = 0; i < num_trials; ++i) {
+    printf("Time %ld: %.4f\n", i, times_millis[i]);
+    float res = (times_millis[i] - average_time);
+    deviation += res * res;
+  }
+
+  deviation = sqrtf(deviation / num_trials);
+
+  printf("Average call time: %.4f +/- %.4f ms\n", average_time, deviation);
 
   printf("Serialising output to file...\n");
   FILE *fp = fopen(output_file, "w");
