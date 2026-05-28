@@ -80,25 +80,38 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     ! This code first does full GR ray tracing for a camera with impact parameters < bmax
     ! It then also does straight line ray tracing for impact parameters >bmax
     ! It adds both up to produce a transfer function for a disk extending from rin to rout
-    !
-    ! This routine populates the transfer functions in `arrays`
-    !
-    ! Non-standard arguments:
-    !
-    ! d: Distance of the source
-    ! dset: dset=1 means calculate ionization from distance, dset=0 means ignore
-    ! distance
-    ! ne: Number of energy bins
-    ! frobs: Observer's reflection fraction
-    ! frrel: Reflection fraction defined by relxilllp.
-    use dyn_gr, only: rlp, cosd, dcosdr, ndelta, npts, rlp, tlp, ndelta
-    use blcoordinate, only: pi
-    use radial_grids, only: dfer_arr, pnorm
-    use gr_continuum, only: gso, lens, tauso, gso, cosdelta_obs
-    use saved_variables
-    use impulseresponse, only: response_zero_edges, response_allocate
-    use common_types, only: t_config, t_model_arguments, t_arrays
-    use m_rtrans
+    ! INPUT
+    ! verbose               Decides whether to print radial scalings to file or not
+    ! dset                  dset=1 means calculate ionization from distance, dset=0 means ignore distance
+    ! nlp                   number of lamp post height considered
+    ! spin,h,mu0,Gamma      Physical parameters (spin, source height(S), cos(inclination), photon index)
+    ! nlp                   Number of lampposts considered (for now either 1 or 2)
+    ! rin,rout,honr         Physical parameters (disk inner radius, outer radius & scaleheight)
+    ! d,rnmax               Physical parameters (distance of the source, max radius for which GR ray tracing is used)
+    ! zcos                  Cosmological redshift
+    ! b1                    Linear coefficient of angular emissivity function
+    ! b2                    Quadratic coefficient of angular emissivity function
+    ! qboost                Asymmetry parameter of angular emissivity function
+    ! fcons                 Used to calculate ionization from distance
+    ! contx_int             Integral of the continuum flux over energy; needed to calculate the radial ionisation profile
+    !                       in the double lamppost case
+    ! nro,nphi              Number of pixels on the observer's camera (b and phib)
+    ! ne, dloge             Number of energy bins and maximum energy (compatible with FFT convolution)
+    ! nf,fhi,flo            nf = Number of logarithmic frequency bins used, range= flo to fhi
+    ! me                    Number of mue bins
+    ! xe                    Number of logr bins: bins 1:xe-1 are logarithmically spaced, bin xe is everything else
+    ! OUTPUT
+    ! ker_W0(nlp,ne,nf,me,xe)  Transfer function W0 - linear transfer function
+    ! ker_W1(nlp,ne,nf,me,xe)  Transfer function W1 - one aspect of photon index variations
+    ! ker_W2(nlp,ne,nf,me,xe)  Transfer function W2 - other aspect of photon index variations
+    ! ker_W3(nlp,ne,nf,me,xe)  Transfer function W3 - ionization variations
+    ! frobs                 Observer's reflection fraction
+    ! frrel                 Reflection fraction defined by relxilllp
+    use common_types
+    use dyn_gr
+    use blcoordinate
+    use radial_grids
+    use gr_continuum
     implicit none
 
     type(t_config), intent(inout) :: config
@@ -125,13 +138,21 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     double precision pnormer, pfunc_raw, ang_fac
     double precision rnn(config%nro), domegan(config%nro)
     logical dotrace
+    type(t_model_arguments) :: model_args_local
 
-    ! Setup the output arrays
-    call bind_arguments(args, config, model_args, arrays, frobs, dFe, fi, ne)
-    ! Zero the outputs
-    dfer_arr = 0.
-    call outputs_zero_arrays(args)
+    !new stuff - move back above once it's implemented properly    
+    complex ker_W0(nlp,ne,nf,me,xe),ker_W1(nlp,ne,nf,me,xe),ker_W2(nlp,ne,nf,me,xe),ker_W3(nlp,ne,nf,me,xe)
+    real emisfac,thetafac(nlp),kfac,normfac
+    
+    !arrays to save the transfer function
+    integer, parameter :: nt = 2**9
+    integer            :: tbin
+    double precision   :: tmin, tmax, sumresp, tar(0:nt), dlogt, dg, E
+    double precision, allocatable :: resp(:,:)
 
+    data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
+    save nrosav,nphisav,spinsav,musav,routsav,mudsav
+       
     ! Settings/initialization
     scal = 1.d0
     velocity = 0.d0
@@ -206,9 +227,13 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     sin0 = sqrt(1.0-args%model%muobs**2)
 
     ! Calculate dcos/dr and time lags vs r for the lamppost model
-    call getdcos(args%model%a, args%model%h, args%mudisk, ndelta,              &
-         args%model%nlp, args%model%rout, npts, rlp, dcosdr, tlp, cosd,        &
-         cosdout)
+    ! Construct a temporary model_args for getdcos (rtrans itself will be
+    ! refactored in PR #94 to take model_args directly)
+    model_args_local%a = spin
+    model_args_local%h = h
+    model_args_local%nlp = nlp
+    model_args_local%rout = rout
+    call getdcos(model_args_local, mudisk, cosdout)
 
     ! set continuum normalisations depending on model flavour
     if (dset .eq. 0)then
