@@ -467,13 +467,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 
     ! set up the continuum spectrum plus relative quantities (cutoff
     ! energies, lensing/gfactors, luminosity, etc)
-    call init_cont(nlp, model_args%a, model_args%h, model_args%zcos,        &
-            model_args%Cutoff_s, model_args%Cutoff_obs, model_args%logxi,      &
-            model_args%lognep, model_args%muobs, Cp_cont, model_args%Cp,       &
-            fcons, model_args%Gamma, model_args%Dkpc, model_args%Mass,         &
-            arrays%earx, config%Emin, config%Emax, arrays%contx,               &
-            config%dloge, config%verbose, dset, model_args%Anorm,              &
-            arrays%contx_int, model_args%eta)
+    call init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
     if (dset .eq. 0) then
        call radfunctions_dens(config, model_args, arrays)
     else
