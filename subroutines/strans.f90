@@ -112,6 +112,9 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     use blcoordinate
     use radial_grids
     use gr_continuum
+    use saved_variables
+    use impulseresponse, only: response_zero_edges, response_allocate
+    use m_rtrans
     implicit none
 
     type(t_config), intent(inout) :: config
@@ -138,21 +141,13 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     double precision pnormer, pfunc_raw, ang_fac
     double precision rnn(config%nro), domegan(config%nro)
     logical dotrace
-    type(t_model_arguments) :: model_args_local
 
-    !new stuff - move back above once it's implemented properly    
-    complex ker_W0(nlp,ne,nf,me,xe),ker_W1(nlp,ne,nf,me,xe),ker_W2(nlp,ne,nf,me,xe),ker_W3(nlp,ne,nf,me,xe)
-    real emisfac,thetafac(nlp),kfac,normfac
-    
-    !arrays to save the transfer function
-    integer, parameter :: nt = 2**9
-    integer            :: tbin
-    double precision   :: tmin, tmax, sumresp, tar(0:nt), dlogt, dg, E
-    double precision, allocatable :: resp(:,:)
+    ! Setup the output arrays
+    call bind_arguments(args, config, model_args, arrays, frobs, dFe, fi, ne)
+    ! Zero the outputs
+    dfer_arr = 0.
+    call outputs_zero_arrays(args)
 
-    data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
-    save nrosav,nphisav,spinsav,musav,routsav,mudsav
-       
     ! Settings/initialization
     scal = 1.d0
     velocity = 0.d0
@@ -227,13 +222,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     sin0 = sqrt(1.0-args%model%muobs**2)
 
     ! Calculate dcos/dr and time lags vs r for the lamppost model
-    ! Construct a temporary model_args for getdcos (rtrans itself will be
-    ! refactored in PR #94 to take model_args directly)
-    model_args_local%a = spin
-    model_args_local%h = h
-    model_args_local%nlp = nlp
-    model_args_local%rout = rout
-    call getdcos(model_args_local, mudisk, cosdout)
+    call getdcos(args%model, args%mudisk, cosdout)
 
     ! set continuum normalisations depending on model flavour
     if (dset .eq. 0)then

@@ -1,4 +1,4 @@
-﻿module m_genreltrans
+module m_genreltrans
     use common_types
     implicit none
 
