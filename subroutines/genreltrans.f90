@@ -465,47 +465,29 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        print *, 'Transfer function runtime: ', time_end - time_start, ' seconds'
     end if
 
+    ! set up the continuum spectrum plus relative quantities (cutoff
+    ! energies, lensing/gfactors, luminosity, etc)
+    call init_cont(nlp, model_args%a, model_args%h, model_args%zcos,        &
+         model_args%Cutoff_s, model_args%Cutoff_obs, model_args%logxi,       &
+         model_args%lognep, muobs, Cp_cont, model_args%Cp, fcons,            &
+         model_args%Gamma,model_args%Dkpc, model_args%Mass,arrays%earx,      &
+         config%Emin,config%Emax, arrays%contx, config%dloge,                &
+         config%verbose, dset,model_args%Anorm, arrays%contx_int,            &
+         model_args%eta)
 
-    ! calculate the ionization/density/gsd radial profiles and get the continuum.
-    ! We need to call the continuum AFTER the definition of the radial profiles
-    ! when
-    ! the ionization parameter is DISTANCE (rtdist).
-    ! We need to call the continuum BEFORE the radial profiles in the rest of
-    ! the flavuors
     if (dset .eq. 0) then
-       ! set up the continuum spectrum plus relative quantities (cutoff
-       ! energies, lensing/gfactors, luminosity, etc)
-       call init_cont(nlp, model_args%a, model_args%h, model_args%zcos,        &
-            model_args%Cutoff_s, model_args%Cutoff_obs, model_args%logxi,      &
-            model_args%lognep, model_args%muobs, Cp_cont, model_args%Cp,       &
-            fcons, model_args%Gamma, model_args%Dkpc, model_args%Mass,         &
-            arrays%earx, config%Emin, config%Emax, arrays%contx,               &
-            config%dloge, config%verbose, dset, model_args%Anorm,              &
-            arrays%contx_int, model_args%eta)
-
        call radfunctions_dens(config, model_args, arrays)
     else
-        call radfuncs_dist(config%xe, model_args%rin, rnmax, model_args%b1,    &
-             model_args%b2, model_args%qboost, fcons,                          &
-             dble(model_args%lognep), model_args%a, model_args%h(1),           &
-             model_args%honr, rlp, dcosdr, cosd, ndelta, config%rmin,          &
-             npts(1), logxir, gsdr, logner, pnorm)
-        ! set up the continuum spectrum plus relative quantities (cutoff
-        ! energies, lensing/gfactors, luminosity, etc)
-        model_args%logxi = logxir(1)
-        call init_cont(nlp, model_args%a, model_args%h, model_args%zcos,       &
-             model_args%Cutoff_s, model_args%Cutoff_obs, model_args%logxi,     &
-             model_args%lognep, model_args%muobs, Cp_cont, model_args%Cp,      &
-             fcons, model_args%Gamma, model_args%Dkpc, model_args%Mass,        &
-             arrays%earx, config%Emin, config%Emax, arrays%contx,              &
-             config%dloge, config%verbose, dset, model_args%Anorm,             &
-             arrays%contx_int, model_args%eta)
-
+       call radfuncs_dist(config%xe, model_args%rin, rnmax,model_args%b1,     &
+            model_args%b2, model_args%qboost, fcons,                           &
+            & dble(model_args%lognep), model_args%a, model_args%h(1),          &
+            model_args%honr, rlp, dcosdr, cosd, ndelta, config%rmin,npts(1),   &
+            & logxir, gsdr, logner, pnorm)
      end if
 
-    ! do this for each lamp post, then find some sort of weird average?
-    if (config%verbose .gt. 0) write(*, *)"Observer's reflection fraction for each source:", model_args%boost*frobs
-    if (config%verbose .gt. 0) write(*, *)"Relxill reflection fraction for each source:", frrel
+     ! do this for each lamp post, then find some sort of weird average?
+    if (config%verbose .gt. 0) write(*,*)"Observer's reflection fraction for each source:",model_args%boost*frobs
+    if (config%verbose .gt. 0) write(*,*)"Relxill reflection fraction for each source:", frrel
 
     if (config%verbose .gt. 2) call CPU_TIME (time_start)
     if (config%needconv)then
