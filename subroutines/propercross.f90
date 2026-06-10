@@ -77,8 +77,6 @@ subroutine propercross(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw, resp_matr)
 end subroutine propercross
 !-----------------------------------------------------------------------
 
-
-
 !-----------------------------------------------------------------------
 subroutine response_and_energy_bounds(resp_matr)
   use telematrix
@@ -252,4 +250,18 @@ subroutine propercross_NOmatrix(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
      end do
   return
 end subroutine propercross_NOmatrix
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+   function find_nearest_index_in_energy_grid(earx, nex, Emin, Emax, E_target)
+     implicit none
+     integer, intent(in)  :: nex
+     real,    intent(in)  :: earx(0:nex), Emin, Emax, E_target
+     integer              :: find_nearest_index_in_energy_grid
+     real                 :: x
+
+     x = nex * log(E_target/Emin) / log(Emax/Emin)
+     find_nearest_index_in_energy_grid = max(0, min(nex, nint(x)))
+
+   end function find_nearest_index_in_energy_grid
 !-----------------------------------------------------------------------

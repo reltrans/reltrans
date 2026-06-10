@@ -355,6 +355,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use m_genreltrans
     use env_variables
     use saved_variables
+    use telematrix2
     implicit none
     ! Constants
     double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0, dlogf = 0.09 !This is a resolution parameter (base 10)
@@ -651,18 +652,30 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             write(*, *)"Warning ReIm = 4 should not be used for fitting!"
         end if
     else
-        call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne,   &
-             ear, ReS, ImS, model_args%resp_matr) !S is count rate
-        if (abs(model_args%ReIm) .eq. 5)then !Modulus
-            do i = 1, ne
-                dE = ear(i) - ear(i-1)
-                photar(i) = sqrt(ReS(i)**2 + ImS(i)**2)
-            end do
-        else if (abs(model_args%ReIm) .eq. 6)then !Time lag (s)
-            do i = 1, ne
-                dE = ear(i) - ear(i-1)
-                photar(i) = atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE
-            end do
+        if (abs(model_args%ReIm) .eq. 8) then
+           if( needresp2 )then
+              call initmatrix2
+           endif
+           call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, &
+                ear, ReS, ImS, 2) !folds the spectrum over the second response
+           do i = 1, ne
+              dE = ear(i) - ear(i-1)
+              photar(i) = atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE
+           end do
+        else
+           call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, &
+                ear, ReS, ImS, model_args%resp_matr) !S is count rate
+           if (abs(model_args%ReIm) .eq. 5)then !Modulus
+              do i = 1, ne
+                 dE = ear(i) - ear(i-1)
+                 photar(i) = sqrt(ReS(i)**2 + ImS(i)**2)
+              end do
+           else if (abs(model_args%ReIm) .eq. 6)then !Time lag (s)
+              do i = 1, ne
+                 dE = ear(i) - ear(i-1)
+                 photar(i) = atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE
+              end do
+           end if
         end if
     end if
 
