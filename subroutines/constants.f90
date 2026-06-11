@@ -1,5 +1,5 @@
-#ifndef _RELTRANS_IS_DEBUG
-#define _RELTRANS_IS_DEBUG 0
+#ifndef RELTRANS_BUILD_DEBUG
+#define RELTRANS_BUILD_DEBUG 0
 #endif
 
 module rtconstants
@@ -30,6 +30,11 @@ module rtconstants
         MODE_CROSS_SPEC_LAG_BOTH_FOLDED     =  6,                              &
         MODE_LAG_FREQ                       =  7,                              &
         MODE_CROSS_SPEC_LAG_TWO_RESPONSES   =  8
+
+    ! This parameter is passed in by the build system using the pre-processor.
+    ! It can be queried to see if the compiler is building for production or in
+    ! debug mode.
+    logical, parameter :: IS_DEBUG_BUILD = (RELTRANS_BUILD_DEBUG == 1)
 
 contains
 

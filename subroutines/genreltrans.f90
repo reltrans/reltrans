@@ -395,7 +395,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! freed and re-allocated
 
     if (config%firstcall) then
-        call init_fftw_allconv()
+        call init_fftw_allconv(IS_DEBUG_BUILD)
         ! initialise environment and allocate all arrays
         call read_environment_variables(config)
         call setup_global_arrays(config, model_args%nlp)

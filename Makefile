@@ -43,7 +43,7 @@ endif
 ifeq ($(DEBUG),1)
 	# Compile reltrans in 'debug' mode, which means disabling optimisations and
 	# including debug symbols.
-	FFLAGS += -g
+	FFLAGS += -DRELTRANS_BUILD_DEBUG=1 -g
 	CFLAGS += -g
 else
 	# The default arguments used to compile reltrans
