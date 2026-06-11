@@ -623,61 +623,62 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             + model_args%eta))**2
     end if
 
+    
+    !------------------------------------------
     ! Write output depending on ReIm parameter
-    if (model_args%ReIm .eq. 7) then
-        do i = 1, ne
-            dE = ear(i) - ear(i-1)
-            photar(i) = atan2(ImS(i), ReS(i))/(pi*(ear(i) + ear(i-1)))*dE
-        end do
-    else if (abs(model_args%ReIm) .le. 4)then
-        call crebin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, ear,   &
-             ReS, ImS) !S is in photar form
-        ! do i = 1, ne
-        ! write(98,*) (ear(i) + ear(i-1))*0.5, ReS(i)/(ear(i) - ear(i-1)) *
-        ! ((ear(i) + ear(i-1))*0.5)**2
-        ! enddo
+    !------------------------------------------
 
-        if (abs(model_args%ReIm) .eq. 1)then !Real part
-            photar = ReS
-        else if (abs(model_args%ReIm) .eq. 2)then !Imaginary part
-            photar = ImS
-        else if (abs(model_args%ReIm) .eq. 3)then !Modulus
-            photar = sqrt(ReS**2 + ImS**2)
-            write(*, *) "Warning ReIm = 3 should not be used for fitting!"
-        else if (abs(model_args%ReIm) .eq. 4)then !Time lag (s)
-            do i = 1, ne
-                dE = ear(i) - ear(i-1)
-                photar(i) = atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE
-            end do
-            write(*, *)"Warning ReIm = 4 should not be used for fitting!"
-        end if
-    else
-        if (abs(model_args%ReIm) .eq. 8) then
-           if( needresp2 )then
-              call initmatrix2
-           endif
-           call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, &
-                ear, ReS, ImS, 2) !folds the spectrum over the second response
-           do i = 1, ne
-              dE = ear(i) - ear(i-1)
-              photar(i) = atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE
-           end do
-        else
-           call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, &
+    !Preparing ReS and ImS: rebin and folding (if needed)
+    select case (abs(model_args%ReIm)) 
+
+    case(1:4)
+       call crebin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, ear,   &
+             ReS, ImS) !S is in photar form        
+    case(5:6)
+       call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, &
                 ear, ReS, ImS, model_args%resp_matr) !S is count rate
-           if (abs(model_args%ReIm) .eq. 5)then !Modulus
-              do i = 1, ne
-                 dE = ear(i) - ear(i-1)
-                 photar(i) = sqrt(ReS(i)**2 + ImS(i)**2)
-              end do
-           else if (abs(model_args%ReIm) .eq. 6)then !Time lag (s)
-              do i = 1, ne
-                 dE = ear(i) - ear(i-1)
-                 photar(i) = atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE
-              end do
-           end if
-        end if
-    end if
+    case(8)
+       if( needresp2 ) call initmatrix2
+       call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, &
+             ear, ReS, ImS, 2) !folds the spectrum over the second response
+    end select
+
+
+    !Generate the correct output 
+    select case (abs(model_args%ReIm))
+
+    case(1)          !Real part
+       photar = ReS
+
+    case(2)          !Imaginary part
+       photar = ImS
+
+    case(3,5)        !Modulus
+       photar = sqrt(ReS**2 + ImS**2)
+       if (model_args%ReIm==3) then 
+          write(*, *) "Warning ReIm = 3 should not be used for fitting!"
+       end if
+
+    case(4,6)        !Time lag
+       do i = 1, ne
+          dE = ear(i) - ear(i-1)
+          photar(i) = atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE
+       end do
+       if (model_args%ReIm==4) then 
+          write(*, *)"Warning ReIm = 4 should not be used for fitting!"
+       end if
+
+    case(7)       !Lag Frequency spectrum
+       do i = 1, ne
+          dE = ear(i) - ear(i-1)
+          photar(i) = atan2(ImS(i), ReS(i))/(pi*(ear(i) + ear(i-1)))*dE
+       end do
+    end select
+
+    
+    !--------------------------------------------
+    ! If REV_VERB > 1 write components into files
+    !--------------------------------------------
 
     if (config%verbose .gt. 1 .and. abs(model_args%ReIm) .gt. 0 .and. model_args%ReIm .lt. 7) then
         if (config%DC .eq. 0 .and. model_args%beta_p .eq. 0) then
