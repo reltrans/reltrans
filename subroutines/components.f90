@@ -8,8 +8,9 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     !PL - pivoting continuum 
     !LT - light travel time only
     !PR - pivoting reflection of each source
-    !RT - total reflection lag due to light travel time, pivoting of each reflection signal, and ionization variations  
-    
+    !RT - total reflection lag due to light travel time, pivoting of each reflection signal, and ionization variations
+
+    use rtconstants
     implicit none
     integer, intent(IN) :: ne,nex,nf,nlp,ionvar,ReIm,resp_matr
     real   , intent(IN) :: ear(0:ne),earx(0:nex),contx(nex,nlp),absorbx(nex)
@@ -179,36 +180,36 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     path = 'Output/IonVar.dat'
     open (unit = 14, file = path, status='replace', action = 'write') 
 
-    if (abs(ReIm) .le. 4) then
-        call crebin(nex,earx,ReGcont_bar,ImGcont_bar,ne,ear,ReScont_print,ImScont_print)              
+    if (.not. is_both_folded(ReIm)) then
+        call crebin(nex,earx,ReGcont_bar,ImGcont_bar,ne,ear,ReScont_print,ImScont_print)
         call crebin(nex,earx,ReGrev_bar,ImGrev_bar,ne,ear,ReSrev_print,ImSrev_print)
         call crebin(nex,earx,ReGpiv_bar,ImGpiv_bar,ne,ear,ReSpiv_print,ImSpiv_print)
         call crebin(nex,earx,ReGion_bar,ImGion_bar,ne,ear,ReSion_print,ImSion_print)
-        if (abs(ReIm) .eq. 1 ) then         !Real part
-            do i = 1,ne 
+        if (is_mode(ReIm, MODE_CROSS_SPEC_REAL)) then
+            do i = 1,ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), ReScont_print(i)/dE
                 write (12,*) ener(i), ReSrev_print(i)/dE
                 write (13,*) ener(i), ReSpiv_print(i)/dE
                 write (14,*) ener(i), ReSion_print(i)/dE
-            end do    
-        else if (abs(ReIm) .eq. 2) then     !Imaginary part
-            do i = 1,ne 
+            end do
+        else if (is_mode(ReIm, MODE_CROSS_SPEC_IMAG)) then
+            do i = 1,ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), ImScont_print(i)/dE
                 write (12,*) ener(i), ImSrev_print(i)/dE
                 write (13,*) ener(i), ImSpiv_print(i)/dE
                 write (14,*) ener(i), ImSion_print(i)/dE
             end do
-        else if (abs(ReIm) .eq. 3) then     !Modulus
-            do i = 1,ne 
+        else if (is_mode(ReIm, MODE_CROSS_SPEC_MODULUS)) then
+            do i = 1,ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), sqrt(ReScont_print(i)**2 + ImScont_print(i)**2)/dE
                 write (12,*) ener(i), sqrt(ReSrev_print(i)**2 + ImSrev_print(i)**2)/dE
                 write (13,*) ener(i), sqrt(ReSpiv_print(i)**2 + ImSpiv_print(i)**2)/dE
                 write (14,*) ener(i), sqrt(ReSion_print(i)**2 + ImSion_print(i)**2)/dE
             end do
-        else if (abs(ReIm) .eq. 4) then     !Time lag (s)
+        else if (is_mode(ReIm, MODE_CROSS_SPEC_LAG)) then
             do i = 1,ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), atan2(ImScont_print(i),ReScont_print(i)) / ( 2.0*pi*fc )
@@ -222,7 +223,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
         call cfoldandbin(nex,earx,ReGpiv_bar,ImGpiv_bar,ne,ear,ReSpiv_print,ImSpiv_print,resp_matr) 
         call cfoldandbin(nex,earx,ReGrev_bar,ImGrev_bar,ne,ear,ReSrev_print,ImSrev_print,resp_matr)
         call cfoldandbin(nex,earx,ReGion_bar,ImGion_bar,ne,ear,ReSion_print,ImSion_print,resp_matr)
-        if (abs(ReIm) .eq. 5) then          !Modulus
+        if (ReIm == MODE_CROSS_SPEC_MODULUS_BOTH_FOLDED) then
             do i = 1, ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), sqrt(ReScont_print(i)**2 + ImScont_print(i)**2)/dE
@@ -230,7 +231,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
                 write (12,*) ener(i), sqrt(ReSrev_print(i)**2 + ImSrev_print(i)**2)/dE
                 write (14,*) ener(i), sqrt(ReSion_print(i)**2 + ImSion_print(i)**2)/dE
             end do
-        else if (abs(ReIm) .eq. 6) then     !Time lag (s)
+        else if (ReIm == MODE_CROSS_SPEC_LAG_BOTH_FOLDED) then
             do i = 1, ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), atan2(ImScont_print(i),ReScont_print(i)) / ( 2.0*pi*fc )
@@ -376,6 +377,7 @@ end subroutine
 subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
                             h,z,Gamma,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
                             ReGpiv,ImGpiv,ReGion,ImGion)
+    use rtconstants, only: is_folded
     use constants
     implicit none
     integer, intent(IN) :: nex,nf,ionvar,nlp,ReIm,resp_matr
@@ -495,7 +497,7 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
     ! close(22)
     
     do m=1,nlp 
-        if (ReIm .gt. 0.0) then 
+        if (is_folded(ReIm)) then
             call propercross(nex,nf,earx,ReScont(m,:,:),ImScont(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:),resp_matr)
             call propercross(nex,nf,earx,ReSrev(m,:,:),ImSrev(m,:,:),ReGrev_temp(m,:,:),ImGrev_temp(m,:,:),resp_matr)
             call propercross(nex,nf,earx,ReSpiv(m,:,:),ImSpiv(m,:,:),ReGpiv_temp(m,:,:),ImGpiv_temp(m,:,:),resp_matr)

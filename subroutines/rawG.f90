@@ -1,6 +1,7 @@
 subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,h,z,Gamma,eta,&
                 boost,ReIm,g,DelAB,ionvar,DC,resp_matr,ReGraw,ImGraw)
                 
+    use rtconstants
     use constants
     implicit none
     integer nex,nf,ionvar,DC,nlp
@@ -70,7 +71,7 @@ subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,I
     end do
 
     do m=1,nlp 
-        if (ReIm .gt. 0.0) then 
+        if (is_folded(ReIm)) then 
             call propercross(nex,nf,earx,ReSraw(m,:,:),ImSraw(m,:,:),ReGtemp(m,:,:),ImGtemp(m,:,:),resp_matr)
         else 
             call propercross_NOmatrix(nex,nf,earx,ReSraw(m,:,:),ImSraw(m,:,:),ReGtemp(m,:,:),ImGtemp(m,:,:))

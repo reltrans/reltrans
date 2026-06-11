@@ -119,10 +119,14 @@ $(BUILD)/bin/dummy: ./utils/dummy.c $(BUILD)/lib/libreltrans.$(SHARED_EXT)
 # someone wants to install it to a different location, the easiest thing to do
 # would be to either tell them to run `make BUILD=/path/to/opt/`, or to invoke
 # `install_name_tool` (see discussion in PR #55).
-$(RELTRANS_SHARED_LIBRARY): $(BUILD) $(BUILD)/cache/wrappers.o
-	$(FC) $(FFLAGS) $(BUILD)/cache/wrappers.o -o $(abspath $@) $(LDFLAGS)
+$(RELTRANS_SHARED_LIBRARY): $(BUILD)/cache/wrappers.o $(BUILD)/cache/constants.o
+	$(FC) $(FFLAGS) $^ -o $(abspath $@) $(LDFLAGS)
 
-$(BUILD)/cache/%.o: $(ROOTDIR)/%.f90 $(ALL_RELTRANS_SOURCE_FILES)
+$(BUILD)/cache/wrappers.o: $(ROOTDIR)/wrappers.f90 $(BUILD)/cache/constants.o $(ALL_RELTRANS_SOURCE_FILES)
+	$(FC) $(FFLAGS) -c $< -o $@
+
+$(BUILD)/cache/%.o: $(ROOTDIR)/subroutines/%.f90
+	mkdir -p $(BUILD)
 	$(FC) $(FFLAGS) -c $< -o $@
 
 $(BUILD):
