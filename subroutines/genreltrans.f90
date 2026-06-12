@@ -218,28 +218,23 @@ contains
                 thetae = acos(mue) * 180.0 / real(pi)
                 if (config%me .eq. 1) thetae = real(model_args%inc)
                 ! Call restframe reflection model
-                call rest_frame(arrays%earx, nex, Gamma0, model_args%Afe,      &
-                     logne, Cutoff_0, logxi0, thetae, model_args%Cp,           &
-                     photarx)
+                call rest_frame(model_args, arrays, Gamma0, logne,             &
+                    Cutoff_0, logxi0, thetae, photarx)
                 ! NON LINEAR EFFECTS
                 if (config%DC .eq. 0) then
                    ! Gamma variations
                    logxi1 = logxi0 + ionvariation * dlogxi1
-                   call rest_frame(arrays%earx, nex, Gamma1, model_args%Afe,   &
-                        logne, Cutoff_0, logxi1, thetae, model_args%Cp,        &
-                        photarx_1)
+                   call rest_frame(model_args, arrays, Gamma1, logne,          &
+                       Cutoff_0, logxi1, thetae, photarx_1)
                    logxi2 = logxi0 + ionvariation * dlogxi2
-                   call rest_frame(arrays%earx, nex, Gamma2, model_args%Afe,   &
-                        logne, Cutoff_0, logxi2, thetae, model_args%Cp,        &
-                        photarx_2)
+                   call rest_frame(model_args, arrays, Gamma2, logne,          &
+                       Cutoff_0, logxi2, thetae, photarx_2)
                    photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
                    ! xi variations
-                   call rest_frame(arrays%earx, nex, Gamma0, model_args%Afe,   &
-                        logne, Cutoff_0, logxi1, thetae, model_args%Cp,        &
-                        photarx_1)
-                   call rest_frame(arrays%earx, nex, Gamma0, model_args%Afe,   &
-                        logne, Cutoff_0, logxi2, thetae, model_args%Cp,        &
-                        photarx_2)
+                   call rest_frame(model_args, arrays, Gamma0, logne,          &
+                       Cutoff_0, logxi1, thetae, photarx_1)
+                   call rest_frame(model_args, arrays, Gamma0, logne,          &
+                       Cutoff_0, logxi2, thetae, photarx_2)
                    photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10
                 end if
                 ! Multiply by E^{Gamma-1} to make less steep
