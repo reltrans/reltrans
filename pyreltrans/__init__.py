@@ -315,6 +315,9 @@ class Reltrans:
         ]
         self.lib_reltrans.grtrace_.restype = None
 
+        self.lib_reltrans.get_needresp2.argtypes = [ct.POINTER(ct.c_int)]
+        self.lib_reltrans.get_needresp2.restype = None
+
     def dcp(self, energy: np.ndarray, parameters: DCP_Parameters) -> np.ndarray:
         """A wrapper around the XSPEC interface of reltransDcp"""
         return _wrap_call(
@@ -412,7 +415,12 @@ class Reltrans:
         nphi_c = ct.c_int(nphi)
         self.lib_reltrans.allocate_pem(ct.byref(nro_c), ct.byref(nphi_c))
 
-
+    def get_needresp2(self):
+        flag = ct.c_int()
+        self.lib_reltrans.get_needresp2(ct.byref(flag))
+        return bool(flag.value)
+        
+        
 __all__ = [
     DCP_Parameters,
     Reltrans,

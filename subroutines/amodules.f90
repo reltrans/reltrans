@@ -27,6 +27,18 @@ module telematrix2
 
   data needresp2/.true./
   data needchans2/.true./
+contains
+
+  subroutine get_needresp2(check_needresp2) bind(C, name="get_needresp2")
+    use iso_c_binding
+    integer(c_int), intent(out) :: check_needresp2
+    if (needresp2) then
+       check_needresp2 = 1
+    else
+       check_needresp2 = 0
+    endif
+  end subroutine get_needresp2
+      
 end module telematrix2
 
 module env_variables

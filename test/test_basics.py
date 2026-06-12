@@ -4,7 +4,7 @@ from pyreltrans import DCP_Parameters, Dbl_Parameters, rtdist_Parameters
 
 
 def _debug_plot(
-    energy, output, title="", xlabel="", ylabel="", yscale="linear", xscale="log"
+        energy, output, title="", xlabel="", ylabel="", yscale="linear", xscale="log"
 ):
     """Used when creating new tests for quickly looking at the data to make
     sure it is sensible."""
@@ -276,3 +276,23 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
     assert_snapshot(taudo, name="taudo1", rtol=2e-4)
     assert_snapshot(pem, name="pem1", rtol=2e-4)
 
+def test_ReIm8_check_second_response(reltrans,  assert_snapshot, telescope, envars):
+
+    envars["RMF_SET"] = telescope.rmf_path
+    envars["ARF_SET"] = telescope.arf_path
+    envars["EMIN_REF"] = "0.3"
+    envars["EMAX_REF"] = "10.0"
+    envars["RMF2SET"] = telescope.rmf_path
+    envars["ARF2SET"] = telescope.arf_path
+
+    energy = np.logspace(np.log10(0.1), np.log10(100), 101)
+    reltrans.reset()
+    xrb1 = DCP_Parameters(mass=10.0, flo_hz=1, fhi_hz=2, re_im=6.0)
+    output = reltrans.dcp(energy, xrb1)
+    resp2_needed = reltrans.get_needresp2()
+    assert resp2_needed
+    
+    xrb1 = DCP_Parameters(mass=10.0, flo_hz=1, fhi_hz=2, re_im=8.0)
+    output = reltrans.dcp(energy, xrb1)
+    resp2_needed = reltrans.get_needresp2()
+    assert not resp2_needed
