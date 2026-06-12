@@ -27,6 +27,28 @@ module telematrix2
 
   data needresp2/.true./
   data needchans2/.true./
+contains
+
+  subroutine get_needresp2(check_needresp2) bind(C, name="get_needresp2")
+  !---------------------------------------------------------------------------
+  !Assign a value to check_needresp2 based on needresp2 variable in the module
+  !
+  !If needresp2 is True, the second telescope response has NOT be initialised 
+  !If needresp2 is False, the second relescope response has been initialised 
+  !
+  !check_needresp2 = 1 when needresp2 = True
+  !check_needresp2 = 0 when needresp2 = False
+  !
+  !---------------------------------------------------------------------------
+    use iso_c_binding
+    integer(c_int), intent(out) :: check_needresp2
+    if (needresp2) then
+       check_needresp2 = 1
+    else
+       check_needresp2 = 0
+    endif
+  end subroutine get_needresp2
+      
 end module telematrix2
 
 module env_variables

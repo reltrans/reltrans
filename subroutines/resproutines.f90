@@ -145,63 +145,6 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
 end subroutine cfoldandbin
 !-----------------------------------------------------------------------
 
-
-! !-----------------------------------------------------------------------
-! subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG)
-! ! Initmatrix must have alreadt been called
-! ! Input:  {ReGx(nex),ImGx(nex)]: in units of photar; i.e. (dN/dE)*dE
-! ! Output: {ReG(nex) ,ImG(nex) ]: in units of photar; i.e. (dN/dE)*dE
-! ! G is folded around the instrument response and re-binned onto the
-! ! input energy array ear(0:ne)
-!   use telematrix
-!   implicit none
-!   integer nex,ne,i,j,k
-!   real earx(0:nex),ReGx(nex),ImGx(nex),ear(0:ne),ReG(ne),ImG(ne)
-!   real ReGi(nenerg),ImGi(nenerg),E,dE,E2ReGx(nex),E2ImGx(nex)
-!   real ReGtel(numchn),ImGtel(numchn)
-  
-!   !Convert to E^2*dN/dE for better accuracy
-!   do i = 1,nex
-!      E  = 0.5 * ( earx(i) + earx(i-1) )
-!      dE = earx(i) - earx(i-1)
-!      E2ReGx(i) = E**2 * ReGx(i) / dE
-!      E2ImGx(i) = E**2 * ImGx(i) / dE
-!   end do
-     
-!   !Rebin input arrays onto interpal telescope energy grid
-!   call rebinE(earx,E2ReGx,nex,En,ReGi,nenerg)
-!   call rebinE(earx,E2ImGx,nex,En,ImGi,nenerg)
-
-!   !Convert back to (dN/dE)*dE
-!   do i = 1,nenerg
-!      E  = 0.5 * ( En(i) + En(i-1) )
-!      dE = En(i) - En(i-1)
-!      ReGi(i) = ReGi(i) / E**2 * dE
-!      ImGi(i) = ImGi(i) / E**2 * dE
-!   end do
-     
-!   !Fold around response
-!   ReGtel = 0.0
-!   ImGtel = 0.0
-!   do J = 1,NENERG
-!      do K = 1,NGRP(J)
-!         do I = FCHAN(J,K)+1,LCHAN(J,K)
-!            dE = En(J) - En(J-1)
-!            ReGtel(I) = ReGtel(I) + ReGi(J) * RESP(I,J)
-!            ImGtel(I) = ImGtel(I) + ImGi(J) * RESP(I,J)
-!         end do
-!      end do
-!   end do
-
-!   !Rebin onto input energy grid
-!   call rebinE(echn,ReGtel,numchn,ear,ReG,ne)
-!   call rebinE(echn,ImGtel,numchn,ear,ImG,ne)
-  
-!   return
-! end subroutine cfoldandbin
-! !-----------------------------------------------------------------------
-
-
 !-----------------------------------------------------------------------
 subroutine cfold(nex, earx, ReGx, ImGx, ReGtel, ImGtel)
 ! Initmatrix must have alreadt been called
