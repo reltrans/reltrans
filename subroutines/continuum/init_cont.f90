@@ -1,59 +1,72 @@
-subroutine init_cont(nlp, a, h, zcos, Cutoff_s, Cutoff_obs, logxi, logne, &
-     muobs, Cp_cont, Cp, fcons, Gamma, Dkpc, Mass,&
-    earx, Emin, Emax, contx, dlogE, verbose, dset, Anorm, contx_int, eta)
-    !!!sets up the continuum arrays/quantities depending on model parameters/flavour 
+subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
+    !!!sets up the continuum arrays/quantities depending on model parameters/flavour
+    use common_types
     use dyn_gr
     use conv_mod
     use gr_continuum
     implicit none
-    integer         , intent(in)    :: nlp,Cp,dset,verbose
-    real            , intent(in)    :: Dkpc,Anorm,Mass,dlogE,Emin,Emax, logxi, logne
-    double precision, intent(in)    :: h(nlp)
-    double precision, intent(in)    :: a,zcos,Gamma,muobs,eta
-    integer         , intent(out)   :: Cp_cont
-    real            , intent(out)   :: earx(0:nex),contx(nex,nlp)
-    double precision, intent(out)   :: fcons,contx_int(nlp)
+    type(t_config)         , intent(in)      :: config
+    type(t_model_arguments), intent(in)      :: model_args
+    type(t_arrays)         , intent(inout)   :: arrays
+    integer                , intent(in)      :: dset
+    integer                , intent(out)     :: Cp_cont
+    double precision       , intent(out)     :: fcons
     
-    integer                         :: m, i
-    real                            :: Cutoff_s,Cutoff_obs,Eintegrate
-    double precision                :: lacc,ell13pt6,get_lacc,get_fcons,dgsofac
+    integer :: m
+    real :: Cutoff_s, Cutoff_obs, Eintegrate
+    double precision :: lacc, ell13pt6, get_lacc, get_fcons
 
+    Cutoff_s = model_args%Cutoff_s
+    Cutoff_obs = model_args%Cutoff_obs
     
-    if (nlp .eq. 1) then 
-       contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1       
+    if (model_args%nlp .eq. 1) then
+       arrays%contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1
 
-       ! gso(1) = real( dgsofac(a,h(1)) ) 
-       ! call getlens(a,h(1),muobs,lens(1),tauso(1),cosdelta_obs(1))
-       ! if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"       
-       if( Cp .ge. 0 ) then
+       ! gso(1) = real( dgsofac(model_args%a, model_args%h(1)) )
+       ! call getlens(model_args%a, model_args%h(1), muobs, lens(1), tauso(1), cosdelta_obs(1))
+       ! if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"
+       if( model_args%Cp .ge. 0 ) then
           ! write(*,*) 'nthcomp illumination for nthcomp and reflionx'
           Cp_cont = 2 !This is needed since we can't use getcont(Cp,...) because in reflionx Cp = 0
-          Cutoff_obs = Cutoff_s * gso(1) / real(1.d0+zcos) 
-          call getcont(Cp_cont, earx, nex, Gamma, Cutoff_s, logxi, logne, contx(:,1))
-          contx = lens(1) * (gso(1)/(real(1.d0+zcos))) * contx
-       else if (Cp .eq. -1) then
+          Cutoff_obs = Cutoff_s * gso(1) / real(1.d0 + model_args%zcos)
+          call getcont(Cp_cont, arrays%earx, nex, model_args%Gamma,            &
+              Cutoff_s, model_args%logxi, model_args%lognep,                   &
+              arrays%contx(:,1))
+          arrays%contx = lens(1) * (gso(1)                                     &
+              / (real(1.d0 + model_args%zcos))) * arrays%contx
+       else if (model_args%Cp .eq. -1) then
           ! write(*,*) 'powerlaw illumination'
-          Cutoff_s = real(1.d0+zcos) * Cutoff_obs / gso(1)
-          call getcont(Cp, earx, nex, Gamma, Cutoff_obs, logxi, logne, contx(:,1))
-          contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
+          Cutoff_s = real(1.d0 + model_args%zcos) * Cutoff_obs / gso(1)
+          call getcont(model_args%Cp, arrays%earx, nex, model_args%Gamma,      &
+              Cutoff_obs, model_args%logxi, model_args%lognep,                 &
+              arrays%contx(:,1))
+          arrays%contx = lens(1) * (gso(1)                                     &
+              / (real(1.d0 + model_args%zcos)))**model_args%Gamma              &
+              * arrays%contx
        endif
 
        if( dset .eq. 1 ) then
-          fcons = get_fcons(h(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
+          fcons = get_fcons(model_args%h(1), model_args%a, model_args%zcos,    &
+              model_args%Gamma, model_args%Dkpc, model_args%Mass,              &
+              model_args%Anorm, nex, arrays%earx, arrays%contx, config%dloge)
        else
           fcons = 0.0
        end if
          
-       if( verbose .gt. 0 )then
+       if( config%verbose .gt. 0 )then
           if( dset .eq. 1 )then    
-             lacc = get_lacc(h(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)
+             lacc = get_lacc(model_args%h(1), model_args%a, model_args%zcos,   &
+                 model_args%Gamma, model_args%Dkpc, model_args%Mass,           &
+                 model_args%Anorm, nex, arrays%earx, arrays%contx,             &
+                 config%dloge)
              write(*,*)"Lacc/Ledd=",lacc 
-             ell13pt6 = fcons * Mass * 1.73152e-28
+             ell13pt6 = fcons * model_args%Mass * 1.73152e-28
              write(*,*)"13.6eV-13.6keV luminosity of single source=",ell13pt6
           else
-             call sourcelum(nex,earx,contx,real(Mass),real(gso(1)),real(Gamma))
+             call sourcelum(nex, arrays%earx, arrays%contx,                    &
+                 real(model_args%Mass), real(gso(1)), real(model_args%Gamma))
           end if
-          if( abs(Cp) .eq. 1 )then
+          if( abs(model_args%Cp) .eq. 1 )then
              write(*,*)"Ecut in source restframe (keV)=",Cutoff_s
              write(*,*)"Ecut in observer restframe (keV)=",Cutoff_obs
           else
@@ -66,30 +79,37 @@ subroutine init_cont(nlp, a, h, zcos, Cutoff_s, Cutoff_obs, logxi, logne, &
        end if
        
     else
-       do m=1,nlp   
-          !here the observed cutoffs are set from the temperature in the source frame   
-          ! gso(m) = real( dgsofac(a,h(m)) )
-          ! call getlens(a,h(m),muobs,lens(m),tauso(m),cosdelta_obs(m))
+       do m=1,model_args%nlp
+          !here the observed cutoffs are set from the temperature in the source frame
+          ! gso(m) = real( dgsofac(model_args%a, model_args%h(m)) )
+          ! call getlens(model_args%a, model_args%h(m), muobs, lens(m), tauso(m), cosdelta_obs(m))
           ! if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
-          Cutoff_obs = Cutoff_s * gso(m) / real(1.d0+zcos)
-          call getcont(Cp, earx, nex, Gamma, Cutoff_obs, logxi, logne, contx(:,m))
-          if (m .gt. 1) contx(:,m) = eta*contx(:,m)  
+          Cutoff_obs = Cutoff_s * gso(m) / real(1.d0 + model_args%zcos)
+          call getcont(model_args%Cp, arrays%earx, nex, model_args%Gamma,      &
+              Cutoff_obs, model_args%logxi, model_args%lognep,                 &
+              arrays%contx(:,m))
+          if (m .gt. 1) arrays%contx(:,m) = model_args%eta * arrays%contx(:,m)
           !TODO fix this section, calculate luminosities better
-          if( verbose .gt. 0 )then
-             call sourcelum(nex,earx,contx(:,m),real(mass),real(gso(m)),real(Gamma))
-             if( abs(Cp) .eq. 1 )then
+          if( config%verbose .gt. 0 )then
+             call sourcelum(nex, arrays%earx, arrays%contx(:,m),               &
+                 real(model_args%Mass), real(gso(m)), real(model_args%Gamma))
+             if( abs(model_args%Cp) .eq. 1 )then
                 write(*,*)"Ecut observed from source #", m, "is (keV)=" ,Cutoff_obs
              else
                 write(*,*)"kTe observed from source #", m, "is (keV)=" ,Cutoff_obs
              end if
           end if
-          contx_int(m) = Eintegrate(Emin,Emax,nex,earx,contx(:,m),dlogE)    
-          if (Cp .eq. 2) then
-             contx = lens(1) * (gso(1)/(real(1.d0+zcos))) * contx
+          arrays%contx_int(m) = Eintegrate(config%Emin, config%Emax, nex,      &
+              arrays%earx, arrays%contx(:,m), config%dloge)
+          if (model_args%Cp .eq. 2) then
+             arrays%contx = lens(1) * (gso(1)                                  &
+                 / (real(1.d0 + model_args%zcos))) * arrays%contx
           else
-             contx(:,m) = lens(m) * (gso(m)/(real(1.d0+zcos)))**Gamma * contx(:,m)
+             arrays%contx(:,m) = lens(m) * (gso(m)                            &
+                 / (real(1.d0 + model_args%zcos)))**model_args%Gamma           &
+                 * arrays%contx(:,m)
           endif
        end do
-    end if  
+    end if
 
 end subroutine init_cont
