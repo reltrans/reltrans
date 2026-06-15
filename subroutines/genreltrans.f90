@@ -467,11 +467,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if (dset .eq. 0) then
        call radfunctions_dens(config, model_args, arrays)
     else
-       call radfuncs_dist(config%xe, model_args%rin, rnmax,model_args%b1,     &
-            model_args%b2, model_args%qboost, fcons,                           &
-            & dble(model_args%lognep), model_args%a, model_args%h(1),          &
-            model_args%honr, rlp, dcosdr, cosd, ndelta, config%rmin,npts(1),   &
-            & logxir, gsdr, logner, pnorm)
+       call radfuncs_dist(config, model_args, fcons)
      end if
 
      ! do this for each lamp post, then find some sort of weird average?
