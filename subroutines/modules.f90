@@ -174,7 +174,7 @@ module conv_mod
   use, intrinsic :: iso_c_binding
   implicit none
   include 'fftw3.f03'
-  ! include <libfftw3.a>
+  !include <libfftw3.a>
 
   integer, parameter :: nex = 2**12, nex_conv = 4 * nex, nec = nex_conv/2 + 1
   ! real   , dimension(2 * nex_conv) :: adata,bdata,cdata

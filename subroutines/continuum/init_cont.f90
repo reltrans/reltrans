@@ -15,13 +15,13 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
     integer :: m
     real :: Cutoff_s, Cutoff_obs, Eintegrate
     double precision :: lacc, ell13pt6, get_lacc, get_fcons
-
+    
     Cutoff_s = model_args%Cutoff_s
     Cutoff_obs = model_args%Cutoff_obs
     
     if (model_args%nlp .eq. 1) then
        arrays%contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1
-
+       
        ! gso(1) = real( dgsofac(model_args%a, model_args%h(1)) )
        ! call getlens(model_args%a, model_args%h(1), muobs, lens(1), tauso(1), cosdelta_obs(1))
        ! if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"
@@ -29,11 +29,12 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
           ! write(*,*) 'nthcomp illumination for nthcomp and reflionx'
           Cp_cont = 2 !This is needed since we can't use getcont(Cp,...) because in reflionx Cp = 0
           Cutoff_obs = Cutoff_s * gso(1) / real(1.d0 + model_args%zcos)
+
           call getcont(Cp_cont, arrays%earx, nex, model_args%Gamma,            &
               Cutoff_s, model_args%logxi, model_args%lognep,                   &
               arrays%contx(:,1))
           arrays%contx = lens(1) * (gso(1)                                     &
-              / (real(1.d0 + model_args%zcos))) * arrays%contx
+               / (real(1.d0 + model_args%zcos))) * arrays%contx
        else if (model_args%Cp .eq. -1) then
           ! write(*,*) 'powerlaw illumination'
           Cutoff_s = real(1.d0 + model_args%zcos) * Cutoff_obs / gso(1)
