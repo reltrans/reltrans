@@ -70,7 +70,7 @@ module common_types
 
         ! Emin, Emax: min and max of the internal energy grid
         ! (different from output grid)
-        real :: Emin = 1e-2, Emax = 3e3, dyn = 0.0
+        real :: Emin = 1e-2, Emax = 3e3
 
         ! rnmax: max radius for which GR ray-tracing is used
         ! dlogf: a resolution parameter in base 10

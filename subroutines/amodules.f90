@@ -218,19 +218,18 @@ contains
     plan2 = fftw_plan_dft_c2r_1d(nex_conv, in_conv, out_conv, flags)
   end subroutine init_fftw_allconv
 
-  subroutine conv_one_FFTw(dyn,earx,Gamma,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
+  subroutine conv_one_FFTw(earx,Gamma,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
     implicit none
-    integer, intent(in) :: DC, nlp 
-    real                :: dyn
+    integer, intent(in) :: DC, nlp
     real, intent(in)    :: photarx(nex), earx(0:nex), Gamma
     real, intent(in)    :: reline(nlp,nex), imline(nlp,nex)
     real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
     complex :: conv(nec),padFT_photarx(nec)
     complex :: padFT_reline(nec),  padFT_imline(nec)            
     integer :: m, i
-    real    :: photmax, depad_conv(nex), E
-    
-    do m=1,nlp  
+    real    :: depad_conv(nex), E
+
+    do m=1,nlp
        if (DC .eq. 1 ) then
           ! call padding4FT(photarx,padFT_photarx)
           call padding4FT_xillver(photarx,padFT_photarx)
@@ -238,7 +237,7 @@ contains
           call padding4FT(reline(m,:),padFT_reline)                        
 
           conv = (padFT_photarx * padFT_reline) * nexm1
-          call de_paddingFT(dyn, conv, depad_conv)
+          call de_paddingFT(conv, depad_conv)
 
           do i = 1,nex
              E             = 0.5 * ( earx(i) + earx(i-1) )
@@ -251,7 +250,7 @@ contains
           call padding4FT(imline(m,:),padFT_imline)
 
           conv = (padFT_photarx * padFT_reline) * nexm1
-          call de_paddingFT(dyn, conv, depad_conv)
+          call de_paddingFT(conv, depad_conv)
 
           do i = 1,nex
              E             = 0.5 * ( earx(i) + earx(i-1) )
@@ -259,7 +258,7 @@ contains
           end do
 
           conv = (padFT_photarx * padFT_imline) * nexm1
-          call de_paddingFT(dyn, conv, depad_conv)
+          call de_paddingFT(conv, depad_conv)
 
           do i = 1,nex
              E             = 0.5 * ( earx(i) + earx(i-1) )
@@ -334,36 +333,23 @@ contains
 
   end subroutine padding4FT_xillver
 
-  subroutine de_paddingFT(dyn, padFT_line, out_line)
-    implicit none 
-    real    , intent(in) :: dyn
+  subroutine de_paddingFT(padFT_line, out_line)
+    implicit none
     complex , intent(in) :: padFT_line(nec)
     real    , intent(out):: out_line(nex)
 
-    integer :: i 
-    real    :: photmax
+    integer :: i
 
     in_conv = padFT_line
 
     call fftw_execute_dft_c2r(plan2, in_conv, out_conv)
-    ! do i = 1, nex_conv 
-    !    write(80,*) i, out_conv(i)
-    ! enddo
-    
+
     ! Populate output array
-    photmax = 0.0
     do i = 1, nex
        out_line(i) = out_conv(i + nex/2 + 1)
-       ! write(81,*) i, out_line(i)
-        photmax = max( photmax , out_line(i) )
     end do
 
-    ! Clean any residual edge effects
-    do i = 1, nex
-        if( abs(out_line(i)) .lt. abs(dyn * photmax) ) out_line(i) = 0.0
-    end do
-
-    return 
+    return
    end subroutine de_paddingFT
 
 end module conv_mod

@@ -110,11 +110,6 @@ contains
 
         logical :: fhizero, flozero
 
-        ! TODO: magic constants
-
-        ! TODO: this is a breaking change compared to the comparison to see if
-        ! fhiHz etc are greater than tiny(...)
-
         ! rework this logic so that low frequencies always result in time
         ! independent spectrum, not just for reim<7
         if (model_args%ReIm .eq. 7) then
@@ -162,7 +157,6 @@ contains
         type(t_arrays), intent(inout) :: arrays
 
         double precision, parameter :: pi = acos(-1.d0)
-        real, parameter :: dyn = 0.0 !1e-7
         real :: Gamma0, Gamma1, Gamma2, Cutoff_0, E, mue, thetae
         real :: Hx_delta(nex), Hx_dlogxi(nex)
         real :: dlogxi1, dlogxi2, logne, logxi0, logxi1, logxi2
@@ -270,41 +264,41 @@ contains
                    ! not at their callsites
                    ! Do the convolution (involves multiplying by E^{1-Gamma})
                    if (config%test) then
-                      call conv_one_FFT(dyn, arrays%earx, Gamma0, Hx,          &
+                      call conv_one_FFT(arrays%earx, Gamma0, Hx,          &
                            reline_w0, imline_w0, arrays%ReW0(:, :, j),         &
                            arrays%ImW0(:, :, j), config%DC, model_args%nlp)
                       if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
-                         call conv_one_FFT(dyn, arrays%earx, Gamma0, Hx,       &
+                         call conv_one_FFT(arrays%earx, Gamma0, Hx,       &
                               reline_w1, imline_w1, arrays%ReW1(:, :, j),      &
                               arrays%ImW1(:, :, j), config%DC,                 &
                               model_args%nlp)
-                         call conv_one_FFT(dyn, arrays%earx, Gamma0,           &
+                         call conv_one_FFT(arrays%earx, Gamma0,           &
                               Hx_delta, reline_w2, imline_w2, arrays%ReW2(:,   &
                               :, j), arrays%ImW2(:, :, j), config%DC,          &
                               model_args%nlp)
                       end if
                       if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
-                         call conv_one_FFT(dyn, arrays%earx, Gamma0,           &
+                         call conv_one_FFT(arrays%earx, Gamma0,           &
                               Hx_dlogxi, reline_w3, imline_w3,                 &
                               arrays%ReW3(:, :, j), arrays%ImW3(:, :, j),      &
                               config%DC, model_args%nlp)
                       end if
                    else
-                      call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,         &
+                      call conv_one_FFTw(arrays%earx, Gamma0, Hx,         &
                            reline_w0, imline_w0, arrays%ReW0(:, :, j),         &
                            arrays%ImW0(:, :, j), config%DC, model_args%nlp)
                       if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
-                         call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,      &
+                         call conv_one_FFTw(arrays%earx, Gamma0, Hx,      &
                               reline_w1, imline_w1, arrays%ReW1(:, :, j),      &
                               arrays%ImW1(:, :, j), config%DC,                 &
                               model_args%nlp)
-                         call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
+                         call conv_one_FFTw(arrays%earx, Gamma0,          &
                               Hx_delta, reline_w2, imline_w2, arrays%ReW2(:,   &
                               :, j), arrays%ImW2(:, :, j), config%DC,          &
                               model_args%nlp)
                       end if
                       if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
-                         call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
+                         call conv_one_FFTw(arrays%earx, Gamma0,          &
                               Hx_dlogxi, reline_w3, imline_w3,                 &
                               arrays%ReW3(:, :, j), arrays%ImW3(:, :, j),      &
                               config%DC, model_args%nlp)
@@ -328,20 +322,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 ! The parameter array has 27 parameters. No one model actually has 27
 ! parameters. In each model, some of these parameters are hardwired, but
 ! the parameters must be sorted into the param(1:27) array for this subroutine.
-
-! Arg:
-
-! Internal variables:
-! constants:
-! pi: greek pi
-! rnmax: maximum radius to consider GR effects
-! nphi, rno: resolution variables, number of pixels on the observer's camera(b
-! and phib)
-! Emax, Emin: minimum and maximum range of the internal energy grid which is
-! different than the xspec one
-! dlogf: resolution parameter of the frequency grid
-! dyn:   limit to check the saved values
-! ionvar: sets the ionisation variation (1 = w/ ion var; 0 = w/o ion var)
 
     use dyn_gr
     use conv_mod
