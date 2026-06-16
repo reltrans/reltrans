@@ -37,6 +37,64 @@ def test_basic_absorption_invocation(reltrans, assert_snapshot):
     assert_snapshot(output)
 
 
+def test_lag_frequency_spectrum(
+    reltrans, assert_snapshot, envars, tmp_path, monkeypatch
+):
+    """Snapshot the lag-frequency spectrum (``ReIm = 7``) of reltransDCp for the
+    default parameters.
+
+    Unlike the lag-*energy* outputs (``ReIm = 1..6``), ``ReIm = 7`` returns the
+    phase/time lag as a function of Fourier frequency. The model fixes the
+    frequency range internally from the black-hole mass (1e-5 - 5e-2 Hz for the
+    default AGN mass of 4.6e7 Msun) and rebins the result onto the grid passed
+    in as ``energy`` - so here that grid is a *frequency* grid in Hz, not keV.
+
+    The lag is formed by cross-correlating two reference bands, which must be
+    supplied through the environment (``EMIN_REF``/``EMAX_REF`` and
+    ``EMIN_REF2``/``EMAX_REF2``); otherwise the Fortran routine blocks on an
+    interactive read from stdin. No RMF/ARF is needed because the lag-frequency
+    path does not fold through the telescope response.
+
+    Ordering note: ``ReIm = 7`` only (re)computes its energy-band indices while
+    the module-level ``needchans`` flag is still ``.true.``. That flag starts
+    ``.true.`` and is cleared by the first call into ``energy_bounds`` or
+    ``propercross`` (and ``reltrans.reset()`` does not restore it). This test is
+    therefore deliberately placed *before* any lag-energy test (e.g.
+    ``test_re_im_parameter``) so the bands are computed deterministically.
+    """
+    # ReIm = 7 *unconditionally* writes 'Output/Total.dat' relative to the
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "Output").mkdir()
+
+    reltrans.reset()
+
+    # For ReIm = 7 the input grid is interpreted as Fourier frequency [Hz];
+    # span the mass-dependent range the model selects internally for an AGN.
+    frequency = np.logspace(np.log10(1e-5), np.log10(5e-2), 101)
+
+    # Two reference bands are cross-correlated to build the lag spectrum.
+    envars["EMIN_REF"] = "0.3"
+    envars["EMAX_REF"] = "1.0"
+    envars["EMIN_REF2"] = "1.0"
+    envars["EMAX_REF2"] = "10.0"
+
+    params = DCP_Parameters(re_im=7.0)
+    output = reltrans.dcp(frequency, params)
+    # _debug_plot(frequency, output, "reltransDCp lag-frequency spectrum [default parameters]", xlabel="Frequency [Hz]")
+
+    # Cheap invariants, checked independently of the numerical snapshot so a
+    # gross regression (wrong length / NaNs) fails with a clear message.
+    assert output.shape == (len(frequency) - 1,)
+    assert np.all(np.isfinite(output))
+    assert np.any(output != 0.0), (
+        "lag-frequency spectrum is all zeros; are the xillver tables on "
+        "RELTRANS_TABLES?"
+    )
+    # `atol` mirrors the lag (time_lag) convention used above: the lag crosses
+    # zero, so a pure relative tolerance is not meaningful near the crossings.
+    assert_snapshot(output, atol=1e-9)
+
+
 def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     model are working. This test requires an RMF and ARF, which is provided by

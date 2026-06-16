@@ -125,13 +125,17 @@ contains
                 model_args%floHz = 0.07
                 model_args%fhiHz = 700.0
             end if
-            ! TODO: why 0.01 here, but 0.09 in the other branch?
             ! overwrite the frequency spacing
             config%dlogf = 0.01
+        else
+            ! Lag-energy spectra use the default spacing. Set it explicitly
+            ! on every call: global_config persists between model evaluations,
+            ! so a previous ReIm=7 call (which sets dlogf=0.01) would otherwise
+            ! leak that value into later non-ReIm=7 evaluations and silently
+            ! change their frequency binning (nf), and reset() does not restore
+            ! it. Just work out how many frequencies to average over.
+            config%dlogf = 0.09
         endif
-        ! else:
-        ! if doing lag-energy spectra, just work out how many frequencies to
-        ! average over
 
         ! Convert frequency bounds from Hz to c/Rg (now being more accurate with
         ! constants)
