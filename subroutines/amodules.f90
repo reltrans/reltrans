@@ -218,59 +218,6 @@ contains
     plan2 = fftw_plan_dft_c2r_1d(nex_conv, in_conv, out_conv, flags)
   end subroutine init_fftw_allconv
 
-  subroutine conv_one_FFTw(dyn,earx,Gamma,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
-    implicit none
-    integer, intent(in) :: DC, nlp 
-    real                :: dyn
-    real, intent(in)    :: photarx(nex), earx(0:nex), Gamma
-    real, intent(in)    :: reline(nlp,nex), imline(nlp,nex)
-    real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
-    complex :: conv(nec),padFT_photarx(nec)
-    complex :: padFT_reline(nec),  padFT_imline(nec)            
-    integer :: m, i
-    real    :: photmax, depad_conv(nex), E
-    
-    do m=1,nlp  
-       if (DC .eq. 1 ) then
-          ! call padding4FT(photarx,padFT_photarx)
-          call padding4FT_xillver(photarx,padFT_photarx)
-
-          call padding4FT(reline(m,:),padFT_reline)                        
-
-          conv = (padFT_photarx * padFT_reline) * nexm1
-          call de_paddingFT(dyn, conv, depad_conv)
-
-          do i = 1,nex
-             E             = 0.5 * ( earx(i) + earx(i-1) )
-             ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
-          end do
-                   
-       else 
-          call padding4FT(photarx       , padFT_photarx)        
-          call padding4FT(reline(m,:),padFT_reline)
-          call padding4FT(imline(m,:),padFT_imline)
-
-          conv = (padFT_photarx * padFT_reline) * nexm1
-          call de_paddingFT(dyn, conv, depad_conv)
-
-          do i = 1,nex
-             E             = 0.5 * ( earx(i) + earx(i-1) )
-             ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
-          end do
-
-          conv = (padFT_photarx * padFT_imline) * nexm1
-          call de_paddingFT(dyn, conv, depad_conv)
-
-          do i = 1,nex
-             E             = 0.5 * ( earx(i) + earx(i-1) )
-             ImW_conv(m,i) = ImW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
-          end do
-          
-       endif
-    end do
-
-  end subroutine conv_one_FFTw
-
   subroutine padding4FT(line, padFT_line)
     implicit none 
     real           , intent(in)  :: line(nex)

@@ -4,6 +4,7 @@ include 'subroutines/continuum/getcont.f90'
 include 'subroutines/continuum/init_cont.f90'
 
 include 'subroutines/utils/conv_one_FFT.f90'
+include 'subroutines/utils/conv_one_FFTw.f90'
 include 'subroutines/utils/crebin.f90'
 include 'subroutines/utils/four1.f90'
 include 'subroutines/utils/four1_real.f90'

@@ -1,19 +1,22 @@
-  subroutine conv_one_FFT(dyn,earx,Gamma,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
+  subroutine conv_one_FFT(config, model_args, dyn, earx, Gamma, photarx,       &
+       reline, imline, ReW_conv, ImW_conv)
     use conv_mod
+    use common_types
     implicit none
-    integer, intent(in) :: DC, nlp 
+    type(t_config),          intent(in)    :: config
+    type(t_model_arguments), intent(in)    :: model_args
     real                :: dyn
     real, intent(in)    :: photarx(nex),earx(nex),Gamma
-    real, intent(in)    :: reline(nlp,nex), imline(nlp,nex)
-    real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
+    real, intent(in)    :: reline(model_args%nlp,nex), imline(model_args%nlp,nex)
+    real, intent(inout) :: ReW_conv(model_args%nlp,nex), ImW_conv(model_args%nlp,nex)
     complex :: FTphotarx(nex_conv), FTreline(nex_conv), FTimline(nex_conv)
     complex :: FTreconv(4*nex),FTimconv(4*nex)
     integer :: m, i
     real    :: photmax, depad_conv(nex), E
     ! real, parameter :: nexm1 = 1. / real(nex_conv)
     
-    do m=1,nlp  
-       if (DC .eq. 1 ) then
+    do m=1,model_args%nlp
+       if (config%DC .eq. 1 ) then
           call pad4FFT(nex, photarx, FTphotarx)
           call pad4FFT(nex, reline(m,:), FTreline)
           FTreconv = (FTreline * FTphotarx) !* nexm1
