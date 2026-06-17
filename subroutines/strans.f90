@@ -1,7 +1,4 @@
 ! vim: cc=80 wrap tw=80
-include 'subroutines/emissivity.f90'
-include 'subroutines/impulseresponse.f90'
-
 module m_rtrans
     use common_types
     implicit none
