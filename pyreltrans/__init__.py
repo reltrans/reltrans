@@ -301,7 +301,7 @@ class Reltrans:
         ]
         self.lib_reltrans.getrgrid_.restype = None
 
-        self.lib_reltrans.grtrace_.argtypes = [
+        self.lib_reltrans.grtrace.argtypes = [
             ct.POINTER(ct.c_int),  # nro
             ct.POINTER(ct.c_int),  # nphi
             f_double,  # rn
@@ -313,7 +313,7 @@ class Reltrans:
             ct.POINTER(ct.c_double),  # mudisk
             ct.POINTER(ct.c_double),  # d
         ]
-        self.lib_reltrans.grtrace_.restype = None
+        self.lib_reltrans.grtrace.restype = None
 
         self.lib_reltrans.get_needresp2.argtypes = [ct.POINTER(ct.c_int)]
         self.lib_reltrans.get_needresp2.restype = None
@@ -353,7 +353,7 @@ class Reltrans:
 
     def grtrace(self, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
         _wrap_grtrace(
-            self.lib_reltrans.grtrace_,
+            self.lib_reltrans.grtrace,
             nphi,
             rn,
             mueff,
