@@ -80,24 +80,40 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     ! This code first does full GR ray tracing for a camera with impact parameters < bmax
     ! It then also does straight line ray tracing for impact parameters >bmax
     ! It adds both up to produce a transfer function for a disk extending from rin to rout
-    !
-    ! This routine populates the transfer functions in `arrays`
-    !
-    ! Non-standard arguments:
-    !
-    ! d: Distance of the source
-    ! dset: dset=1 means calculate ionization from distance, dset=0 means ignore
-    ! distance
-    ! ne: Number of energy bins
-    ! frobs: Observer's reflection fraction
-    ! frrel: Reflection fraction defined by relxilllp.
-    use dyn_gr, only: rlp, cosd, dcosdr, ndelta, npts, rlp, tlp, ndelta
-    use blcoordinate, only: pi
-    use radial_grids, only: dfer_arr, pnorm
-    use gr_continuum, only: gso, lens, tauso, gso, cosdelta_obs
+    ! INPUT
+    ! verbose               Decides whether to print radial scalings to file or not
+    ! dset                  dset=1 means calculate ionization from distance, dset=0 means ignore distance
+    ! nlp                   number of lamp post height considered
+    ! spin,h,mu0,Gamma      Physical parameters (spin, source height(S), cos(inclination), photon index)
+    ! nlp                   Number of lampposts considered (for now either 1 or 2)
+    ! rin,rout,honr         Physical parameters (disk inner radius, outer radius & scaleheight)
+    ! d,rnmax               Physical parameters (distance of the source, max radius for which GR ray tracing is used)
+    ! zcos                  Cosmological redshift
+    ! b1                    Linear coefficient of angular emissivity function
+    ! b2                    Quadratic coefficient of angular emissivity function
+    ! qboost                Asymmetry parameter of angular emissivity function
+    ! fcons                 Used to calculate ionization from distance
+    ! contx_int             Integral of the continuum flux over energy; needed to calculate the radial ionisation profile
+    !                       in the double lamppost case
+    ! nro,nphi              Number of pixels on the observer's camera (b and phib)
+    ! ne, dloge             Number of energy bins and maximum energy (compatible with FFT convolution)
+    ! nf,fhi,flo            nf = Number of logarithmic frequency bins used, range= flo to fhi
+    ! me                    Number of mue bins
+    ! xe                    Number of logr bins: bins 1:xe-1 are logarithmically spaced, bin xe is everything else
+    ! OUTPUT
+    ! ker_W0(nlp,ne,nf,me,xe)  Transfer function W0 - linear transfer function
+    ! ker_W1(nlp,ne,nf,me,xe)  Transfer function W1 - one aspect of photon index variations
+    ! ker_W2(nlp,ne,nf,me,xe)  Transfer function W2 - other aspect of photon index variations
+    ! ker_W3(nlp,ne,nf,me,xe)  Transfer function W3 - ionization variations
+    ! frobs                 Observer's reflection fraction
+    ! frrel                 Reflection fraction defined by relxilllp
+    use common_types
+    use dyn_gr
+    use blcoordinate
+    use radial_grids
+    use gr_continuum
     use saved_variables
     use impulseresponse, only: response_zero_edges, response_allocate
-    use common_types, only: t_config, t_model_arguments, t_arrays
     use m_rtrans
     implicit none
 
@@ -206,9 +222,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     sin0 = sqrt(1.0-args%model%muobs**2)
 
     ! Calculate dcos/dr and time lags vs r for the lamppost model
-    call getdcos(args%model%a, args%model%h, args%mudisk, ndelta,              &
-         args%model%nlp, args%model%rout, npts, rlp, dcosdr, tlp, cosd,        &
-         cosdout)
+    call getdcos(args%model, args%mudisk, cosdout)
 
     ! set continuum normalisations depending on model flavour
     if (dset .eq. 0)then
