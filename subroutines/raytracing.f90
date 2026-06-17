@@ -3,7 +3,7 @@ module raytracing
 
 contains
 
-    subroutine raytrace(model_args)
+    subroutine raytrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
     !> This subroutine is a shim function that allows for the substitution of the
     !> raytracing functionality without adjusting the rest of the code
     !> Inputs:
@@ -12,13 +12,15 @@ contains
     !>   none
         use grtrace, only: GRtrace
         implicit none
-        real, intent(in) :: model_args(:)
+        integer, intent(in) :: nro, nphi
+        double precision, intent(in) :: rn, mueff, mu0, spin, rmin, rout
+        double precision, intent(in) :: mudisk, d
         ! Call the GRtrace subroutine
         call GRtrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
         return
     end subroutine raytrace
 
-    subroutine lensing_factor(model_args)
+    subroutine lensing_factor(a_spin,h,muobs,lens,delt,cosdelta1)
     !> This subroutine is a shim function that allows for the substitution of the
     !> lensing factor functionality without adjusting the rest of the code
     !> Inputs:
@@ -27,7 +29,7 @@ contains
     !>   none
         use getlens, only: getlens
         implicit none
-        real, intent(in) :: model_args(:)
+        double precision, intent(in) :: a_spin, h, muobs, lens, delt, cosdelta1
         ! Call the getlens subroutine
         call getlens(a_spin,h,muobs,lens,delt,cosdelta1)
         return
@@ -43,8 +45,8 @@ contains
     !>   none
         use mudiff, only: mudiff
         implicit none
-        real, intent(in) :: cosdelta(:)
-        real, intent(in) :: par(:)
+        double precision, intent(in) :: cosdelta(:)
+        double precision, intent(in) :: par(:)
         ! Call the mudiff subroutine
         call mudiff(cosdelta,par)
         return
