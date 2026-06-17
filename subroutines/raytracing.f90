@@ -66,4 +66,30 @@ contains
         return
     end subroutine raytrace_disk
 
+    subroutine initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,    &
+                                f1234)
+    !> This subroutine is a shim function that allows for the substitution of the
+    !> initialdirection functionality without adjusting the rest of the code.
+    !> Inputs:
+    !>     pr, pt, pp: components of the initial photon momentum in the source
+    !>                 rest frame.
+    !>     sins, mus: sine and cosine of the source inclination angle.
+    !>     a_spin: spin of the black hole.
+    !>     h: height of the source above the black hole.
+    !>     velocity: 3-velocity of the source.
+    !> Outputs:
+    !>     lambda, q: motion constants, defined by lambda=L_z/E, q=Q/E^2.
+    !>     f1234: array of p_1, p_2, p_3, p_4, which are the components of 
+    !>            four-momentum of a photon measured under the LNRF frame. This 
+    !>            array can be computed by subroutine lambdaq(...), see below
+        use blcoordinate, only: initialdirection
+        implicit none
+        double precision, intent(in) :: pr, pt, pp, sins, mus, a_spin, h
+        double precision, intent(in) :: velocity(3)
+        double precision, intent(out) :: lambda, q
+        double precision, intent(out) :: f1234(4)
+        call initialdirection(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,f1234)
+        return
+    end subroutine initial_photon
+
 end module raytracing
