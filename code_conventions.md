@@ -17,6 +17,7 @@ doc string that is indented on the same level as the function/subroutine. Doc st
 should not include change logs. They should include inputs and outputs (subroutines
 should specify what the goals of the changed variables are).
 
+```fortran
 function blah
 !> Human readable doc string (one line minimum)
 !> Inputs: 
@@ -25,6 +26,7 @@ function blah
 !>     variable, type
     code
 end function
+```
 
 # Structure formatting
 
