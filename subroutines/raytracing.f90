@@ -24,59 +24,46 @@ contains
         return
     end subroutine raytrace
 
-    subroutine lensing_factor(a_spin,h,muobs,lens,delt,cosdelta1)
-    !> This subroutine is a shim function that allows for the substitution of the
-    !> lensing factor functionality without adjusting the rest of the code
+    subroutine raytrace_disk(p,f1234,lambda,q,sinobs,muobs,a_spin,robs,scal,&
+                        radi,mu,phi,time,sigma)
+    !> Computes four Boyer-Lindquist coordinates (r,\mu,\phi,t) and affine 
+    !> parameter \sigma as functions of parameter p, i.e. functions r(p), 
+    !> \mu(p), \phi(p), t(p), \sigma as functions of parameter p, i.e. 
+    !> functions r(p), \mu(p), \phi(p), t(p) and \sigma(p). Cf. discussions in 
+    !> Yang & Wang (2012).
     !> Inputs:
-    !>   model_args: a real array containing the model parameters
+    !>    p: independent variable, which must be nonnegative.
+    !>    f1234: array of p_1, p_2, p_3, p_4, which are the components of 
+    !>           four-momentum of a photon measured under the LNRF frame. This 
+    !>           array can be computed by subroutine lambdaq(...), see below
+    !>    lambda,q: motion constants, defined by lambda=L_z/E, q=Q/E^2.
+    !>    sinobs,muobs: sinobs=sin(\theta_{obs}), muobs=cos(\theta_{obs}), where 
+    !>                  \theta_{obs} is the inclination angle of the observer.
+    !>    a_spin: spin of black hole, on interval (-1,1).
+    !>    robs: radial coordinate of observer or initial position of photon.
+    !>    scal: a dimensionless parameter to control the size of the images, 
+    !>          which is usually set to 1.D0.
     !> Outputs:
-    !>   none
-        use getlens, only: getlens
-        implicit none
-        double precision, intent(in) :: a_spin, h, muobs, lens, delt, cosdelta1
-        ! Call the getlens subroutine
-        call getlens(a_spin,h,muobs,lens,delt,cosdelta1)
-        return
-    end subroutine lensing_factor
-
-    subroutine distant_inclination(cosdelta, par)
-    !> This subroutine is a shim function that allows for the substitution of the
-    !> distant inclination functionality without adjusting the rest of the code
-    !> Inputs:
-    !>   cosdelta: a real array containing the cosine of the inclination angles
-    !>   par: a real array containing additional parameters
-    !> Outputs:
-    !>   none
-        use mudiff, only: mudiff
-        implicit none
-        double precision, intent(in) :: cosdelta(:)
-        double precision, intent(in) :: par(:)
-        ! Call the mudiff subroutine
-        call mudiff(cosdelta,par)
-        return
-    end subroutine distant_inclination
-
-    subroutine raytrace_disk
-    !> This subroutine is a shim function that allows for the substitution of the
-    !> raytracing disk functionality without adjusting the rest of the code
-    !> Inputs:
-    !>   none
-    !> Outputs:
-    !>   radi-----------value of function r(p). 
-    !>   mu-------------value of function \mu(p). 
-    !>   phi------------value of function \phi(p).
-    !>   time-----------value of function t(p).
-    !>   sigma----------value of function \sigma(p).
-    !>   tm1,tm2--------number of times of photon meets turning points \mu_tp1 and \mu_tp2
-    !>                  respectively. 
-    !>   tr1,tr2--------number of times of photon meets turning points r_tp1 and r_tp2
-    !>                  respectively.
+    !>    radi: value of function r(p).
+    !>    mu: value of function \mu(p).
+    !>    phi: value of function \phi(p).
+    !>    time: value of function t(p).
+    !>    sigma: value of function \sigma(p).
+    !>    tm1,tm2: number of times of photon meets turning points \mu_tp1 and 
+    !>             \mu_tp2 respectively.
+    !>    tr1,tr2: number of times of photon meets turning points r_tp1 and 
+    !>             r_tp2 respectively.
         use YNOGK, only: YNOGK
-        call YNOGK
-
-end module raytracing
-!*                              respectively. 
-!*               tr1,tr2--------number of times of photon meets turning points r_tp1 and r_tp2
-!*                              respectively.            
+        implicit none
+        double precision, intent(in) :: p
+        double precision, intent(in) :: f1234(4), lambda, q, sinobs, muobs
+        double precision, intent(in) :: a_spin, robs, scal
+        double precision, intent(out) :: radi, mu, phi, time, sigma
+        double precision :: tm1, tm2
+        double precision :: tr1, tr2
+        call YNOGK(p,f1234,lambda,q,sinobs,muobs,a_spin,robs,scal,&
+                   radi,mu,phi,time,sigma,tm1,tm2,tr1,tr2)
+        return
+    end subroutine raytrace_disk
 
 end module raytracing
