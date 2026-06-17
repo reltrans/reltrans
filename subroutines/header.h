@@ -1,3 +1,4 @@
+include 'subroutines/modules.f90'
 include 'subroutines/common.f90'
 
 include 'subroutines/continuum/getcont.f90'
@@ -59,7 +60,6 @@ include 'subroutines/GR_factors.f90'
 include 'subroutines/grtrace.f90'
 include 'subroutines/isco.f90'
 include 'subroutines/lag_freq.f90'
-include 'subroutines/modules.f90'
 include 'subroutines/mudiff.f90'
 include 'subroutines/mygauss.f90'
 include 'subroutines/myinterp_complex2.f90'
