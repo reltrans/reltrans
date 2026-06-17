@@ -175,7 +175,7 @@ class Dbl_Parameters:
     # Second Lamp post height
     h2: float = 50.0
     # Spin
-    A: float = 0.997
+    a: float = 0.997
     # Inclination (degrees)
     inc: float = 30.0
     # Inner radius

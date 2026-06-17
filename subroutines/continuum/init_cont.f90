@@ -86,7 +86,7 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
           ! if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
           Cutoff_obs = Cutoff_s * gso(m) / real(1.d0 + model_args%zcos)
           call getcont(model_args%Cp, arrays%earx, nex, model_args%Gamma,      &
-              Cutoff_obs, model_args%logxi, model_args%lognep,                 &
+              Cutoff_s, model_args%logxi, model_args%lognep,                 &
               arrays%contx(:,m))
           if (m .gt. 1) arrays%contx(:,m) = model_args%eta * arrays%contx(:,m)
           !TODO fix this section, calculate luminosities better
@@ -101,14 +101,8 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
           end if
           arrays%contx_int(m) = Eintegrate(config%Emin, config%Emax, nex,      &
               arrays%earx, arrays%contx(:,m), config%dloge)
-          if (model_args%Cp .eq. 2) then
-             arrays%contx = lens(1) * (gso(1)                                  &
-                 / (real(1.d0 + model_args%zcos))) * arrays%contx
-          else
-             arrays%contx(:,m) = lens(m) * (gso(m)                            &
-                 / (real(1.d0 + model_args%zcos)))**model_args%Gamma           &
-                 * arrays%contx(:,m)
-          endif
+          arrays%contx(:,m) = lens(m) * (gso(m)                                      &
+                 / (real(1.d0 + model_args%zcos))) * arrays%contx(:,m)
        end do
     end if
 
