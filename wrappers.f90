@@ -18,7 +18,7 @@ module reltrans_version_mod
     character(len=*), parameter :: reltrans_version = RELTRANS_VERSION
 end module reltrans_version_mod
 
-include 'subroutines/amodules.f90'
+include 'subroutines/modules.f90'
 include 'subroutines/header.h'
           
 !-----------------------------------------------------------------------
