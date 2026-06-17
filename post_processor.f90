@@ -94,7 +94,7 @@ subroutine genreltrans1(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! Variables of the subroutine
     ! initializer
     integer :: m, prev_nf, Cpsave, i, j, Cp_cont
-    double precision :: d
+    double precision :: d, distance
     real :: f, fac, dE, ear(0:ne)
     ! relativistic parameters and limit on rin and h
     ! lens needs to be allocatable to save it.
@@ -232,6 +232,9 @@ subroutine genreltrans1(Cp, dset, nlp, ear, ne, param, ifl, photar)
        write(123,*)i,logxir(i)
        write(124,*)i,logxir_dens(i)-logxir(i)
     end do
+
+    Distance = 10.0**( 0.5 * ( logxir_dens(2)-logxir(2) )  ) / boost
+    write(*,*)"Distance (kpc) = ",distance
 
     !  ! do this for each lamp post, then find some sort of weird average?
     ! if (config%verbose .gt. 0) write(*,*)"Observer's reflection fraction for each source:",model_args%boost*frobs
