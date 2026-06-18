@@ -393,11 +393,12 @@ end subroutine pack_reltransDCp
 
 !-----------------------------------------------------------------------
 subroutine copyhdu(inunit,outfile,outunit)
-! Inputs
-! inunit:  unit number of (alreay opened) input file.
-! outfile: name of output file to be created
-! Outputs
-! outunit: unit number of output file
+!> Copy's the HDU from the fits file.
+!> Inputs:
+!>     inunit:  unit number of (alreay opened) input file.
+!>     outfile: name of output file to be created
+!> Outputs
+!>     outunit: unit number of output file
   implicit none
   integer status,inunit,outunit,blocksize,morekeys,hdutype
   character (len=500) outfile
