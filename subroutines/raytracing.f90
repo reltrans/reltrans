@@ -152,6 +152,7 @@ contains
     !>     taudo1: array of time coordinate at the disk for each ray.
     !>     re1: array of radial coordinate at the disk for each ray.
         use blcoordinate, only: Pemdisk
+        use dyn_gr
         implicit none
         integer, intent(in) :: nro,nphi
         double precision, intent(in) :: rn(nro),mueff,mu0,spin,rmin,rout
@@ -160,7 +161,6 @@ contains
         double precision velocity(3),f1234(4)
         double precision lambda,q
         double precision pem,re,mucros,phie,taudo,sigmacros   
-        double precision pem1(nphi,nro),taudo1(nphi,nro),re1(nphi,nro)   
         integer i,j
         cos0  = mu0
         sin0  = sqrt(1.0-cos0**2)
