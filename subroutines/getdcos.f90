@@ -18,8 +18,7 @@ subroutine getdcos(a_spin,h,mudisk,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
 !>    tc(n)        Corresponding time coordinate
 !>    cosd1(n)     Corresponding \cos\delta
 !>    cosdout      cosd at the outer disk radius
-    use raytracing, only: initial_photon, raytrace_disk
-    use blcoordinate, only: Pemdisk
+    use raytracing, only: initial_photon, raytrace_disk, p_disk_crossing
     use constants
     implicit none
 
@@ -63,8 +62,8 @@ subroutine getdcos(a_spin,h,mudisk,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
             call initial_photon(pr,pt,pp,sins,mus,a_spin,h(m),velocity,lambda, &
                                 q,f1234)
             !Calculate value of p-coordinate at mu=0
-            pcros = Pemdisk(f1234,lambda,q,sins,mus,a_spin,h(m),scal,mudisk,   &
-                            r_max,r_min)
+            pcros = p_disk_crossing(f1234,lambda,q,sins,mus,a_spin,h(m),       &
+                    scal,mudisk,r_max,r_min)
             !From that, calculate r, phi and t at mu=0
             call raytrace_disk(pcros,f1234,lambda,q,sins,mus,a_spin,h(m),scal, &
                                 rcros,mucros,phicros,tcros,sigmacros)

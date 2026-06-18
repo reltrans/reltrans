@@ -89,7 +89,6 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     ! frobs: Observer's reflection fraction
     ! frrel: Reflection fraction defined by relxilllp.
     use dyn_gr, only: rlp, cosd, dcosdr, ndelta, npts, rlp, tlp, ndelta
-    use blcoordinate, only: pi
     use radial_grids, only: dfer_arr, pnorm
     use gr_continuum, only: gso, lens, tauso, gso, cosdelta_obs
     use saved_variables
@@ -109,6 +108,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
          frrel(model_args%nlp)
 
     type(t_rtrans_args) :: args
+    double precision, parameter :: pi = acos(-1.d0)
 
     integer m
     double precision cosdout(model_args%nlp)

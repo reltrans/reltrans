@@ -50,6 +50,20 @@ contains
         return
     end subroutine raytrace_disk
 
+    
+    function p_disk_crossing(f1234,lambda,q,sins,mus,a_spin,h,scal,mudisk,     &
+                 r_max,r_min)
+        use blcoordinate, only: Pemdisk
+        implicit none
+        double precision, intent(in) :: f1234(4), lambda, q, sins, mus
+        double precision, intent(in) :: a_spin, h, scal, mudisk, r_max, r_min
+        double precision p_disk_crossing
+        p_disk_crossing = Pemdisk(f1234,lambda,q,sins,mus,a_spin,h,            &
+               scal,mudisk,r_max,r_min)
+        return
+    end function p_disk_crossing
+
+    
     subroutine initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,    &
                                 f1234)
     !> This subroutine is a shim function that allows for the substitution of 
