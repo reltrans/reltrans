@@ -234,16 +234,28 @@ def test_re_im_reltransDbl(reltrans, assert_snapshot, telescope, envars):
     assert_snapshot(output, name="imaginary_part", rtol=1e-3)
 
 
-    
 def test_basic_invocation_rtdist(reltrans, assert_snapshot, envars):
-    """A smoke test to check whether the default values are working."""
+    """A test to check whether the default values of rtdist model are working
+    with density profile as SSD73."""
     reltrans.reset()
+    envars["A_DENSITY"] = "1"
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.rtdist(energy, rtdist_Parameters())
     # _debug_plot(energy,output, "rtdist time-averaged spectrum [default parameters]")
     assert_snapshot(output)
 
-    
+
+def test_basic_invocation_rtdist_adens0(reltrans, assert_snapshot, envars):
+    """A test to check whether the default values of rtdist are working
+    with density profile constant."""
+    reltrans.reset()
+    envars["A_DENSITY"] = "0"
+    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
+    output = reltrans.rtdist(energy, rtdist_Parameters())
+    # _debug_plot(energy,output, "rtdist time-averaged spectrum [default parameters]")
+    assert_snapshot(output)
+
+
 def test_re_im_rtdist(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     RTDIST model are working. This test requires an RMF and ARF, which is provided by
@@ -251,6 +263,7 @@ def test_re_im_rtdist(reltrans, assert_snapshot, telescope, envars):
     reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 101)
 
+    envars["A_DENSITY"] = "1"
     envars["RMF_SET"] = telescope.rmf_path
     envars["ARF_SET"] = telescope.arf_path
     envars["EMIN_REF"] = "0.3"
@@ -283,6 +296,7 @@ def test_reltransDCp_called_twice_no_resetting(reltrans, assert_snapshot):
     output_dcp = reltrans.dcp(energy, DCP_Parameters())
     output_dcp2 = reltrans.dcp(energy, DCP_Parameters())
     np.testing.assert_allclose(output_dcp, output_dcp2, rtol=1e-4)
+
 
 def test_reltransDCp_called_twice_after_resetting(reltrans, assert_snapshot):
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
@@ -386,6 +400,7 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
     assert_snapshot(taudo, name="taudo1", rtol=2e-4)
     assert_snapshot(pem, name="pem1", rtol=2e-4)
 
+    
 def test_ReIm8_check_second_response(reltrans,  assert_snapshot, telescope, envars):
 
     envars["RMF_SET"] = telescope.rmf_path

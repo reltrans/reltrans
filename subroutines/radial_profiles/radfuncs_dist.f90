@@ -13,7 +13,7 @@ subroutine radfuncs_dist(config, model_args, fcons)
   use common_types
   use dyn_gr, only: ndelta, rlp, dcosdr, cosd, npts
   use radial_grids, only: logxir, gsdr, logner, pnorm
-  use env_variables
+  use env_variables, only : adensity
   implicit none
   type(t_config),          intent(in) :: config
   type(t_model_arguments), intent(in) :: model_args
@@ -34,7 +34,10 @@ subroutine radfuncs_dist(config, model_args, fcons)
      re     = re * model_args%rin * 0.5
      re1(i) = re
      !Density
-     logner(i) = zA_logne(re,model_args%rin,dble(model_args%lognep))
+     !IF adensity = 0 logner(i)=dble(model_args%lognep) for every i
+     !IF adensity = 1 logner(i)=zA_logne(re,model_args%rin,dble(model_args%lognep) where re depends on i
+     logner(i) = abs(dble(model_args%lognep) * (adensity - 1))
+     logner(i) = logner(i) + (adensity * zA_logne(re,model_args%rin,dble(model_args%lognep)))
      !Interpolate functions from rpl grid
      kk     = get_index(rlp,ndelta,re,config%rmin,npts(1))
      cosfac = interper(rlp,dcosdr,ndelta,re,kk)
