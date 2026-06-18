@@ -67,7 +67,18 @@ def cmd_fortran() -> list[str]:
     return cmd
 
 
-def compile(*source_files: str) -> str:
+def compile(source_file: str, outdir_path: str) -> str:
+    name, _ = os.path.splitext(os.path.basename(source_file))
+    out_path = os.path.join(outdir_path, f"{name}.o")
+    cmd = cmd_fortran()
+    cmd += ["-c"]
+    cmd += [source_file]
+    cmd += ["-o", out_path]
+    subprocess.run(cmd, check=True)
+    return out_path
+
+
+def libcompile(main_file: str, depends: list = []) -> str:
     if not os.path.isdir(BUILD_DIR):
         os.mkdir(BUILD_DIR)
 
@@ -79,12 +90,19 @@ def compile(*source_files: str) -> str:
     if not os.path.isdir(dir_lib_model):
         os.mkdir(dir_lib_model)
 
-    if os.path.isdir(os.path.join(BUILD_DIR, "cache")):
-        shutil.rmtree(os.path.join(BUILD_DIR, "cache"))
+    cache_dir = os.path.join(BUILD_DIR, "cache")
+    if os.path.isdir(cache_dir):
+        shutil.rmtree(cache_dir)
 
-    os.mkdir(os.path.join(BUILD_DIR, "cache"))
+    os.mkdir(cache_dir)
 
     output_path = os.path.join(dir_lib_model, f"lib{MODEL_NAME}.{SHARED_EXT}")
+
+    # Compile the source targets that this depends on.
+    source_files = [main_file]
+    for dep in depends:
+        path = compile(dep, cache_dir)
+        source_files.append(path)
 
     cmd = cmd_fortran()
     cmd += source_files
@@ -115,7 +133,7 @@ def compile(*source_files: str) -> str:
 
 
 if __name__ == "__main__":
-    lib_path = compile("wrappers.f90")
+    lib_path = libcompile("wrappers.f90", depends=["./subroutines/constants.f90"])
     print(f"All targets compiled to path '{BUILD_DIR}'")
 
     artifact_dir = xspectrampoline_helpers.get_artifact_dir(PACKAGE_NAME)

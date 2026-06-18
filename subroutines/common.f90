@@ -142,6 +142,7 @@ contains
 
     ! Unwraps the arguments from a parameter array into `args`.
     subroutine unwrap_arguments(args, nlp, dset, params, cutoff_powerlaw)
+        use rtconstants, only: parse_reim
         double precision, parameter :: pi = acos(-1.d0)
         integer, intent(in) :: nlp, dset, cutoff_powerlaw
         real, target, intent(in) :: params(32)
@@ -183,7 +184,7 @@ contains
         args%b2 = dble(params(22))
         args%floHz = params(23)
         args%fhiHz = params(24)
-        args%ReIm = int(params(25))
+        args%ReIm = parse_reim(int(params(25)))
         args%DelA = params(26)
         args%Anorm = params(31)
         args%resp_matr = params(32)

@@ -351,6 +351,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use env_variables
     use saved_variables
     use telematrix2
+    use rtconstants
     implicit none
     ! Constants
     double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0, dlogf = 0.09 !This is a resolution parameter (base 10)
@@ -394,7 +395,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! freed and re-allocated
 
     if (config%firstcall) then
-        call init_fftw_allconv()
+        call init_fftw_allconv(IS_DEBUG_BUILD)
         ! initialise environment and allocate all arrays
         call read_environment_variables(config)
         call setup_global_arrays(config, model_args%nlp)
@@ -430,7 +431,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         model_args%g = 0.0
         model_args%DelAB = 0.0
         model_args%DelA = 0.0
-        model_args%ReIm = 1
+        model_args%ReIm = MODE_CROSS_SPEC_REAL_REF_FOLDED
         model_args%eta = model_args%eta_0
         ! this is an ugly hack for the double LP model to calculate the time-
         ! averaged spectrum
@@ -555,7 +556,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             arrays%ReGbar(i) = (model_args%Anorm / real(1. +                   &
                 model_args%eta)) * arrays%ReSrawa(i, 1)
         end do
-    else if (model_args%ReIm .eq. 7) then
+    else if (model_args%ReIm == MODE_LAG_FREQ) then
         ! if calculating the lag-frequency spectrum, just rebin the arrays
         call rebinE(arrays%fix, arrays%ReGbar, config%nf, ear, ReS, ne)
         call rebinE(arrays%fix, arrays%ImGbar, config%nf, ear, ImS, ne)
@@ -565,8 +566,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ! parameters
         ! note: this must be done by rawG for two incoherent lamp posts, hence
         ! the skip below
-        if (nlp .eq. 1 .or. model_args%beta_p .ne. 0.) then
-            if (model_args%ReIm .gt. 0.0) then
+        if (nlp == 1 .or. model_args%beta_p .ne. 0.) then
+            if (is_ref_folded(model_args%ReIm)) then
                 call propercross(nex, config%nf, arrays%earx,                  &
                      arrays%ReSrawa, arrays%ImSrawa, arrays%ReGrawa,           &
                      arrays%ImGrawa, model_args%resp_matr)
@@ -612,59 +613,52 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             + model_args%eta))**2
     end if
 
-    
+
     !------------------------------------------
     ! Write output depending on ReIm parameter
     !------------------------------------------
 
     !Preparing ReS and ImS: rebin and folding (if needed)
-    select case (abs(model_args%ReIm)) 
-
-    case(1:4)
-       call crebin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, ear,   &
-             ReS, ImS) !S is in photar form        
-    case(5:6)
+    if (is_both_folded(model_args%reim)) then
        call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, &
                 ear, ReS, ImS, model_args%resp_matr) !S is count rate
-    case(8)
+    else if (is_ref_folded(model_args%reim)) then
+       call crebin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, ear,   &
+             ReS, ImS) !S is in photar form
+    end if
+
+    if (model_args%reim == MODE_CROSS_SPEC_LAG_TWO_RESPONSES) then
        if( needresp2 ) call initmatrix2
        call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, &
              ear, ReS, ImS, 2) !folds the spectrum over the second response
-    end select
+    end if
 
-
-    !Generate the correct output 
-    select case (abs(model_args%ReIm))
-
-    case(1)          !Real part
+    !Generate the correct output
+    if (is_mode(model_args%reim, MODE_CROSS_SPEC_REAL)) then
        photar = ReS
-
-    case(2)          !Imaginary part
+    else if (is_mode(model_args%reim, MODE_CROSS_SPEC_IMAG)) then
        photar = ImS
-
-    case(3,5)        !Modulus
+    else if (is_mode(model_args%reim, MODE_CROSS_SPEC_MODULUS)) then
        photar = sqrt(ReS**2 + ImS**2)
-       if (model_args%ReIm==3) then 
+       if (is_mode(model_args%ReIm, MODE_CROSS_SPEC_MODULUS)) then
           write(*, *) "Warning ReIm = 3 should not be used for fitting!"
        end if
-
-    case(4,6)        !Time lag
+    else if (is_mode(model_args%reim, MODE_CROSS_SPEC_LAG)) then
        do i = 1, ne
           dE = ear(i) - ear(i-1)
           photar(i) = atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE
        end do
-       if (model_args%ReIm==4) then 
+       if (is_mode(model_args%ReIm, MODE_CROSS_SPEC_LAG)) then
           write(*, *)"Warning ReIm = 4 should not be used for fitting!"
        end if
-
-    case(7)       !Lag Frequency spectrum
+    else if (model_args%reim == MODE_LAG_FREQ) then
        do i = 1, ne
           dE = ear(i) - ear(i-1)
           photar(i) = atan2(ImS(i), ReS(i))/(pi*(ear(i) + ear(i-1)))*dE
        end do
-    end select
+    end if
 
-    
+
     !--------------------------------------------
     ! If REV_VERB > 1 write components into files
     !--------------------------------------------
@@ -709,7 +703,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             write (24, *) (arrays%earx(i)+arrays%earx(i-1))/2., contx_temp
         end do
         close(24)
-    else if (model_args%ReIm .eq. 7) then
+    else if (is_mode(model_args%ReIm, MODE_LAG_FREQ)) then
        open (unit = 14, file = 'Output/Total.dat', status = 'replace', action = 'write')
         do i = 1, ne
             dE = ear(i) - ear(i-1)

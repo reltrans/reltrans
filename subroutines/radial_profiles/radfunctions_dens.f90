@@ -9,7 +9,7 @@ subroutine radfunctions_dens(config, model_args, arrays)
     !       logner(1:config%xe) - log10 of electron density as a function of radius
     !       dfer_arr(1:config%xe) - emissivity-related radial scaling array
     use common_types
-    use env_variables
+    use env_variables, only : adensity
     use dyn_gr, only: ndelta, rlp, dcosdr, cosd, npts
     use radial_grids, only: logxir, gsdr, logner, dfer_arr
     implicit none

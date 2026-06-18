@@ -190,10 +190,11 @@ module conv_mod
 
 contains
   
-  subroutine init_fftw_allconv()
+  subroutine init_fftw_allconv(use_estimate)
     implicit none
     integer(c_int) :: flags, i
     integer, external :: omp_get_max_threads
+    logical, intent(in) :: use_estimate
     INTEGER FFTW_PATIENT
     PARAMETER (FFTW_PATIENT=32)
     !i = fftw_init_threads()
@@ -210,8 +211,12 @@ contains
     call c_f_pointer(a2, out_conv, [nex_conv])
     call c_f_pointer(a3, out     , [nec     ])
     call c_f_pointer(a4, in_conv , [nec     ])
-    !   flags = 0 + FFTW_ESTIMATE
-    flags = 0 + FFTW_PATIENT
+    if (use_estimate) then
+        ! Saves time on running the test suite.
+        flags = FFTW_ESTIMATE
+    else
+        flags = FFTW_PATIENT
+    endif
 
     ! note: these two are what kill the runtime of this subroutine
     plan1 = fftw_plan_dft_r2c_1d(nex_conv,  in, out, flags)

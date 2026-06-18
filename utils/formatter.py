@@ -32,7 +32,7 @@ class TokenizeMaths:
         self.index = 0
         return self
 
-    def _as_expontent(self, token):
+    def _as_exponent(self, token):
         """
         Ensures that Fortran code like `123d-6` is not split into `123d - 6`.
         """
@@ -67,7 +67,7 @@ class TokenizeMaths:
             return None
 
     def _map_lookaheads(self, token):
-        for f in (self._as_expontent, self._as_power):
+        for f in (self._as_exponent, self._as_power):
             r = f(token)
             if r:
                 return r
@@ -189,7 +189,6 @@ class SourceLine:
         indent_width=4,
     ) -> "SourceLine":
         kwargs = dict(cont=True, indent=self.indent)
-
         tokenizer = TokenizeMaths(self.line)
 
         lines = []
@@ -285,7 +284,8 @@ class Formatter:
                 new_text = re.sub(r"\(\s+", "(", new_text)
                 new_text = re.sub(r"\s+\)", ")", new_text)
                 new_text = re.sub(r"\s\s+", " ", new_text)
-                new_text = re.sub(r"\s*=(?!>)\s*", " = ", new_text)
+                new_text = re.sub(r"\s*([=><]?=[>]?)\s*", " \\1 ", new_text)
+                new_text = re.sub(r"\s*((\.and\.|\.or\.))\s*", " \\1 ", new_text)
                 new_text = re.sub(r"\s*,\s*", ", ", new_text)
                 new_text = re.sub(r"\s*(?!\*)\*\s*", " * ", new_text)
                 lines.append(dataclasses.replace(line, line=new_text))
