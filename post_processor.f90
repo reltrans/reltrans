@@ -175,15 +175,8 @@ subroutine post_processor(param,xe,adensity,chainmode,chainfile,newchainfile,  &
     call ftfiou(newunit, status)
 
     end subroutine post_processor
-!-----------------------------------------------------------------------
 
 
-
-
-
-
-
-! -----------------------------------------------------------------------
 function distance(Cp, nlp, xe_in, adensity_in, param)
 !
 ! Calculates the distance given a set of model parameters for reltransDCp.
