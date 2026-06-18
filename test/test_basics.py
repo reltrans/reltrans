@@ -53,6 +53,116 @@ def test_basic_absorption_invocation(reltrans, assert_snapshot):
     assert_snapshot(output)
 
 
+def test_dcp_continuum(reltrans, assert_snapshot):
+    """A test to check the output of the continum  (boost = 0)"""
+    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
+    output = reltrans.dcp(energy, DCP_Parameters(boost = 0))
+    # E = (energy[1:] + energy[:-1]) * 0.5
+    # dE = (energy[1:] - energy[:-1])
+    # _debug_plot(energy, output/dE*E**2, "reltransDCp time-averaged spectrum [boost = 0]", yscale="log", xscale="log")
+    assert_snapshot(output)
+
+
+def test_dcp_reflection(reltrans, assert_snapshot):
+    """A test to check the output of boost = -1 (just reflection)"""
+    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
+    output = reltrans.dcp(energy, DCP_Parameters(boost = -1))
+    # E = (energy[1:] + energy[:-1]) * 0.5
+    # dE = (energy[1:] - energy[:-1])
+    # _debug_plot(energy,output/dE*E**2, "reltransDCp time-averaged spectrum [boost = -1]", yscale="log", xscale="log")
+    assert_snapshot(output)
+
+
+def test_dcp_to_dbl_continuum(reltrans, assert_snapshot):
+    """Test to compare the continuum output of reltransDCp and reltransDBL (boost = 0)"""
+    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
+    xrb = DCP_Parameters(h = 5.0, boost = 0)
+    output_dcp = reltrans.dcp(energy, xrb)
+    reltrans.reset()
+    output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = xrb.h, a = xrb.a, boost = 0))
+    # ratio = output_dbl/output_dcp
+    # outputs = np.stack((output_dcp, output_dbl))
+    # E = (energy[1:] + energy[:-1]) * 0.5
+    # dE = (energy[1:] - energy[:-1])
+    # _debug_plot_multi_spec(energy, outputs, "reltrans time-averaged spectrum [boost = 0]", yscale="log", xscale="log")
+    # _debug_plot(energy, ratio, "ratio dcp to dbl [boost = -1]", yscale="log", xscale="log")
+    np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
+
+
+def test_dcp_to_dbl_reflection_only(reltrans, assert_snapshot):
+    """Test to check if the reflection-only outputs (boost = -1)
+    of reltransDCp and reltransDBL are the same if the heights
+    of the two lampposts are the same"""
+    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
+    xrb = DCP_Parameters(h = 5.0, boost = -1)
+    output_dcp = reltrans.dcp(energy, xrb)
+    reltrans.reset()
+    output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = xrb.h, a = xrb.a, boost = xrb.boost))
+    # ratio = output_dbl/output_dcp
+    # outputs = np.stack((output_dcp, output_dbl))
+    # E = (energy[1:] + energy[:-1]) * 0.5
+    # dE = (energy[1:] - energy[:-1])
+    # _debug_plot_multi_spec(energy, outputs, "reltrans time-averaged spectrum [boost = -1]", yscale="log", xscale="log")
+    # _debug_plot(energy, ratio, "ratio dcp to dbl [boost = 0]", yscale="log", xscale="log")
+    np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
+
+
+def test_dcp_to_dbl_eta0_reflection_only(reltrans, assert_snapshot):
+    """Test to check if the reflection-only outputs (boost = -1)
+    of reltransDCp and reltransDBL are the same if the heights
+    of the two lampposts are different, BUT eta_0 == 0 (which means that
+    the second lamppost does NOT contribute)."""
+    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
+    xrb = DCP_Parameters(h = 5.0, boost = -1)
+    output_dcp = reltrans.dcp(energy, xrb)
+    reltrans.reset()
+    output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = 100.0, a = xrb.a, boost = xrb.boost, eta_0 = 0.0))
+    # ratio = output_dbl/output_dcp
+    # outputs = np.stack((output_dcp, output_dbl))
+    # E = (energy[1:] + energy[:-1]) * 0.5
+    # dE = (energy[1:] - energy[:-1])
+    # _debug_plot_multi_spec(energy, outputs, "reltrans time-averaged spectrum [boost = -1]", yscale="log", xscale="log")
+    # _debug_plot(energy, ratio, "ratio dcp to dbl [boost = 0]", yscale="log", xscale="log")
+    np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
+
+
+def test_dcp_to_dbl_full_spectrum(reltrans, assert_snapshot):
+    """Test to check if the full time-averaged spectra (boost = 1)
+    of reltransDCp and reltransDBL are the same if the heights
+    of the two lampposts are the same"""
+    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
+    xrb = DCP_Parameters(h = 5.0, boost = 1)
+    output_dcp = reltrans.dcp(energy, xrb)
+    reltrans.reset()
+    output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = xrb.h, a = xrb.a, boost = xrb.boost))
+    # ratio = output_dbl/output_dcp
+    # outputs = np.stack((output_dcp, output_dbl))
+    # E = (energy[1:] + energy[:-1]) * 0.5
+    # dE = (energy[1:] - energy[:-1])
+    # _debug_plot_multi_spec(energy, outputs, "reltrans time-averaged spectrum [boost = 1]", yscale="log", xscale="log")
+    # _debug_plot(energy, ratio, "ratio dcp to dbl [boost = 1]", yscale="log", xscale="log")
+    np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
+
+
+def test_dcp_to_dbl_eta0_full_spectrum(reltrans, assert_snapshot):
+    """Test to check if the full time-averaged spectra (boost = 1)
+    of reltransDCp and reltransDBL are the same if the heights
+    of the two lampposts are different, BUT eta_0 == 0 (which means that
+    the second lamppost does NOT contribute)."""
+    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
+    xrb = DCP_Parameters(h = 5.0, boost = 1)
+    output_dcp = reltrans.dcp(energy, xrb)
+    reltrans.reset()
+    output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = xrb.h, a = xrb.a, boost = xrb.boost, eta_0 = 0))
+    # ratio = output_dbl/output_dcp
+    # outputs = np.stack((output_dcp, output_dbl))
+    # E = (energy[1:] + energy[:-1]) * 0.5
+    # dE = (energy[1:] - energy[:-1])
+    # _debug_plot_multi_spec(energy, outputs, "reltrans time-averaged spectrum [boost = 1]", yscale="log", xscale="log")
+    # _debug_plot(energy, ratio, "ratio dcp to dbl [boost = 1]", yscale="log", xscale="log")
+    np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
+    
+
 def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     model are working. This test requires an RMF and ARF, which is provided by
