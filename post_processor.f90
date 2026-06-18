@@ -430,10 +430,8 @@ subroutine copyhdu(inunit,outfile,outunit)
   call ftcopy(inunit,outunit,morekeys,status)
 
  end subroutine copyhdu
-!-----------------------------------------------------------------------
 
 
-!-----------------------------------------------------------------------
       subroutine deletefile(filename,status)
 
 !C  A simple little routine to delete a FITS file
