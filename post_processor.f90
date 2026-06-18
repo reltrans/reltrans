@@ -69,16 +69,16 @@ subroutine post_processor(param,xe,adensity,chainmode,chainfile,newchainfile,  &
 !> If chainmode = true, it also reads in a chain, calculates the distance for
 !> every step of the chain, and creates a new fits file with a distance column.
 !> Inputs:
-!> param(15)     ReltransDCp parameters
-!> xe            Number of radial zones
-!> adensity      Radial density profile (=1 means zone A, =0 means constant)
-!> chainmode     Just calculate once (false) or for an entire chain (true).
-!> chainfile     Name of input chain file (must already exist)
-!> newchainfile  Name of output chain file.
-!> iparam(15)    Column number of that parameter in the chain. If parameter i
-!>               was frozen for the chain, set iparam(i) = 0. The frozen
-!>               parameters are then read from param(:), so the main parameter
-!>               array is also required for chainmode=true.
+!>     param(15)     ReltransDCp parameters
+!>     xe            Number of radial zones
+!>     adensity      Radial density profile (=1 means zone A, =0 means constant)
+!>     chainmode     Just calculate once (false) or for an entire chain (true).
+!>     chainfile     Name of input chain file (must already exist)
+!>     newchainfile  Name of output chain file.
+!>     iparam(15)    Column number of that parameter in the chain. If parameter i
+!>                   was frozen for the chain, set iparam(i) = 0. The frozen
+!>                   parameters are then read from param(:), so the main parameter
+!>                   array is also required for chainmode=true.
 !>
     implicit none
     real, intent(in)    :: param(15)
