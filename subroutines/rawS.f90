@@ -33,7 +33,7 @@ subroutine rawS(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2
     ! Outputs
     ! ReGraw(1:nex,1:nf)    Real part of Sraw(E,nu)      - in specific photon flux (photar/dE)
     ! ImGraw(1:nex,1:nf)    Imaginary part of Sraw(E,nu) - in specific photon flux (photar/dE)
-    use constants
+    use rtconstants, only: pi
     implicit none
     integer nex,nf,ionvar,DC,nlp
     complex W0,W1,W2,W3,Sraw(nex,nf),cexp_p,cexp_d,cexp_phi,Stemp   

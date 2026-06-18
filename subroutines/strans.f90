@@ -95,7 +95,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     use impulseresponse, only: response_zero_edges, response_allocate
     use common_types, only: t_config, t_model_arguments, t_arrays
     use m_rtrans
-    use raytracing, only: trace_disk_observer
+    use raytracing, only: trace_disk_observer, getdcos, getlens
     implicit none
 
     type(t_config), intent(inout) :: config
@@ -260,7 +260,7 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
     use dyn_gr
     use radial_grids
     use gr_continuum
-    use constants
+    use rtconstants, only: pi
     use emissivities
     use m_rtrans
     implicit none
@@ -374,7 +374,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     use dyn_gr
     use radial_grids
     use gr_continuum
-    use constants
+    use rtconstants, only: pi
     use emissivities
     use impulseresponse, only: time_axis, response
     use m_rtrans
@@ -495,7 +495,7 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
     use dyn_gr
     use radial_grids
     use gr_continuum
-    use constants
+    use rtconstants, only: pi
     use emissivities
     use impulseresponse, only: time_axis, response
     use m_rtrans

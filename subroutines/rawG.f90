@@ -2,7 +2,6 @@ subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,I
                 boost,ReIm,g,DelAB,ionvar,DC,resp_matr,ReGraw,ImGraw)
                 
     use rtconstants
-    use constants
     implicit none
     integer nex,nf,ionvar,DC,nlp
     complex W0,W1,W2,W3,Sraw(nlp,nex,nf),cexp_d,cexp_phi,Stemp   

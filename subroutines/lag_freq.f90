@@ -6,7 +6,7 @@ subroutine lag_freq(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,tauso,gs
 ! Input: continuum model (contx is f(E) in the papers) and the reflection transfer functions
 ! Output: Graw(E,\nu) after multiplying by the absorption model
 ! These inputs and outputs are all in terms of (dN/dE)*dE; i.e. photar
-    use constants
+    use rtconstants, only: pi
     implicit none
     integer, intent(in) :: nex,nf,ionvar,nlp
     integer             :: Ea1,Ea2,Eb1,Eb2       
@@ -137,7 +137,7 @@ end subroutine lag_freq
 subroutine lag_freq_nocoh(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,&
                           ReW3,ImW3,h,z,Gamma,eta,boost,g,DelAB,ionvar,ReGraw,ImGraw)
                                 
-    use constants
+    use rtconstants, only: pi
     implicit none
     integer, intent(in) :: nex,nf,ionvar,nlp
     integer             :: Ea1,Ea2,Eb1,Eb2       
