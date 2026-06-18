@@ -337,7 +337,7 @@ function distance(Cp, nlp, xe_in, adensity_in, param)
          model_args%honr, rlp, dcosdr, cosd, ndelta, config%rmin,npts(1),      &
          & logxir, gsdr, logner, pnorm)
     
-! Caculate the re-scaling distance
+! Calculate the re-scaling distance
     Distance = 10.0**( 0.5 * ( logxir_dens(2)-logxir(2) )  )
     Distance = Distance / sqrt(model_args%boost)
 
