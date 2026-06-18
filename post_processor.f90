@@ -465,4 +465,3 @@ subroutine copyhdu(inunit,outfile,outunit)
 !C  Free the unit number for later reuse
       call ftfiou(unit, status)
     end subroutine deletefile
-!-----------------------------------------------------------------------
