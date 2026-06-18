@@ -636,7 +636,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        photar = ImS
     else if (is_mode(model_args%reim, MODE_CROSS_SPEC_MODULUS)) then
        photar = sqrt(ReS**2 + ImS**2)
-       if (model_args%ReIm==3) then
+       if (is_mode(model_args%ReIm, MODE_CROSS_SPEC_MODULUS)) then
           write(*, *) "Warning ReIm = 3 should not be used for fitting!"
        end if
     else if (is_mode(model_args%reim, MODE_CROSS_SPEC_LAG)) then
@@ -644,7 +644,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
           dE = ear(i) - ear(i-1)
           photar(i) = atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE
        end do
-       if (model_args%ReIm==4) then
+       if (is_mode(model_args%ReIm, MODE_CROSS_SPEC_LAG)) then
           write(*, *)"Warning ReIm = 4 should not be used for fitting!"
        end if
     else if (model_args%reim == MODE_LAG_FREQ) then

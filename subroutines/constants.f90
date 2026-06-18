@@ -3,11 +3,11 @@
 #endif
 
 module rtconstants
-! This module defines constants and enumerations used throughout the reltrans
-! codebase.
-! Physical constants should not be defined here, as a constants module already
-! exists in `amodules.f90`.
-! TODO: move `constants` in `amodules.f90` here.
+!> This module defines constants and enumerations used throughout the reltrans
+!> codebase.
+!> Physical constants should not be defined here, as a constants module already
+!> exists in `amodules.f90`.
+!> TODO: move `constants` in `amodules.f90` here.
     implicit none
     public
 
@@ -35,9 +35,20 @@ contains
 
     logical function is_mode(reim, mode) result(ret)
         !> Checks whether `reim` is of a particular mode regardless of whether
-        !it is > folded or not.
+        !> it is folded or not.
         integer, intent(in) :: reim, mode
-        ret = abs(reim) == abs(mode)
+        integer local_reim
+        local_reim = reim
+        ! Folding should not matter in this function, hence convert this to what
+        ! it physically represents.
+        select case(abs(local_reim))
+        case (MODE_CROSS_SPEC_MODULUS_BOTH_FOLDED)
+            local_reim = MODE_CROSS_SPEC_MODULUS
+        case (MODE_CROSS_SPEC_LAG_TWO_RESPONSES,                               &
+              MODE_CROSS_SPEC_LAG_BOTH_FOLDED)
+            local_reim = MODE_CROSS_SPEC_LAG
+        end select
+        ret = abs(local_reim) == abs(mode)
     end function is_mode
 
     integer function parse_reim(reim) result(ret)
