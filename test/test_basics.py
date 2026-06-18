@@ -4,8 +4,7 @@ from pyreltrans import DCP_Parameters, Dbl_Parameters, rtdist_Parameters
 
 
 def _debug_plot(
-        energy, output, title="", xlabel="", ylabel="", yscale="linear", xscale="log"
-):
+        energy, output, title="", xlabel="", ylabel="", yscale="linear", xscale="log", ylim_min=None, ylim_max=None):
     """Used when creating new tests for quickly looking at the data to make
     sure it is sensible."""
     import matplotlib.pyplot as plt
@@ -17,6 +16,8 @@ def _debug_plot(
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
+    if ylim_min is not None and ylim_max is not None:
+        plt.ylim(ylim_min, ylim_max)
     plt.show()
 
     
@@ -47,6 +48,7 @@ def test_basic_invocation(reltrans, assert_snapshot):
 
 def test_basic_absorption_invocation(reltrans, assert_snapshot):
     """A smoke test to check whether absorption is being correctly applied."""
+    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dcp(energy, DCP_Parameters(nh = 0.2))
     # _debug_plot(energy,output, "reltransDCp time-averaged spectrum [default parameters]")
@@ -55,6 +57,7 @@ def test_basic_absorption_invocation(reltrans, assert_snapshot):
 
 def test_dcp_continuum(reltrans, assert_snapshot):
     """A test to check the output of the continum  (boost = 0)"""
+    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dcp(energy, DCP_Parameters(boost = 0))
     # E = (energy[1:] + energy[:-1]) * 0.5
@@ -65,6 +68,7 @@ def test_dcp_continuum(reltrans, assert_snapshot):
 
 def test_dcp_reflection(reltrans, assert_snapshot):
     """A test to check the output of boost = -1 (just reflection)"""
+    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dcp(energy, DCP_Parameters(boost = -1))
     # E = (energy[1:] + energy[:-1]) * 0.5
@@ -75,6 +79,7 @@ def test_dcp_reflection(reltrans, assert_snapshot):
 
 def test_dcp_to_dbl_continuum(reltrans, assert_snapshot):
     """Test to compare the continuum output of reltransDCp and reltransDBL (boost = 0)"""
+    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     xrb = DCP_Parameters(h = 5.0, boost = 0)
     output_dcp = reltrans.dcp(energy, xrb)
@@ -93,6 +98,7 @@ def test_dcp_to_dbl_reflection_only(reltrans, assert_snapshot):
     """Test to check if the reflection-only outputs (boost = -1)
     of reltransDCp and reltransDBL are the same if the heights
     of the two lampposts are the same"""
+    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     xrb = DCP_Parameters(h = 5.0, boost = -1)
     output_dcp = reltrans.dcp(energy, xrb)
@@ -112,6 +118,7 @@ def test_dcp_to_dbl_eta0_reflection_only(reltrans, assert_snapshot):
     of reltransDCp and reltransDBL are the same if the heights
     of the two lampposts are different, BUT eta_0 == 0 (which means that
     the second lamppost does NOT contribute)."""
+    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     xrb = DCP_Parameters(h = 5.0, boost = -1)
     output_dcp = reltrans.dcp(energy, xrb)
@@ -130,6 +137,7 @@ def test_dcp_to_dbl_full_spectrum(reltrans, assert_snapshot):
     """Test to check if the full time-averaged spectra (boost = 1)
     of reltransDCp and reltransDBL are the same if the heights
     of the two lampposts are the same"""
+    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     xrb = DCP_Parameters(h = 5.0, boost = 1)
     output_dcp = reltrans.dcp(energy, xrb)
@@ -149,6 +157,7 @@ def test_dcp_to_dbl_eta0_full_spectrum(reltrans, assert_snapshot):
     of reltransDCp and reltransDBL are the same if the heights
     of the two lampposts are different, BUT eta_0 == 0 (which means that
     the second lamppost does NOT contribute)."""
+    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     xrb = DCP_Parameters(h = 5.0, boost = 1)
     output_dcp = reltrans.dcp(energy, xrb)
@@ -190,6 +199,30 @@ def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
     xrb1.re_im = 3
     output = reltrans.dcp(energy, xrb1)
     assert_snapshot(output, name="magnitude")
+
+
+def test_re_im_5_6(reltrans, assert_snapshot, telescope, envars):
+    """Test the re_im parameter to assert that all the different outputs of the
+    model are working. This test requires an RMF and ARF, which is provided by
+    the `telescope` fixture."""
+    reltrans.reset()
+    energy = np.logspace(np.log10(0.1), np.log10(12), 101)
+    dE = (energy[1:] - energy[:-1])
+
+    envars["RMF_SET"] = telescope.rmf_path
+    envars["ARF_SET"] = telescope.arf_path
+    envars["EMIN_REF"] = "0.3"
+    envars["EMAX_REF"] = "10.0"
+
+    xrb1 = DCP_Parameters(mass=10.0, flo_hz=0.122, fhi_hz=0.224, re_im=6.0)
+    output = reltrans.dcp(energy, xrb1)/dE
+    # _debug_plot(energy,output, title = "reltrans lag spectrum", xlabel="Energy [keV]", ylim_min=-1e-3, ylim_max=1e-3)
+    assert_snapshot(output, name="time_lag")
+
+    xrb1.re_im = 5
+    output = reltrans.dcp(energy, xrb1)
+    # _debug_plot(energy,output, title = "reltrans modulus spectrum", xlabel="Energy [keV]")
+    assert_snapshot(output, name="real_part")
 
 
 def test_basic_invocation_reltransDbl(reltrans, assert_snapshot, envars):
