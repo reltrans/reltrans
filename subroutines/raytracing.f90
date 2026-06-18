@@ -165,7 +165,7 @@ contains
     !>     pem1: array of p-coordinate at the disk for each ray.
     !>     taudo1: array of time coordinate at the disk for each ray.
     !>     re1: array of radial coordinate at the disk for each ray.
-        use blcoordinate, only: Pemdisk
+        !use blcoordinate, only: Pemdisk
         use dyn_gr
         implicit none
         integer, intent(in) :: nro,nphi
@@ -190,8 +190,8 @@ contains
                 call constants_of_motion(-alpha,-beta,d,sin0,cos0,spin,scal,   &
                                         velocity,f1234,lambda,q)
                 !Can try rin instead of rmin to save an if statement
-                pem = Pemdisk(f1234,lambda,q,sin0,cos0,spin,d,scal,mudisk,rout,&
-                            rmin)  
+                pem = p_disk_crossing(f1234,lambda,q,sin0,cos0,spin,d,scal,    &
+                            mudisk,rout,rmin)  
                 pem1(j,i) = pem
                 !pem > 0 means there is a solution
                 !pem < 0 means there is no solution
