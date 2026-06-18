@@ -126,6 +126,8 @@ jobs:
           # Change directory to avoid any namespace / Python module clashes
           pytest -vvv test
       - name: Upload coverage to Codecov
+        # Only upload once, and on the ubuntu latest machine.
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         uses: codecov/codecov-action@v5
         with:
           gcov: true
