@@ -12,6 +12,9 @@ DEBUG = 0
 # The `SANITIZE` option enables the address sanitizer in the library (see
 # below).
 SANITIZE = 0
+# The `COVERAGE` option compiles the library with coverage enabled. This can be
+# used with the `cov-report` target to generate a coverage breakdown.
+COVERAGE = 0
 
 # The name to use for the reltrans library (must be different from reltrans, as
 # libreltrans is the compiled reltrans library)
@@ -65,6 +68,12 @@ ifeq ($(SANITIZE),1)
 	CFLAGS += -fsanitize=address
 endif
 
+ifeq ($(COVERAGE),1)
+	# `-coverage` should be expanded to the other two but it isn't for all
+	# Fortran compiler versions.
+	FFLAGS += -coverage -fprofile-arcs -ftest-coverage
+endif
+
 ifeq ($(TARGET),Linux)
 	FFLAGS += -shared -export-dynamic
 	LDFLAGS += -lm -lpthread
@@ -100,6 +109,18 @@ exe: $(BUILD)/bin/relcli
 
 dummy: $(BUILD)/bin/dummy
 
+.PHONY: coverage
+coverage: coverage.info
+
+coverage.info:
+	# Requires both `gcov` and `lcov`
+	gcov -o $(BUILD)/cache -b wrappers.f90
+	lcov --gcov-tool gcov --capture --directory . --output-file coverage.info
+
+.PHONY: covreport
+covreport: coverage.info
+	genhtml --output-directory $(BUILD)/html coverage.info
+
 $(BUILD)/bin/relcli: ./utils/cli.c $(BUILD)/lib/libreltrans.$(SHARED_EXT)
 	$(CC) $(CFLAGS) utils/cli.c -o $@ \
 		-L$(BUILD)/lib -lgfortran -lc -lm $(EXE_LDFLAGS) \
@@ -131,6 +152,8 @@ $(BUILD):
 .PHONY: clean
 clean:
 	rm -rf $(BUILD)
+	rm -rf *.f90.gcov
+	rm -rf coverage.info
 
 .PHONY: format
 format:
