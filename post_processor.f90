@@ -349,15 +349,8 @@ function distance(Cp, nlp, xe_in, adensity_in, param)
     Cpsave = model_args%Cp
     
   end function distance  
-! -----------------------------------------------------------------------
 
 
-
-
-  
-
-
-!-----------------------------------------------------------------------
 subroutine pack_reltransDCp(param,par,Cp,nlp)
   implicit none
   real, intent(in)     :: param(15)
