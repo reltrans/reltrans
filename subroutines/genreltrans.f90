@@ -316,7 +316,7 @@ contains
     end subroutine do_convolutions
 end module m_genreltrans
 
-! -----------------------------------------------------------------------
+
 subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 ! All reltrans flavours are calculated in this subroutine.
 ! Cp and dset are the settings:

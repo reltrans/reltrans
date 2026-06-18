@@ -1,8 +1,13 @@
-!-----------------------------------------------------------------------
 function mudiff(cosdelta,par)
-    use blcoordinate
-    !Calculates muobs (cosine of distant inclination angle) when given
-    !cos(delta) (cosine of angle between initial photon trajectory and -z)
+!> Calculates muobs (cosine of distant inclination angle) when given
+!> cos(delta) (cosine of angle between initial photon trajectory and -z)
+!> Inputs:
+!>     cosdelta: cosine of angle between initial photon trajectory and -z
+!>     par: array of parameters, where par(1)=a_spin, par(2)=h, par(3)=muobs
+!> Outputs:
+!>     mudiff: difference between calculated muobs and input muobs
+
+    use raytracing, only: initial_photon, raytrace_disk
     implicit none
     double precision mudiff,cosdelta,par(3)
     double precision a_spin,h,muobs
@@ -26,16 +31,16 @@ function mudiff(cosdelta,par)
         scal = 1.d0
         mus  = 1.d0
         sins = 0.d0
-        call initialdirection(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,f1234)
+        call initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,f1234)
         ptotal = p_total(f1234(1),lambda,q,sins,mus,a_spin,h,scal)
         p = 0.9998d0 * ptotal
-        call YNOGK(p,f1234,lambda,q,sins,mus,a_spin,h,scal,&
+        call raytrace_disk(p,f1234,lambda,q,sins,mus,a_spin,h,scal,&
                    ra,mua,phya,timea,sigmaa)
         xprev = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*cos(phya)
         yprev = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*sin(phya)
         zprev = ra*mua
         p = 0.9999d0 * ptotal
-        call YNOGK(p,f1234,lambda,q,sins,mus,a_spin,h,scal,&
+        call raytrace_disk(p,f1234,lambda,q,sins,mus,a_spin,h,scal,&
                    ra,mua,phya,timea,sigmaa)
         x = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*cos(phya)
         y = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*sin(phya)
@@ -49,5 +54,3 @@ function mudiff(cosdelta,par)
     mudiff = cosdum - muobs
     return
 end function mudiff
-
-!-----------------------------------------------------------------------

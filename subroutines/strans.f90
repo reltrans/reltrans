@@ -96,7 +96,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     use impulseresponse, only: response_zero_edges, response_allocate
     use common_types, only: t_config, t_model_arguments, t_arrays
     use m_rtrans
-    use raytracing, only: disk_observer_trace
+    use raytracing, only: trace_disk_observer
     implicit none
 
     type(t_config), intent(inout) :: config
@@ -184,7 +184,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
         endif
         if (abs(mudsav-args%mudisk) .gt. tiny(args%mudisk)) dotrace = .true.
         if (dotrace) then
-            call disk_observer_trace(args%conf%nro, args%conf%nphi, rn,        &
+            call trace_disk_observer(args%conf%nro, args%conf%nphi, rn,        &
                  args%mueff,args%model%muobs, args%model%a, args%r_isco,       &
                  args%model%rout, args%mudisk, d)
             spinsav = args%model%a

@@ -1,18 +1,17 @@
-!*****************************************************************************************************
 subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
-! Routine to calculate the lensing factor l=d\cos\delta/d\cos(i)
-! and the source to observer time lag.
-! Both calculations need us to know the delta value for the geodesic
-! that ends up at angle i at infinity.
-! INPUTS
-! a_spin       Dimensionless spin parameter
-! h            Height of on-axis, isotropically emitting source
-! muobs        Cosine of inclination angle
+!> Routine to calculate the lensing factor l=d\cos\delta/d\cos(i)
+!> and the source to observer time lag.
+!> Both calculations need us to know the delta value for the geodesic
+!> that ends up at angle i at infinity.
+!> INPUTS
+!> a_spin       Dimensionless spin parameter
+!> h            Height of on-axis, isotropically emitting source
+!> muobs        Cosine of inclination angle
 !
-! OUTPUTS
-! lens         Lensing factor
-! delt         Source to observer time lag 
-  use blcoordinate
+!> OUTPUTS
+!> lens         Lensing factor
+!> delt         Source to observer time lag 
+  use raytracing, only: initial_photon, YNOGK
   implicit none
 
   double precision, intent(in)    :: a_spin,h, muobs
@@ -57,11 +56,11 @@ subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
   pp   = sqrt( 1.d0 - pr**2 )  !sindelta
   pt   = 0.d0
   !Convert to LNRF (locally non-rotating reference frame)
-  call initialdirection(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,f1234)
+  call initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,f1234)
   !Now calculate ptotal (value of p-coordinate at infinity)
   ptotal = p_total(f1234(1),lambda,q,sins,mus,a_spin,h,scal)
   p = 0.9999d0 * ptotal
-  call YNOGK(p,f1234,lambda,q,sins,mus,a_spin,h,scal,&
+  call raytrace_disk(p,f1234,lambda,q,sins,mus,a_spin,h,scal,&
        ra,mua,phya,timea,sigmaa)
   !Calcluate the distance from BH to centre of observer's camera
   !For an on-axis lamppost, alpha should always be 0, but the below is general
@@ -80,14 +79,20 @@ subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
   delt = timea - d
   return
 end subroutine getlens
-!*****************************************************************************************************
 
 
-!-----------------------------------------------------------------------
 subroutine getlimits(sins,mus,a_spin,h,velocity,muobs,x1,x2)
-! Minimisation routine will numerically calculate cosdelta for a given cosi.
-! To do that, we need limits that bracket only one root. 
-! This routine works out sensible limits
+!> Minimisation routine will numerically calculate cosdelta for a given cosi.
+!> To do that, we need limits that bracket only one root. 
+!> This routine works out sensible limits
+!> Inputs:
+!>     sins, mus: sine and cosine of the source inclination angle.
+!>     a_spin: spin of the black hole.
+!>     h: height of the source above the black hole.
+!>     velocity: 3-velocity of the source.
+!>     muobs: cosine of the observer inclination angle.
+!> Outputs:
+!>     x1, x2: limits for the minimisation routine.
   implicit none
   double precision sins,mus,a_spin,h,velocity(3),muobs,x1,x2
   double precision cosdelta0,mua,cosidel,cosi,cosdelta
@@ -109,18 +114,13 @@ subroutine getlimits(sins,mus,a_spin,h,velocity,muobs,x1,x2)
   x2 = cosdelta
   return
 end subroutine getlimits
-!-----------------------------------------------------------------------
 
-      
-!-----------------------------------------------------------------------
+
 function cosidel(cosdelta,sins,mus,a_spin,h,velocity)
-! Inputs:
-! cosdelta,sins,mus,a_spin,h,velocity
-        
-! Calculates cosi when given cosdelta and parameters
-!
-!        
-  use blcoordinate
+!> Calculates cosi when given cosdelta and parameters
+!> Inputs:
+!> cosdelta,sins,mus,a_spin,h,velocity
+  use raytracing, only: initial_photon, raytrace_disk
   implicit none
   double precision cosdelta,sins,mus,a_spin,h,velocity(3),cosidel
   double precision pr,pp,pt,lambda,q,f1234(4),ptotal
@@ -130,14 +130,12 @@ function cosidel(cosdelta,sins,mus,a_spin,h,velocity)
   pp   = sqrt( 1.d0 - pr**2 )  !sindelta
   pt   = 0.d0
   !Convert to LNRF (locally non-rotating reference frame)
-  call initialdirection(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,f1234)
+  call initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,f1234)
   !Now calculate ptotal (value of p-coordinate at infinity)
   ptotal = p_total(f1234(1),lambda,q,sins,mus,a_spin,h,scal)
   p = 0.9999d0 * ptotal
-  call YNOGK(p,f1234,lambda,q,sins,mus,a_spin,h,scal,&
+  call raytrace_disk(p,f1234,lambda,q,sins,mus,a_spin,h,scal,&
            ra,mua,phya,timea,sigmaa)
   cosidel = mua
   return
 end function cosidel
-!-----------------------------------------------------------------------
-      

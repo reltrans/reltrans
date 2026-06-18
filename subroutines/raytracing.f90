@@ -51,8 +51,8 @@ contains
 
     subroutine initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,    &
                                 f1234)
-    !> This subroutine is a shim function that allows for the substitution of the
-    !> initialdirection functionality without adjusting the rest of the code.
+    !> This subroutine is a shim function that allows for the substitution of 
+    !> the initial_photon functionality without adjusting the rest of the code.
     !> Inputs:
     !>     pr, pt, pp: components of the initial photon momentum in the source
     !>                 rest frame.
@@ -76,32 +76,62 @@ contains
         return
     end subroutine initial_photon
 
-    subroutine raytrace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
-    !> This subroutine is a shim function that allows for the substitution of the
-    !> raytracing functionality without adjusting the rest of the code
+    subroutine constants_of_motion(alpha,beta,robs,sinobs,muobs,a_spin,scal,   &
+                                    velocity,f1234,lambda,q)
+    !> This subroutine is a shim function that allows for the substitution of 
+    !> the constants_of_motion functionality without adjusting the rest of the 
+    !> code.
     !> Inputs:
-    !>   model_args: a real array containing the model parameters
+    !>     alpha, beta: impact parameters of the photon.
+    !>     robs: radial coordinate of observer or initial position of photon.
+    !>     sinobs, muobs: sine and cosine of the observer inclination angle.
+    !>     a_spin: spin of the black hole.
+    !>     scal: a dimensionless parameter to control the size of the images,
+    !>           which is usually set to 1.D0.
+    !>     velocity: 3-velocity of the source.
     !> Outputs:
-    !>   none
+    !>     f1234: array of p_1, p_2, p_3, p_4, which are the components of 
+    !>            four-momentum of a photon measured under the LNRF frame. This 
+    !>            array can be computed by subroutine lambdaq(...), see below
+    !>     lambda, q: motion constants, defined by lambda=L_z/E, q=Q/E^2.
+        use blcoordinate, only: lambdaq
         implicit none
-        integer, intent(in) :: nro, nphi
-        double precision, intent(in) :: rn(nro), mueff, mu0, spin, rmin, rout
-        double precision, intent(in) :: mudisk, d
-        ! Call the disk_observer_trace subroutine
-        call disk_observer_trace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,d)
+        double precision, intent(in) :: alpha, beta, robs, sinobs, muobs
+        double precision, intent(in) :: a_spin, scal
+        double precision, intent(in) :: velocity(3)
+        double precision, intent(out) :: f1234(4), lambda, q
+        call lambdaq(alpha,beta,robs,sinobs,muobs,a_spin,scal,velocity,f1234,&
+                    lambda,q)
         return
-    end subroutine raytrace
+    end subroutine constants_of_motion
 
-    subroutine disk_observer_trace(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,&
+    subroutine trace_disk_observer(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,&
                                     d)
     !> Traces rays in full GR for the camera defined by rn(nro), nro, nphi
     !> to convert alpha and beta to r and tau_do (don't care about phi)
-        use dyn_gr
-        use blcoordinate
+    !> Used to be called GRtrace.
+    !> Inputs:
+    !>     nro: number of radial points in the disk.
+    !>     nphi: number of azimuthal points in the disk.
+    !>     rn: array of radial points in the disk.
+    !>     mueff: effective cosine of the inclination angle of the disk.
+    !>     mu0: cosine of the inclination angle of the observer.
+    !>     spin: spin of the black hole.
+    !>     rmin: minimum radius of the disk.
+    !>     rout: maximum radius of the disk.
+    !>     mudisk: cosine of the inclination angle of the disk.
+    !>     d: distance from the black hole to the observer.
+    !> Outputs:
+    !>     pem1: array of p-coordinate at the disk for each ray.
+    !>     taudo1: array of time coordinate at the disk for each ray.
+    !>     re1: array of radial coordinate at the disk for each ray.
         implicit none
         integer, intent(in) :: nro,nphi
-        double precision rn(nro),mueff,mu0,spin,rmin,rout,mudisk,d
-        double precision phin,alpha,beta,cos0,sin0,scal,velocity(3),f1234(4),lambda,q
+        double precision, intent(in) :: rn(nro),mueff,mu0,spin,rmin,rout
+        double precision, intent(in) :: mudisk,d
+        double precision, intent(in) :: phin,alpha,beta,cos0,sin0,scal
+        double precision, intent(in) :: velocity(3),f1234(4)
+        double precision, intent(out) :: lambda,q
         double precision pem,re,mucros,phie,taudo,sigmacros      
         integer i,j
         cos0  = mu0
@@ -115,23 +145,23 @@ contains
                 phin  = (j-0.5) * 2.d0 * pi / dble(nphi)
                 alpha = rn(i) * sin(phin)
                 beta  = -rn(i) * cos(phin) * mueff
-                call lambdaq(-alpha,-beta,d,sin0,cos0,spin,scal,velocity,f1234,&
-                            lambda,q)
+                call constants_of_motion(-alpha,-beta,d,sin0,cos0,spin,scal,   &
+                                        velocity,f1234,lambda,q)
                 !Can try rin instead of rmin to save an if statement
                 pem = Pemdisk(f1234,lambda,q,sin0,cos0,spin,d,scal,mudisk,rout,&
                             rmin)  
                 pem1(j,i) = pem
-                !pem > 1 means there is a solution
-                !pem < 1 means there is no solution
+                !pem > 0 means there is a solution
+                !pem < 0 means there is no solution
                 if( pem .gt. 0.0d0 )then
-                call raytrace_disk(pem,f1234,lambda,q,sin0,cos0,spin,d,scal,&
-                                    re,mucros,phie,taudo,sigmacros)
-                taudo1(j,i) = taudo - d
-                re1(j,i)    = re
+                    call raytrace_disk(pem,f1234,lambda,q,sin0,cos0,spin,d,    &
+                                        scal,re,mucros,phie,taudo,sigmacros)
+                    taudo1(j,i) = taudo - d
+                    re1(j,i)    = re
                 end if
             end do
         end do
         return
-      end subroutine disk_observer_trace
+      end subroutine trace_disk_observer
 
 end module raytracing
