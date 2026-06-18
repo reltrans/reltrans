@@ -11,7 +11,7 @@ subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
 !> OUTPUTS
 !> lens         Lensing factor
 !> delt         Source to observer time lag 
-  use raytracing, only: initial_photon, YNOGK
+  use raytracing, only: initial_photon, raytrace_disk, p_coord_at_infinity
   implicit none
 
   double precision, intent(in)    :: a_spin,h, muobs
@@ -23,6 +23,7 @@ subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
   double precision mua,p,phya,ra,sigmaa,timea,mudiff
   double precision par(3),x1,x2,xacc,mu2
   double precision alpha,beta,b2,d
+  double precision p_coord_at_inf
   external mudiff
 ! Settings
   scal      = 1.d0   !Meaningless scaling factor
@@ -58,8 +59,9 @@ subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
   !Convert to LNRF (locally non-rotating reference frame)
   call initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,f1234)
   !Now calculate ptotal (value of p-coordinate at infinity)
-  ptotal = p_total(f1234(1),lambda,q,sins,mus,a_spin,h,scal)
-  p = 0.9999d0 * ptotal
+  p_coord_at_inf = p_coord_at_infinity(f1234,lambda,q,sins,mus,a_spin,h,  &
+                                            scal)
+  p = 0.9999d0 * p_coord_at_inf
   call raytrace_disk(p,f1234,lambda,q,sins,mus,a_spin,h,scal,&
        ra,mua,phya,timea,sigmaa)
   !Calcluate the distance from BH to centre of observer's camera
@@ -120,11 +122,12 @@ function cosidel(cosdelta,sins,mus,a_spin,h,velocity)
 !> Calculates cosi when given cosdelta and parameters
 !> Inputs:
 !> cosdelta,sins,mus,a_spin,h,velocity
-  use raytracing, only: initial_photon, raytrace_disk
+  use raytracing, only: initial_photon, raytrace_disk, p_coord_at_infinity
   implicit none
   double precision cosdelta,sins,mus,a_spin,h,velocity(3),cosidel
   double precision pr,pp,pt,lambda,q,f1234(4),ptotal
   double precision scal,p,ra,mua,phya,timea,sigmaa
+  double precision p_coord_at_inf
   scal = 1.d0                  !Meaningless scaling factor
   pr   = cosdelta              !cosdelta
   pp   = sqrt( 1.d0 - pr**2 )  !sindelta
@@ -132,8 +135,9 @@ function cosidel(cosdelta,sins,mus,a_spin,h,velocity)
   !Convert to LNRF (locally non-rotating reference frame)
   call initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,f1234)
   !Now calculate ptotal (value of p-coordinate at infinity)
-  ptotal = p_total(f1234(1),lambda,q,sins,mus,a_spin,h,scal)
-  p = 0.9999d0 * ptotal
+  p_coord_at_inf = p_coord_at_infinity(f1234,lambda,q,sins,mus,a_spin,h,  &
+                                            scal)
+  p = 0.9999d0 * p_coord_at_inf
   call raytrace_disk(p,f1234,lambda,q,sins,mus,a_spin,h,scal,&
            ra,mua,phya,timea,sigmaa)
   cosidel = mua

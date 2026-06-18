@@ -3,6 +3,7 @@ module raytracing
 !> calculations. All the subroutines only serve as interfaces to the actual 
 !> implementations but allows for easy substitution without changing the rest of
 !> the code.
+    use constants
     implicit none
 
 contains
@@ -76,6 +77,31 @@ contains
         return
     end subroutine initial_photon
 
+    function p_coord_at_infinity(f1234,lambda,q,sins,mus,a_spin,h,scal)        &
+                                result(p_coord_at_inf)
+    !> This subroutine is a shim function that allows for the substitution of 
+    !> the p_coord_at_infinity functionality without adjusting the rest of the code.
+    !> Inputs:
+    !>     f1234: array of p_1, p_2, p_3, p_4, which are the components of 
+    !>            four-momentum of a photon measured under the LNRF frame.
+    !>     lambda, q: motion constants, defined by lambda=L_z/E, q=Q/E^2.
+    !>     sins, mus: sine and cosine of the source inclination angle.
+    !>     a_spin: spin of the black hole.
+    !>     h: height of the source above the black hole.
+    !>     scal: a dimensionless parameter to control the size of the images,
+    !>           which is usually set to 1.D0.
+    !> Outputs:
+    !>     p_coord_at_infinity: array of p_1, p_2, p_3, p_4, which are the 
+    !>                         components of four-momentum of a photon measured 
+    !>                         at infinity.
+        use blcoordinate, only: p_total
+        implicit none
+        double precision, intent(in) :: f1234(4), lambda, q, sins, mus
+        double precision, intent(in) :: a_spin, h, scal
+        double precision :: p_coord_at_inf
+        p_coord_at_inf = p_total(f1234(1),lambda,q,sins,mus,a_spin,h,scal)
+    end function p_coord_at_infinity
+
     subroutine constants_of_motion(alpha,beta,robs,sinobs,muobs,a_spin,scal,   &
                                     velocity,f1234,lambda,q)
     !> This subroutine is a shim function that allows for the substitution of 
@@ -125,14 +151,16 @@ contains
     !>     pem1: array of p-coordinate at the disk for each ray.
     !>     taudo1: array of time coordinate at the disk for each ray.
     !>     re1: array of radial coordinate at the disk for each ray.
+        use blcoordinate, only: Pemdisk
         implicit none
         integer, intent(in) :: nro,nphi
         double precision, intent(in) :: rn(nro),mueff,mu0,spin,rmin,rout
         double precision, intent(in) :: mudisk,d
-        double precision, intent(in) :: phin,alpha,beta,cos0,sin0,scal
-        double precision, intent(in) :: velocity(3),f1234(4)
-        double precision, intent(out) :: lambda,q
-        double precision pem,re,mucros,phie,taudo,sigmacros      
+        double precision phin,alpha,beta,cos0,sin0,scal
+        double precision velocity(3),f1234(4)
+        double precision lambda,q
+        double precision pem,re,mucros,phie,taudo,sigmacros   
+        double precision pem1(nphi,nro),taudo1(nphi,nro),re1(nphi,nro)   
         integer i,j
         cos0  = mu0
         sin0  = sqrt(1.0-cos0**2)

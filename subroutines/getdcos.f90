@@ -19,6 +19,8 @@ subroutine getdcos(a_spin,h,mudisk,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
 !>    cosd1(n)     Corresponding \cos\delta
 !>    cosdout      cosd at the outer disk radius
     use raytracing, only: initial_photon, raytrace_disk
+    use blcoordinate, only: Pemdisk
+    use constants
     implicit none
 
     double precision, intent(in )   :: a_spin, h(2), mudisk, rout
