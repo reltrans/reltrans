@@ -63,29 +63,16 @@ contains
         end select
     end function parse_reim
 
-    logical function is_folded(reim) result(bool)
+    logical function is_ref_folded(reim) result(bool)
         !> Returns true if the `reim` parameter is a folded result, in either
         !> the subject or reference band.
         integer, intent(in) :: reim
-        if (reim > 0) then
+        if (reim > 0 .and. reim .ne. MODE_LAG_FREQ) then
             bool = .true.
         else
             bool = .false.
         end if
-    end function is_folded
-
-    logical function is_subj_folded(reim) result(bool)
-        !> Returns true if in this mode the subject band is folded.
-        integer, intent(in) :: reim
-        select case(reim)
-        case (MODE_CROSS_SPEC_LAG_BOTH_FOLDED,                                 &
-              MODE_CROSS_SPEC_LAG_TWO_RESPONSES,                               &
-              MODE_CROSS_SPEC_MODULUS_BOTH_FOLDED)
-            bool = .true.
-        case default
-            bool = .false.
-        end select
-    end function is_subj_folded
+    end function is_ref_folded
 
     logical function is_both_folded(reim) result(bool)
         !> Returns true if in this mode both the subject and reference bands are

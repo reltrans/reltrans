@@ -377,7 +377,7 @@ end subroutine
 subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
                             h,z,Gamma,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
                             ReGpiv,ImGpiv,ReGion,ImGion)
-    use rtconstants, only: is_folded
+    use rtconstants, only: is_ref_folded
     use constants
     implicit none
     integer, intent(IN) :: nex,nf,ionvar,nlp,ReIm,resp_matr
@@ -497,7 +497,7 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
     ! close(22)
     
     do m=1,nlp 
-        if (is_folded(ReIm)) then
+        if (is_ref_folded(ReIm)) then
             call propercross(nex,nf,earx,ReScont(m,:,:),ImScont(m,:,:),ReGcont_temp(m,:,:),ImGcont_temp(m,:,:),resp_matr)
             call propercross(nex,nf,earx,ReSrev(m,:,:),ImSrev(m,:,:),ReGrev_temp(m,:,:),ImGrev_temp(m,:,:),resp_matr)
             call propercross(nex,nf,earx,ReSpiv(m,:,:),ImSpiv(m,:,:),ReGpiv_temp(m,:,:),ImGpiv_temp(m,:,:),resp_matr)

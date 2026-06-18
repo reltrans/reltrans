@@ -563,7 +563,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ! note: this must be done by rawG for two incoherent lamp posts, hence
         ! the skip below
         if (nlp == 1 .or. model_args%beta_p .ne. 0.) then
-            if (is_folded(model_args%ReIm)) then
+            if (is_ref_folded(model_args%ReIm)) then
                 call propercross(nex, config%nf, arrays%earx,                  &
                      arrays%ReSrawa, arrays%ImSrawa, arrays%ReGrawa,           &
                      arrays%ImGrawa, model_args%resp_matr)
@@ -618,7 +618,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if (is_both_folded(model_args%reim)) then
        call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, &
                 ear, ReS, ImS, model_args%resp_matr) !S is count rate
-    else if (is_folded(model_args%reim)) then
+    else if (is_ref_folded(model_args%reim)) then
        call crebin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, ear,   &
              ReS, ImS) !S is in photar form
     end if
