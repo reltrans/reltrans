@@ -77,4 +77,4 @@ include 'subroutines/sourcelum.f90'
 include 'subroutines/strans.f90'
 include 'subroutines/xilimits.f90'
 
-include 'subroutines/interface.f90'
+include 'subroutines/reltrans_interface.f90'
