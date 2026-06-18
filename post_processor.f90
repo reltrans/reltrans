@@ -61,7 +61,6 @@ program ppmain
 end program ppmain
   
 
-!-----------------------------------------------------------------------
 subroutine post_processor(param,xe,adensity,chainmode,chainfile,newchainfile,  &
      iparam)
 !> Takes a set of reltransDCp parameters and calculates the distance in kpc. 
