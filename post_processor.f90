@@ -1,12 +1,13 @@
-! gfortran post_processor.f90 -J ./build/cache -lcfitsio -L"${HEADAS}/lib" -lreltrans -L./build/lib
+! gfortran post_processor.f90 -J ./build/cache -L"${HEADAS}/lib" -lcfitsio -lreltrans -L./build/lib
 
-program post_processor
+program ppmain
   implicit none
-  real param(15),par(32)
-  integer xe,adensity,Cp,nlp
-  double precision distance,Dkpc
-  
-  
+  real param(15)
+  integer xe,adensity
+  logical chainmode
+  character (len=500) chainfile,newchainfile
+  integer iparam(15),i
+
 ! Input parameters
   param(1)  = 11.4144          !h
   param(2)  = 0.998            !a
@@ -25,20 +26,157 @@ program post_processor
   param(15) = 0.0999336        !Anorm
 
 ! Settings
-  xe       = 20       !Number of radial zones
-  adensity = 1        !1 = zone A ne; 0 = const ne
+  chainmode = .true.  !Reading in a chain (true) or just entering one parameter set (false)
+  xe        = 20       !Number of radial zones
+  adensity  = 1        !1 = zone A ne; 0 = const ne
   
-! Pack into general array
-  call pack_reltransDCp(param,par,Cp,nlp)
+! Name of input chain
+  chainfile = '/Users/nai47/Dropbox/Patrick_CygX1_RXTE/post_referee_fits/contour_plots/'
+  chainfile = trim(chainfile) // 'adam_dcp_final.out'
 
-! Calculate distance
-  Dkpc = distance(Cp, nlp, xe, adensity, par)
-  write(*,*)"Dkpc=",Dkpc
+! Name of output chain (with distance column added)
+  newchainfile = 'adam_dcp_final_dist.out'
+
+! Column number corresponding to each parameter in the chain
+  !(not used if chainmode=false)
+  !0 means that the parameter was fixed to the value in param(:)
+  iparam(1)  = 5           !h
+  iparam(2)  = 0           !a
+  iparam(3)  = 6           !inc
+  iparam(4)  = 7           !rin
+  iparam(5)  = 0           !rout
+  iparam(6)  = 0           !zcos
+  iparam(7)  = 8           !Gamma
+  iparam(8)  = 9           !logxi
+  iparam(9)  = 10          !Afe
+  iparam(10) = 11          !lognep
+  iparam(11) = 12          !kTe
+  iparam(12) = 0           !Nh
+  iparam(13) = 13          !boost
+  iparam(14) = 14          !Mass
+  iparam(15) = 15          !Anorm
+
+  call post_processor(param,xe,adensity,chainmode,chainfile,newchainfile,iparam)
+
+end program ppmain
   
-  Dkpc = distance(Cp, nlp, xe, adensity, par)
-  write(*,*)"Dkpc=",Dkpc
+
+!-----------------------------------------------------------------------
+subroutine post_processor(param,xe,adensity,chainmode,chainfile,newchainfile,  &
+     iparam)
+!> 
+!> Takes a set of reltransDCp parameters and calculates the distance in kpc. 
+!> If chainmode = false, it just writes the distance to terminal.
+!> If chainmode = true, it also reads in a chain, calculates the distance for
+!> every step of the chain, and creates a new fits file with a distance column.
+!> Inputs:
+!> param(15)     ReltransDCp parameters
+!> xe            Number of radial zones
+!> adensity      Radial density profile (=1 means zone A, =0 means constant)
+!> chainmode     Just calculate once (false) or for an entire chain (true).
+!> chainfile     Name of input chain file (must already exist)
+!> newchainfile  Name of output chain file.
+!> iparam(15)    Column number of that parameter in the chain. If parameter i
+!>               was frozen for the chain, set iparam(i) = 0. The frozen
+!>               parameters are then read from param(:), so the main parameter
+!>               array is also required for chainmode=true.
+!>
+    implicit none
+    real, intent(in)    :: param(15)
+    integer, intent(in) :: xe,adensity,iparam(15)
+    logical, intent(in) :: chainmode
+    character (len=500), intent(in) :: chainfile,newchainfile
+    real par(32)
+    integer Cp,nlp
+    double precision distance,Dkpc
+    logical anynull
+    integer unit,status,readwrite,blocksize
+    character (len=500) comment
+    integer steps,columns,col,k,newunit
+    real chisquared,parray(15)
+    integer i,colnum,ncols,nhdu,hdutype
+    character (len=16) ttype(1),tform(1),tunit(1)
   
-end program post_processor
+!   Calculate distance for input parameters
+    call pack_reltransDCp(param,par,Cp,nlp)
+    Dkpc = distance(Cp, nlp, xe, adensity, par)
+    write(*,*)"reltransDCp distance (kpc) = ",Dkpc
+  
+!   Read in chain and append distance
+    if( chainmode )then
+
+        write(*,*)"Input chain file=",trim(chainfile)
+        write(*,*)"Output chainfile=",trim(newchainfile)
+     
+        !Open chain file
+        status = 0
+        call ftgiou(unit,status)
+        readwrite = 0
+        call ftopen(unit,chainfile,readwrite,blocksize,status)
+        if( status .ne. 0 ) stop 'cannot open chain file'
+     
+        !Shift to  extension "CHAIN"
+        status = 0
+        call ftmnhd(unit,2,'CHAIN',0,status)
+        if( status .ne. 0 ) stop 'cannot shift to extension CHAIN'
+     
+        !Read number of rows and columns
+        call ftgkyj(unit,'NAXIS2',steps,comment,status)
+        if(status .ne. 0) stop 'Cannot determine No of rows'
+        call ftgkyj(unit,'TFIELDS',columns,comment,status)
+        if(status .ne. 0) stop 'Cannot determine No of columns'
+     
+        !Copy chain file to new chain file
+        status = 0
+        call copyhdu(unit,newchainfile,newunit)
+        if( status .ne. 0 ) stop 'Could not copy chain file'
+     
+        !Add a new column to the new CHAIN binary table
+        !First move to the CHAIN extension
+        status = 0
+        call ftmnhd(newunit,2,'CHAIN',0,status)
+        if( status .ne. 0 ) stop 'Could not move to CHAIN ext of newchainfile'
+        !Insert the name and type of the new column.
+        status = 0
+        colnum = columns + 1
+        ncols  = 1
+        ttype(1) = 'Dkpc'
+        tform(1) = '1D'
+        tunit(1) = 'kpc'
+        call FTICLS(newunit,colnum,ncols,ttype,tform,status)
+        if( status .ne. 0 ) stop 'Something wrong in FTICLS'
+  
+        !Go through each step and calculate distance for each one
+        write(*,*)"Calculating distance and appending to chain..."
+        do k = 1,steps
+            status  = 0
+            !Read in parameters
+            call ftgcve(unit,columns,k,1,1,-1.0,chisquared,anynull,status)
+            do i = 1,15
+                if( iparam(i) .gt. 0 )then
+                    call ftgcve(unit,iparam(i),k,1,1,-1.0,parray(i),anynull    &
+                    ,status)
+                else
+                    parray(i) = param(i)
+                end if
+            end do
+            !Calculate distance
+            call pack_reltransDCp(parray,par,Cp,nlp)
+            Dkpc = distance(Cp, nlp, xe, adensity, par)
+            !Append to new chain file
+            call ftpcld(newunit,columns+1,k,1,1,Dkpc,status)
+        end do
+
+    end if
+  
+!   Close chain files
+    call ftclos(unit, status)
+    call ftfiou(unit, status)
+    call ftclos(newunit, status)
+    call ftfiou(newunit, status)
+
+    end subroutine post_processor
+!-----------------------------------------------------------------------
 
 
 
@@ -267,3 +405,81 @@ end subroutine pack_reltransDCp
 !-----------------------------------------------------------------------
 
 
+
+
+!-----------------------------------------------------------------------
+subroutine copyhdu(inunit,outfile,outunit)
+! Inputs
+! inunit:  unit number of (alreay opened) input file.
+! outfile: name of output file to be created
+! Outputs
+! outunit: unit number of output file
+  implicit none
+  integer status,inunit,outunit,blocksize,morekeys,hdutype
+  character (len=500) outfile
+  
+! The STATUS parameter must always be initialized.
+  status=0
+
+! Delete the file if it already exists, so we can then recreate it
+! The deletefile subroutine is listed at the end of this file.
+  call deletefile(outfile,status)
+
+! Get  unused Logical Unit Numbers to use to open the FITS file.
+  call ftgiou(outunit,status)
+
+! Create the new empty FITS file (value of blocksize is ignored)
+  blocksize=1
+  call ftinit(outunit,outfile,blocksize,status)
+
+! Skip to the 2nd extension in the input file
+  call ftmahd(inunit,2,hdutype,status)
+  
+! FTCOPY copies the current HDU from the input FITS file to the output
+! file.  The MOREKEY parameter allows one to reserve space for additional
+! header keywords when the HDU is created.   FITSIO will automatically
+! insert more header space if required, so programmers do not have to
+! reserve space ahead of time, although it is more efficient to do so if
+! it is known that more keywords will be appended to the header.
+  morekeys=0
+  call ftcopy(inunit,outunit,morekeys,status)
+
+ end subroutine copyhdu
+!-----------------------------------------------------------------------
+
+
+!-----------------------------------------------------------------------
+      subroutine deletefile(filename,status)
+
+!C  A simple little routine to delete a FITS file
+
+      integer status,unit,blocksize
+      character*(*) filename
+
+!C  Simply return if status is greater than zero
+      if (status .gt. 0)return
+
+!C  Get an unused Logical Unit Number to use to open the FITS file
+      call ftgiou(unit,status)
+
+!C  Try to open the file, to see if it exists
+      call ftopen(unit,filename,1,blocksize,status)
+
+      if (status .eq. 0)then
+!C         file was opened;  so now delete it 
+          call ftdelt(unit,status)
+      else if (status .eq. 103)then
+!C         file doesn't exist, so just reset status to zero and clear errors
+          status=0
+          call ftcmsg
+      else
+!C         there was some other error opening the file; delete the file anyway
+          status=0
+          call ftcmsg
+          call ftdelt(unit,status)
+      end if
+
+!C  Free the unit number for later reuse
+      call ftfiou(unit, status)
+    end subroutine deletefile
+!-----------------------------------------------------------------------
