@@ -296,7 +296,7 @@ function distance(Cp, nlp, xe_in, adensity_in, param)
         model_args%boost = abs(model_args%boost)
     end if
 
-    ! Determine if I need to calculate the kernel
+    ! Determine if we need to calculate the kernel
     call need_check(model_args%Cp, Cpsave, param, paramsave, config%fhi,       &
          config%flo, fhisave, flosave, config%nf, prev_nf, config%needtrans,   &
          config%needconv)
