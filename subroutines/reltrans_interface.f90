@@ -1,7 +1,6 @@
-module interface
+module reltrans_interface
 !> This module defines the library interface for reltrans.
     contains
-
         subroutine wrap_disk_observer_trace(nro,nphi,rn,mueff,mu0,spin,rmin,   &
                                             rout,mudisk,d)&
             bind(C, name = "grtrace")
@@ -13,4 +12,4 @@ module interface
                                     mudisk,d)
             return
         end subroutine wrap_disk_observer_trace
-end module interface
+end module reltrans_interface
