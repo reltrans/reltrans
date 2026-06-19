@@ -199,8 +199,8 @@ contains
                                         scal,re,mucros,phie,taudo,sigmacros)
                     taudo1(j,i) = taudo - d
                     re1(j,i)    = re
-                end if
-            end do
+                 end if
+              end do
         end do
         return
     end subroutine trace_disk_observer
@@ -238,7 +238,7 @@ contains
         double precision deltamin,deltamax, deltas,r_min,r_max,disco
         double precision rcros,mucros,phicros,tcros,sigmacros,pcros
         scal     = 1.d0   !Meaningless scaling factor
-        mus      = 1.d0   !Position of source: mus=0 means on-axis
+        mus      = 1.d0   !Position of source: mus=1 means on-axis
         sins     = 0.d0   !sin of same angle
         velocity = 0.0D0  !3-velocity of source
         rhorizon = 1.d0+sqrt(1.d0-a_spin**2)
@@ -264,7 +264,7 @@ contains
                 pt= 0.d0
                 !Convert to LNRF (locally non-rotating reference frame)
                 call initial_photon(pr,pt,pp,sins,mus,a_spin,h(m),             &
-                                    velocity,lambda,q,f1234)
+                     velocity,lambda,q,f1234)
                 !Calculate value of p-coordinate at mu=0
                 pcros = p_disk_crossing(f1234,lambda,q,sins,mus,               &
                                     a_spin,h(m),scal,mudisk,r_max,r_min)

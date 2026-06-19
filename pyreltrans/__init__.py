@@ -122,6 +122,9 @@ def _wrap_trace_disk_observer(f, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk,
         ct.byref(d_c),
     )
 
+def is_c_double(a):
+    b = a if isinstance(a, ct.c_double) else ct.c_double(a)
+    return b
 
 @dataclasses.dataclass
 class DCP_Parameters:
@@ -387,14 +390,14 @@ class Reltrans:
              robs, scal):
     # ctypes scalars
         f1234_c  = np.asarray(f1234, dtype=np.float64)
-        p_c      = ct.c_double(p      )
-        lambda_c = ct.c_double(lambda_)
-        q_c      = ct.c_double(q      )
-        sinobs_c = ct.c_double(sinobs )
-        muobs_c  = ct.c_double(muobs  )
-        aspin_c  = ct.c_double(a_spin )
-        robs_c   = ct.c_double(robs   )                                  
-        scal_c   = ct.c_double(scal   )
+        p_c      = is_c_double(p      )
+        lambda_c = is_c_double(lambda_)
+        q_c      = is_c_double(q      )
+        sinobs_c = is_c_double(sinobs )
+        muobs_c  = is_c_double(muobs  )
+        aspin_c  = is_c_double(a_spin )
+        robs_c   = is_c_double(robs   )
+        scal_c   = is_c_double(scal   )
         radi_c   = ct.c_double(0      ) #out
         mu_c     = ct.c_double(0      ) #out
         phi_c    = ct.c_double(0      ) #out
@@ -422,16 +425,17 @@ class Reltrans:
           scal,mudisk,r_max,r_min):
     # ctypes scalars
         f1234_c  = np.asarray(f1234, dtype=np.float64)
-        lambda_c = ct.c_double(lambda_)
-        q_c      = ct.c_double(q      )
-        sins_c   = ct.c_double(sins   )
-        mus_c    = ct.c_double(mus    )
-        aspin_c  = ct.c_double(a_spin )
-        h_c      = ct.c_double(h      )                                  
-        scal_c   = ct.c_double(scal   )
-        mudisk_c = ct.c_double(mudisk )
-        rmax_c   = ct.c_double(r_max  )
-        rmin_c   = ct.c_double(r_min  ) 
+
+        lambda_c = is_c_double(lambda_)
+        q_c      = is_c_double(q      )
+        sins_c   = is_c_double(sins   )
+        mus_c    = is_c_double(mus    )
+        aspin_c  = is_c_double(a_spin )
+        h_c      = is_c_double(h      )
+        scal_c   = is_c_double(scal   )
+        mudisk_c = is_c_double(mudisk )
+        rmax_c   = is_c_double(r_max  )
+        rmin_c   = is_c_double(r_min  )
         out      = ct.c_double(0      ) #output
         self.lib_reltrans.p_disk_crossing(
             f1234_c.ctypes.data_as(f_double),
@@ -452,13 +456,13 @@ class Reltrans:
     def p_coord_at_infinity(self,f1234,lambda_,q,sins,mus,a_spin,h,scal):
     # ctypes scalars
         f1234_c  = np.asarray(f1234, dtype=np.float64)
-        lambda_c = ct.c_double(lambda_)
-        q_c      = ct.c_double(q      )
-        sins_c   = ct.c_double(sins   )
-        mus_c    = ct.c_double(mus    )
-        aspin_c  = ct.c_double(a_spin )
-        h_c      = ct.c_double(h      )                                  
-        scal_c   = ct.c_double(scal   )
+        lambda_c = is_c_double(lambda_)
+        q_c      = is_c_double(q      )
+        sins_c   = is_c_double(sins   )
+        mus_c    = is_c_double(mus    )
+        aspin_c  = is_c_double(a_spin )
+        h_c      = is_c_double(h      )
+        scal_c   = is_c_double(scal   )
     # vectors 
         out = np.zeros(4, dtype=np.float64)
         self.lib_reltrans.p_coord_at_infinity(
@@ -473,6 +477,66 @@ class Reltrans:
             out.ctypes.data_as(f_double)
             )
         return out
+
+    def constants_of_motion(self,alpha,beta,robs,sinobs,muobs,a_spin,scal):
+    # ctypes scalars
+        alpha_c  = is_c_double(alpha  )
+        beta_c   = is_c_double(beta   )
+        robs_c   = is_c_double(robs   )
+        sinobs_c = is_c_double(sinobs )
+        muobs_c  = is_c_double(muobs  )
+        aspin_c  = is_c_double(a_spin )
+        scal_c   = is_c_double(scal   )
+        lambda_c = ct.c_double(0.0    ) #output
+        q_c      = ct.c_double(0.0    ) #output
+    # vectors
+        # velocity_c = np.asarray(velocity, dtype=np.float64)
+        velocity_c = np.zeros(3, dtype=np.float64)
+        f1234_c  = np.zeros(4, dtype=np.float64) #output
+        self.lib_reltrans.constants_of_motion(
+            ct.byref(alpha_c ),
+            ct.byref(beta_c  ),
+            ct.byref(robs_c  ),
+            ct.byref(sinobs_c),
+            ct.byref(muobs_c ),
+            ct.byref(aspin_c ),
+            ct.byref(scal_c  ),
+            velocity_c.ctypes.data_as(f_double),
+            f1234_c.ctypes.data_as(f_double),
+            ct.byref(lambda_c),
+            ct.byref(q_c     )            
+            )
+        return f1234_c,lambda_c, q_c
+
+    def initial_photon(self,pr,pt,pp,sins,mus,a_spin,h):
+    # ctypes scalars
+        alpha_c  = is_c_double(pr     )
+        beta_c   = is_c_double(pt     )
+        robs_c   = is_c_double(pp     )                                  
+        sins_c   = is_c_double(sins   )
+        mus_c    = is_c_double(mus    )
+        aspin_c  = is_c_double(a_spin )
+        h_c      = is_c_double(h      )
+        lambda_c = ct.c_double(0      ) #output
+        q_c      = ct.c_double(0      ) #output
+    # vectors 
+        velocity_c = np.zeros(3, dtype=np.float64)
+        # velocity_c = np.asarray(velocity, dtype=np.float64)
+        f1234_c  = np.zeros(4, dtype=np.float64) #output
+        self.lib_reltrans.initial_photon(
+            ct.byref(alpha_c ),
+            ct.byref(beta_c  ),
+            ct.byref(robs_c  ),
+            ct.byref(sins_c  ),
+            ct.byref(mus_c   ),
+            ct.byref(aspin_c ),
+            ct.byref(h_c     ),
+            velocity_c.ctypes.data_as(f_double),
+            ct.byref(lambda_c),
+            ct.byref(q_c     ),
+            f1234_c.ctypes.data_as(f_double)
+            )
+        return f1234_c,lambda_c,q_c
 
     def get_re(self, nro, nphi):
         out = np.zeros(nro * nphi, dtype=np.float64)

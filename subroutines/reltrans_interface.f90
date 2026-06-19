@@ -20,7 +20,7 @@ module reltrans_interface
             implicit none
             double precision, intent(in) :: f1234(4), lambda, q, sins, mus
             double precision, intent(in) :: a_spin, h, scal, mudisk, r_max, r_min
-            double precision, intent(out):: output(4)
+            double precision, intent(out):: output
             output = p_disk_crossing(f1234,lambda,q,sins,mus,a_spin,h,        &
                scal,mudisk,r_max,r_min)
             return
@@ -35,7 +35,34 @@ module reltrans_interface
             double precision, intent(out):: output(4)
             output = p_coord_at_infinity(f1234,lambda,q,sins,mus,a_spin,h,scal)
             return
-          end subroutine wrap_p_coord_at_infinity
+        end subroutine wrap_p_coord_at_infinity
+
+        subroutine wrap_initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,  &
+            lambda,q,f1234) bind(C, name = "initial_photon")
+            use raytracing, only: initial_photon
+            implicit none
+            double precision, intent(in)  :: pr, pt, pp, sins, mus, a_spin, h
+            double precision, intent(in)  :: velocity(3)
+            double precision, intent(out) :: lambda, q
+            double precision, intent(out) :: f1234(4)
+            call initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,           &
+            lambda,q,f1234)
+            return
+        end subroutine wrap_initial_photon
+
+        subroutine wrap_constants_of_motion(alpha,beta,robs,sinobs,muobs,    &
+            a_spin,scal, velocity,f1234,lambda,q)                              &
+            bind(C, name = "constants_of_motion")
+            use raytracing, only: constants_of_motion
+            implicit none
+            double precision, intent(in) :: alpha, beta, robs, sinobs, muobs
+            double precision, intent(in) :: a_spin, scal
+            double precision, intent(in) :: velocity(3)
+            double precision, intent(out) :: f1234(4), lambda, q
+            call constants_of_motion(alpha,beta,robs,sinobs,muobs,             &
+            a_spin,scal, velocity,f1234,lambda,q)
+            return
+        end subroutine wrap_constants_of_motion
         
         subroutine wrap_trace_disk_observer(nro,nphi,rn,mueff,mu0,spin,rmin,   &
                    rout,mudisk,d) bind(C, name = "trace_disk_observer")
