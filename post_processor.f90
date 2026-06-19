@@ -385,12 +385,8 @@ subroutine pack_reltransDCp(param,par,Cp,nlp)
   par(32) = 1.0              !telescope response  
   return
 end subroutine pack_reltransDCp
-!-----------------------------------------------------------------------
 
 
-
-
-!-----------------------------------------------------------------------
 subroutine copyhdu(inunit,outfile,outunit)
 !> Copy's the HDU from the fits file.
 !> Inputs:
