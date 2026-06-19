@@ -7,9 +7,10 @@ module raytracing
     implicit none
 
 contains
-
+    
     subroutine get_raytrace_coords(p,f1234,lambda,q,sinobs,muobs,a_spin,robs,  &
                                     scal,radi,mu,phi,time,sigma)
+    !> INTERFACE SUBROUTINE
     !> Computes four Boyer-Lindquist coordinates (r,\mu,\phi,t) and affine 
     !> parameter \sigma as functions of parameter p, i.e. functions r(p), 
     !> \mu(p), \phi(p), t(p), \sigma as functions of parameter p, i.e. 
@@ -47,6 +48,9 @@ contains
     
     function p_disk_crossing(f1234,lambda,q,sins,mus,a_spin,h,scal,mudisk,     &
                  r_max,r_min)
+    !> INTERFACE FUNCTION
+    !> This function is a shim function that allows for the substitution of the
+    !> p_disk_crossing functionality without adjusting the rest of the code.
         use blcoordinate, only: Pemdisk
         implicit none
         double precision, intent(in) :: f1234(4), lambda, q, sins, mus
@@ -60,6 +64,7 @@ contains
     
     subroutine initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,    &
                                 f1234)
+    !> INTERFACE SUBROUTINE
     !> This subroutine is a shim function that allows for the substitution of 
     !> the initial_photon functionality without adjusting the rest of the code.
     !> Inputs:
@@ -87,8 +92,9 @@ contains
 
     function p_coord_at_infinity(f1234,lambda,q,sins,mus,a_spin,h,scal)        &
                                 result(p_coord_at_inf)
-    !> This subroutine is a shim function that allows for the substitution of 
-    !> the p_coord_at_infinity functionality without adjusting the rest of the code.
+    !> INTERFACE FUNCTION
+    !> This function is a shim function that allows for the substitution of the
+    !> p_coord_at_infinity functionality without adjusting the rest of the code.
     !> Inputs:
     !>     f1234: array of p_1, p_2, p_3, p_4, which are the components of 
     !>            four-momentum of a photon measured under the LNRF frame.
@@ -112,6 +118,7 @@ contains
 
     subroutine constants_of_motion(alpha,beta,robs,sinobs,muobs,a_spin,scal,   &
                                     velocity,f1234,lambda,q)
+    !> INTERFACE SUBROUTINE
     !> This subroutine is a shim function that allows for the substitution of 
     !> the constants_of_motion functionality without adjusting the rest of the 
     !> code.
@@ -141,6 +148,7 @@ contains
 
     subroutine trace_disk_observer(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,&
                                     d)
+    !> CALCULATION SUBROUTINE
     !> Traces rays in full GR for the camera defined by rn(nro), nro, nphi
     !> to convert alpha and beta to r and tau_do (don't care about phi)
     !> Used to be called GRtrace.
@@ -201,7 +209,9 @@ contains
     end subroutine trace_disk_observer
 
     
-    subroutine getdcos(a_spin,h,mudisk,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
+    subroutine getdcos(a_spin,h,mudisk,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,     &
+                        cosdout)
+    !> CALCULATION SUBROUTINE
     !> For n values of the emission angle, delta, the code calculates the r and t 
     !> coordinates for the geodesic for mu=mudisk; i.e. the crossing points of a 
     !> thin disk.
@@ -308,9 +318,16 @@ contains
 
 
     function cosidel(cosdelta,sins,mus,a_spin,h,velocity)
+    !> CALCULATION FUNCTION
     !> Calculates cosi when given cosdelta and parameters
     !> Inputs:
-    !> cosdelta,sins,mus,a_spin,h,velocity
+    !>     cosdelta: cosine of the emission angle delta (see Fig 1; Dauser et 
+    !>                  al 2013)
+    !>     sins: sine of the source inclination angle
+    !>     mus: cosine of the source inclination angle
+    !>     a_spin: spin of the black hole
+    !>     h: height of the source above the black hole
+    !>     velocity: 3-velocity of the source
         implicit none
         double precision cosdelta,sins,mus,a_spin,h,velocity(3),cosidel
         double precision pr,pp,pt,lambda,q,f1234(4),ptotal
@@ -334,6 +351,7 @@ contains
 
 
     subroutine getlimits(sins,mus,a_spin,h,velocity,muobs,x1,x2)
+    !> CALCULATION SUBROUTINE
     !> Minimisation routine will numerically calculate cosdelta for a given cosi.
     !> To do that, we need limits that bracket only one root. 
     !> This routine works out sensible limits
@@ -356,8 +374,8 @@ contains
         !From this extrapolation is my second limit.
         cosdelta0 = -0.98d0
         mua = cosidel(cosdelta0,sins,mus,a_spin,h,velocity)
-        !Take the straight line from (cosi=1,cosdelta=-1) to (cosi=mua,cosdelta=cosdelta0)
-        !and extrapolate down to cosi=-0.5
+        !Take the straight line from (cosi=1,cosdelta=-1) to 
+        !(cosi=mua,cosdelta=cosdelta0) and extrapolate down to cosi=-0.5
         cosi = -0.5
         cosdelta = (cosi-1.d0)*(cosdelta0+1.d0)/(mua-1.d0) - 1.0
         cosdelta = min( cosdelta , -muobs )  !-muobs is the Newtonian limit 
@@ -369,18 +387,19 @@ contains
     
 
     subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
+    !> CALCULATION SUBROUTINE
     !> Routine to calculate the lensing factor l=d\cos\delta/d\cos(i)
     !> and the source to observer time lag.
     !> Both calculations need us to know the delta value for the geodesic
     !> that ends up at angle i at infinity.
     !> INPUTS
-    !> a_spin       Dimensionless spin parameter
-    !> h            Height of on-axis, isotropically emitting source
-    !> muobs        Cosine of inclination angle
+    !>     a_spin       Dimensionless spin parameter
+    !>     h            Height of on-axis, isotropically emitting source
+    !>     muobs        Cosine of inclination angle
     !
     !> OUTPUTS
-    !> lens         Lensing factor
-    !> delt         Source to observer time lag 
+    !>     lens         Lensing factor
+    !>     delt         Source to observer time lag 
         implicit none
         double precision, intent(in)    :: a_spin,h, muobs
         double precision, intent(inout) :: cosdelta1
@@ -452,6 +471,7 @@ contains
 
 
     function mudiff(cosdelta,par)
+    !> CALCULATION FUNCTION
     !> Calculates muobs (cosine of distant inclination angle) when given
     !> cos(delta) (cosine of angle between initial photon trajectory and -z)
     !> Inputs:
