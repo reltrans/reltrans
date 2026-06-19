@@ -457,13 +457,13 @@ contains
 
 
     function mudiff(cosdelta,par)
-        !> Calculates muobs (cosine of distant inclination angle) when given
-        !> cos(delta) (cosine of angle between initial photon trajectory and -z)
-        !> Inputs:
-        !>     cosdelta: cosine of angle between initial photon trajectory and -z
-        !>     par: array of parameters, where par(1)=a_spin, par(2)=h, par(3)=muobs
-        !> Outputs:
-        !>     mudiff: difference between calculated muobs and input muobs
+    !> Calculates muobs (cosine of distant inclination angle) when given
+    !> cos(delta) (cosine of angle between initial photon trajectory and -z)
+    !> Inputs:
+    !>     cosdelta: cosine of angle between initial photon trajectory and -z
+    !>     par: array of parameters, where par(1)=a_spin, par(2)=h, par(3)=muobs
+    !> Outputs:
+    !>     mudiff: difference between calculated muobs and input muobs
         implicit none
         double precision mudiff,cosdelta,par(3)
         double precision a_spin,h,muobs
