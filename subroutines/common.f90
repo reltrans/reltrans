@@ -323,10 +323,12 @@ contains
         integer :: i
         logical :: needs_allocating
         double precision :: fhisave, flosave
+        double precision, parameter   :: dtol = 1e-10
 
-        if (flosave .ne. model_args%floHz) then
+! abs( fhi - fhisave ) .gt. dtol
+        if ( abs(model_args%floHz - flosave) .gt. dtol ) then
             needs_allocating = .true.
-        else if (fhisave .ne. model_args%fhiHz) then
+        else if ( abs(model_args%fhiHz - fhisave) .gt. dtol ) then
             needs_allocating = .true.
         else if (allocated(arrays%fix)) then
             needs_allocating = prev_nf .ne. config%nf
