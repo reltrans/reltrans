@@ -1,7 +1,4 @@
 ! vim: cc=80 wrap tw=80
-include 'subroutines/emissivity.f90'
-include 'subroutines/impulseresponse.f90'
-
 module m_rtrans
     use common_types
     implicit none
@@ -92,13 +89,14 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     ! frobs: Observer's reflection fraction
     ! frrel: Reflection fraction defined by relxilllp.
     use dyn_gr, only: rlp, cosd, dcosdr, ndelta, npts, rlp, tlp, ndelta
-    use blcoordinate, only: pi
     use radial_grids, only: dfer_arr, pnorm
     use gr_continuum, only: gso, lens, tauso, gso, cosdelta_obs
     use saved_variables
     use impulseresponse, only: response_zero_edges, response_allocate
     use common_types, only: t_config, t_model_arguments, t_arrays
     use m_rtrans
+    use raytracing, only: trace_disk_observer, getdcos, getlens
+    use rtconstants, only: pi
     implicit none
 
     type(t_config), intent(inout) :: config
@@ -186,8 +184,8 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
         endif
         if (abs(mudsav-args%mudisk) .gt. tiny(args%mudisk)) dotrace = .true.
         if (dotrace) then
-            call GRtrace(args%conf%nro, args%conf%nphi, rn, args%mueff,        &
-                 args%model%muobs, args%model%a, args%r_isco,                  &
+            call trace_disk_observer(args%conf%nro, args%conf%nphi, rn,        &
+                 args%mueff,args%model%muobs, args%model%a, args%r_isco,       &
                  args%model%rout, args%mudisk, d)
             spinsav = args%model%a
             musav = args%model%muobs
@@ -262,7 +260,7 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
     use dyn_gr
     use radial_grids
     use gr_continuum
-    use constants
+    use rtconstants, only: pi
     use emissivities
     use m_rtrans
     implicit none
@@ -376,7 +374,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     use dyn_gr
     use radial_grids
     use gr_continuum
-    use constants
+    use rtconstants, only: pi
     use emissivities
     use impulseresponse, only: time_axis, response
     use m_rtrans
@@ -497,7 +495,7 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
     use dyn_gr
     use radial_grids
     use gr_continuum
-    use constants
+    use rtconstants, only: pi
     use emissivities
     use impulseresponse, only: time_axis, response
     use m_rtrans

@@ -59,7 +59,7 @@ contains
     ! geodesic from the source to the disc `gsd`
     double precision function determine_emissivity(re, spin, Gamma, cosfac,    &
         ptf, gsd) result(em)
-        use constants
+        use rtconstants, only: pi
         double precision, intent(in) :: ptf, spin, cosfac, re, Gamma
         real, intent(in) :: gsd
 

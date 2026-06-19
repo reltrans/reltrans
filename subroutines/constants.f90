@@ -35,6 +35,7 @@ module rtconstants
     ! It can be queried to see if the compiler is building for production or in
     ! debug mode.
     logical, parameter :: IS_DEBUG_BUILD = (RELTRANS_BUILD_DEBUG == 1)
+    double precision, parameter :: pi = acos(-1.d0)
 
 contains
 

@@ -21,10 +21,7 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
     
     if (model_args%nlp .eq. 1) then
        arrays%contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1
-       
-       ! gso(1) = real( dgsofac(model_args%a, model_args%h(1)) )
-       ! call getlens(model_args%a, model_args%h(1), muobs, lens(1), tauso(1), cosdelta_obs(1))
-       ! if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"
+
        if( model_args%Cp .ge. 0 ) then
           ! write(*,*) 'nthcomp illumination for nthcomp and reflionx'
           Cp_cont = 2 !This is needed since we can't use getcont(Cp,...) because in reflionx Cp = 0
@@ -82,9 +79,6 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
     else
        do m=1,model_args%nlp
           !here the observed cutoffs are set from the temperature in the source frame
-          ! gso(m) = real( dgsofac(model_args%a, model_args%h(m)) )
-          ! call getlens(model_args%a, model_args%h(m), muobs, lens(m), tauso(m), cosdelta_obs(m))
-          ! if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
           Cutoff_obs = Cutoff_s * gso(m) / real(1.d0 + model_args%zcos)
           call getcont(model_args%Cp, arrays%earx, nex, model_args%Gamma,      &
               Cutoff_s, model_args%logxi, model_args%lognep,                 &

@@ -22,7 +22,6 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     real :: tempRe,tempIm,dE, corr
     real :: f,flo,fhi,floHz,fhiHz
     double precision :: fc
-    double precision, parameter :: pi = acos(-1.d0)
     integer :: i,j,m
     !indiRTdual components transfer functions (S) and cross spectrum (G) dynamic allocation
     real, dimension(:,:), allocatable :: ReScont,ImScont,ReSrev,ImSrev
@@ -278,7 +277,7 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
     ! Spivot(1:nex,1:nf)    Continuum and reflection pivoting+reverberation cross spectrum for all LPs
     ! Sion(1:nex,1:nf)      Continuum pivoting+ionization fluctuation cross spectrum for all LPs
 
-    use constants
+    use rtconstants
     implicit none
     integer, intent(IN) :: nex,nf,ionvar,nlp
     real   , intent(IN) :: earx(0:nex),contx(nex,nlp)
@@ -377,8 +376,7 @@ end subroutine
 subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
                             h,z,Gamma,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
                             ReGpiv,ImGpiv,ReGion,ImGion)
-    use rtconstants, only: is_ref_folded
-    use constants
+    use rtconstants, only: is_ref_folded,pi
     implicit none
     integer, intent(IN) :: nex,nf,ionvar,nlp,ReIm,resp_matr
     real, intent(IN) :: earx(0:nex),contx(nex,nlp),absorbx(nex)

@@ -316,7 +316,7 @@ contains
     end subroutine do_convolutions
 end module m_genreltrans
 
-! -----------------------------------------------------------------------
+
 subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 ! All reltrans flavours are calculated in this subroutine.
 ! Cp and dset are the settings:
@@ -354,7 +354,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use rtconstants
     implicit none
     ! Constants
-    double precision, parameter :: pi = acos(-1.d0), rnmax = 300.d0, dlogf = 0.09 !This is a resolution parameter (base 10)
+    double precision, parameter :: rnmax = 300.d0, dlogf = 0.09 !This is a resolution parameter (base 10)
     ! Args:
     integer, intent(inout) :: ifl
     integer, intent(in) :: Cp, dset, ne, nlp
@@ -404,8 +404,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         config%firstcall = .false.
         config%needtrans = .true.
         config%needconv = .true.
-        prev_nf = 0 !this is needed to reallocate arrays with realloc_arrays, if firstcall is set to true externally
-
+        !this is needed to reallocate arrays with realloc_arrays, if firstcall 
+        !is set to true externally
+        prev_nf = 0 
         ! set sensible distance for observer from the BH
         d = max(1.0d4, 2.0d2 * config%rnmax**2)
 
@@ -472,8 +473,11 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
      end if
 
      ! do this for each lamp post, then find some sort of weird average?
-    if (config%verbose .gt. 0) write(*,*)"Observer's reflection fraction for each source:",model_args%boost*frobs
-    if (config%verbose .gt. 0) write(*,*)"Relxill reflection fraction for each source:", frrel
+    if (config%verbose .gt. 0) then
+        write(*,*)"Observer's reflection fraction for each source:",           &
+                    model_args%boost*frobs
+        write(*,*)"Relxill reflection fraction for each source:", frrel
+    end if
 
     if (config%verbose .gt. 2) call CPU_TIME (time_start)
     if (config%needconv)then
