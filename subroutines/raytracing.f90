@@ -374,18 +374,18 @@ contains
     
 
     subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
-        !> Routine to calculate the lensing factor l=d\cos\delta/d\cos(i)
-        !> and the source to observer time lag.
-        !> Both calculations need us to know the delta value for the geodesic
-        !> that ends up at angle i at infinity.
-        !> INPUTS
-        !> a_spin       Dimensionless spin parameter
-        !> h            Height of on-axis, isotropically emitting source
-        !> muobs        Cosine of inclination angle
-        !
-        !> OUTPUTS
-        !> lens         Lensing factor
-        !> delt         Source to observer time lag 
+    !> Routine to calculate the lensing factor l=d\cos\delta/d\cos(i)
+    !> and the source to observer time lag.
+    !> Both calculations need us to know the delta value for the geodesic
+    !> that ends up at angle i at infinity.
+    !> INPUTS
+    !> a_spin       Dimensionless spin parameter
+    !> h            Height of on-axis, isotropically emitting source
+    !> muobs        Cosine of inclination angle
+    !
+    !> OUTPUTS
+    !> lens         Lensing factor
+    !> delt         Source to observer time lag 
         implicit none
         double precision, intent(in)    :: a_spin,h, muobs
         double precision, intent(inout) :: cosdelta1
