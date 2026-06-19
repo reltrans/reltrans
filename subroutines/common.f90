@@ -315,7 +315,7 @@ contains
     end subroutine setup_arrays
 
     ! Reallocate arrays depending on whether they need to be resized
-    subroutine realloc_arrays(config, model_args, arrays, prev_nf)
+    subroutine realloc_arrays(config, model_args, arrays, prev_nf, flosave, fhisave)
         use conv_mod, only: nex
         type(t_config), intent(in) :: config
         type(t_model_arguments), intent(in) :: model_args
@@ -323,8 +323,18 @@ contains
         integer, intent(in) :: prev_nf
         integer :: i
         logical :: needs_allocating
+        double precision :: fhisave, flosave
+        double precision :: fhicheck, flocheck 
+        double precision, parameter   :: dtol = 1e-5
 
-        if (allocated(arrays%fix)) then
+        fhicheck = fhisave /(4.92695275718945d-06 * model_args%Mass)
+        flocheck = flosave /(4.92695275718945d-06 * model_args%Mass)            
+
+        if ( abs(1. - model_args%floHz/flocheck) .gt. dtol ) then
+            needs_allocating = .true.
+        else if ( abs(1. - model_args%fhiHz/fhicheck) .gt. dtol ) then
+            needs_allocating = .true.
+        else if (allocated(arrays%fix)) then
             needs_allocating = prev_nf .ne. config%nf
         else
             needs_allocating = .true.
@@ -340,7 +350,7 @@ contains
                     *(model_args%fhiHz                                         &
                     / model_args%floHz)**(real(i) / real(config%nf))
             end do
-            
+                       
             ! reallocate the transfer function arrays
             if (allocated(arrays%ker_W0)) deallocate(arrays%ker_W0)
             allocate(arrays%ker_W0(model_args%nlp,nex,config%nf,config%me,config%xe))

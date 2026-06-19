@@ -23,7 +23,7 @@ subroutine radfuncs_dist(config, model_args, fcons)
   double precision, parameter :: pi = acos(-1.d0)
   double precision :: ptf,pfunc_raw,gsd,dglpfacthick,eps_bol,Fx(config%xe),logxir_raw(config%xe),mui,dinang
   double precision :: dareafac,lximax
-
+  
 ! Set disk opening angle
   mudisk   = model_args%honr / sqrt( model_args%honr**2 + 1.d0  )
 ! Now loop through xe radial bins
@@ -59,10 +59,7 @@ subroutine radfuncs_dist(config, model_args, fcons)
      !Now adjust to effective ionization parameter
      mui       = dinang(model_args%a, re, model_args%h(1), mus)
      logxir(i) = logxir_raw(i) - 0.1505 - log10(mui)
-!     write(188,*)re,logxir_raw(i),logxir(i)
-
   end do
-!  write(188,*)"no no"
 
 !check max and min for both ionisation and density
   logxir = max( logxir , 0.d0  )
