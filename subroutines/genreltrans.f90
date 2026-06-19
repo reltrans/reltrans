@@ -416,8 +416,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     end if
 
     ! reallocated frequency dependent arrays
-    call realloc_arrays(config, model_args, arrays, prev_nf)
-
+    call realloc_arrays(config, model_args, arrays, prev_nf, flosave, fhisave)
+    
     ifl = 1
 
     ! Note: the two different calls are because for the double lP we set the
