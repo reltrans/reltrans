@@ -32,7 +32,6 @@ subroutine radfuncs_dist(config, model_args, fcons)
      re     = (config%rnmax/model_args%rin)**(real(i-1) / real(config%xe))
      re     = re + (config%rnmax/model_args%rin)**(real(i) / real(config%xe))
      re     = re * model_args%rin * 0.5
-     write(*,*)"re=",re
      re1(i) = re
      !Density
      logner(i) = zA_logne(re,model_args%rin,dble(model_args%lognep))
