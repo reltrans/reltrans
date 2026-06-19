@@ -13,9 +13,8 @@ contains
     !> INTERFACE SUBROUTINE
     !> Computes four Boyer-Lindquist coordinates (r,\mu,\phi,t) and affine 
     !> parameter \sigma as functions of parameter p, i.e. functions r(p), 
-    !> \mu(p), \phi(p), t(p), \sigma as functions of parameter p, i.e. 
-    !> functions r(p), \mu(p), \phi(p), t(p) and \sigma(p). Cf. discussions in 
-    !> Yang & Wang (2012).
+    !> \mu(p), \phi(p), t(p), \sigma as functions of parameter p. Cf.
+    !> discussions in Yang & Wang (2012).
     !> Inputs:
     !>    p: independent variable, which must be nonnegative.
     !>    f1234: array of p_1, p_2, p_3, p_4, which are the components of 
