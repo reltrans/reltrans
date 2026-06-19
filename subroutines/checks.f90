@@ -31,55 +31,53 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
   ! OUTPUTS
   !   needtrans: if true, we must do the kernel calculation
   !   neecconv:  if true, we must do the convolution
-  implicit none 
-  integer         , intent(in)  :: Cp, Cpsave, nf, nfsave
-  real            , intent(in)  :: param(32), paramsave(32)
-  real            , parameter   :: tol = 1e-7
-  double precision, intent(in)  :: fhi, flo, fhisave, flosave
-  double precision, parameter   :: dtol = 1e-10
-  logical         , intent(out) :: needtrans,needconv
-  integer :: i
+    implicit none 
+    integer         , intent(in)  :: Cp, Cpsave, nf, nfsave
+    real            , intent(in)  :: param(32), paramsave(32)
+    real            , parameter   :: tol = 1e-7
+    double precision, intent(in)  :: fhi, flo, fhisave, flosave
+    double precision, parameter   :: dtol = 1e-5
+    logical         , intent(out) :: needtrans,needconv
+    integer :: i
 
-  ! functions
-  integer :: get_env_int
-  needtrans = .false.
-  needconv  = .false.
+    ! functions
+    integer :: get_env_int
+    needtrans = .false.
+    needconv  = .false.
 
-  ! Optionally disable the caches
-  if (0 .ne. get_env_int("REV_NOSAV", 0)) then
-      print *, "Applying cache overwrite"
-      needtrans = .true.
-      needconv = .true.
-      return
-  end if
+    ! Optionally disable the caches
+    if (0 .ne. get_env_int("REV_NOSAV", 0)) then
+        print *, "Applying cache overwrite"
+        needtrans = .true.
+        needconv = .true.
+        return
+    end if
 
-! First check the parameter entries
-  do i = 1,9
-     if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
-  end do
-  i = 11
-  if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
-  i = 13
-  if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
-  !i = 18
-  !if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true. !note: i=19 is the mass
-  do i = 18,22
-     if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
-  end do
-  i = 31
-  if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
-! Now check if frequency range and frequency grid have changed 
-  if( nf .ne. nfsave ) then
-     needtrans = .true.
-  else if( abs( fhi - fhisave ) .gt. dtol) then
-     needtrans = .true.
-  else if( abs( flo - flosave ) .gt. dtol) then
-     needtrans = .true.
-  end if
-!Now for needconv
-  if( needtrans ) needconv = .true.
-  if( Cp .ne. Cpsave ) needconv = .true.
-  if( abs( param(10) - paramsave(10) ) .gt. tol ) needconv = .true.
-  if( abs( param(12) - paramsave(12) ) .gt. tol ) needconv = .true.
+    ! First check the parameter entries
+    do i = 1,9
+        if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
+    end do
+    i = 11
+    if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
+    i = 13
+    if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
+    do i = 18,22
+        if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
+    end do
+    i = 31
+    if( abs( param(i) - paramsave(i) ) .gt. tol ) needtrans = .true.
+    ! Now check if frequency range and frequency grid have changed 
+    if( nf .ne. nfsave ) then
+        needtrans = .true.
+    else if( abs(1.- (fhi / fhisave) ) .gt. dtol) then
+        needtrans = .true.
+    else if( abs(1. - (flo - flosave) ) .gt. dtol) then
+        needtrans = .true.
+    end if
+    !Now for needconv
+    if( needtrans ) needconv = .true.
+    if( Cp .ne. Cpsave ) needconv = .true.
+    if( abs( param(10) - paramsave(10) ) .gt. tol ) needconv = .true.
+    if( abs( param(12) - paramsave(12) ) .gt. tol ) needconv = .true.
 end subroutine need_check
 !-----------------------------------------------------------------------
