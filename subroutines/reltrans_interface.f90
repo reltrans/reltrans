@@ -1,15 +1,52 @@
 module reltrans_interface
 !> This module defines the library interface for reltrans.
     contains
-        subroutine wrap_disk_observer_trace(nro,nphi,rn,mueff,mu0,spin,rmin,   &
-                                            rout,mudisk,d)&
-            bind(C, name = "grtrace")
+        subroutine wrap_raytrace_disk(p,f1234,lambda,q,sinobs,muobs,a_spin,    &
+             robs, scal,radi,mu,phi,time,sigma) bind(C, name = "raytrace_disk")
+            use raytracing, only: raytrace_disk
+            implicit none
+            double precision, intent(in)  :: p
+            double precision, intent(in)  :: f1234(4), lambda, q, sinobs, muobs
+            double precision, intent(in)  :: a_spin, robs, scal
+            double precision, intent(out) :: radi, mu, phi, time, sigma
+            call raytrace_disk(p,f1234,lambda,q,sinobs,muobs,a_spin,           &
+                 robs, scal,radi,mu,phi,time,sigma)
+            return
+        end subroutine wrap_raytrace_disk
+
+        subroutine wrap_p_disk_crossing(f1234,lambda,q,sins,mus,a_spin,h,      &
+          scal,mudisk,r_max,r_min, output) bind(C, name = "p_disk_crossing")
+            use raytracing, only: p_disk_crossing
+            implicit none
+            double precision, intent(in) :: f1234(4), lambda, q, sins, mus
+            double precision, intent(in) :: a_spin, h, scal, mudisk, r_max, r_min
+            double precision, intent(out):: output(4)
+            output = p_disk_crossing(f1234,lambda,q,sins,mus,a_spin,h,        &
+               scal,mudisk,r_max,r_min)
+            return
+        end subroutine wrap_p_disk_crossing
+        
+        subroutine wrap_p_coord_at_infinity(f1234,lambda,q,sins,mus,a_spin,   &
+          h,scal, output) bind(C, name = "p_coord_at_infinity")
+            use raytracing, only: p_coord_at_infinity
+            implicit none
+            double precision, intent(in) :: f1234(4), lambda, q, sins, mus
+            double precision, intent(in) :: a_spin, h, scal
+            double precision, intent(out):: output(4)
+            output = p_coord_at_infinity(f1234,lambda,q,sins,mus,a_spin,h,scal)
+            return
+          end subroutine wrap_p_coord_at_infinity
+        
+        subroutine wrap_trace_disk_observer(nro,nphi,rn,mueff,mu0,spin,rmin,   &
+                   rout,mudisk,d) bind(C, name = "trace_disk_observer")
             use raytracing, only: trace_disk_observer
+            implicit none
             integer, intent(in) :: nro, nphi
             double precision, intent(in) :: rn(nro), mueff, mu0, spin, rmin, rout
             double precision, intent(in) :: mudisk, d
             call trace_disk_observer(nro,nphi,rn,mueff,mu0,spin,rmin,rout,     &
                                     mudisk,d)
             return
-        end subroutine wrap_disk_observer_trace
+        end subroutine wrap_trace_disk_observer
+          
 end module reltrans_interface

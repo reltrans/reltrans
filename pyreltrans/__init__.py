@@ -95,7 +95,7 @@ def _wrap_getrgrid(f, rnmin, rnmax, mueff, nro, nphi):
     return rn, domega
 
 
-def _wrap_grtrace(f, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
+def _wrap_trace_disk_observer(f, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
     nro = len(rn)
     # ctypes scalars
     nro_c = ct.c_int(nro)
@@ -301,7 +301,25 @@ class Reltrans:
         ]
         self.lib_reltrans.getrgrid_.restype = None
 
-        self.lib_reltrans.grtrace.argtypes = [
+        self.lib_reltrans.raytrace_disk.argtypes = [
+            ct.POINTER(ct.c_double),  # p
+            f_double,  # f1234(4)
+            ct.POINTER(ct.c_double),  # lambda
+            ct.POINTER(ct.c_double),  # q
+            ct.POINTER(ct.c_double),  # sinobs
+            ct.POINTER(ct.c_double),  # muobs
+            ct.POINTER(ct.c_double),  # a_spin
+            ct.POINTER(ct.c_double),  # robs
+            ct.POINTER(ct.c_double),  # scal
+            ct.POINTER(ct.c_double),  # radi
+            ct.POINTER(ct.c_double),  # mu
+            ct.POINTER(ct.c_double),  # phi
+            ct.POINTER(ct.c_double),  # time
+            ct.POINTER(ct.c_double),  # sigma
+        ]
+        self.lib_reltrans.raytrace_disk.restype = None
+
+        self.lib_reltrans.trace_disk_observer.argtypes = [
             ct.POINTER(ct.c_int),  # nro
             ct.POINTER(ct.c_int),  # nphi
             f_double,  # rn
@@ -313,7 +331,7 @@ class Reltrans:
             ct.POINTER(ct.c_double),  # mudisk
             ct.POINTER(ct.c_double),  # d
         ]
-        self.lib_reltrans.grtrace.restype = None
+        self.lib_reltrans.trace_disk_observer.restype = None
 
         self.lib_reltrans.get_needresp2.argtypes = [ct.POINTER(ct.c_int)]
         self.lib_reltrans.get_needresp2.restype = None
@@ -351,9 +369,9 @@ class Reltrans:
             self.lib_reltrans.getrgrid_, rnmin, rnmax, mueff, nro, nphi
         )
 
-    def grtrace(self, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
-        _wrap_grtrace(
-            self.lib_reltrans.grtrace,
+    def trace_disk_observer(self, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
+        _wrap_trace_disk_observer(
+            self.lib_reltrans.trace_disk_observer,
             nphi,
             rn,
             mueff,
@@ -364,6 +382,97 @@ class Reltrans:
             mudisk,
             d,
         )
+
+    def raytrace_disk(self,p,f1234,lambda_,q,sinobs,muobs,a_spin,
+             robs, scal):
+    # ctypes scalars
+        f1234_c  = np.asarray(f1234, dtype=np.float64)
+        p_c      = ct.c_double(p      )
+        lambda_c = ct.c_double(lambda_)
+        q_c      = ct.c_double(q      )
+        sinobs_c = ct.c_double(sinobs )
+        muobs_c  = ct.c_double(muobs  )
+        aspin_c  = ct.c_double(a_spin )
+        robs_c   = ct.c_double(robs   )                                  
+        scal_c   = ct.c_double(scal   )
+        radi_c   = ct.c_double(0      ) #out
+        mu_c     = ct.c_double(0      ) #out
+        phi_c    = ct.c_double(0      ) #out
+        time_c   = ct.c_double(0      ) #out
+        sigma_c  = ct.c_double(0      ) #out
+        self.lib_reltrans.raytrace_disk(
+            ct.byref(p_c     ),
+            f1234_c.ctypes.data_as(f_double),
+            ct.byref(lambda_c),
+            ct.byref(q_c     ),
+            ct.byref(sinobs_c),
+            ct.byref(muobs_c ),
+            ct.byref(aspin_c ),
+            ct.byref(robs_c  ),
+            ct.byref(scal_c  ),
+            ct.byref(radi_c  ),
+            ct.byref(mu_c    ),
+            ct.byref(phi_c   ),
+            ct.byref(time_c  ),
+            ct.byref(sigma_c )
+            )
+        return radi_c, mu_c, phi_c, time_c, sigma_c
+
+    def p_disk_crossing(self,f1234,lambda_,q,sins,mus,a_spin,h,
+          scal,mudisk,r_max,r_min):
+    # ctypes scalars
+        f1234_c  = np.asarray(f1234, dtype=np.float64)
+        lambda_c = ct.c_double(lambda_)
+        q_c      = ct.c_double(q      )
+        sins_c   = ct.c_double(sins   )
+        mus_c    = ct.c_double(mus    )
+        aspin_c  = ct.c_double(a_spin )
+        h_c      = ct.c_double(h      )                                  
+        scal_c   = ct.c_double(scal   )
+        mudisk_c = ct.c_double(mudisk )
+        rmax_c   = ct.c_double(r_max  )
+        rmin_c   = ct.c_double(r_min  ) 
+        out      = ct.c_double(0      ) #output
+        self.lib_reltrans.p_disk_crossing(
+            f1234_c.ctypes.data_as(f_double),
+            ct.byref(lambda_c),
+            ct.byref(q_c     ),
+            ct.byref(sins_c  ),
+            ct.byref(mus_c   ),
+            ct.byref(aspin_c ),
+            ct.byref(h_c     ),
+            ct.byref(scal_c  ),
+            ct.byref(mudisk_c),
+            ct.byref(rmax_c  ),
+            ct.byref(rmin_c  ),
+            ct.byref(out     )
+            )
+        return out
+
+    def p_coord_at_infinity(self,f1234,lambda_,q,sins,mus,a_spin,h,scal):
+    # ctypes scalars
+        f1234_c  = np.asarray(f1234, dtype=np.float64)
+        lambda_c = ct.c_double(lambda_)
+        q_c      = ct.c_double(q      )
+        sins_c   = ct.c_double(sins   )
+        mus_c    = ct.c_double(mus    )
+        aspin_c  = ct.c_double(a_spin )
+        h_c      = ct.c_double(h      )                                  
+        scal_c   = ct.c_double(scal   )
+    # vectors 
+        out = np.zeros(4, dtype=np.float64)
+        self.lib_reltrans.p_coord_at_infinity(
+            f1234_c.ctypes.data_as(f_double),
+            ct.byref(lambda_c),
+            ct.byref(q_c     ),
+            ct.byref(sins_c  ),
+            ct.byref(mus_c   ),
+            ct.byref(aspin_c ),
+            ct.byref(h_c     ),
+            ct.byref(scal_c  ),
+            out.ctypes.data_as(f_double)
+            )
+        return out
 
     def get_re(self, nro, nphi):
         out = np.zeros(nro * nphi, dtype=np.float64)

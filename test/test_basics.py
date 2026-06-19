@@ -415,7 +415,7 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
     reltrans.set_re(nro, nphi)
     reltrans.set_taudo(nro, nphi)
     reltrans.set_pem(nro, nphi)
-    reltrans.grtrace(
+    reltrans.trace_disk_observer(
         nphi=nphi,
         rn=rn,
         mueff=mueff,
@@ -432,6 +432,62 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
     assert_snapshot(re, name="re1", rtol=2e-4)
     assert_snapshot(taudo, name="taudo1", rtol=2e-4)
     assert_snapshot(pem, name="pem1", rtol=2e-4)
+
+
+def test_raytrace_disk(reltrans, assert_snapshot):
+    reltrans.reset()
+    p = 0.16638448413345461
+    f1234 = [0.97999999999999998, 0, -0.1989974874213242, 1]
+    q = 1.1723701732639298
+    lambda_ = 0.0
+    sinobs = np.sin(1e-3)
+    muobs = np.cos(1e-3)
+    aspin = 0.998
+    robs  = 6.0
+    scal = 1.0
+    radi, mu, phi, time, sigma = reltrans.raytrace_disk(p,f1234,lambda_,q,sinobs,muobs,aspin,robs, scal)
+    # print(f'FROM THE TESTS: radi {radi}, mu {mu}, phi {phi}, time {time}, sigma {sigma}')
+    assert radi.value  == pytest.approx(60095.57339645814, rel=1e-4) 
+    assert mu.value    == pytest.approx(0.9701656408593914, rel=1e-4) 
+    assert phi.value   == pytest.approx(6.247995161686957, rel=1e-6) 
+    assert time.value  == pytest.approx(60108.777370445634, rel=1e-6) 
+    assert sigma.value == pytest.approx(60089.55895566616, rel=1e-6)
+
+
+def test_p_disk_crossing(reltrans, assert_snapshot):
+    reltrans.reset()
+    f1234 = [0.97999999999999998, 0, -0.1989974874213242, 1]
+    q = 1.1723701732639298
+    lambda_ = 0.0
+    sins  = np.sin(10)
+    mus   = np.cos(10)
+    aspin   = 0.998
+    h       = 6.0
+    scal    = 1.0
+    mudisk  = np.cos(0)
+    r_max   = 300.0
+    r_min   = 1.3
+    
+    p_out = reltrans.p_disk_crossing(f1234,lambda_,q,sins,mus,aspin,h,
+          scal,mudisk,r_max,r_min)
+    print(f'FROM THE TESTS: p_out = {p_out}')
+    # p_ref = 0.16638448413345461
+    assert p_out.value == -1
+
+
+def test_p_coord_at_infinity(reltrans, assert_snapshot):
+    reltrans.reset()
+    f1234 = [0.97999999999999998, 0, -0.1989974874213242, 1]
+    q = 1.1723701732639298
+    lambda_ = 0.0
+    sins  = np.sin(0)
+    mus   = np.cos(0)
+    aspin   = 0.998
+    h       = 6.0
+    scal    = 1.0
+    p_out = reltrans.p_coord_at_infinity(f1234,lambda_,q,sins,mus,aspin,h,scal)
+    print(f'FROM THE TESTS: p_out = {p_out}')
+    assert 0 == -1
 
     
 def test_ReIm8_check_second_response(reltrans,  assert_snapshot, telescope, envars):

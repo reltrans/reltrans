@@ -43,8 +43,6 @@ contains
         double precision, intent(in) :: f1234(4), lambda, q, sinobs, muobs
         double precision, intent(in) :: a_spin, robs, scal
         double precision, intent(out) :: radi, mu, phi, time, sigma
-        double precision :: tm1, tm2
-        double precision :: tr1, tr2
         call YNOGK(p,f1234,lambda,q,sinobs,muobs,a_spin,robs,scal,&
                    radi,mu,phi,time,sigma)
         return
@@ -181,7 +179,8 @@ contains
         scal     = 1.d0
         velocity = 0.d0
         taudo1   = 0.0
-        re1      = 0.0      
+        re1      = 0.0
+        !TODO: kerrz optimisation here! 
         do i = 1,nro
             do j = 1,NPHI
                 phin  = (j-0.5) * 2.d0 * pi / dble(nphi)
