@@ -30,7 +30,33 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
   !   nfsave:    saved number
   ! OUTPUTS
   !   needtrans: if true, we must do the kernel calculation
-  !   neecconv:  if true, we must do the convolution
+!> Checks if reltrans needs to calculate the kernel
+!> Parameters that rtrans() is sensitive to:
+!> (1-9):   h1,h2,a,inc,rin,rout,zcos,Gamma,logxi/Dkpc
+!> (11):    lognep
+!> (13):    eta_0
+!> (18):    qboost
+!> (20-22): honr,b1,b2
+!> (31):    Anorm
+!> Also need to check if the frequency range changes
+!>
+!> Parameters the restframe spec is sensitive to
+!> (10):     Afe
+!> (12):    Ecut/kTe  
+!> Inputs:
+!>     Cp:        defines which model
+!>     Cpsave:    saved Cp
+!>     param:     parameter array
+!>     paramsave: saved array
+!>     fhi:       high frequency range
+!>     flo:       low frequency range
+!>     fhisave:   saved frequency 
+!>     flosave:   saved frequency 
+!>     nf:        number of frequency bins
+!>     nfsave:    saved number
+!> Outputs:
+!>     needtrans: if true, we must do the kernel calculation
+!>     neecconv:  if true, we must do the convolution
     implicit none 
     integer         , intent(in)  :: Cp, Cpsave, nf, nfsave
     real            , intent(in)  :: param(32), paramsave(32)
