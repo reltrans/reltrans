@@ -474,7 +474,7 @@ def test_trace_observer_disk_single_photon(reltrans, assert_snapshot):
     p_out = reltrans.p_disk_crossing(four_momentum,lambda_.value,q.value,sin0,cos0,aspin,dist,scal,mudisk,r_max,r_min)
     
     #from the affine parameter and constant of motion to the interesting values
-    radi, mu, phi, time, sigma = reltrans.raytrace_disk(p_out,four_momentum,lambda_,q,sin0,cos0,aspin,dist,scal)
+    radi, mu, phi, time, sigma = reltrans.get_raytrace_coords(p_out,four_momentum,lambda_,q,sin0,cos0,aspin,dist,scal)
     # print(f'FROM THE TESTS: radi {radi}, mu {mu}, phi {phi}, time {time}, sigma {sigma}')
     assert radi.value  == pytest.approx(3.3090221511440556, rel=1e-4) 
     assert mu.value    == pytest.approx(0.0, rel=1e-4) 
@@ -502,7 +502,7 @@ def test_trace_source_disk_single_photon(reltrans, assert_snapshot):
     p_out = reltrans.p_disk_crossing(four_momentum,lambda_,q,sins,mus,aspin,h,
           scal,mudisk,r_max,r_min)
     #from the affine parameter and constant of motion to the interesting values
-    radi, mu, phi, time, sigma = reltrans.raytrace_disk(p_out,four_momentum,lambda_.value,q.value,sins,mus,aspin,h,scal)
+    radi, mu, phi, time, sigma = reltrans.get_raytrace_coords(p_out,four_momentum,lambda_.value,q.value,sins,mus,aspin,h,scal)
     # print(f'FROM THE TESTS: radi {radi}, mu {mu}, phi {phi}, time {time}, sigma {sigma}')
     assert radi.value  == pytest.approx(2.9239091166396736, rel=1e-4) 
     assert mu.value    == pytest.approx(0.0, rel=1e-4) 
