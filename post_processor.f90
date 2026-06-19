@@ -26,12 +26,12 @@ program ppmain
   param(15) = 0.0999336        !Anorm
 
 ! Settings
-  chainmode = .true.  !Reading in a chain (true) or just entering one parameter set (false)
+  chainmode = .false.  !Reading in a chain (true) or just entering one parameter set (false)
   xe        = 20       !Number of radial zones
   adensity  = 1        !1 = zone A ne; 0 = const ne
   
 ! Name of input chain
-  chainfile = '/Users/nai47/Dropbox/Patrick_CygX1_RXTE/post_referee_fits/contour_plots/'
+  chainfile = '/Users/administrator/Dropbox/Patrick_CygX1_RXTE/post_referee_fits/contour_plots/'
   chainfile = trim(chainfile) // 'adam_dcp_final.out'
 
 ! Name of output chain (with distance column added)
@@ -123,7 +123,10 @@ subroutine post_processor(param,xe,adensity,chainmode,chainfile,newchainfile,  &
         if(status .ne. 0) stop 'Cannot determine No of rows'
         call ftgkyj(unit,'TFIELDS',columns,comment,status)
         if(status .ne. 0) stop 'Cannot determine No of columns'
-     
+
+        steps = 100 !!!!!!!!!!!!!!!!!!!*******************
+
+        
         !Copy chain file to new chain file
         status = 0
         call copyhdu(unit,newchainfile,newunit)
@@ -210,7 +213,7 @@ function distance(Cp, nlp, xe_in, adensity_in, param)
     ! relativistic parameters and limit on rin and h
     ! lens needs to be allocatable to save it.
     double precision, allocatable :: frobs(:), frrel(:)
-    double precision :: fhisave, flosave, fcons, contx_temp
+    double precision :: fhisave, flosave, fcons, contx_temp, E , dE
 
     double precision, allocatable :: logxir_dens(:)
 
@@ -318,16 +321,12 @@ function distance(Cp, nlp, xe_in, adensity_in, param)
     call radfunctions_dens(config, model_args, arrays)
     allocate( logxir_dens(config%xe) )
     logxir_dens = logxir
-
+    
 ! Calculate ionization profile assuming isotropic corona seen from D=1kpc
     dset            = 1
     model_args%Dkpc = 1.0
     call init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
-    call radfuncs_dist(config%xe, model_args%rin, rnmax,model_args%b1,         &
-         model_args%b2, model_args%qboost, fcons,                              &
-         & dble(model_args%lognep), model_args%a, model_args%h(1),             &
-         model_args%honr, rlp, dcosdr, cosd, ndelta, config%rmin,npts(1),      &
-         & logxir, gsdr, logner, pnorm)
+    call radfuncs_dist(config, model_args, fcons)
     
 ! Calculate the re-scaling distance
     Distance = 10.0**( 0.5 * ( logxir_dens(2)-logxir(2) )  )
