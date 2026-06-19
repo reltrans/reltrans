@@ -304,7 +304,7 @@ class Reltrans:
         ]
         self.lib_reltrans.getrgrid_.restype = None
 
-        self.lib_reltrans.raytrace_disk.argtypes = [
+        self.lib_reltrans.get_raytrace_coords.argtypes = [
             ct.POINTER(ct.c_double),  # p
             f_double,  # f1234(4)
             ct.POINTER(ct.c_double),  # lambda
@@ -320,7 +320,7 @@ class Reltrans:
             ct.POINTER(ct.c_double),  # time
             ct.POINTER(ct.c_double),  # sigma
         ]
-        self.lib_reltrans.raytrace_disk.restype = None
+        self.lib_reltrans.get_raytrace_coords.restype = None
 
         self.lib_reltrans.trace_disk_observer.argtypes = [
             ct.POINTER(ct.c_int),  # nro
@@ -386,7 +386,7 @@ class Reltrans:
             d,
         )
 
-    def raytrace_disk(self,p,f1234,lambda_,q,sinobs,muobs,a_spin,
+    def get_raytrace_coords(self,p,f1234,lambda_,q,sinobs,muobs,a_spin,
              robs, scal):
     # ctypes scalars
         f1234_c  = np.asarray(f1234, dtype=np.float64)
@@ -403,7 +403,7 @@ class Reltrans:
         phi_c    = ct.c_double(0      ) #out
         time_c   = ct.c_double(0      ) #out
         sigma_c  = ct.c_double(0      ) #out
-        self.lib_reltrans.raytrace_disk(
+        self.lib_reltrans.get_raytrace_coords(
             ct.byref(p_c     ),
             f1234_c.ctypes.data_as(f_double),
             ct.byref(lambda_c),

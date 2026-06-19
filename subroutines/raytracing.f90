@@ -8,8 +8,8 @@ module raytracing
 
 contains
 
-    subroutine raytrace_disk(p,f1234,lambda,q,sinobs,muobs,a_spin,robs,scal,&
-                        radi,mu,phi,time,sigma)
+    subroutine get_raytrace_coords(p,f1234,lambda,q,sinobs,muobs,a_spin,robs,  &
+                                    scal,radi,mu,phi,time,sigma)
     !> Computes four Boyer-Lindquist coordinates (r,\mu,\phi,t) and affine 
     !> parameter \sigma as functions of parameter p, i.e. functions r(p), 
     !> \mu(p), \phi(p), t(p), \sigma as functions of parameter p, i.e. 
@@ -33,10 +33,6 @@ contains
     !>    phi: value of function \phi(p).
     !>    time: value of function t(p).
     !>    sigma: value of function \sigma(p).
-    !>    tm1,tm2: number of times of photon meets turning points \mu_tp1 and 
-    !>             \mu_tp2 respectively.
-    !>    tr1,tr2: number of times of photon meets turning points r_tp1 and 
-    !>             r_tp2 respectively.
         use blcoordinate, only: YNOGK
         implicit none
         double precision, intent(in) :: p
@@ -46,7 +42,7 @@ contains
         call YNOGK(p,f1234,lambda,q,sinobs,muobs,a_spin,robs,scal,&
                    radi,mu,phi,time,sigma)
         return
-    end subroutine raytrace_disk
+    end subroutine get_raytrace_coords
 
     
     function p_disk_crossing(f1234,lambda,q,sins,mus,a_spin,h,scal,mudisk,     &
@@ -163,7 +159,6 @@ contains
     !>     pem1: array of p-coordinate at the disk for each ray.
     !>     taudo1: array of time coordinate at the disk for each ray.
     !>     re1: array of radial coordinate at the disk for each ray.
-        !use blcoordinate, only: Pemdisk
         use dyn_gr
         implicit none
         integer, intent(in) :: nro,nphi
@@ -195,8 +190,8 @@ contains
                 !pem > 0 means there is a solution
                 !pem < 0 means there is no solution
                 if( pem .gt. 0.0d0 )then
-                    call raytrace_disk(pem,f1234,lambda,q,sin0,cos0,spin,d,    &
-                                        scal,re,mucros,phie,taudo,sigmacros)
+                    call get_raytrace_coords(pem,f1234,lambda,q,sin0,cos0,spin,&
+                                        d,scal,re,mucros,phie,taudo,sigmacros)
                     taudo1(j,i) = taudo - d
                     re1(j,i)    = re
                  end if
@@ -269,7 +264,7 @@ contains
                 pcros = p_disk_crossing(f1234,lambda,q,sins,mus,               &
                                     a_spin,h(m),scal,mudisk,r_max,r_min)
                 !From that, calculate r, phi and t at mu=0
-                call raytrace_disk(pcros,f1234,lambda,q,sins,mus,a_spin,       &
+                call get_raytrace_coords(pcros,f1234,lambda,q,sins,mus,a_spin, &
                               h(m),scal,rcros,mucros,phicros,tcros,sigmacros)
                 if( pcros .gt. 0.0 )then
                     counter        = counter + 1
@@ -331,7 +326,7 @@ contains
         p_coord_at_inf = p_coord_at_infinity(f1234,lambda,q,sins,mus,a_spin,h, &
                                             scal)
         p = 0.9999d0 * p_coord_at_inf
-        call raytrace_disk(p,f1234,lambda,q,sins,mus,a_spin,h,scal,&
+        call get_raytrace_coords(p,f1234,lambda,q,sins,mus,a_spin,h,scal,      &
                  ra,mua,phya,timea,sigmaa)
         cosidel = mua
         return
@@ -435,7 +430,7 @@ contains
         p_coord_at_inf = p_coord_at_infinity(f1234,lambda,q,sins,mus,a_spin,h, &
                                             scal)
         p = 0.9999d0 * p_coord_at_inf
-        call raytrace_disk(p,f1234,lambda,q,sins,mus,a_spin,h,scal,&
+        call get_raytrace_coords(p,f1234,lambda,q,sins,mus,a_spin,h,scal,      &
              ra,mua,phya,timea,sigmaa)
         !Calcluate the distance from BH to centre of observer's camera
         !For an on-axis lamppost, alpha should always be 0, but the below is general
@@ -493,13 +488,13 @@ contains
             p_coord_at_inf = p_coord_at_infinity(f1234,lambda,q,sins,mus,      &
                                   a_spin,h,scal)
             p = 0.9998d0 * p_coord_at_inf
-            call raytrace_disk(p,f1234,lambda,q,sins,mus,a_spin,h,scal,        &
+            call get_raytrace_coords(p,f1234,lambda,q,sins,mus,a_spin,h,scal,  &
                        ra,mua,phya,timea,sigmaa)
             xprev = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*cos(phya)
             yprev = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*sin(phya)
             zprev = ra*mua
             p = 0.9999d0 * p_coord_at_inf
-            call raytrace_disk(p,f1234,lambda,q,sins,mus,a_spin,h,scal,        &
+            call get_raytrace_coords(p,f1234,lambda,q,sins,mus,a_spin,h,scal,  &
                        ra,mua,phya,timea,sigmaa)
             x = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*cos(phya)
             y = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*sin(phya)

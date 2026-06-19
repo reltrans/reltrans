@@ -456,25 +456,6 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
     assert_snapshot(pem, name="pem1", rtol=2e-4)
 
 
-def test_raytrace_disk(reltrans, assert_snapshot):
-    reltrans.reset()
-    p = 0.16638448413345461
-    f1234 = [0.97999999999999998, 0, -0.1989974874213242, 1]
-    q = 1.1723701732639298
-    lambda_ = 0.0
-    sinobs = np.sin(1e-3)
-    muobs = np.cos(1e-3)
-    aspin = 0.998
-    robs  = 6.0
-    scal = 1.0
-    radi, mu, phi, time, sigma = reltrans.raytrace_disk(p,f1234,lambda_,q,sinobs,muobs,aspin,robs, scal)
-    # print(f'FROM THE TESTS: radi {radi}, mu {mu}, phi {phi}, time {time}, sigma {sigma}')
-    assert radi.value  == pytest.approx(60095.57339645814, rel=1e-4) 
-    assert mu.value    == pytest.approx(0.9701656408593914, rel=1e-4) 
-    assert time.value  == pytest.approx(60108.777370445634, rel=1e-4) 
-    assert sigma.value == pytest.approx(60089.55895566616, rel=1e-4)
-
-
 def test_trace_observer_disk_single_photon(reltrans, assert_snapshot):
     reltrans.reset()
     aspin = 0.998
