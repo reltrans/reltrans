@@ -339,17 +339,17 @@ contains
 
 
     subroutine getlimits(sins,mus,a_spin,h,velocity,muobs,x1,x2)
-        !> Minimisation routine will numerically calculate cosdelta for a given cosi.
-        !> To do that, we need limits that bracket only one root. 
-        !> This routine works out sensible limits
-        !> Inputs:
-        !>     sins, mus: sine and cosine of the source inclination angle.
-        !>     a_spin: spin of the black hole.
-        !>     h: height of the source above the black hole.
-        !>     velocity: 3-velocity of the source.
-        !>     muobs: cosine of the observer inclination angle.
-        !> Outputs:
-        !>     x1, x2: limits for the minimisation routine.
+    !> Minimisation routine will numerically calculate cosdelta for a given cosi.
+    !> To do that, we need limits that bracket only one root. 
+    !> This routine works out sensible limits
+    !> Inputs:
+    !>     sins, mus: sine and cosine of the source inclination angle.
+    !>     a_spin: spin of the black hole.
+    !>     h: height of the source above the black hole.
+    !>     velocity: 3-velocity of the source.
+    !>     muobs: cosine of the observer inclination angle.
+    !> Outputs:
+    !>     x1, x2: limits for the minimisation routine.
         implicit none
         double precision sins,mus,a_spin,h,velocity(3),muobs,x1,x2
         double precision cosdelta0,mua,cosi,cosdelta
