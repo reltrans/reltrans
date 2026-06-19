@@ -226,7 +226,7 @@ def test_re_im_5_6(reltrans, assert_snapshot, telescope, envars):
 
 
 def test_ReIm8_check_second_response(reltrans,  assert_snapshot, telescope, envars):
-
+    '''A test for checking if the second response is loaded when ReIm=8'''
     envars["RMF_SET"] = telescope.rmf_path
     envars["ARF_SET"] = telescope.arf_path
     envars["EMIN_REF"] = "0.3"
@@ -456,7 +456,8 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
     assert_snapshot(pem, name="pem1", rtol=2e-4)
 
 
-def test_trace_observer_disk_single_photon(reltrans, assert_snapshot):
+def test_trace_observer_disk_single_photon(reltrans):
+    '''This test computes the ray tracing from the observer to the disk for a single geodesic'''
     reltrans.reset()
     aspin = 0.998
     cos0  = np.cos(30.0/180.0 * np.pi)
@@ -465,14 +466,13 @@ def test_trace_observer_disk_single_photon(reltrans, assert_snapshot):
     scal  = 1.0
     alpha = 3.0 #totally random
     beta  = 4.0 #totally random
-    #from the observer camera to the Carter's constants of motion 
+    #from the observer camera parameter to the Carter's constants of motion 
     four_momentum, lambda_, q = reltrans.constants_of_motion(-alpha,-beta,dist,sin0,cos0,aspin,scal)
     mudisk  = 0.0
     r_max   = 1e8
     r_min   = 0.0
-    #from the Carter's constant of motion to the affine parameter where the geodedic hit the disk
+    #from the Carter's constant of motion to the affine parameter where the geodesic hit the disk
     p_out = reltrans.p_disk_crossing(four_momentum,lambda_.value,q.value,sin0,cos0,aspin,dist,scal,mudisk,r_max,r_min)
-    
     #from the affine parameter and constant of motion to the interesting values
     radi, mu, phi, time, sigma = reltrans.get_raytrace_coords(p_out,four_momentum,lambda_,q,sin0,cos0,aspin,dist,scal)
     # print(f'FROM THE TESTS: radi {radi}, mu {mu}, phi {phi}, time {time}, sigma {sigma}')
@@ -482,7 +482,8 @@ def test_trace_observer_disk_single_photon(reltrans, assert_snapshot):
     assert sigma.value == pytest.approx(18000000.171032075, rel=1e-4)
 
 
-def test_trace_source_disk_single_photon(reltrans, assert_snapshot):
+def test_trace_source_disk_single_photon(reltrans):
+    '''This test computes the ray-tracing from the lamppost source to the disk for a single geodesic'''
     reltrans.reset()
     deltas = 40.0/180.0 * np.pi #180 degree out from kerrz
     pr     = np.cos(deltas)           #cosdelta
@@ -493,7 +494,7 @@ def test_trace_source_disk_single_photon(reltrans, assert_snapshot):
     aspin  = 0.998
     h      = 6.0
     scal   = 1.0
-    #
+    #from the source paramter to the Carter's constants of motion
     four_momentum, lambda_, q = reltrans.initial_photon(pr,pt,pp,sins,mus,aspin,h)
     mudisk  = 0.0
     r_max   = 300.0
