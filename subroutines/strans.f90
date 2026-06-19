@@ -96,6 +96,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     use common_types, only: t_config, t_model_arguments, t_arrays
     use m_rtrans
     use raytracing, only: trace_disk_observer, getdcos, getlens
+    use rtconstants, only: pi
     implicit none
 
     type(t_config), intent(inout) :: config
@@ -108,7 +109,6 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
          frrel(model_args%nlp)
 
     type(t_rtrans_args) :: args
-    double precision, parameter :: pi = acos(-1.d0)
 
     integer m
     double precision cosdout(model_args%nlp)
