@@ -207,25 +207,25 @@ contains
 
     
     subroutine getdcos(a_spin,h,mudisk,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
-        !> For n values of the emission angle, delta, the code calculates the r and t 
-        !> coordinates for the geodesic for mu=mudisk; i.e. the crossing points of a 
-        !> thin disk.
-        !> Note that mudisk = (h/r) / sqrt( (h/r)**2 + 1 )
-        !> INPUTS
-        !>    a_spin       Dimensionless spin parameter
-        !>    h            Height of on-axis, isotropically emitting source
-        !>    mudisk       cos(theta) of disk surface (mu=0 for h/r=0)
-        !>    n            Number of values of emission angle delta (see Fig 1 Dauser 
-        !>                 et al 2013) calculated
-        !>    rout         Disk outer radius
-        !> OUTPUTS
-        !>    npts         Number of points recorded in arrays (leq n, since some 
-        !>                 trial values will not hit the disk)
-        !>    r1(n)        Radius of disk crossing
-        !>    dcosdr(n)    Corresponding d\cos\delta/dr
-        !>    tc(n)        Corresponding time coordinate
-        !>    cosd1(n)     Corresponding \cos\delta
-        !>    cosdout      cosd at the outer disk radius
+    !> For n values of the emission angle, delta, the code calculates the r and t 
+    !> coordinates for the geodesic for mu=mudisk; i.e. the crossing points of a 
+    !> thin disk.
+    !> Note that mudisk = (h/r) / sqrt( (h/r)**2 + 1 )
+    !> INPUTS
+    !>    a_spin       Dimensionless spin parameter
+    !>    h            Height of on-axis, isotropically emitting source
+    !>    mudisk       cos(theta) of disk surface (mu=0 for h/r=0)
+    !>    n            Number of values of emission angle delta (see Fig 1 Dauser 
+    !>                 et al 2013) calculated
+    !>    rout         Disk outer radius
+    !> OUTPUTS
+    !>    npts         Number of points recorded in arrays (leq n, since some 
+    !>                 trial values will not hit the disk)
+    !>    r1(n)        Radius of disk crossing
+    !>    dcosdr(n)    Corresponding d\cos\delta/dr
+    !>    tc(n)        Corresponding time coordinate
+    !>    cosd1(n)     Corresponding \cos\delta
+    !>    cosdout      cosd at the outer disk radius
         implicit none
         double precision, intent(in )   :: a_spin, h(2), mudisk, rout
         integer         , intent(in )   :: n, nlp
