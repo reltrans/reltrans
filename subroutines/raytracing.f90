@@ -313,9 +313,9 @@ contains
 
 
     function cosidel(cosdelta,sins,mus,a_spin,h,velocity)
-        !> Calculates cosi when given cosdelta and parameters
-        !> Inputs:
-        !> cosdelta,sins,mus,a_spin,h,velocity
+    !> Calculates cosi when given cosdelta and parameters
+    !> Inputs:
+    !> cosdelta,sins,mus,a_spin,h,velocity
         implicit none
         double precision cosdelta,sins,mus,a_spin,h,velocity(3),cosidel
         double precision pr,pp,pt,lambda,q,f1234(4),ptotal
