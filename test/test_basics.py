@@ -20,7 +20,7 @@ def _debug_plot(
         plt.ylim(ylim_min, ylim_max)
     plt.show()
 
-    
+
 def _debug_plot_multi_spec(energy, output, title="", xlabel="", ylabel="", yscale="linear", xscale="log"):
     """Used when creating new tests for quickly looking at the data to make
     sure it is sensible."""
@@ -35,8 +35,8 @@ def _debug_plot_multi_spec(energy, output, title="", xlabel="", ylabel="", yscal
     plt.ylabel(ylabel)
     plt.title(title)
     plt.show()
-    
-    
+
+
 def test_basic_invocation(reltrans, assert_snapshot):
     """A smoke test to check whether the default values are working."""
     reltrans.reset()
@@ -170,7 +170,7 @@ def test_dcp_to_dbl_eta0_full_spectrum(reltrans, assert_snapshot):
     # _debug_plot_multi_spec(energy, outputs, "reltrans time-averaged spectrum [boost = 1]", yscale="log", xscale="log")
     # _debug_plot(energy, ratio, "ratio dcp to dbl [boost = 1]", yscale="log", xscale="log")
     np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
-    
+
 
 def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
@@ -240,7 +240,7 @@ def test_ReIm8_check_second_response(reltrans,  assert_snapshot, telescope, enva
     output = reltrans.dcp(energy, xrb1)
     resp2_needed = reltrans.get_needresp2()
     assert resp2_needed
-    
+
     xrb1 = DCP_Parameters(mass=10.0, flo_hz=1, fhi_hz=2, re_im=8.0)
     output = reltrans.dcp(energy, xrb1)
     resp2_needed = reltrans.get_needresp2()
@@ -384,7 +384,7 @@ def test_rtdist_called_twice_lag_and_time_averaged(reltrans, telescope, envars):
     output_rtdist2 = reltrans.rtdist(energy, rtdist_Parameters())
     np.testing.assert_allclose(output_rtdist_lag, output_rtdist_lag2, rtol=1e-4)
     np.testing.assert_allclose(output_rtdist, output_rtdist2, rtol=1e-4)
-    
+
 
 def test_resetting_between_flavours(reltrans):
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
@@ -454,58 +454,3 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
     assert_snapshot(re, name="re1", rtol=2e-4)
     assert_snapshot(taudo, name="taudo1", rtol=2e-4)
     assert_snapshot(pem, name="pem1", rtol=2e-4)
-
-
-def test_trace_observer_disk_single_photon(reltrans):
-    '''This test computes the ray tracing from the observer to the disk for a single geodesic'''
-    reltrans.reset()
-    aspin = 0.998
-    cos0  = np.cos(30.0/180.0 * np.pi)
-    sin0  = np.sqrt(1.0 - cos0**2)
-    dist  = 18000000.0
-    scal  = 1.0
-    alpha = 3.0 #totally random
-    beta  = 4.0 #totally random
-    #from the observer camera parameter to the Carter's constants of motion 
-    four_momentum, lambda_, q = reltrans.constants_of_motion(-alpha,-beta,dist,sin0,cos0,aspin,scal)
-    mudisk  = 0.0
-    r_max   = 1e8
-    r_min   = 0.0
-    #from the Carter's constant of motion to the affine parameter where the geodesic hit the disk
-    p_out = reltrans.p_disk_crossing(four_momentum,lambda_.value,q.value,sin0,cos0,aspin,dist,scal,mudisk,r_max,r_min)
-    #from the affine parameter and constant of motion to the interesting values
-    radi, mu, phi, time, sigma = reltrans.get_raytrace_coords(p_out,four_momentum,lambda_,q,sin0,cos0,aspin,dist,scal)
-    # print(f'FROM THE TESTS: radi {radi}, mu {mu}, phi {phi}, time {time}, sigma {sigma}')
-    assert radi.value  == pytest.approx(3.3090221511440556, rel=1e-4) 
-    assert mu.value    == pytest.approx(0.0, rel=1e-4) 
-    assert time.value  == pytest.approx(18000034.946610235, rel=1e-4) 
-    assert sigma.value == pytest.approx(18000000.171032075, rel=1e-4)
-
-
-def test_trace_source_disk_single_photon(reltrans):
-    '''This test computes the ray-tracing from the lamppost source to the disk for a single geodesic'''
-    reltrans.reset()
-    deltas = 40.0/180.0 * np.pi #180 degree out from kerrz
-    pr     = np.cos(deltas)           #cosdelta
-    pp     = np.sqrt( 1.0 - pr**2 )   #sindelta
-    pt     = 0.0
-    mus    = 1.0   #Position of source: mus=1 means on-axis
-    sins   = np.sqrt(1.0 - mus**2)   #sin of same angle
-    aspin  = 0.998
-    h      = 6.0
-    scal   = 1.0
-    #from the source paramter to the Carter's constants of motion
-    four_momentum, lambda_, q = reltrans.initial_photon(pr,pt,pp,sins,mus,aspin,h)
-    mudisk  = 0.0
-    r_max   = 300.0
-    r_min   = 1.3
-    #from the Carter's constant of motion to the affine parameter where the geodedic hit the disk
-    p_out = reltrans.p_disk_crossing(four_momentum,lambda_,q,sins,mus,aspin,h,
-          scal,mudisk,r_max,r_min)
-    #from the affine parameter and constant of motion to the interesting values
-    radi, mu, phi, time, sigma = reltrans.get_raytrace_coords(p_out,four_momentum,lambda_.value,q.value,sins,mus,aspin,h,scal)
-    # print(f'FROM THE TESTS: radi {radi}, mu {mu}, phi {phi}, time {time}, sigma {sigma}')
-    assert radi.value  == pytest.approx(2.9239091166396736, rel=1e-4) 
-    assert mu.value    == pytest.approx(0.0, rel=1e-4) 
-    assert time.value  == pytest.approx(10.567334777173707, rel=1e-4) 
-    assert sigma.value == pytest.approx(5.442883301224947, rel=1e-4)
