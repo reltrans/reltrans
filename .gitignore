@@ -24,3 +24,8 @@ __pycache__
 __pycache__/*
 lib_reltrans.so*
 run_model.py
+**.swp
+**.orig
+**.egg-info
+**.pdf
+.gdbinit
