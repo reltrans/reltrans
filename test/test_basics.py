@@ -2,57 +2,27 @@ import pytest
 import numpy as np
 from pyreltrans import DCP_Parameters, Dbl_Parameters, rtdist_Parameters
 
+from conftest import _get_snapshot
 
-def _debug_plot(
-        energy, output, title="", xlabel="", ylabel="", yscale="linear", xscale="log", ylim_min=None, ylim_max=None):
-    """Used when creating new tests for quickly looking at the data to make
-    sure it is sensible."""
-    import matplotlib.pyplot as plt
-
-    plt.clf()
-    plt.plot(energy[0:-1], output)
-    plt.xscale(xscale)
-    plt.yscale(yscale)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    if ylim_min is not None and ylim_max is not None:
-        plt.ylim(ylim_min, ylim_max)
-    plt.show()
+plot_spectral_kwargs = dict(
+        yscale = "log", xlabel = "Energy", ylabel = "Flux" , xscale = "log", units = "ef"
+)
 
 
-def _debug_plot_multi_spec(energy, output, title="", xlabel="", ylabel="", yscale="linear", xscale="log"):
-    """Used when creating new tests for quickly looking at the data to make
-    sure it is sensible."""
-    import matplotlib.pyplot as plt
-
-    plt.clf()
-    for spec in output:
-        plt.plot(energy[0:-1], spec)
-    plt.xscale(xscale)
-    plt.yscale(yscale)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.show()
-
-
+@pytest.mark.rt
 def test_basic_invocation(reltrans, assert_snapshot):
     """A smoke test to check whether the default values are working."""
     reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dcp(energy, DCP_Parameters())
-    # _debug_plot(energy,output, "reltransDCp time-averaged spectrum [default parameters]")
-    assert_snapshot(output)
-
+    assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
 
 def test_basic_absorption_invocation(reltrans, assert_snapshot):
     """A smoke test to check whether absorption is being correctly applied."""
     reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dcp(energy, DCP_Parameters(nh = 0.2))
-    # _debug_plot(energy,output, "reltransDCp time-averaged spectrum [default parameters]")
-    assert_snapshot(output)
+    assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
 
 
 def test_dcp_continuum(reltrans, assert_snapshot):
@@ -60,10 +30,7 @@ def test_dcp_continuum(reltrans, assert_snapshot):
     reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dcp(energy, DCP_Parameters(boost = 0))
-    # E = (energy[1:] + energy[:-1]) * 0.5
-    # dE = (energy[1:] - energy[:-1])
-    # _debug_plot(energy, output/dE*E**2, "reltransDCp time-averaged spectrum [boost = 0]", yscale="log", xscale="log")
-    assert_snapshot(output)
+    assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
 
 
 def test_dcp_reflection(reltrans, assert_snapshot):
@@ -71,13 +38,10 @@ def test_dcp_reflection(reltrans, assert_snapshot):
     reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dcp(energy, DCP_Parameters(boost = -1))
-    # E = (energy[1:] + energy[:-1]) * 0.5
-    # dE = (energy[1:] - energy[:-1])
-    # _debug_plot(energy,output/dE*E**2, "reltransDCp time-averaged spectrum [boost = -1]", yscale="log", xscale="log")
-    assert_snapshot(output)
+    assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
 
 
-def test_dcp_to_dbl_continuum(reltrans, assert_snapshot):
+def test_dcp_to_dbl_continuum(reltrans, assert_snapshot, save_plot):
     """Test to compare the continuum output of reltransDCp and reltransDBL (boost = 0)"""
     reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
@@ -85,16 +49,19 @@ def test_dcp_to_dbl_continuum(reltrans, assert_snapshot):
     output_dcp = reltrans.dcp(energy, xrb)
     reltrans.reset()
     output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = xrb.h, a = xrb.a, boost = 0))
-    # ratio = output_dbl/output_dcp
-    # outputs = np.stack((output_dcp, output_dbl))
-    # E = (energy[1:] + energy[:-1]) * 0.5
-    # dE = (energy[1:] - energy[:-1])
-    # _debug_plot_multi_spec(energy, outputs, "reltrans time-averaged spectrum [boost = 0]", yscale="log", xscale="log")
-    # _debug_plot(energy, ratio, "ratio dcp to dbl [boost = -1]", yscale="log", xscale="log")
+    save_plot(
+        energy[0:-1],
+        output_dcp,
+        output_dbl,
+        label1="DCP",
+        label2="DBL",
+        rtol = 1e-4,
+        **plot_spectral_kwargs,
+    )
     np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
 
 
-def test_dcp_to_dbl_reflection_only(reltrans, assert_snapshot):
+def test_dcp_to_dbl_reflection_only(reltrans, assert_snapshot, save_plot):
     """Test to check if the reflection-only outputs (boost = -1)
     of reltransDCp and reltransDBL are the same if the heights
     of the two lampposts are the same"""
@@ -104,16 +71,19 @@ def test_dcp_to_dbl_reflection_only(reltrans, assert_snapshot):
     output_dcp = reltrans.dcp(energy, xrb)
     reltrans.reset()
     output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = xrb.h, a = xrb.a, boost = xrb.boost))
-    # ratio = output_dbl/output_dcp
-    # outputs = np.stack((output_dcp, output_dbl))
-    # E = (energy[1:] + energy[:-1]) * 0.5
-    # dE = (energy[1:] - energy[:-1])
-    # _debug_plot_multi_spec(energy, outputs, "reltrans time-averaged spectrum [boost = -1]", yscale="log", xscale="log")
-    # _debug_plot(energy, ratio, "ratio dcp to dbl [boost = 0]", yscale="log", xscale="log")
+    save_plot(
+        energy[0:-1],
+        output_dcp,
+        output_dbl,
+        label1="DCP",
+        label2="DBL",
+        rtol = 1e-4,
+        **plot_spectral_kwargs,
+    )
     np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
 
 
-def test_dcp_to_dbl_eta0_reflection_only(reltrans, assert_snapshot):
+def test_dcp_to_dbl_eta0_reflection_only(reltrans, assert_snapshot, save_plot):
     """Test to check if the reflection-only outputs (boost = -1)
     of reltransDCp and reltransDBL are the same if the heights
     of the two lampposts are different, BUT eta_0 == 0 (which means that
@@ -124,16 +94,19 @@ def test_dcp_to_dbl_eta0_reflection_only(reltrans, assert_snapshot):
     output_dcp = reltrans.dcp(energy, xrb)
     reltrans.reset()
     output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = 100.0, a = xrb.a, boost = xrb.boost, eta_0 = 0.0))
-    # ratio = output_dbl/output_dcp
-    # outputs = np.stack((output_dcp, output_dbl))
-    # E = (energy[1:] + energy[:-1]) * 0.5
-    # dE = (energy[1:] - energy[:-1])
-    # _debug_plot_multi_spec(energy, outputs, "reltrans time-averaged spectrum [boost = -1]", yscale="log", xscale="log")
-    # _debug_plot(energy, ratio, "ratio dcp to dbl [boost = 0]", yscale="log", xscale="log")
+    save_plot(
+        energy[0:-1],
+        output_dcp,
+        output_dbl,
+        label1="DCP",
+        label2="DBL",
+        rtol = 1e-4,
+        **plot_spectral_kwargs,
+    )
     np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
 
 
-def test_dcp_to_dbl_full_spectrum(reltrans, assert_snapshot):
+def test_dcp_to_dbl_full_spectrum(reltrans, assert_snapshot, save_plot):
     """Test to check if the full time-averaged spectra (boost = 1)
     of reltransDCp and reltransDBL are the same if the heights
     of the two lampposts are the same"""
@@ -143,16 +116,19 @@ def test_dcp_to_dbl_full_spectrum(reltrans, assert_snapshot):
     output_dcp = reltrans.dcp(energy, xrb)
     reltrans.reset()
     output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = xrb.h, a = xrb.a, boost = xrb.boost))
-    # ratio = output_dbl/output_dcp
-    # outputs = np.stack((output_dcp, output_dbl))
-    # E = (energy[1:] + energy[:-1]) * 0.5
-    # dE = (energy[1:] - energy[:-1])
-    # _debug_plot_multi_spec(energy, outputs, "reltrans time-averaged spectrum [boost = 1]", yscale="log", xscale="log")
-    # _debug_plot(energy, ratio, "ratio dcp to dbl [boost = 1]", yscale="log", xscale="log")
+    save_plot(
+        energy[0:-1],
+        output_dcp,
+        output_dbl,
+        label1="DCP",
+        label2="DBL",
+        rtol = 1e-4,
+        **plot_spectral_kwargs,
+    )
     np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
 
 
-def test_dcp_to_dbl_eta0_full_spectrum(reltrans, assert_snapshot):
+def test_dcp_to_dbl_eta0_full_spectrum(reltrans, assert_snapshot, save_plot):
     """Test to check if the full time-averaged spectra (boost = 1)
     of reltransDCp and reltransDBL are the same if the heights
     of the two lampposts are different, BUT eta_0 == 0 (which means that
@@ -163,12 +139,15 @@ def test_dcp_to_dbl_eta0_full_spectrum(reltrans, assert_snapshot):
     output_dcp = reltrans.dcp(energy, xrb)
     reltrans.reset()
     output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = xrb.h, a = xrb.a, boost = xrb.boost, eta_0 = 0))
-    # ratio = output_dbl/output_dcp
-    # outputs = np.stack((output_dcp, output_dbl))
-    # E = (energy[1:] + energy[:-1]) * 0.5
-    # dE = (energy[1:] - energy[:-1])
-    # _debug_plot_multi_spec(energy, outputs, "reltrans time-averaged spectrum [boost = 1]", yscale="log", xscale="log")
-    # _debug_plot(energy, ratio, "ratio dcp to dbl [boost = 1]", yscale="log", xscale="log")
+    save_plot(
+        energy[0:-1],
+        output_dcp,
+        output_dbl,
+        label1="DCP",
+        label2="DBL",
+        rtol = 1e-4,
+        **plot_spectral_kwargs,
+    )
     np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
 
 
@@ -186,19 +165,46 @@ def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
 
     xrb1 = DCP_Parameters(mass=10.0, flo_hz=0.122, fhi_hz=0.224, re_im=4.0)
     output = reltrans.dcp(energy, xrb1)
-    assert_snapshot(output, name="time_lag", atol=1e-9)
+
+    assert_snapshot(
+        output,
+        name="time_lag",
+        atol=1e-9,
+        xscale = "log",
+        xlabel = "Energy",
+        domain = energy[0:-1]
+    )
 
     xrb1.re_im = 1
     output = reltrans.dcp(energy, xrb1)
-    assert_snapshot(output, name="real_part")
-
+    assert_snapshot(
+        output,
+        name="real_part",
+        xscale = "log",
+        xlabel = "Energy",
+        domain = energy[0:-1]
+    )
     xrb1.re_im = 2
     output = reltrans.dcp(energy, xrb1)
-    assert_snapshot(output, name="imaginary_part", rtol=1e-3)
+    assert_snapshot(
+        output,
+        name="imaginary_part",
+        rtol=1e-3,
+        xscale = "log",
+        xlabel = "Energy",
+        domain = energy[0:-1]
+    )
 
     xrb1.re_im = 3
     output = reltrans.dcp(energy, xrb1)
-    assert_snapshot(output, name="magnitude")
+    assert_snapshot(
+        output,
+        name="magnitude",
+        rtol=1e-3,
+        xscale = "log",
+        xlabel = "Energy",
+        domain = energy[0:-1]
+    )
 
 
 def test_re_im_5_6(reltrans, assert_snapshot, telescope, envars):
@@ -216,13 +222,11 @@ def test_re_im_5_6(reltrans, assert_snapshot, telescope, envars):
 
     xrb1 = DCP_Parameters(mass=10.0, flo_hz=0.122, fhi_hz=0.224, re_im=6.0)
     output = reltrans.dcp(energy, xrb1)/dE
-    # _debug_plot(energy,output, title = "reltrans lag spectrum", xlabel="Energy [keV]", ylim_min=-1e-3, ylim_max=1e-3)
-    assert_snapshot(output, name="time_lag")
+    assert_snapshot(output, name="time_lag", xlabel = "Energy", ylabel = "Lag / dE", domain = energy[0:-1])
 
     xrb1.re_im = 5
     output = reltrans.dcp(energy, xrb1)
-    # _debug_plot(energy,output, title = "reltrans modulus spectrum", xlabel="Energy [keV]")
-    assert_snapshot(output, name="real_part")
+    assert_snapshot(output, name="real_part", xlabel = "Energy", domain = energy[0:-1])
 
 
 def test_ReIm8_check_second_response(reltrans,  assert_snapshot, telescope, envars):
@@ -252,8 +256,7 @@ def test_basic_invocation_reltransDbl(reltrans, assert_snapshot, envars):
     reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dbl_lamp(energy, Dbl_Parameters())
-    # _debug_plot(energy,output, "rtdist time-averaged spectrum [default parameters]", xlabel="Energy [keV]", xscale='log', yscale='log')
-    assert_snapshot(output)
+    assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
 
 
 def test_re_im_reltransDbl(reltrans, assert_snapshot, telescope, envars):
@@ -297,7 +300,7 @@ def test_basic_invocation_rtdist(reltrans, assert_snapshot, envars):
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.rtdist(energy, rtdist_Parameters())
     # _debug_plot(energy,output, "rtdist time-averaged spectrum [default parameters]")
-    assert_snapshot(output)
+    assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
 
 
 def test_basic_invocation_rtdist_adens0(reltrans, assert_snapshot, envars):
@@ -308,7 +311,7 @@ def test_basic_invocation_rtdist_adens0(reltrans, assert_snapshot, envars):
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.rtdist(energy, rtdist_Parameters())
     # _debug_plot(energy,output, "rtdist time-averaged spectrum [default parameters]")
-    assert_snapshot(output)
+    assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
 
 
 def test_re_im_rtdist(reltrans, assert_snapshot, telescope, envars):
