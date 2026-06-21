@@ -387,6 +387,28 @@ class Reltrans:
         self.lib_reltrans.get_needresp2.argtypes = [ct.POINTER(ct.c_int)]
         self.lib_reltrans.get_needresp2.restype = None
 
+        self.lib_reltrans.test_kerrz_trace.argtypes = [
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+        ]
+
+        self.lib_reltrans.test_kerrz_trace_lamppost.argtypes = [
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+        ]
+
+
     def dcp(self, energy: np.ndarray, parameters: DCP_Parameters) -> np.ndarray:
         """A wrapper around the XSPEC interface of reltransDcp"""
         return _wrap_call(
@@ -647,8 +669,50 @@ class Reltrans:
         flag = ct.c_int()
         self.lib_reltrans.get_needresp2(ct.byref(flag))
         return bool(flag.value)
-        
-        
+
+    def kerrz_trace(self, spin, cos0, alpha, beta) -> tuple[float,float,float,float]:
+        spin = ct.c_double(spin)
+        cos0 = ct.c_double(cos0)
+        alpha = ct.c_double(alpha)
+        beta = ct.c_double(beta)
+        t = ct.c_double(0.0)
+        r = ct.c_double(0.0)
+        th = ct.c_double(0.0)
+        ph = ct.c_double(0.0)
+        self.lib_reltrans.test_kerrz_trace(
+            ct.byref(spin),
+            ct.byref(cos0),
+            ct.byref(alpha),
+            ct.byref(beta),
+            # Outputs:
+            ct.byref(t),
+            ct.byref(r),
+            ct.byref(th),
+            ct.byref(ph),
+        )
+        return (t.value, r.value, th.value, ph.value)
+
+    def kerrz_trace_lamppost(self, spin, h, delta_s) -> tuple[float,float,float,float]:
+        spin = ct.c_double(spin)
+        h = ct.c_double(h)
+        delta_s = ct.c_double(delta_s)
+        t = ct.c_double(0.0)
+        r = ct.c_double(0.0)
+        th = ct.c_double(0.0)
+        ph = ct.c_double(0.0)
+        self.lib_reltrans.test_kerrz_trace_lamppost(
+            ct.byref(spin),
+            ct.byref(h),
+            ct.byref(delta_s),
+            # Outputs:
+            ct.byref(t),
+            ct.byref(r),
+            ct.byref(th),
+            ct.byref(ph),
+        )
+        return (t.value, r.value, th.value, ph.value)
+
+
 __all__ = [
     DCP_Parameters,
     Reltrans,

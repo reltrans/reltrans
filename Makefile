@@ -45,6 +45,11 @@ FFLAGS := -cpp -DHAVE_INLINE \
 		  -J$(BUILD)/cache \
 		  -I$(BUILD)/cache
 
+LDFLAGS := -lkerrz -Wl,-rpath,'$(abspath $(BUILD)/lib)' -L$(BUILD)/lib \
+	-L$(HEADAS_LIB) -lXSFunctions -lXSModel -lfftw3 \
+	$(shell ls -1 $(HEADAS_LIB)/libcfitsio.*$(SHARED_EXT)* | head -n1) \
+	-Wl,-rpath,'$(HEADAS_LIB)'
+
 # Only pass the version macro if git found a tag
 ifneq ($(VERSION),)
 	FFLAGS += -DRELTRANS_VERSION='"$(VERSION)"'
@@ -59,6 +64,8 @@ else
 	# The default arguments used to compile reltrans
 	FFLAGS += -O3
 	CFLAGS += -O3
+	# For production releases also enable link-time optimisations
+	LDFLAGS += -flto
 endif
 
 ifeq ($(SANITIZE),1)
@@ -102,13 +109,12 @@ ifeq ($(TARGET),Darwin)
 endif
 endif
 
-LDFLAGS := -L$(BUILD)/lib -L$(HEADAS_LIB) \
-	-lXSFunctions -lXSModel -lfftw3 $(shell ls -1 $(HEADAS_LIB)/libcfitsio.*$(SHARED_EXT)* | head -n1) \
-	-Wl,-rpath,'$(HEADAS_LIB)'
-
 # the path to the reltrans library for the -L linker flag
 LIB_PATH := $(abspath $(BUILD)/lib)
 RELTRANS_SHARED_LIBRARY := $(BUILD)/lib/libreltrans.$(SHARED_EXT)
+LIB_KERRZ = $(shell python3 -c "import kerrz_lib ; print(kerrz_lib.bindings.KERRZ_PATH)")
+LIB_KERRZ_SYMLINK := $(BUILD)/lib/libkerrz.$(SHARED_EXT)
+KERRZ_F90 := $(BUILD)/cache/kerrz.f90
 
 all: $(BUILD) $(RELTRANS_SHARED_LIBRARY)
 
@@ -147,10 +153,10 @@ $(BUILD)/bin/dummy: ./utils/dummy.c $(BUILD)/lib/libreltrans.$(SHARED_EXT)
 # someone wants to install it to a different location, the easiest thing to do
 # would be to either tell them to run `make BUILD=/path/to/opt/`, or to invoke
 # `install_name_tool` (see discussion in PR #55).
-$(RELTRANS_SHARED_LIBRARY): $(BUILD)/cache/wrappers.o $(BUILD)/cache/constants.o
+$(RELTRANS_SHARED_LIBRARY): $(BUILD)/cache/wrappers.o $(BUILD)/cache/kerrz.o $(BUILD)/cache/constants.o
 	$(FC) $(FFLAGS) $^ -o $(abspath $@) $(LDFLAGS)
 
-$(BUILD)/cache/wrappers.o: $(ROOTDIR)/wrappers.f90 $(BUILD)/cache/constants.o $(ALL_RELTRANS_SOURCE_FILES)
+$(BUILD)/cache/wrappers.o: $(ROOTDIR)/wrappers.f90 $(BUILD)/cache/kerrz.o $(BUILD)/cache/constants.o $(ALL_RELTRANS_SOURCE_FILES)
 	$(FC) $(FFLAGS) -c $< -o $@
 
 $(BUILD)/cache/%.o: $(ROOTDIR)/subroutines/%.f90
@@ -169,6 +175,17 @@ clean:
 .PHONY: format
 format:
 	clang-format -i ./utils/cli.c
+
+$(BUILD)/cache/kerrz.o: $(KERRZ_F90) $(LIB_KERRZ_SYMLINK)
+	$(FC) $(FFLAGS) -c $< -o $@
+
+$(LIB_KERRZ_SYMLINK):
+	# Assume kerrz is pip-installed
+	# so just symlink the library so we have the library in a convenient place
+	ln -s "$(LIB_KERRZ)" "$@"
+
+$(KERRZ_F90):
+	ln -s $(shell python3 -c "import kerrz_lib ; print(kerrz_lib.bindings.KERRZ_PATH.parent / 'kerrz.f90')") "$@"
 
 .PHONY: xspec
 xspec: $(RELTRANS_SHARED_LIBRARY) xspec/lmodel_reltrans.dat xspec/compile_reltrans.xcm

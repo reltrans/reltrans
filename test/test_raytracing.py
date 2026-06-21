@@ -2,6 +2,24 @@ import pytest
 import numpy as np
 from pyreltrans import DCP_Parameters, Dbl_Parameters, rtdist_Parameters
 
+def test_kerrz_observer_disk(reltrans):
+    aspin = 0.998
+    cos0  = np.cos(np.deg2rad(30))
+    alpha = 3.0 #totally random
+    beta  = 4.0 #totally random
+    t, r, theta, phi = reltrans.kerrz_trace(aspin, cos0, alpha, beta)
+    assert r == pytest.approx(3.3090221511440556, rel=1e-4)
+    assert theta == pytest.approx(np.pi / 2.0, rel=1e-4)
+    assert t == pytest.approx(18000034.946610235, rel=1e-4)
+
+def test_kerrz_lamppost(reltrans):
+    deltas = np.deg2rad(40)
+    aspin  = 0.998
+    h      = 6.0
+    t, r, theta, phi = reltrans.kerrz_trace_lamppost(aspin, h, deltas)
+    assert r  == pytest.approx(2.9239091166396736, rel=1e-4)
+    assert theta == pytest.approx(np.pi / 2.0, rel=1e-4)
+    assert t  == pytest.approx(10.236485162732807, rel=1e-4)
 
 def test_trace_observer_disk_single_photon(reltrans):
     '''This test computes the ray tracing from the observer to the disk for a single geodesic'''

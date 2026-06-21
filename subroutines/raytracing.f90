@@ -166,20 +166,17 @@ contains
     !>     pem1: array of p-coordinate at the disk for each ray.
     !>     taudo1: array of time coordinate at the disk for each ray.
     !>     re1: array of radial coordinate at the disk for each ray.
-        use dyn_gr
+        use dyn_gr, only: pem1, re1, taudo1
+        use kerrz, only: krz_TraceResult, trace_impact_parameters,             &
+            KRZ_STATUS_NONE, kerr_metric
         implicit none
         integer, intent(in) :: nro,nphi
         double precision, intent(in) :: rn(nro),mueff,mu0,spin,rmin,rout
         double precision, intent(in) :: mudisk,d
-        double precision phin,alpha,beta,cos0,sin0,scal
-        double precision velocity(3),f1234(4)
-        double precision lambda,q
-        double precision pem,re,mucros,phie,taudo,sigmacros   
+        double precision :: phin, alpha, beta, cos0
         integer i,j
+        type(krz_TraceResult) :: res
         cos0  = mu0
-        sin0  = sqrt(1.0-cos0**2)
-        scal     = 1.d0
-        velocity = 0.d0
         taudo1   = 0.0
         re1      = 0.0
         !TODO: kerrz optimisation here! 
@@ -188,20 +185,24 @@ contains
                 phin  = (j-0.5) * 2.d0 * pi / dble(nphi)
                 alpha = rn(i) * sin(phin)
                 beta  = -rn(i) * cos(phin) * mueff
-                call constants_of_motion(-alpha,-beta,d,sin0,cos0,spin,scal,   &
-                                        velocity,f1234,lambda,q)
-                !Can try rin instead of rmin to save an if statement
-                pem = p_disk_crossing(f1234,lambda,q,sin0,cos0,spin,d,scal,    &
-                            mudisk,rout,rmin)  
-                pem1(j,i) = pem
-                !pem > 0 means there is a solution
-                !pem < 0 means there is no solution
-                if( pem .gt. 0.0d0 )then
-                    call get_raytrace_coords(pem,f1234,lambda,q,sin0,cos0,spin,&
-                                        d,scal,re,mucros,phie,taudo,sigmacros)
-                    taudo1(j,i) = taudo - d
-                    re1(j,i)    = re
-                 end if
+
+                res = trace_impact_parameters(mu0, alpha, beta, d)
+
+                ! Do not include sub-isco contributions for now:
+                if (res%status == KRZ_STATUS_NONE .and.            &
+                    res%x_final%r > rmin .and. res%x_final%r < rout) then
+                    ! TODO: This is for compatability with YNOGK. It is only
+                    ! used in `strans` to later decide whether the photon hit
+                    ! the disc or not. Any positive value can be used.
+                    !
+                    ! It is technically redundant, as a negative value could be
+                    ! written into `re1` instead.
+                    pem1(j,i) = 1.0d0
+                    taudo1(j,i) = res%x_final%t - d
+                    re1(j,i) = res%x_final%r
+                else
+                    pem1(j, i) = -1.0d0
+                end if
               end do
         end do
         return
@@ -230,6 +231,10 @@ contains
     !>    tc(n)        Corresponding time coordinate
     !>    cosd1(n)     Corresponding \cos\delta
     !>    cosdout      cosd at the outer disk radius
+    !>
+    !> TODO: replace this with a kerrz emissivity call.
+        use kerrz, only: kerr_metric, krz_TraceResult, trace_lamppost,         &
+            KRZ_STATUS_NONE
         implicit none
         double precision, intent(in )   :: a_spin, h(2), mudisk, rout
         integer         , intent(in )   :: n, nlp
@@ -237,49 +242,35 @@ contains
         double precision, intent(inout) :: r1(n,nlp)
         double precision, intent(out)   :: dcosdr(n,nlp), tc(n,nlp), cosd1(n,nlp), cosdout(nlp)
         integer  m,j,k,counter,nout(nlp)
-        double precision sins,mus,lambda,q,scal
-        double precision rhorizon,velocity(3),f1234(4),pp,pr,pt
-        double precision deltamin,deltamax, deltas,r_min,r_max,disco
-        double precision rcros,mucros,phicros,tcros,sigmacros,pcros
-        scal     = 1.d0   !Meaningless scaling factor
-        mus      = 1.d0   !Position of source: mus=1 means on-axis
-        sins     = 0.d0   !sin of same angle
-        velocity = 0.0D0  !3-velocity of source
-        rhorizon = 1.d0+sqrt(1.d0-a_spin**2)
+        double precision rhorizon
+        double precision deltamin,deltamax, deltas,r_min,r_max
+        type(krz_TraceResult) :: res
+        rhorizon = kerr_metric%horizon_radius
+        ! Set minimum and maximum disk radii
+        r_min = kerr_metric%isco
+        r_max = 1d10
 
-        !loop over h here
+        ! Loop over each lamppost here:
         do m=1,nlp
-            !Calculate smallest delta worth considering
+            ! Calculate smallest delta worth considering
             deltamin = acos( h(m) / sqrt( h(m)**2 + rhorizon**2 ) )
-            !Consider arbitrarily large value of delta
+            ! Consider arbitrarily large value of delta
             deltamax = pi
-            !Set minimum and maximum disk radii
-            r_min = disco( a_spin )
-            r_max = 1d10
-            !Go through n different values of the angle delta_s
+            ! Go through n different values of the angle delta_s
             counter = 0
             nout(m) = 1
             do j = 1,n
-            !Run through linear steps in the angle delta (see Fig 1; Dauser et al 2013)
+            ! Run through linear steps in the angle delta (see Fig 1; Dauser et
+            ! al 2013)
                 deltas   = deltamin + (j-1) * (deltamax-deltamin)/float(n-1)
-                !Calculate 4-momentum in source rest frame tetrad
-                pr = cos(deltas)           !cosdelta
-                pp = sqrt( 1.d0 - pr**2 )  !sindelta
-                pt= 0.d0
-                !Convert to LNRF (locally non-rotating reference frame)
-                call initial_photon(pr,pt,pp,sins,mus,a_spin,h(m),             &
-                     velocity,lambda,q,f1234)
-                !Calculate value of p-coordinate at mu=0
-                pcros = p_disk_crossing(f1234,lambda,q,sins,mus,               &
-                                    a_spin,h(m),scal,mudisk,r_max,r_min)
-                !From that, calculate r, phi and t at mu=0
-                call get_raytrace_coords(pcros,f1234,lambda,q,sins,mus,a_spin, &
-                              h(m),scal,rcros,mucros,phicros,tcros,sigmacros)
-                if( pcros .gt. 0.0 )then
-                    counter        = counter + 1
-                    r1(counter,m)    = rcros
-                    cosd1(counter,m) = pr    !cosdelta
-                    tc(counter,m)    = tcros
+                res = trace_lamppost(h(m), deltas)
+                if (res%status == KRZ_STATUS_NONE                  &
+                    .and. r_min <= res%x_final%r .and. r_max >= res%x_final%r  &
+                ) then
+                    counter = counter + 1
+                    r1(counter,m) = res%x_final%r
+                    cosd1(counter,m) = cos(deltas)
+                    tc(counter,m) = res%x_final%t
                     if( rout .gt. r1(counter,m) ) nout(m) = counter
                 end if
             end do 
