@@ -235,6 +235,11 @@ def save_plot(plotting_mode) -> callable:
         rtol=DEFAULT_TOLERANCE_REL,
         **kwargs,
     ):
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            logger.warn("matplotlib missing, cannot create debug plot.")
+            return
 
         if derive_name_from_callstack:
             name = _get_calling_function_name(name)
