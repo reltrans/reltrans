@@ -4,12 +4,17 @@ import inspect
 import pathlib
 import logging
 import dataclasses
+import enum
 
 from typing import Any
+
+DEFAULT_TOLERANCE_ABS = 0
+DEFAULT_TOLERANCE_REL = 2e-4
 
 # The `test` directory
 ROOT_DIR = pathlib.Path(pathlib.Path(__file__).parent)
 SNAPSHOT_DIR = ROOT_DIR / "_snapshots"
+PLOT_DIR = ROOT_DIR / "_plots"
 
 import pytest
 
@@ -22,6 +27,110 @@ except ModuleNotFoundError:
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
+
+def _get_calling_function_name(name: str | None) -> str:
+    """
+    Get the calling function's name. A name may be provided that will be
+    appended as a tail.
+    """
+    caller_name = inspect.currentframe().f_back.f_back.f_code.co_name
+    if name:
+        return f"{caller_name}.{name}"
+    return caller_name
+
+
+class PlotMode(enum.Enum):
+    ALWAYS_PLOT = 1
+    PLOT_ON_FAIL = 2
+    NO_PLOT = 0
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--plot",
+        action="store",
+        help="Whether to save debugging plots when tests fail.",
+        default=True,
+    )
+    parser.addoption(
+        "--plot-always",
+        action="store",
+        help="Whether to save debugging plots irrespective of whether tests fail.",
+        default=False,
+    )
+
+
+@pytest.fixture
+def plotting_mode(request):
+    """
+    This fixture can be used to get boolean that tells the test or fixture
+    whether to enable debug plotting on fail.
+    """
+    if request.config.getoption("--plot-always"):
+        return PlotMode.ALWAYS_PLOT
+    if request.config.getoption("--plot"):
+        return PlotMode.PLOT_ON_FAIL
+    return PlotMode.NO_PLOT
+
+
+def _plot_with_ratio(
+    x: np.ndarray, y1: np.ndarray, y2: np.ndarray, title: str, **kwargs
+):
+    import matplotlib.pyplot as plt
+
+    fig, axes = plt.subplots(nrows=2, figsize=(10, 6))
+
+    residuals = (y1 - y2) / y2
+    axes[1].plot(x, residuals)
+
+    units = kwargs.get("units", "f")
+    if len(units) > 1:
+        units_unknown = False
+
+        y1_tmp = y1.copy()
+        y2_tmp = y2.copy()
+
+        for c in units[:-1]:
+            if c == "e":
+                y1_tmp *= x
+                y2_tmp *= x
+            else:
+                units_unknown = True
+                break
+
+        if units[-1] != "f":
+            units_unknown = True
+
+        if units_unknown:
+            logger.warn(f"Unknown plotting units '{units}'. Plotting as is.")
+            y1_tmp = y1
+            y2_tmp = y2
+
+        y1 = y1_tmp
+        y2 = y2_tmp
+
+    axes[0].plot(x, y1, label=kwargs.get("label1", "actual"))
+    axes[0].plot(x, y2, label=kwargs.get("label2", "expected"))
+
+    axes[0].set_title(title)
+    axes[0].legend()
+
+    # The y-scale is separated for the two axes:
+    axes[0].set_yscale(kwargs.get("yscale", "linear"))
+    axes[1].set_yscale(kwargs.get("yscale_ratio", "linear"))
+    axes[0].set_ylabel(kwargs.get("ylabel", "y") + f" (units: {units})")
+    axes[1].set_ylabel("(y1 - y2) / y2")
+
+    print(kwargs)
+
+    for ax in axes:
+        ax.set_xlabel(kwargs.get("xlabel", "x"))
+        ax.set_xscale(kwargs.get("xscale", "linear"))
+
+    fig.tight_layout()
+
+    return fig
 
 
 def _get_snapshot(name: str) -> None | np.ndarray:
@@ -109,7 +218,49 @@ def reltrans() -> pyreltrans.Reltrans:
 
 
 @pytest.fixture
-def assert_snapshot() -> callable:
+def save_plot(plotting_mode) -> callable:
+    """
+    This fixture can be used to save debugging plots depending on the `--plot`
+    command line argument.
+    """
+
+    def plot_function(
+        domain: np.ndarray | None,
+        data: np.ndarray,
+        snapshot: np.ndarray,
+        name: str | None = None,
+        derive_name_from_callstack=True,
+        plotter_function: callable = _plot_with_ratio,
+        atol=DEFAULT_TOLERANCE_ABS,
+        rtol=DEFAULT_TOLERANCE_REL,
+        **kwargs,
+    ):
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            logger.warn("matplotlib missing, cannot create debug plot.")
+            return
+
+        if derive_name_from_callstack:
+            name = _get_calling_function_name(name)
+        else:
+            name = name or "[name missing]"
+
+        if (plotting_mode == PlotMode.ALWAYS_PLOT) or (
+            (plotting_mode == PlotMode.PLOT_ON_FAIL)
+            and not np.allclose(data, snapshot, rtol=rtol, atol=atol)
+        ):
+            domain = domain if domain is not None else np.array(range(len(data)))
+            fig = plotter_function(domain, data, snapshot, name, **kwargs)
+            # Then save the plot after ensuring the plot directory exists:
+            PLOT_DIR.mkdir(parents=True, exist_ok=True)
+            fig.savefig(PLOT_DIR / (name + ".jpg"))
+
+    return plot_function
+
+
+@pytest.fixture
+def assert_snapshot(save_plot) -> callable:
     """
     Fixture used to assert that snapshots are reproduced to within specified
     tolerances.
@@ -127,15 +278,19 @@ def assert_snapshot() -> callable:
     turns out the order of operations incrues different rounding errors, which,
     as reltrans functions over a very large numerical range (that is, very many
     orders of magnitude), build up to the ~0.1% percent level.
+
+    All other keyword arguments are passed to the debug plotting function.
     """
 
-    def _assert_snapshot_equal(data: np.ndarray, name="", rtol=2e-4, atol=0) -> bool:
-        calling_context = inspect.stack()[1][3]
-
-        snapshot_name = calling_context
-        if name:
-            snapshot_name = f"{snapshot_name}.{name}"
-
+    def _assert_snapshot_equal(
+        data: np.ndarray,
+        name="",
+        rtol=DEFAULT_TOLERANCE_REL,
+        atol=DEFAULT_TOLERANCE_ABS,
+        domain: np.ndarray | None = None,
+        **kwargs,
+    ) -> bool:
+        snapshot_name = _get_calling_function_name(name)
         snapshot = _get_snapshot(snapshot_name)
         if snapshot is None:
             # TODO: print warning that no snapshot exists and that a new one
@@ -147,6 +302,14 @@ def assert_snapshot() -> callable:
             _create_snapshot(snapshot_name, data)
             return True
 
+        save_plot(
+            domain,
+            data,
+            snapshot,
+            name=snapshot_name,
+            derive_name_from_callstack=False,
+            **kwargs,
+        )
         np.testing.assert_allclose(data, snapshot, rtol=rtol, atol=atol)
 
     return _assert_snapshot_equal
