@@ -339,43 +339,6 @@ contains
         return
     end function cosidel
 
-
-    subroutine getlimits(sins,mus,a_spin,h,velocity,muobs,x1,x2)
-    !> CALCULATION SUBROUTINE
-    !> Minimisation routine will numerically calculate cosdelta for a given cosi.
-    !> To do that, we need limits that bracket only one root. 
-    !> This routine works out sensible limits
-    !> Inputs:
-    !>     sins, mus: sine and cosine of the source inclination angle.
-    !>     a_spin: spin of the black hole.
-    !>     h: height of the source above the black hole.
-    !>     velocity: 3-velocity of the source.
-    !>     muobs: cosine of the observer inclination angle.
-    !> Outputs:
-    !>     x1, x2: limits for the minimisation routine.
-        implicit none
-        double precision sins,mus,a_spin,h,velocity(3),muobs,x1,x2
-        double precision cosdelta0,mua,cosi,cosdelta
-        !The first limit is always cosdelta=-1 (corresponding to cosi=1)
-        !Can't take cosdelta too large because this will also braket
-        !the ghost images solutions
-        !Tactic: extrapolate the initially straight line function from
-        !cosi = 1, to some well-chosen cosi value. The cosdelta resulting
-        !From this extrapolation is my second limit.
-        cosdelta0 = -0.98d0
-        mua = cosidel(cosdelta0,sins,mus,a_spin,h,velocity)
-        !Take the straight line from (cosi=1,cosdelta=-1) to 
-        !(cosi=mua,cosdelta=cosdelta0) and extrapolate down to cosi=-0.5
-        cosi = -0.5
-        cosdelta = (cosi-1.d0)*(cosdelta0+1.d0)/(mua-1.d0) - 1.0
-        cosdelta = min( cosdelta , -muobs )  !-muobs is the Newtonian limit 
-        !Use for limits
-        x1 = -1.d0
-        x2 = cosdelta
-        return
-    end subroutine getlimits
-    
-
     subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
     !> CALCULATION SUBROUTINE
     !> Routine to calculate the lensing factor l=d\cos\delta/d\cos(i)
@@ -406,66 +369,6 @@ contains
         lens = continuum%lensing_factor
         return
     end subroutine getlens
-
-
-    function mudiff(cosdelta,par)
-    !> CALCULATION FUNCTION
-    !> Calculates muobs (cosine of distant inclination angle) when given
-    !> cos(delta) (cosine of angle between initial photon trajectory and -z)
-    !> Inputs:
-    !>     cosdelta: cosine of angle between initial photon trajectory and -z
-    !>     par: array of parameters, where par(1)=a_spin, par(2)=h, par(3)=muobs
-    !> Outputs:
-    !>     mudiff: difference between calculated muobs and input muobs
-        implicit none
-        double precision mudiff,cosdelta,par(3)
-        double precision a_spin,h,muobs
-        double precision scal,mus,sins
-        double precision velocity(3),sindelta,pp,pr,pt,lambda,q,f1234(4)
-        double precision ptotal,x,y,z,xprev,yprev,zprev,delx,dely,delz
-        double precision ra,mua,phya,timea,sigmaa,p,cosdum
-        double precision p_coord_at_inf
-        a_spin = par(1)
-        h      = par(2)
-        muobs  = par(3)
-        velocity = 0.0D0
-        sindelta = sqrt( 1.d0 - cosdelta**2 )
-        if ( sindelta .eq. 0.d0 )then
-            cosdum = 1.d0
-        else
-            !Calculate 4-momentum in source rest frame tetrad
-            pp= sindelta
-            pr= cosdelta
-            pt= 0.d0
-            !Convert to LNRF (locally non-rotating reference frame)
-            scal = 1.d0
-            mus  = 1.d0
-            sins = 0.d0
-            call initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,           &
-                                  lambda,q,f1234)
-            p_coord_at_inf = p_coord_at_infinity(f1234,lambda,q,sins,mus,      &
-                                  a_spin,h,scal)
-            p = 0.9998d0 * p_coord_at_inf
-            call get_raytrace_coords(p,f1234,lambda,q,sins,mus,a_spin,h,scal,  &
-                       ra,mua,phya,timea,sigmaa)
-            xprev = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*cos(phya)
-            yprev = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*sin(phya)
-            zprev = ra*mua
-            p = 0.9999d0 * p_coord_at_inf
-            call get_raytrace_coords(p,f1234,lambda,q,sins,mus,a_spin,h,scal,  &
-                       ra,mua,phya,timea,sigmaa)
-            x = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*cos(phya)
-            y = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*sin(phya)
-            z = ra*mua
-            delx = x - xprev
-            dely = y - yprev
-            delz = z - zprev
-            cosdum = delz / sqrt( delx**2 + dely**2 + delz**2 )
-        end if
-    
-        mudiff = cosdum - muobs
-        return
-    end function mudiff
 
     
 end module raytracing
