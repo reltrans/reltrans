@@ -88,5 +88,14 @@ module reltrans_interface
                                     mudisk,d)
             return
         end subroutine wrap_trace_disk_observer
+
+        subroutine wrap_getlens(a_spin, h, muobs, lens, del_t, cosdelta)       &
+            bind(C, name = "wrap_getlens")
+            use raytracing, only: getlens
+            double precision, intent(in) :: a_spin, h, muobs
+            double precision, intent(inout) :: lens, del_t, cosdelta
+            call getlens(a_spin, h, muobs, lens, del_t, cosdelta)
+        end subroutine wrap_getlens
+
           
 end module reltrans_interface

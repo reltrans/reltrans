@@ -387,6 +387,15 @@ class Reltrans:
         self.lib_reltrans.get_needresp2.argtypes = [ct.POINTER(ct.c_int)]
         self.lib_reltrans.get_needresp2.restype = None
 
+        self.lib_reltrans.wrap_getlens.argtypes = [
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+        ]
+
         self.lib_reltrans.test_kerrz_trace.argtypes = [
             ct.POINTER(ct.c_double),
             ct.POINTER(ct.c_double),
@@ -669,6 +678,16 @@ class Reltrans:
         flag = ct.c_int()
         self.lib_reltrans.get_needresp2(ct.byref(flag))
         return bool(flag.value)
+
+    def getlens(self, spin: float, h: float, muobs: float) -> tuple[float, float, float]:
+        spin = ct.c_double(spin)
+        h = ct.c_double(h)
+        muobs = ct.c_double(muobs)
+        lens = ct.c_double(0.0)
+        delta = ct.c_double(0.0)
+        cosdelta = ct.c_double(0.0)
+        self.lib_reltrans.wrap_getlens(spin, h, muobs, lens, delta, cosdelta)
+        return (lens.value, delta.value, cosdelta.value)
 
     def kerrz_trace(self, spin, cos0, alpha, beta) -> tuple[float,float,float,float]:
         spin = ct.c_double(spin)

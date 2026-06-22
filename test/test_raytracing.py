@@ -21,6 +21,22 @@ def test_kerrz_lamppost(reltrans):
     assert theta == pytest.approx(np.pi / 2.0, rel=1e-4)
     assert t  == pytest.approx(10.236485162732807, rel=1e-4)
 
+def test_getlens(reltrans):
+    lens, del_t, cosdelta = reltrans.getlens(0.998, 10.0, np.cos(np.deg2rad(45)))
+    assert lens == pytest.approx(0.8057818904234975, rel=1e-6)
+    assert del_t == pytest.approx(11.636116672685603, rel=1e-6)
+    assert cosdelta == pytest.approx(-0.7650985078050626, rel=1e-6)
+
+    lens, del_t, cosdelta = reltrans.getlens(0.998, 10.0, np.cos(np.deg2rad(2)))
+    assert lens == pytest.approx(0.8021025183127937, rel=1e-6)
+    assert del_t == pytest.approx(8.865999764529988, rel=1e-6)
+    assert cosdelta == pytest.approx(-0.9995109959079069, rel=1e-6)
+
+    lens, del_t, cosdelta = reltrans.getlens(0.998, 10.0, np.cos(np.deg2rad(88)))
+    assert lens == pytest.approx(0.8148675788648064, rel=1e-6)
+    assert del_t == pytest.approx(18.164819858808187, rel=1e-6)
+    assert cosdelta == pytest.approx(-0.22538557531144973, rel=1e-6)
+
 def test_trace_observer_disk_single_photon(reltrans):
     '''This test computes the ray tracing from the observer to the disk for a single geodesic'''
     reltrans.reset()
