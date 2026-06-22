@@ -29,3 +29,4 @@ run_model.py
 **.egg-info
 **.pdf
 .gdbinit
+test/_plots
