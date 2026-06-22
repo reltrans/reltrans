@@ -390,72 +390,20 @@ contains
     !> OUTPUTS
     !>     lens         Lensing factor
     !>     delt         Source to observer time lag 
+        use kerrz, only: trace_lensing, LamppostContinuum
         implicit none
         double precision, intent(in)    :: a_spin,h, muobs
         double precision, intent(inout) :: cosdelta1
         double precision, intent(out)   :: lens, delt
-        double precision sins,mus,lambda,q,scal
-        double precision velocity(3),f1234(4),pp,pr,pt
-        double precision ptotal,dcosdelta,drtbis
-        double precision mua,p,phya,ra,sigmaa,timea
-        double precision par(3),x1,x2,xacc,mu2
-        double precision alpha,beta,b2,d
-        double precision p_coord_at_inf
-
-        !Settings
-        scal      = 1.d0   !Meaningless scaling factor
-        mus       = 1.d0   !Position of source: mus=0 means on-axis
-        sins      = 0.d0   !sin of same angle
-        velocity  = 0.0D0  !3-velocity of source
-        dcosdelta = 1d-2   !Step in cosdelta used for differentiation
-        xacc      = 1d-6   !Accuracy of minimisation routine
-
-        !First calculate the cosdelta corresponding to the input muobs
-      
-        !Set limits for minimisation routine
-        call getlimits(sins,mus,a_spin,h,velocity,muobs,x1,x2)
-        !Call minimisation routine
-        par(1)=a_spin
-        par(2)=h
-        par(3)=muobs
-        cosdelta1 = drtbis(mudiff,x1,x2,xacc,par)
-      
-        !Now calculate the lensing factor
-      
-        !Make cosdelta a little bit bigger and calculate the new cosi
-        mu2 = cosidel(cosdelta1+dcosdelta,sins,mus,a_spin,h,velocity) 
-        !Finally calculate the lensing factor
-        lens = dcosdelta / ( muobs - mu2 )
-
-        !Now calculate the source lag
-
-        !Set 4-momentum in the source frame
-        pr   = cosdelta1             !cosdelta
-        pp   = sqrt( 1.d0 - pr**2 )  !sindelta
-        pt   = 0.d0
-        !Convert to LNRF (locally non-rotating reference frame)
-        call initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,f1234)
-        !Now calculate ptotal (value of p-coordinate at infinity)
-        p_coord_at_inf = p_coord_at_infinity(f1234,lambda,q,sins,mus,a_spin,h, &
-                                            scal)
-        p = 0.9999d0 * p_coord_at_inf
-        call get_raytrace_coords(p,f1234,lambda,q,sins,mus,a_spin,h,scal,      &
-             ra,mua,phya,timea,sigmaa)
-        !Calcluate the distance from BH to centre of observer's camera
-        !For an on-axis lamppost, alpha should always be 0, but the below is general
-        if( muobs .eq. 1.d0 )then
-            d = ra
-        else
-            alpha = -lambda / sqrt( 1.0 - muobs**2 )
-            beta  = q - (alpha**2-a_spin**2)*muobs**2
-            beta = sqrt(beta)
-            b2   = alpha**2 + beta**2
-            d    = sqrt( ra**2 - b2  )
-        end if
-        !Subtract the distance - will do the same for
-        !the disk to observer lags, meaning I don't need to use the
-        !same distance for both calculations
-        delt = timea - d
+        double precision :: d
+        double precision, parameter :: r_at_inf = 1.0d5
+        type(LamppostContinuum) :: continuum
+        continuum = trace_lensing(h, r_at_inf, muobs)
+        d = continuum%alpha**2 + continuum%beta**2
+        d = sqrt( r_at_inf**2 - d  )
+        delt = continuum%time - d
+        cosdelta1 = continuum%cos_delta
+        lens = continuum%lensing_factor
         return
     end subroutine getlens
 

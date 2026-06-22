@@ -417,6 +417,16 @@ class Reltrans:
             ct.POINTER(ct.c_double),
         ]
 
+        self.lib_reltrans.test_kerrz_lensing.argtypes = [
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+            ct.POINTER(ct.c_double),
+        ]
+
 
     def dcp(self, energy: np.ndarray, parameters: DCP_Parameters) -> np.ndarray:
         """A wrapper around the XSPEC interface of reltransDcp"""
@@ -730,6 +740,27 @@ class Reltrans:
             ct.byref(ph),
         )
         return (t.value, r.value, th.value, ph.value)
+
+    def kerrz_trace_lensing(self, spin, h, r_obs, mu_obs) -> tuple[float,float,float]:
+        spin = ct.c_double(spin)
+        h = ct.c_double(h)
+        r_obs = ct.c_double(r_obs)
+        mu_obs = ct.c_double(mu_obs)
+        lensing_factor = ct.c_double(0.0)
+        cos_delta = ct.c_double(0.0)
+        time = ct.c_double(0.0)
+        self.lib_reltrans.test_kerrz_lensing(
+            ct.byref(spin),
+            ct.byref(h),
+            ct.byref(r_obs),
+            ct.byref(mu_obs),
+            # Outputs:
+            ct.byref(lensing_factor),
+            ct.byref(cos_delta),
+            ct.byref(time),
+        )
+        return (lensing_factor.value, cos_delta.value, time.value)
+
 
 
 __all__ = [
