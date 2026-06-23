@@ -278,6 +278,53 @@ class rtdist_Parameters:
     def to_numpy_array(self) -> np.ndarray:
         return np.array(dataclasses.astuple(self), dtype=np.float32)
 
+@dataclasses.dataclass
+class Simrelt_Parameters:
+    # Lamp post height
+    h: float = 6.0
+    # Spin
+    a: float = 0.998
+    # Inclination (degrees)
+    inc: float = 30.0
+    # Inner radius
+    rin: float = -1.0
+    # Outer radius
+    rout: float = 1e3
+    # Cosmological redshift
+    zcos: float = 0.0
+    # Photon index
+    gamma: float = 2.0
+    # logξ ionisation parameter
+    logxi: float = 3.0
+    # Iron abundance
+    afe: float = 1.0
+    # Electron abundance
+    lognep: float = 15.0
+    # Electron temperature in observer frame
+    kte: float = 60.0
+    # Hydrogen column density
+    nh: float = 0.0
+    # Boosting factor (ad-hoc normalisation)
+    boost: float = 1.0
+    # Black hole mass in solar units
+    mass: float = 4.6e7
+    # Lowest frequency in band
+    flo_hz: float = 1e-5
+    # Highest frequency in band
+    fhi_hz: float = 1e-3
+    # Squared coherence
+    coherence_squared: float = 1.0
+    del_A: float = 0.0
+    del_AB: float = 0.0
+    g: float = 0.0
+    Anorm: float = 0.002
+    exposure_time: float = 150000
+    power: float = 10.0
+    use_telescope_response: float = 1
+
+    def to_numpy_array(self) -> np.ndarray:
+        return np.array(dataclasses.astuple(self), dtype=np.float32)
+
 
 class Reltrans:
     def __init__(self, path=None, **kwargs):
@@ -371,6 +418,13 @@ class Reltrans:
     def getrgrid(self, rnmin, rnmax, mueff, nro, nphi):
         return _wrap_getrgrid(
             self.lib_reltrans.getrgrid_, rnmin, rnmax, mueff, nro, nphi
+        )
+
+    def simrelt(self, energy: np.ndarray, parameters: Dbl_Parameters) -> np.ndarray:
+        return _wrap_call(
+            self.lib_reltrans.simrelt_,
+            energy.astype(np.float32),
+            parameters.to_numpy_array(),
         )
 
     def trace_disk_observer(self, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
