@@ -284,6 +284,7 @@ class Reltrans:
         self.lib_reltrans = ct.cdll.LoadLibrary(
             path or get_reltrans_library_path(**kwargs)
         )
+        self.lib_reltrans.FNINIT()
         self.lib_reltrans.tdreltransdcp_.argtypes = [
             f_float,
             f_int,
