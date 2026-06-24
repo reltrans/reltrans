@@ -306,39 +306,6 @@ contains
         return
     end subroutine getdcos
 
-
-    function cosidel(cosdelta,sins,mus,a_spin,h,velocity)
-    !> CALCULATION FUNCTION
-    !> Calculates cosi when given cosdelta and parameters
-    !> Inputs:
-    !>     cosdelta: cosine of the emission angle delta (see Fig 1; Dauser et 
-    !>                  al 2013)
-    !>     sins: sine of the source inclination angle
-    !>     mus: cosine of the source inclination angle
-    !>     a_spin: spin of the black hole
-    !>     h: height of the source above the black hole
-    !>     velocity: 3-velocity of the source
-        implicit none
-        double precision cosdelta,sins,mus,a_spin,h,velocity(3),cosidel
-        double precision pr,pp,pt,lambda,q,f1234(4),ptotal
-        double precision scal,p,ra,mua,phya,timea,sigmaa
-        double precision p_coord_at_inf
-        scal = 1.d0                  !Meaningless scaling factor
-        pr   = cosdelta              !cosdelta
-        pp   = sqrt( 1.d0 - pr**2 )  !sindelta
-        pt   = 0.d0
-        !Convert to LNRF (locally non-rotating reference frame)
-        call initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,f1234)
-        !Now calculate ptotal (value of p-coordinate at infinity)
-        p_coord_at_inf = p_coord_at_infinity(f1234,lambda,q,sins,mus,a_spin,h, &
-                                            scal)
-        p = 0.9999d0 * p_coord_at_inf
-        call get_raytrace_coords(p,f1234,lambda,q,sins,mus,a_spin,h,scal,      &
-                 ra,mua,phya,timea,sigmaa)
-        cosidel = mua
-        return
-    end function cosidel
-
     subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
     !> CALCULATION SUBROUTINE
     !> Routine to calculate the lensing factor l=d\cos\delta/d\cos(i)
