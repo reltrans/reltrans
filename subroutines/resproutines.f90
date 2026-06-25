@@ -251,7 +251,8 @@ subroutine readinresp
   integer status,U1,readwrite,blocksize,hdutype,i,colnum,felem
   integer nelem,j,rows,k
   character (len=200) exname,comment
-  real nullval,area(10000)
+  real nullval
+  real, allocatable :: area(:)
   logical anynull
   status = 0
   call ftgiou(U1,status)
@@ -300,6 +301,9 @@ subroutine readinresp
      call ftgkyj(U1,'NAXIS2',rows,comment,status)
      if(status .ne. 0) stop 'Cannot determine NENERG from arf file'
      if( rows .ne. NENERG ) stop 'rmf and arf not compatible!'
+
+     allocate(AREA(1:NENERG))
+
      !Read in rows and re-normalise response matrix
      do J = 1,NENERG
         colnum = 3
@@ -311,6 +315,9 @@ subroutine readinresp
            end do
         end do
      end do
+
+     deallocate(AREA)
+
      !Close unit
      call ftclos(U1,status)
      call ftfiou(U1,status)
@@ -328,7 +335,8 @@ subroutine readinresp2
   integer status,U1,readwrite,blocksize,hdutype,i,colnum,felem
   integer nelem,j,rows,k
   character (len=200) exname,comment
-  real nullval,area(10000)
+  real nullval
+  real, allocatable :: area(:)
   logical anynull
   status = 0
   call ftgiou(U1,status)
@@ -386,6 +394,7 @@ subroutine readinresp2
      call ftgkyj(U1,'NAXIS2',rows,comment,status)
      if(status .ne. 0) stop 'Cannot determine NENERG from arf file'
      if( rows .ne. NENERG2 ) stop 'rmf and arf not compatible!'
+     allocate(AREA(1:NENERG2))
      !Read in rows and re-normalise response matrix
      do J = 1,NENERG2
         colnum = 3
@@ -398,6 +407,7 @@ subroutine readinresp2
         end do
      end do
      !Close unit
+     deallocate(AREA)
      call ftclos(U1,status)
      call ftfiou(U1,status)
   end if
