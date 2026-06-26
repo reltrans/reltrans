@@ -622,7 +622,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if (is_both_folded(model_args%reim)) then
        call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, &
                 ear, ReS, ImS, model_args%resp_matr) !S is count rate
-    else if (is_ref_folded(model_args%reim)) then
+    else if (is_only_ref_folded(model_args%reim)) then
        call crebin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, ear,   &
              ReS, ImS) !S is in photar form
     end if
@@ -640,7 +640,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        photar = ImS
     else if (is_mode(model_args%reim, MODE_CROSS_SPEC_MODULUS)) then
        photar = sqrt(ReS**2 + ImS**2)
-       if (is_mode(model_args%ReIm, MODE_CROSS_SPEC_MODULUS)) then
+       if (model_args%ReIm == MODE_CROSS_SPEC_MODULUS_REF_FOLDED) then
           write(*, *) "Warning ReIm = 3 should not be used for fitting!"
        end if
     else if (is_mode(model_args%reim, MODE_CROSS_SPEC_LAG)) then
@@ -648,7 +648,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
           dE = ear(i) - ear(i-1)
           photar(i) = atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE
        end do
-       if (is_mode(model_args%ReIm, MODE_CROSS_SPEC_LAG)) then
+       if (model_args%ReIm == MODE_CROSS_SPEC_LAG_REF_FOLDED) then
           write(*, *)"Warning ReIm = 4 should not be used for fitting!"
        end if
     else if (model_args%reim == MODE_LAG_FREQ) then

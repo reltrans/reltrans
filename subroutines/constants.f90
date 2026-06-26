@@ -80,6 +80,17 @@ contains
         end if
     end function is_ref_folded
 
+    logical function is_only_ref_folded(reim) result(bool)
+        !> Returns true if the reference band is folded through
+        !> the telescope response
+        integer, intent(in) :: reim
+        if (reim .ge. 1  .and. reim .le. 4) then
+            bool = .true.
+        else
+            bool = .false.
+        end if
+      end function is_only_ref_folded
+
     logical function is_both_folded(reim) result(bool)
         !> Returns true if in this mode both the subject and reference bands are
         !> folded.
