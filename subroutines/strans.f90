@@ -323,7 +323,7 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
                 taudo = taudo1(j, i)
             endif
 
-            if (re .lt. args%model%rin .and. re .gt. args%model%rout) then
+            if (re .lt. args%model%rin .or. re .gt. args%model%rout) then
                 ! Not in the disc domain, skip this photon and move on to the
                 ! next j.
                 cycle

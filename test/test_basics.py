@@ -457,3 +457,28 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
     assert_snapshot(re, name="re1", rtol=2e-4)
     assert_snapshot(taudo, name="taudo1", rtol=2e-4)
     assert_snapshot(pem, name="pem1", rtol=2e-4)
+
+
+def test_reltransDCp_parameters(reltrans, assert_snapshot):
+    reltrans.reset()
+    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
+
+    xrb = DCP_Parameters(
+        h = 4.50516,
+        a = 0.998,
+        inc = 63.0,
+        rin = -15.1818,
+        rout = 1000.0,
+        zcos = 0.0,
+        gamma = 1.49403,
+        logxi = 4.11957,
+        afe = 1.93351,
+        lognep = 15.0,
+        kte = 123.638,
+        nh = 0.0,
+        boost = -1.0,
+        mass = 4.6e7,
+        re_im = -1
+        )
+    output_dcp = reltrans.dcp(energy, xrb)
+    assert_snapshot(output_dcp, name="set_parameters1", xlabel = "Energy", domain = energy[0:-1])
