@@ -409,7 +409,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         prev_nf = 0 
         ! set sensible distance for observer from the BH
         d = max(1.0d4, 2.0d2 * config%rnmax**2)
-
+        ! Zero all of the saved parameters on the first call.
+        paramsave = 0.0d0
         spinsav = -2.d0 !this is needed to force the run of the GRtrace routine
 
         ! finally, let the people know what they are witnessing!
