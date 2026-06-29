@@ -239,7 +239,7 @@ function distance(Cp, nlp, xe_in, adensity_in, param)
     call arguments_check(config, model_args)
 
     if (config%firstcall) then
-        call init_fftw_allconv()
+        call init_fftw_allconv(.false.)
         config%firstcall = .false.
         config%needtrans = .true.
         config%needconv  = .true.
@@ -269,8 +269,9 @@ function distance(Cp, nlp, xe_in, adensity_in, param)
     call setup_arrays(config, arrays, model_args%nlp)
     
     ! reallocated frequency dependent arrays
-    call realloc_arrays(config, model_args, arrays, prev_nf)
+    call realloc_arrays(config, model_args, arrays, prev_nf, flosave, fhisave)
 
+    
     ! Note: the two different calls are because for the double lP we set the
     ! temperature from the coronal frame(s), but for the single
     ! LP we use the temperature in the observer frame
