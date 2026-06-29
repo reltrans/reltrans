@@ -123,9 +123,6 @@ subroutine post_processor(param,xe,adensity,chainmode,chainfile,newchainfile,  &
         if(status .ne. 0) stop 'Cannot determine No of rows'
         call ftgkyj(unit,'TFIELDS',columns,comment,status)
         if(status .ne. 0) stop 'Cannot determine No of columns'
-
-        steps = 100 !!!!!!!!!!!!!!!!!!!*******************
-
         
         !Copy chain file to new chain file
         status = 0
@@ -239,7 +236,7 @@ function distance(Cp, nlp, xe_in, adensity_in, param)
     call arguments_check(config, model_args)
 
     if (config%firstcall) then
-        call init_fftw_allconv(.false.)
+        call init_fftw_allconv(.true.)
         config%firstcall = .false.
         config%needtrans = .true.
         config%needconv  = .true.
