@@ -110,6 +110,7 @@ jobs:
         run: |
           make DEBUG=1
       - name: Build in debug with coverage
+        if: ${{ contains(matrix.os, 'ubuntu-latest') }}
         run: |
           make DEBUG=1 COVERAGE=1
       - name: Fetch tables and test instrument files
