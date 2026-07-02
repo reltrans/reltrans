@@ -700,6 +700,7 @@ end subroutine simrtdist
 !-----------------------------------------------------------------------
 subroutine simrelt(ear, ne, param, ifl, photar)
   use telematrix
+  use common_types, only: reset_instrument_files
   implicit none
   integer :: ne, ifl, Cp, dset, i
   real    :: ear(0:ne), param(24), photar(ne), par(32)
@@ -720,6 +721,9 @@ subroutine simrelt(ear, ne, param, ifl, photar)
   data idum/-2851043/
   save idum
   character (len=200) command,flxlagfile,phalagfile,rsplagfile,lagfile,root
+  ! Reset instrument files lest they have changed
+  call reset_instrument_files()
+
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=1 means distance is set, logxi is calculated internally
