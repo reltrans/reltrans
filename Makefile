@@ -38,7 +38,6 @@ CFLAGS := -fno-omit-frame-pointer
 FFLAGS := -cpp -DHAVE_INLINE \
 		  -fPIC -fno-automatic -fno-second-underscore \
 		  -fno-omit-frame-pointer \
-		  -fopenmp \
 		  -I$(BUILD)/include \
 		  -I$(HEADAS_INCLUDE) \
 		  -I$(HEADAS_INCLUDE)/fftw \
