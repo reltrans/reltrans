@@ -286,7 +286,7 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
     ! This is to avoid a bug where a disc with the outer radius truncated below
     ! the maximum of r_grid would cause the ray-tracing to terminate
     ! prematurely.
-    logical :: disc_seen = .false.
+    logical :: disc_seen
     ! Used in the loop to check if all over the points along a particular r_grid
     ! radius on the image plane hit the accretion disc.
     logical :: at_least_one_hit
@@ -300,6 +300,7 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
     ! TODO: for ring-like corona, pre-load the correct time-dependent emissivity
     ! profile here, before the loop over observer coordinates
 
+    disc_seen = .false.
     do ri = 1, r_length
         ! Loop in reverse order over the radial grid, starting at the
         ! outermost radius.

@@ -204,7 +204,7 @@ contains
         ! TODO: should this be printing if it modifies the input parameters?
         ! some kind of warning perhaps?
         if (abs(model_args%a) .gt. 0.999) then
-            model_args%a = sign(model_args%a,1.d0) * 0.999
+            model_args%a = sign(1.d0,model_args%a) * 0.999
         end if
         config%rmin = disco(model_args%a)
         config%rh = 1.d0+sqrt(1.d0-model_args%a**2)
