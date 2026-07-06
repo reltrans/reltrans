@@ -138,7 +138,33 @@ contains
       ! a fresh start of the model
       global_config%firstcall = .true.
     end subroutine reset_reltrans
-  
+ 
+    subroutine reset_instrument_files() bind(C, name="reset_instrument_files")
+      ! De-allocate any and all instrument files
+      use telematrix
+      use telematrix2
+      if (allocated(En)) deallocate(En)
+      if (allocated(resp)) deallocate(resp)
+      if (allocated(ECHN)) deallocate(ECHN)
+      if (allocated(NGRP)) deallocate(NGRP)
+      if (allocated(FCHAN)) deallocate(FCHAN)
+      if (allocated(LCHAN)) deallocate(LCHAN)
+      if (allocated(NCHAN)) deallocate(NCHAN)
+      if (allocated(bkgcounts)) deallocate(bkgcounts)
+      if (allocated(bkgrate)) deallocate(bkgrate)
+      if (allocated(En2)) deallocate(En2)
+      if (allocated(resp2)) deallocate(resp2)
+      if (allocated(ECHN2)) deallocate(ECHN2)
+      if (allocated(NGRP2)) deallocate(NGRP2)
+      if (allocated(FCHAN2)) deallocate(FCHAN2)
+      if (allocated(LCHAN2)) deallocate(LCHAN2)
+      if (allocated(NCHAN2)) deallocate(NCHAN2)
+      needresp = .true.
+      needchans = .true.
+      needbkg = .true.
+      needresp2 = .true.
+      needchans2 = .true.
+    end subroutine reset_instrument_files
 
     ! Unwraps the arguments from a parameter array into `args`.
     subroutine unwrap_arguments(args, nlp, dset, params, cutoff_powerlaw)
