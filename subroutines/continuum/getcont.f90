@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-      subroutine getcont(Cp, earx, nex, Gamma, Cutoff, logxi, logne, contx)
+      subroutine getcont(Cp, earx, nex, Gamma, Cutoff, logxi, logne, zcos, contx)
 !!! Calculates continuum spectrum calling nthComp with the correct normalisation
 !!!based on the xillver spectrum 
 !!!  Arg:
@@ -8,7 +8,8 @@
         !  Gamma: continuum spectrum inclination
         !  Cutoff: high energy cut-off or electron temperature
         !  logxi: ionisation parameter
-        !  logne: density 
+        !  logne: density
+        !  zcos: host galaxy redshift
         !  (output) contx: continuum spectrum 
 
       use gr_continuum
@@ -16,7 +17,7 @@
       integer, intent(in)           :: nex, Cp
       real   , intent(in)           :: earx(0:nex), Cutoff, logxi, logne
       real   , intent(out)          :: contx(nex)
-      double precision , intent(in) :: Gamma
+      double precision , intent(in) :: Gamma, zcos
 
       real   , parameter  :: pi = acos(-1.0),ergsev  = 1.602197e-9 ! Convert keV to ergs
       integer :: i, ifl
@@ -31,7 +32,7 @@
          nth_par(2) = Cutoff
          nth_par(3) = 0.05
          nth_par(4) = 1.0
-         nth_par(5) = (1.0/ real(gso(1))) - 1.0
+         nth_par(5) = ( 1.0 + zcos ) / real( gso(1) ) - 1.0
          Ifl=1
 
          call donthcomp(earx, nex, nth_par, ifl, contx, photer)
