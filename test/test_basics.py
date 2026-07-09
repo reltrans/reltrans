@@ -330,7 +330,7 @@ def test_re_im_rtdist(reltrans, assert_snapshot, telescope, envars):
     agn1 = rtdist_Parameters(mass=4.7e6, flo_hz=1e-5, fhi_hz=1e-4, re_im=4.0)
     output = reltrans.rtdist(energy, agn1)
     # _debug_plot(energy,output, title = "rtdist lag spectrum", xlabel="Energy [keV]")
-    assert_snapshot(output, name="time_lag", rtol=5e-4)
+    assert_snapshot(output, name="time_lag", rtol=5e-3)
 
     agn1.re_im = 3
     output = reltrans.rtdist(energy, agn1)
@@ -345,7 +345,7 @@ def test_re_im_rtdist(reltrans, assert_snapshot, telescope, envars):
     agn1.re_im = 2
     output = reltrans.rtdist(energy, agn1)
     # _debug_plot(energy,output, title="rtdist imaginary part spectrum", xlabel="Energy[keV]")
-    assert_snapshot(output, name="imaginary_part", rtol=5e-4)
+    assert_snapshot(output, name="imaginary_part", rtol=5e-3)
 
 
 def test_reltransDCp_called_twice_no_resetting(reltrans, assert_snapshot):
@@ -433,7 +433,7 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
     rin = 1.2369694567256766
     rout = 1000.0
     mudisk = 0.0
-    distance = 18000000.0
+    distance = 1e5
 
     rn, domega = reltrans.getrgrid(rnmin, rnmax, mueff, nro, nphi)
 

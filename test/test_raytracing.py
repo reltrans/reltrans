@@ -10,7 +10,7 @@ def test_kerrz_observer_disk(reltrans):
     t, r, theta, phi = reltrans.kerrz_trace(aspin, cos0, alpha, beta)
     assert r == pytest.approx(3.3090221511440556, rel=1e-4)
     assert theta == pytest.approx(np.pi / 2.0, rel=1e-4)
-    assert t == pytest.approx(18000034.946610235, rel=1e-4)
+    assert t == pytest.approx(100024.22630105753, rel=1e-4)
 
 def test_kerrz_lamppost(reltrans):
     deltas = np.deg2rad(40)
@@ -49,7 +49,7 @@ def test_trace_observer_disk_single_photon(reltrans):
     aspin = 0.998
     cos0  = np.cos(30.0/180.0 * np.pi)
     sin0  = np.sqrt(1.0 - cos0**2)
-    dist  = 18000000.0
+    dist  = 1e5
     scal  = 1.0
     alpha = 3.0 #totally random
     beta  = 4.0 #totally random
@@ -65,8 +65,8 @@ def test_trace_observer_disk_single_photon(reltrans):
     # print(f'FROM THE TESTS: radi {radi}, mu {mu}, phi {phi}, time {time}, sigma {sigma}')
     assert radi.value  == pytest.approx(3.3090221511440556, rel=1e-4)
     assert mu.value    == pytest.approx(0.0, rel=1e-4)
-    assert time.value  == pytest.approx(18000034.946610235, rel=1e-4)
-    assert sigma.value == pytest.approx(18000000.171032075, rel=1e-4)
+    assert time.value  == pytest.approx(100024.5612360437, rel=1e-4)
+    assert sigma.value == pytest.approx(100000.17150694033, rel=1e-4)
 
 
 def test_trace_source_disk_single_photon(reltrans):
