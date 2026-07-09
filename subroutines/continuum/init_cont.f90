@@ -28,7 +28,7 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
           Cutoff_obs = Cutoff_s * gso(1) / real(1.d0 + model_args%zcos)
 
           call getcont(Cp_cont, arrays%earx, nex, model_args%Gamma,            &
-              Cutoff_s, model_args%logxi, model_args%lognep,                   &
+              Cutoff_s, Cutoff_obs, model_args%logxi, model_args%lognep,       &
               model_args%zcos, arrays%contx(:,1))
           arrays%contx = lens(1) / real(1.d0 + model_args%zcos)**2             &
               * gso(1) / real(1.d0 + model_args%zcos) * arrays%contx
@@ -36,7 +36,7 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
           ! write(*,*) 'powerlaw illumination'
           Cutoff_s = real(1.d0 + model_args%zcos) * Cutoff_obs / gso(1)
           call getcont(model_args%Cp, arrays%earx, nex, model_args%Gamma,      &
-              Cutoff_obs, model_args%logxi, model_args%lognep,                 &
+              Cutoff_s, Cutoff_obs, model_args%logxi, model_args%lognep,       &
               model_args%zcos, arrays%contx(:,1))
           arrays%contx = lens(1) / real(1.d0 + model_args%zcos)**2             &
               * (gso(1) / real(1.d0 + model_args%zcos))**model_args%Gamma      &
@@ -84,7 +84,7 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
           !here the observed cutoffs are set from the temperature in the source frame
           Cutoff_obs = Cutoff_s * gso(m) / real(1.d0 + model_args%zcos)
           call getcont(model_args%Cp, arrays%earx, nex, model_args%Gamma,      &
-              Cutoff_s, model_args%logxi, model_args%lognep,                   &
+              Cutoff_s, Cutoff_obs, model_args%logxi, model_args%lognep,       &
               model_args%zcos, arrays%contx(:,m))
           if (m .gt. 1) arrays%contx(:,m) = model_args%eta * arrays%contx(:,m)
           !TODO fix this section, calculate luminosities better
