@@ -1,5 +1,5 @@
 subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
-    !!!sets up the continuum arrays/quantities depending on model parameters/flavour
+!> Sets up the continuum arrays/quantities depending on model parameters/flavour
     use common_types
     use dyn_gr
     use conv_mod
@@ -30,8 +30,8 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
           call getcont(Cp_cont, arrays%earx, nex, model_args%Gamma,            &
               Cutoff_s, Cutoff_obs, model_args%logxi, model_args%lognep,       &
               model_args%zcos, arrays%contx(:,1))
-          arrays%contx = lens(1) / real(1.d0 + model_args%zcos)**2             &
-              * gso(1) / real(1.d0 + model_args%zcos) * arrays%contx
+          arrays%contx = lens(1) / real(1.d0 + model_args%zcos)**3             &
+              * gso(1) * arrays%contx
        else if (model_args%Cp .eq. -1) then
           ! write(*,*) 'powerlaw illumination'
           Cutoff_s = real(1.d0 + model_args%zcos) * Cutoff_obs / gso(1)
