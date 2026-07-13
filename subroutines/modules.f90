@@ -135,19 +135,6 @@ END MODULE dyn_gr
 
 module xillver_tables
     implicit none
-
-    interface
-        ! An interface to the xsatbl function in libXSFunctions.
-        subroutine xsatbl(ear,ne,params,filename,ifl,photar,photer)          &
-            bind(C, name="xsatbl")
-            use iso_c_binding, only: c_float, c_int, c_char
-            real(c_float), dimension(*), intent(in) :: ear, params
-            real(c_float), dimension(*), intent(out) :: photar, photer
-            character(kind=c_char), intent(in) :: filename(*)
-            integer(c_int), value, intent(in) :: ne, ifl
-        end subroutine xsatbl
-    end interface
-
     character (len=50), parameter ::  xillver = 'xillver-a-Ec5_normalised.fits'
     character (len=50), parameter ::  xillverDCp = 'xillverCp_v3.4_normalised.fits'
     character (len=200) ::  path_tables 
