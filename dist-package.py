@@ -58,6 +58,7 @@ def cmd_fortran() -> list[str]:
         f"-J{BUILD_DIR}/cache",
         "-DHAVE_INLINE",
         "-fPIC",
+        "-O3",
         "-fno-automatic",
         "-fno-second-underscore",
         "-fno-omit-frame-pointer",
