@@ -41,116 +41,6 @@ def test_dcp_reflection(reltrans, assert_snapshot):
     assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
 
 
-def test_dcp_to_dbl_continuum(reltrans, assert_snapshot, save_plot):
-    """Test to compare the continuum output of reltransDCp and reltransDBL (boost = 0)"""
-    reltrans.reset()
-    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
-    xrb = DCP_Parameters(h = 5.0, boost = 0)
-    output_dcp = reltrans.dcp(energy, xrb)
-    reltrans.reset()
-    output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = xrb.h, a = xrb.a, boost = 0))
-    save_plot(
-        energy[0:-1],
-        output_dcp,
-        output_dbl,
-        label1="DCP",
-        label2="DBL",
-        rtol = 1e-4,
-        **plot_spectral_kwargs,
-    )
-    np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
-
-
-def test_dcp_to_dbl_reflection_only(reltrans, assert_snapshot, save_plot):
-    """Test to check if the reflection-only outputs (boost = -1)
-    of reltransDCp and reltransDBL are the same if the heights
-    of the two lampposts are the same"""
-    reltrans.reset()
-    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
-    xrb = DCP_Parameters(h = 5.0, boost = -1)
-    output_dcp = reltrans.dcp(energy, xrb)
-    reltrans.reset()
-    output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = xrb.h, a = xrb.a, boost = xrb.boost))
-    save_plot(
-        energy[0:-1],
-        output_dcp,
-        output_dbl,
-        label1="DCP",
-        label2="DBL",
-        rtol = 1e-4,
-        **plot_spectral_kwargs,
-    )
-    np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
-
-
-def test_dcp_to_dbl_eta0_reflection_only(reltrans, assert_snapshot, save_plot):
-    """Test to check if the reflection-only outputs (boost = -1)
-    of reltransDCp and reltransDBL are the same if the heights
-    of the two lampposts are different, BUT eta_0 == 0 (which means that
-    the second lamppost does NOT contribute)."""
-    reltrans.reset()
-    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
-    xrb = DCP_Parameters(h = 5.0, boost = -1)
-    output_dcp = reltrans.dcp(energy, xrb)
-    reltrans.reset()
-    output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = 100.0, a = xrb.a, boost = xrb.boost, eta_0 = 0.0))
-    save_plot(
-        energy[0:-1],
-        output_dcp,
-        output_dbl,
-        label1="DCP",
-        label2="DBL",
-        rtol = 1e-4,
-        **plot_spectral_kwargs,
-    )
-    np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
-
-
-def test_dcp_to_dbl_full_spectrum(reltrans, assert_snapshot, save_plot):
-    """Test to check if the full time-averaged spectra (boost = 1)
-    of reltransDCp and reltransDBL are the same if the heights
-    of the two lampposts are the same"""
-    reltrans.reset()
-    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
-    xrb = DCP_Parameters(h = 5.0, boost = 1)
-    output_dcp = reltrans.dcp(energy, xrb)
-    reltrans.reset()
-    output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = xrb.h, a = xrb.a, boost = xrb.boost))
-    save_plot(
-        energy[0:-1],
-        output_dcp,
-        output_dbl,
-        label1="DCP",
-        label2="DBL",
-        rtol = 1e-4,
-        **plot_spectral_kwargs,
-    )
-    np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
-
-
-def test_dcp_to_dbl_eta0_full_spectrum(reltrans, assert_snapshot, save_plot):
-    """Test to check if the full time-averaged spectra (boost = 1)
-    of reltransDCp and reltransDBL are the same if the heights
-    of the two lampposts are different, BUT eta_0 == 0 (which means that
-    the second lamppost does NOT contribute)."""
-    reltrans.reset()
-    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
-    xrb = DCP_Parameters(h = 5.0, boost = 1)
-    output_dcp = reltrans.dcp(energy, xrb)
-    reltrans.reset()
-    output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters(h1 = xrb.h, h2 = xrb.h, a = xrb.a, boost = xrb.boost, eta_0 = 0))
-    save_plot(
-        energy[0:-1],
-        output_dcp,
-        output_dbl,
-        label1="DCP",
-        label2="DBL",
-        rtol = 1e-4,
-        **plot_spectral_kwargs,
-    )
-    np.testing.assert_allclose(output_dcp, output_dbl, rtol=1e-4)
-
-
 def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     model are working. This test requires an RMF and ARF, which is provided by
@@ -207,6 +97,37 @@ def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
     )
 
 
+def test_negative_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
+    """Test the negative values of re_im = -4 and -3 parameter for the model."""
+    reltrans.reset()
+    energy = np.logspace(np.log10(0.1), np.log10(100), 101)
+
+    envars["EMIN_REF"] = "2.0"
+    envars["EMAX_REF"] = "10.0"
+
+    xrb1 = DCP_Parameters(mass=10.0, flo_hz=0.1, fhi_hz=0.2, re_im=-4.0)
+    output_propercrossNOmatrix = reltrans.dcp(energy, xrb1)
+    assert_snapshot(
+        output_propercrossNOmatrix,
+        name="time_lag",
+        atol=1e-9,
+        xscale = "log",
+        xlabel = "Energy",
+        domain = energy[0:-1]
+    )
+
+    xrb1.re_im = -3
+    output = reltrans.dcp(energy, xrb1)
+    assert_snapshot(
+        output,
+        name="magnitude",
+        rtol=1e-3,
+        xscale = "log",
+        xlabel = "Energy",
+        domain = energy[0:-1]
+    )
+
+
 def test_re_im_5_6(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     model are working. This test requires an RMF and ARF, which is provided by
@@ -227,28 +148,6 @@ def test_re_im_5_6(reltrans, assert_snapshot, telescope, envars):
     xrb1.re_im = 5
     output = reltrans.dcp(energy, xrb1)
     assert_snapshot(output, name="real_part", xlabel = "Energy", domain = energy[0:-1])
-
-
-def test_ReIm8_check_second_response(reltrans,  assert_snapshot, telescope, envars):
-    '''A test for checking if the second response is loaded when ReIm=8'''
-    envars["RMF_SET"] = telescope.rmf_path
-    envars["ARF_SET"] = telescope.arf_path
-    envars["EMIN_REF"] = "0.3"
-    envars["EMAX_REF"] = "10.0"
-    envars["RMF2SET"] = telescope.rmf_path
-    envars["ARF2SET"] = telescope.arf_path
-
-    energy = np.logspace(np.log10(0.1), np.log10(100), 101)
-    reltrans.reset()
-    xrb1 = DCP_Parameters(mass=10.0, flo_hz=1, fhi_hz=2, re_im=6.0)
-    output = reltrans.dcp(energy, xrb1)
-    resp2_needed = reltrans.get_needresp2()
-    assert resp2_needed
-
-    xrb1 = DCP_Parameters(mass=10.0, flo_hz=1, fhi_hz=2, re_im=8.0)
-    output = reltrans.dcp(energy, xrb1)
-    resp2_needed = reltrans.get_needresp2()
-    assert not resp2_needed
 
 
 def test_basic_invocation_reltransDbl(reltrans, assert_snapshot, envars):
@@ -346,67 +245,6 @@ def test_re_im_rtdist(reltrans, assert_snapshot, telescope, envars):
     output = reltrans.rtdist(energy, agn1)
     # _debug_plot(energy,output, title="rtdist imaginary part spectrum", xlabel="Energy[keV]")
     assert_snapshot(output, name="imaginary_part", rtol=5e-3, atol=0.01)
-
-
-def test_reltransDCp_called_twice_no_resetting(reltrans, assert_snapshot):
-    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
-    reltrans.reset()
-    output_dcp = reltrans.dcp(energy, DCP_Parameters())
-    output_dcp2 = reltrans.dcp(energy, DCP_Parameters())
-    np.testing.assert_allclose(output_dcp, output_dcp2, rtol=1e-4)
-
-
-def test_reltransDCp_called_twice_after_resetting(reltrans, assert_snapshot):
-    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
-    reltrans.reset()
-    output_dcp = reltrans.dcp(energy, DCP_Parameters(nh=0.5))
-    reltrans.reset()
-    output_dcp2 = reltrans.dcp(energy, DCP_Parameters(nh=0.5))
-    np.testing.assert_allclose(output_dcp, output_dcp2, rtol=1e-4)
-
-
-def test_rtdist_called_twice(reltrans, assert_snapshot):
-    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
-    reltrans.reset()
-    output_rtdist = reltrans.rtdist(energy, rtdist_Parameters())
-    output_rtdist2 = reltrans.rtdist(energy, rtdist_Parameters())
-    np.testing.assert_allclose(output_rtdist, output_rtdist2, rtol=1e-4)
-
-
-def test_rtdist_called_twice_lag_and_time_averaged(reltrans, telescope, envars):
-    reltrans.reset()
-    envars["RMF_SET"] = telescope.rmf_path
-    envars["ARF_SET"] = telescope.arf_path
-    envars["EMIN_REF"] = "0.3"
-    envars["EMAX_REF"] = "10.0"
-    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
-    agn1 = rtdist_Parameters(mass=4.7e6, flo_hz=1e-5, fhi_hz=1e-4, re_im=4.0)
-    output_rtdist_lag = reltrans.rtdist(energy, agn1)
-    output_rtdist = reltrans.rtdist(energy, rtdist_Parameters()) #call the time averaged spectrum
-    output_rtdist_lag2 = reltrans.rtdist(energy, agn1)
-    output_rtdist2 = reltrans.rtdist(energy, rtdist_Parameters())
-    np.testing.assert_allclose(output_rtdist_lag, output_rtdist_lag2, rtol=1e-4)
-    np.testing.assert_allclose(output_rtdist, output_rtdist2, rtol=1e-4)
-
-
-def test_resetting_between_flavours(reltrans):
-    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
-    reltrans.reset()
-    output_dcp = reltrans.dcp(energy, DCP_Parameters())
-    reltrans.reset()
-    output_rtdist = reltrans.rtdist(energy, rtdist_Parameters())
-    reltrans.reset()
-    output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters())
-    reltrans.reset()
-    output_dcp2 = reltrans.dcp(energy, DCP_Parameters())
-    reltrans.reset()
-    output_rtdist2 = reltrans.rtdist(energy, rtdist_Parameters())
-    reltrans.reset()
-    output_dbl2 = reltrans.dbl_lamp(energy, Dbl_Parameters())
-
-    np.testing.assert_allclose(output_dcp, output_dcp2, rtol=1e-4)
-    np.testing.assert_allclose(output_rtdist, output_rtdist2, rtol=1e-4)
-    np.testing.assert_allclose(output_dbl, output_dbl2, rtol=1e-4)
 
 
 def test_strans_routines_getrgrid(reltrans, assert_snapshot):

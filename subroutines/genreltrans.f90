@@ -357,6 +357,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! freed and re-allocated
 
     if (config%firstcall) then
+        call reset_instrument_files()
         call init_fftw_allconv(IS_DEBUG_BUILD)
         ! initialise environment and allocate all arrays
         call read_environment_variables(config)
@@ -580,7 +581,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if (is_both_folded(model_args%reim)) then
        call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, &
                 ear, ReS, ImS, model_args%resp_matr) !S is count rate
-    else if (is_only_ref_folded(model_args%reim)) then
+    else
        call crebin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, ear,   &
              ReS, ImS) !S is in photar form
     end if
