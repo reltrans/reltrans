@@ -710,7 +710,7 @@ subroutine simrelt(ear, ne, param, ifl, photar)
   integer, parameter :: nex=2**12
   real :: earx(0:nex),photarx(nex),pow
   real :: Pr,rephotarx(nex),imphotarx(nex),mur,mus
-  real :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,br,bs(ne)
+  real :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,br,bs(ne),std_deviation
   real :: flo,fhi,fc,lag(ne),gasdev,lagsim(ne)
   real, parameter :: pi = acos(-1.0)
   integer idum, unit,xunit,status,j
@@ -721,6 +721,10 @@ subroutine simrelt(ear, ne, param, ifl, photar)
   data idum/-2851043/
   save idum
   character (len=200) command,flxlagfile,phalagfile,rsplagfile,lagfile,root
+
+  character (len=200) cross_path
+  integer cross_fd
+
   ! Reset instrument files lest they have changed
   call reset_instrument_files()
 
@@ -842,7 +846,12 @@ subroutine simrelt(ear, ne, param, ifl, photar)
   open(xunit,file=flxlagfile)
   call ftgiou(unit,status)
   open(unit,file=lagfile)
-  
+
+  cross_path = 'sim_cross_' // trim(root) // '.dat'
+
+  call ftgiou(cross_fd,status)
+  open(cross_fd,file=cross_path)
+
 ! Loop through energy bins
   write(unit,*)"skip on"
   write(unit,*)"read serr 1 2"
@@ -867,17 +876,21 @@ subroutine simrelt(ear, ne, param, ifl, photar)
      ! write(14,* ) E,0.5*dE, dlag(i)
      dlag(i) = sqrt( dlag(i) )
      dlag(i) = dlag(i) / ( 2.0 * pi * fc )
+     std_deviation = dlag(i)
      !Now generate simulated data
      lagsim(i) = lag(i) + gasdev(idum) * dlag(i)
      !Write out
      write(unit,*)E,0.5*dE,lagsim(i),dlag(i),lag(i)
      write(xunit,*)ear(i-1),ear(i),dE*lagsim(i),dE*dlag(i)
+     write(cross_fd,*) E,0.5*dE,mus,ReG,ImG,std_deviation
   end do
   close(unit)
   call ftfiou(unit,status)
   close(xunit)
   call ftfiou(xunit,status)
- 
+  close(cross_fd)
+  call ftfiou(cross_fd,status)
+
   Command = 'flx2xsp ' // trim(flxlagfile) // ' ' // trim(phalagfile)
   command = trim(command) // ' ' // trim(rsplagfile)
   write(*,*)"-----------------------------------------------"
