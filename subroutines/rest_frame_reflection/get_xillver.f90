@@ -15,6 +15,7 @@
 
 !!! Last change: Gullo - 2023 Nov
       use xillver_tables
+      use xspec_interface, only: xsatbl
       implicit none
       integer, intent(in)  :: ne, Cp, dim, dimCp
       real   , intent(in)  :: ear(0:ne), param_xillPL(dim), param_xillCp(dimCp)

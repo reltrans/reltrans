@@ -1,3 +1,4 @@
+include 'subroutines/xspec_interface.f90'
 include 'subroutines/modules.f90'
 include 'subroutines/YNOGK_modules.f90'
 include 'subroutines/common.f90'
