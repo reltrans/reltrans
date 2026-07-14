@@ -23,6 +23,15 @@ module xspec_interface
             integer(c_int), value, intent(in) :: nex, Ifl
             character(kind = c_char), intent(in) :: str(*)
         end subroutine c_tbabs
+
+        subroutine donthcomp(earx, nex, params, Ifl, absorbx, photerx)
+            !> The interface around the XSPEC donthcomp. Note that this is a
+            !> Fortran function and so does not need to be bound to a C symbol.
+            real, intent(in) :: earx(nex+1)
+            real, intent(in) :: params(5)
+            real, intent(inout) :: absorbx(nex), photerx(nex)
+            integer, intent(in) :: nex, Ifl
+        end subroutine donthcomp
     end interface
 contains
 
