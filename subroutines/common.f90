@@ -54,6 +54,7 @@ module common_types
         ! me: Number of mue bins
         ! xe: Number of logr bins: bins 1:xe-1 are logarithmically spaced, bin
         ! xe is everything else
+        ! ionvar: ionvar=1 means include ionization variations, ionvar=0 means don't.
         integer :: me, xe, nex, m, ionvar, refvar
 
         ! TODO: are these really constants, or are they hidden variables?
@@ -108,6 +109,7 @@ module common_types
         integer :: mubin, rbin, ibin
 
         ! variable for non linear effects
+        ! DC == 1 means calculate the DC component, else opposite.
         integer :: DC, ionvariation
         real :: dlogxi1, dlogxi2
 

@@ -487,15 +487,10 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
              arrays%ImGrawa)
     else
         ! Calculate raw FT of the full spectrum without absorption
-        call rawS(nex, arrays%earx, config%nf, real(config%flo),               &
-             real(config%fhi), nlp, arrays%contx, real(tauso), real(gso),      &
-             arrays%ReW0, arrays%ImW0, arrays%ReW1, arrays%ImW1,               &
-             arrays%ReW2, arrays%ImW2, arrays%ReW3, arrays%ImW3,               &
-             real(model_args%h), real(model_args%zcos),                        &
-             real(model_args%Gamma), real(model_args%eta),                     &
-             model_args%beta_p, model_args%boost, model_args%g,                &
-             model_args%DelAB, config%ionvar, config%DC, arrays%ReSraw,        &
-             arrays%ImSraw)
+        ! This was once called `rawS` and this comment will help anyone grepping
+        ! find it.
+        call sum_continuum_reflection_transfer_functions(config, model_args,   &
+            arrays, nex, tauso, gso)
 
         ! Include absorption in the model
         do j = 1, config%nf
