@@ -140,6 +140,8 @@ def test_ReIm8_check_second_response(reltrans, telescope, envars):
 
 
 def test_reltransDCp_called_twice_no_resetting(reltrans):
+    '''A test that calls the reltransDCp time-averaged spectrum twice
+    with the same parameters without resetting the model'''
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     reltrans.reset()
     output_dcp = reltrans.dcp(energy, DCP_Parameters())
@@ -148,6 +150,8 @@ def test_reltransDCp_called_twice_no_resetting(reltrans):
 
 
 def test_reltransDCp_called_twice_after_resetting(reltrans, assert_snapshot):
+    '''A test that calls the reltransDCp time-averaged spectrum twice
+    with the same parameters using resetting function between the two calls'''
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     reltrans.reset()
     output_dcp = reltrans.dcp(energy, DCP_Parameters(nh=0.5))
@@ -157,6 +161,8 @@ def test_reltransDCp_called_twice_after_resetting(reltrans, assert_snapshot):
 
 
 def test_rtdist_called_twice(reltrans):
+    '''A test that calls the rtdist time-averaged spectrum twice
+    with the same parameters without resetting the model'''
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     reltrans.reset()
     output_rtdist = reltrans.rtdist(energy, rtdist_Parameters())
@@ -165,6 +171,8 @@ def test_rtdist_called_twice(reltrans):
 
 
 def test_rtdist_called_twice_lag_and_time_averaged(reltrans, telescope, envars):
+    '''A test that calls the rtdist time lag and time-averaged spectra twice
+    with the same parameters without resetting the model'''
     reltrans.reset()
     envars["RMF_SET"] = telescope.rmf_path
     envars["ARF_SET"] = telescope.arf_path
@@ -181,6 +189,8 @@ def test_rtdist_called_twice_lag_and_time_averaged(reltrans, telescope, envars):
 
 
 def test_resetting_between_flavours(reltrans):
+    '''A test that calls all model flavour twice using resetting function
+    every time a model flavour is called'''
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     reltrans.reset()
     output_dcp = reltrans.dcp(energy, DCP_Parameters())
@@ -200,8 +210,9 @@ def test_resetting_between_flavours(reltrans):
     np.testing.assert_allclose(output_dbl, output_dbl2, rtol=1e-4)
 
 
-def test_negative_re_im_called_twice(reltrans, telescope, envars):
-    """Test """
+def test_negative_re_im_called_twice_resetting(reltrans, telescope, envars):
+    ''' A test that calls twice reltransDCp with negative ReIm parameter
+     (-3 and -4) using resetting function before calling the model'''
     reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 101)
 
@@ -209,12 +220,38 @@ def test_negative_re_im_called_twice(reltrans, telescope, envars):
     envars["EMAX_REF"] = "10.0"
 
     xrb1 = DCP_Parameters(mass=10.0, flo_hz=0.1, fhi_hz=0.2, re_im=-4.0)
-    output_propercrossNOmatrix = reltrans.dcp(energy, xrb1)
+    output_NOmatrix_lag = reltrans.dcp(energy, xrb1)
     reltrans.reset()
     xrb1 = DCP_Parameters(mass=10.0, flo_hz=1, fhi_hz=5, re_im=-3.0)
-    output_propercross = reltrans.dcp(energy, xrb1)
+    output_NOmatrix_modulus = reltrans.dcp(energy, xrb1)
     reltrans.reset()
     xrb1 = DCP_Parameters(mass=10.0, flo_hz=0.1, fhi_hz=0.2, re_im=-4.0)
-    output_propercrossNOmatrix2 = reltrans.dcp(energy, xrb1)
+    output_NOmatrix_lag_bis = reltrans.dcp(energy, xrb1)
+    reltrans.reset()
+    xrb1 = DCP_Parameters(mass=10.0, flo_hz=1, fhi_hz=5, re_im=-3.0)
+    output_NOmatrix_modulus_bis = reltrans.dcp(energy, xrb1)
 
-    np.testing.assert_allclose(output_propercrossNOmatrix, output_propercrossNOmatrix2, rtol=1e-4)
+    np.testing.assert_allclose(output_NOmatrix_lag, output_NOmatrix_lag_bis, rtol=1e-6)
+    np.testing.assert_allclose(output_NOmatrix_modulus, output_NOmatrix_modulus_bis, rtol=1e-6)
+
+
+def test_negative_re_im_called_twice_no_resetting(reltrans, telescope, envars):
+    ''' A test that calls twice reltransDCp with negative ReIm parameter
+     (-3 and -4) without resetting the model'''
+    reltrans.reset()
+    energy = np.logspace(np.log10(0.1), np.log10(100), 101)
+
+    envars["EMIN_REF"] = "2.0"
+    envars["EMAX_REF"] = "10.0"
+
+    xrb1 = DCP_Parameters(mass=10.0, flo_hz=0.1, fhi_hz=0.2, re_im=-4.0)
+    output_NOmatrix_lag = reltrans.dcp(energy, xrb1)
+    xrb1 = DCP_Parameters(mass=10.0, flo_hz=1, fhi_hz=5, re_im=-3.0)
+    output_NOmatrix_modulus = reltrans.dcp(energy, xrb1)
+    xrb1 = DCP_Parameters(mass=10.0, flo_hz=0.1, fhi_hz=0.2, re_im=-4.0)
+    output_NOmatrix_lag_bis = reltrans.dcp(energy, xrb1)
+    xrb1 = DCP_Parameters(mass=10.0, flo_hz=1, fhi_hz=5, re_im=-3.0)
+    output_NOmatrix_modulus_bis = reltrans.dcp(energy, xrb1)
+
+    np.testing.assert_allclose(output_NOmatrix_lag, output_NOmatrix_lag_bis, rtol=1e-6)
+    np.testing.assert_allclose(output_NOmatrix_modulus, output_NOmatrix_modulus_bis, rtol=1e-6)
