@@ -102,9 +102,11 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y libfftw3-dev
           cp /usr/include/fftw3.f03 ./
+      - name: Set the HEADAS environment variable
+        run: |
+          echo "HEADAS=$(python3 -c 'import xspectrampoline_helpers as helpers ; print(helpers.get_HEADAS())')" >> $GITHUB_ENV
       - name: Build in debug with coverage
         run: |
-          export HEADAS="$(python3 -c 'import xspectrampoline_helpers as helpers ; print(helpers.get_HEADAS())')"
           make DEBUG=1 COVERAGE=1
       - name: Fetch tables and test instrument files
         run: |
