@@ -326,12 +326,12 @@ def telescope() -> TelescopeData:
     """Obtain paths to telescope files."""
     repo_root = pathlib.Path(ROOT_DIR.parent)
     rmf_path = (
-        repo_root / "Benchmarks" / "resp_matrix" / "nicer-rmf6s-teamonly-array50.rmf"
+        repo_root / "cache" / "instrument-files" / "nicer-rmf6s-teamonly-array50.rmf"
     )
     arf_path = (
         repo_root
-        / "Benchmarks"
-        / "resp_matrix"
+        / "cache"
+        / "instrument-files"
         / "nicer-consim135p-teamonly-array50.arf"
     )
     return TelescopeData(
