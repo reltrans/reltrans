@@ -248,3 +248,15 @@ $(CACHEDIR)/tables:
 		-o $(@)/xillverD-5_normalised.fits
 	( cd $(CACHEDIR)/tables && \
 		cat `ls xillverCp_v3.4_normalised.fits-* | sort -V` > xillverCp_v3.4_normalised.fits )
+
+.PHONY: instrument-files
+instrument-files:
+	@echo "Downloading test suite instrument files..."
+	mkdir -p $(CACHEDIR)/instrument-files
+	curl -sL \
+		"https://github.com/reltrans/model-data/releases/download/v0.1.0/nicer-consim135p-teamonly-array50.arf" \
+		-o $(CACHEDIR)/instrument-files/nicer-consim135p-teamonly-array50.arf
+	curl -sL \
+		"https://github.com/reltrans/model-data/releases/download/v0.1.0/nicer-rmf6s-teamonly-array50.rmf" \
+		-o $(CACHEDIR)/instrument-files/nicer-rmf6s-teamonly-array50.rmf
+	@echo "Instrument files now located at '$(CACHEDIR)/instrument-files'"
