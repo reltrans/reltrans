@@ -6,6 +6,13 @@ HEADAS_INCLUDE := ${HEADAS}/include
 
 VERSION := $(shell cat VERSION)
 
+# A cache directory for static files that should be persistent between `make
+# clean` calls.
+CACHEDIR := cache
+# Where the reltrans tables are stored. This will use the user's environment
+# variable if set.
+RELTRANS_TABLES ?= $(CACHEDIR)/tables
+
 # These may be set when invoking `make`, such as `make DEBUG=1 SANITIZE=1`.
 # The `DEBUG` option compiles a debug build of reltrans (see below).
 DEBUG = 0
@@ -190,7 +197,54 @@ xspec: $(RELTRANS_SHARED_LIBRARY) xspec/lmodel_reltrans.dat xspec/compile_reltra
 	@echo "For more information, consult the reltrans documentation (see the"
 	@echo "README included in the repository)."
 
-.PHONY: tables
-tables:
+.PHONY: tables-renorm
+tables-renorm:
 	# Normalise the tables
 	python3 ./renormalise_table.py
+
+.PHONY: tables-fetch
+tables-fetch: $(RELTRANS_TABLES)
+	@echo "Tables located at '$(RELTRANS_TABLES)'"
+	@echo "Please run"
+	@echo ""
+	@echo "    export RELTRANS_TABLES=$(RELTRANS_TABLES)"
+	@echo ""
+	@echo "to instruct reltrans to use that path. Add to your `~/.bashrc` to"
+	@echo "make the change persistent. To redownload the tables, use"
+	@echo ""
+	@echo "    unset RELTRANS_TABLES"
+	@echo ""
+	@echo "and remove the '$(CACHEDIR)/tables' directory."
+
+$(CACHEDIR)/tables:
+	mkdir -p $@
+	@echo "Downloading pre-normalised tables (may take a few minutes)..."
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillver-a-Ec5_normalised.fits \
+		-o $(@)/xillver-a-Ec5_normalised.fits
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-00 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-00
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-01 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-01
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-02 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-02
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-03 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-03
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-04 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-04
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-05 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-05
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-06 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-06
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverD-5_normalised.fits \
+		-o $(@)/xillverD-5_normalised.fits
+	( cd $(CACHEDIR)/tables && \
+		cat `ls xillverCp_v3.4_normalised.fits-* | sort -V` > xillverCp_v3.4_normalised.fits )
