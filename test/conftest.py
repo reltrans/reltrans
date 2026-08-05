@@ -319,6 +319,7 @@ def assert_snapshot(save_plot) -> callable:
 class TelescopeData:
     arf_path: str
     rmf_path: str
+    bkg_path: str
 
 
 @pytest.fixture
@@ -334,6 +335,11 @@ def telescope() -> TelescopeData:
         / "instrument-files"
         / "nicer-consim135p-teamonly-array50.arf"
     )
+    mock_bkg_path = (
+        repo_root / "cache" / "instrument-files" / "nicer-powerlaw.1.1e-4.fak"
+    )
     return TelescopeData(
-        arf_path=str(arf_path.absolute()), rmf_path=str(rmf_path.absolute())
+        arf_path=str(arf_path.absolute()),
+        rmf_path=str(rmf_path.absolute()),
+        bkg_path=mock_bkg_path,
     )
