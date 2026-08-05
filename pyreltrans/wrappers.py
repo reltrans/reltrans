@@ -375,6 +375,34 @@ class Simrelt_Parameters:
     def to_numpy_array(self) -> np.ndarray:
         return np.array(dataclasses.astuple(self), dtype=np.float32)
 
+    def to_DCP_Parameters(self) -> DCP_Parameters:
+        """
+        Convert the simrelt parameters to a set of `DCP_Parameters`.
+        """
+        return DCP_Parameters(
+            h=self.h,
+            a=self.a,
+            inc=self.inc,
+            rin=self.rin,
+            rout=self.rout,
+            zcos=self.zcos,
+            gamma=self.gamma,
+            logxi=self.logxi,
+            afe=self.afe,
+            lognep=self.lognep,
+            kte=self.kte,
+            nh=self.nh,
+            boost=self.boost,
+            mass=self.mass,
+            flo_hz=0,
+            fhi_hz=0,
+            re_im=1,
+            del_a=self.del_A,
+            del_ab=self.del_AB,
+            g=self.g,
+            telescope_response=self.use_telescope_response,
+        )
+
 
 class Reltrans:
     def __init__(self, path=None, **kwargs):
