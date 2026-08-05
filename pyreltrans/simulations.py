@@ -100,7 +100,11 @@ class ReltransSimulator:
     instances that simulate different instruments.
     """
 
-    def __init__(self, rmf: str, arf: str, background: str):
+    # The reltrans singleton that is reused between all instances of the
+    # simulator.
+    _reltrans = None
+
+    def __init__(self, rmf: str, arf: str, background: str, **kwargs):
         if os.environ.get("RELTRANS_TABLES", None) is None:
             raise Exception(
                 "Must set the RELTRANS_TABLES environment variable before running the simulation."
@@ -112,7 +116,11 @@ class ReltransSimulator:
         self.e_low = 0.2
         self.e_high = 10.0
         self.seed = 42
-        self._reltrans = Reltrans()
+
+        if not ReltransSimulator._reltrans:
+            ReltransSimulator._reltrans = Reltrans(**kwargs)
+
+        self._reltrans = ReltransSimulator._reltrans
 
     def _setup_environ(self):
         # Set the environment variables
