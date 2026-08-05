@@ -13,4 +13,6 @@ def test_basic_simulation(telescope):
     )
     result = simulator.simulate_lag(energy, Simrelt_Parameters())
 
-    assert result.lag_true[0] == pytest.approx(-4.8397069, abs=1e-4)
+    assert result.background_count_rate == pytest.approx(0.03639, abs=1e-3)
+    assert result.source_count_rate == pytest.approx(270.4867858886719, abs=1e-3)
+    assert result.lag_true[0] == pytest.approx(-5.01435804, abs=1e-4)

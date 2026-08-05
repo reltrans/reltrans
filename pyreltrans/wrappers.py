@@ -419,6 +419,19 @@ class Reltrans:
         ]
         self.lib_reltrans.tdreltransdcp_.restype = None
 
+        self.lib_reltrans.simrelt_extra_.argtypes = [
+            f_float,
+            f_int,
+            f_float,
+            f_int,
+            f_float,
+            # Extra:
+            f_float,
+            f_float,
+            f_float,
+        ]
+        self.lib_reltrans.simrelt_extra_.restype = None
+
         self.lib_reltrans.getrgrid_.argtypes = [
             ct.POINTER(ct.c_double),  # rnmin
             ct.POINTER(ct.c_double),  # rnmax
@@ -528,11 +541,34 @@ class Reltrans:
             self.lib_reltrans.getrgrid_, rnmin, rnmax, mueff, nro, nphi
         )
 
-    def simrelt(self, energy: np.ndarray, parameters: Dbl_Parameters) -> np.ndarray:
-        return _wrap_call(
-            self.lib_reltrans.simrelt_,
-            energy.astype(np.float32),
-            parameters.to_numpy_array(),
+    def simrelt(
+        self, energy: np.ndarray, parameters: Dbl_Parameters
+    ) -> tuple[float, float, float]:
+        _energy = energy.astype(np.float32)
+        _params = parameters.to_numpy_array()
+
+        ne = len(energy) - 1
+        output = np.zeros(ne, dtype=np.float32)
+
+        background_count_rate = ct.c_float(0)  # output
+        source_count_rate = ct.c_float(0)  # output
+        fractional_rms_sq_per_hz = ct.c_float(0)  # output
+
+        self.lib_reltrans.simrelt_extra_(
+            _energy.ctypes.data_as(f_float),
+            ct.byref(ct.c_int(ne)),
+            _params.ctypes.data_as(f_float),
+            ct.byref(ct.c_int(1)),
+            output.ctypes.data_as(f_float),
+            # The extra arguments
+            ct.byref(background_count_rate),
+            ct.byref(source_count_rate),
+            ct.byref(fractional_rms_sq_per_hz),
+        )
+        return (
+            float(background_count_rate.value),
+            float(source_count_rate.value),
+            float(fractional_rms_sq_per_hz.value),
         )
 
     def trace_disk_observer(self, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):

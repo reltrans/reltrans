@@ -28,8 +28,15 @@ class SimulationResult:
     # The standard deviation of the lag.
     std: np.ndarray
 
-    # The count rate.
+    # The count rate in each energy bin:
     count_rate: np.ndarray
+
+    # This is `Pr` in the output.
+    fractional_rms_sq_per_hz: float
+    # This is `br` in the output.
+    background_count_rate: float
+    # This is `mur` in the output.
+    source_count_rate: float
 
     # The real part of the cross spectrum.
     real: np.ndarray
@@ -39,6 +46,9 @@ class SimulationResult:
 
     # The data used to create an XSPEC mock spectrum.
     xspec_data: np.ndarray
+
+    def __repr__(self) -> str:
+        return f"SimulationResult(pr={self.fractional_rms_sq_per_hz:e},mur={self.source_count_rate:e},br={self.background_count_rate:e})"
 
     def make_XSPEC(self, name: str):
         """
@@ -58,7 +68,14 @@ class SimulationResult:
         os.remove(tmp_xspec_file)
 
     @staticmethod
-    def from_file(path: str, cross_path: str, xspec_path: str) -> "SimulationResult":
+    def from_file(
+        background_count_rate: float,
+        source_count_rate: float,
+        fractional_rms_sq_per_hz: float,
+        path: str,
+        cross_path: str,
+        xspec_path: str,
+    ) -> "SimulationResult":
         """
         Read the simulation result from a set of paths.
 
@@ -85,6 +102,9 @@ class SimulationResult:
             lag=lag_simulated,
             d_lag=d_lag_simulated,
             lag_true=lag_true,
+            fractional_rms_sq_per_hz=fractional_rms_sq_per_hz,
+            background_count_rate=background_count_rate,
+            source_count_rate=source_count_rate,
             count_rate=cross_data[:, 2],
             real=cross_data[:, 3],
             imag=cross_data[:, 4],
@@ -152,10 +172,18 @@ class ReltransSimulator:
         simulation are deleted again.
         """
         self._setup_environ()
-        self._reltrans.simrelt(energy, params)
+
+        bkg_count_rate, src_count_rate, Pr = self._reltrans.simrelt(energy, params)
+
         result = SimulationResult.from_file(
-            "sim_test.dat", "sim_cross_test.dat", "sim_xspec_test.dat"
+            bkg_count_rate,
+            src_count_rate,
+            Pr,
+            "sim_test.dat",
+            "sim_cross_test.dat",
+            "sim_xspec_test.dat",
         )
+
         # Cleanup the temporary files
         if remove_files:
             os.remove("sim_test.dat")
