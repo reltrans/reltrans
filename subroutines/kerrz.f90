@@ -46,8 +46,8 @@ contains
             ph = 0.0d0)
 
         ! TODO: remove this once kerrz has fully face-on implemented
-        if (abs(x_obs%th) < 1d-4) then
-            x_obs%th = 1d-4
+        if (abs(x_obs%th) < 1d-3) then
+            x_obs%th = 1d-3
         end if
 
         ic = krz_fromImpactParameters(kerr_metric, x_obs, alpha, beta)
@@ -85,8 +85,8 @@ contains
         x = krz_FourVector(t=0.0d0, r=r_obs, th=acos(mu_obs), ph=0.0d0)
 
         ! TODO: remove this once kerrz has fully face-on implemented
-        if (abs(x%th) < 1d-4) then
-            x%th = 1d-4
+        if (abs(x%th) < 1d-3) then
+            x%th = 1d-3
         end if
 
         continuum = krz_traceContinuumLamppost(kerr_metric, x, h)
