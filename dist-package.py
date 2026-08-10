@@ -3,6 +3,7 @@ import sys
 import subprocess
 import shutil
 import pathlib
+import kerrz_lib
 
 import xspectrampoline_helpers
 
@@ -25,6 +26,18 @@ HEADAS_INCLUDE = os.path.join(HEADAS, "include")
 
 def get_version() -> str:
     return pathlib.Path("VERSION").read_text().strip()
+
+
+def kerrz_ldflags() -> list[str]:
+    lib_path = kerrz_lib.bindings.KERRZ_PATH
+
+    lib_name = lib_path.stem.removeprefix("lib")
+    common = [f"-l{lib_name}", f"-L{lib_path.parent}"]
+
+    if TARGET == "macos":
+        return common + ["-Wl,-rpath,@loader_path/../kerrz_lib/"]
+    else:
+        return common + ["-Wl,-rpath,$ORIGIN/../kerrz_lib/"]
 
 
 def get_ldflags():
@@ -125,6 +138,7 @@ def libcompile(main_file: str, depends: list = []) -> str:
         for i in ld_flags
     ]
     cmd += ld_flags
+    cmd += kerrz_ldflags()
 
     subprocess.run(cmd, check=True)
     shutil.copyfile(
@@ -134,7 +148,10 @@ def libcompile(main_file: str, depends: list = []) -> str:
 
 
 if __name__ == "__main__":
-    lib_path = libcompile("wrappers.f90", depends=["./subroutines/constants.f90"])
+    kerrz_f90 = kerrz_lib.bindings.KERRZ_PATH.parent / "kerrz.f90"
+    lib_path = libcompile(
+        "wrappers.f90", depends=["./subroutines/constants.f90", kerrz_f90]
+    )
     print(f"All targets compiled to path '{BUILD_DIR}'")
 
     artifact_dir = xspectrampoline_helpers.get_artifact_dir(PACKAGE_NAME)

@@ -166,20 +166,17 @@ contains
     !>     pem1: array of p-coordinate at the disk for each ray.
     !>     taudo1: array of time coordinate at the disk for each ray.
     !>     re1: array of radial coordinate at the disk for each ray.
-        use dyn_gr
+        use dyn_gr, only: pem1, re1, taudo1
+        use kerrz, only: krz_TraceResult, trace_impact_parameters,             &
+            KRZ_STATUS_NONE, kerr_metric
         implicit none
         integer, intent(in) :: nro,nphi
         double precision, intent(in) :: rn(nro),mueff,mu0,spin,rmin,rout
         double precision, intent(in) :: mudisk,d
-        double precision phin,alpha,beta,cos0,sin0,scal
-        double precision velocity(3),f1234(4)
-        double precision lambda,q
-        double precision pem,re,mucros,phie,taudo,sigmacros   
+        double precision :: phin, alpha, beta, cos0
         integer i,j
+        type(krz_TraceResult) :: res
         cos0  = mu0
-        sin0  = sqrt(1.0-cos0**2)
-        scal     = 1.d0
-        velocity = 0.d0
         taudo1   = 0.0
         re1      = 0.0
         !TODO: kerrz optimisation here! 
@@ -188,20 +185,24 @@ contains
                 phin  = (j-0.5) * 2.d0 * pi / dble(nphi)
                 alpha = rn(i) * sin(phin)
                 beta  = -rn(i) * cos(phin) * mueff
-                call constants_of_motion(-alpha,-beta,d,sin0,cos0,spin,scal,   &
-                                        velocity,f1234,lambda,q)
-                !Can try rin instead of rmin to save an if statement
-                pem = p_disk_crossing(f1234,lambda,q,sin0,cos0,spin,d,scal,    &
-                            mudisk,rout,rmin)  
-                pem1(j,i) = pem
-                !pem > 0 means there is a solution
-                !pem < 0 means there is no solution
-                if( pem .gt. 0.0d0 )then
-                    call get_raytrace_coords(pem,f1234,lambda,q,sin0,cos0,spin,&
-                                        d,scal,re,mucros,phie,taudo,sigmacros)
-                    taudo1(j,i) = taudo - d
-                    re1(j,i)    = re
-                 end if
+
+                res = trace_impact_parameters(mu0, alpha, beta, d)
+
+                ! Do not include sub-isco contributions for now:
+                if (res%status == KRZ_STATUS_NONE .and.            &
+                    res%x_final%r > rmin .and. res%x_final%r < rout) then
+                    ! TODO: This is for compatability with YNOGK. It is only
+                    ! used in `strans` to later decide whether the photon hit
+                    ! the disc or not. Any positive value can be used.
+                    !
+                    ! It is technically redundant, as a negative value could be
+                    ! written into `re1` instead.
+                    pem1(j,i) = 1.0d0
+                    taudo1(j,i) = res%x_final%t - d
+                    re1(j,i) = res%x_final%r
+                else
+                    pem1(j, i) = -1.0d0
+                end if
               end do
         end do
         return
@@ -230,6 +231,10 @@ contains
     !>    tc(n)        Corresponding time coordinate
     !>    cosd1(n)     Corresponding \cos\delta
     !>    cosdout      cosd at the outer disk radius
+    !>
+    !> TODO: replace this with a kerrz emissivity call.
+        use kerrz, only: kerr_metric, krz_TraceResult, trace_lamppost,         &
+            KRZ_STATUS_NONE
         implicit none
         double precision, intent(in )   :: a_spin, h(2), mudisk, rout
         integer         , intent(in )   :: n, nlp
@@ -237,49 +242,35 @@ contains
         double precision, intent(inout) :: r1(n,nlp)
         double precision, intent(out)   :: dcosdr(n,nlp), tc(n,nlp), cosd1(n,nlp), cosdout(nlp)
         integer  m,j,k,counter,nout(nlp)
-        double precision sins,mus,lambda,q,scal
-        double precision rhorizon,velocity(3),f1234(4),pp,pr,pt
-        double precision deltamin,deltamax, deltas,r_min,r_max,disco
-        double precision rcros,mucros,phicros,tcros,sigmacros,pcros
-        scal     = 1.d0   !Meaningless scaling factor
-        mus      = 1.d0   !Position of source: mus=1 means on-axis
-        sins     = 0.d0   !sin of same angle
-        velocity = 0.0D0  !3-velocity of source
-        rhorizon = 1.d0+sqrt(1.d0-a_spin**2)
+        double precision rhorizon
+        double precision deltamin,deltamax, deltas,r_min,r_max
+        type(krz_TraceResult) :: res
+        rhorizon = kerr_metric%horizon_radius
+        ! Set minimum and maximum disk radii
+        r_min = kerr_metric%isco
+        r_max = 1d10
 
-        !loop over h here
+        ! Loop over each lamppost here:
         do m=1,nlp
-            !Calculate smallest delta worth considering
+            ! Calculate smallest delta worth considering
             deltamin = acos( h(m) / sqrt( h(m)**2 + rhorizon**2 ) )
-            !Consider arbitrarily large value of delta
+            ! Consider arbitrarily large value of delta
             deltamax = pi
-            !Set minimum and maximum disk radii
-            r_min = disco( a_spin )
-            r_max = 1d10
-            !Go through n different values of the angle delta_s
+            ! Go through n different values of the angle delta_s
             counter = 0
             nout(m) = 1
             do j = 1,n
-            !Run through linear steps in the angle delta (see Fig 1; Dauser et al 2013)
+            ! Run through linear steps in the angle delta (see Fig 1; Dauser et
+            ! al 2013)
                 deltas   = deltamin + (j-1) * (deltamax-deltamin)/float(n-1)
-                !Calculate 4-momentum in source rest frame tetrad
-                pr = cos(deltas)           !cosdelta
-                pp = sqrt( 1.d0 - pr**2 )  !sindelta
-                pt= 0.d0
-                !Convert to LNRF (locally non-rotating reference frame)
-                call initial_photon(pr,pt,pp,sins,mus,a_spin,h(m),             &
-                     velocity,lambda,q,f1234)
-                !Calculate value of p-coordinate at mu=0
-                pcros = p_disk_crossing(f1234,lambda,q,sins,mus,               &
-                                    a_spin,h(m),scal,mudisk,r_max,r_min)
-                !From that, calculate r, phi and t at mu=0
-                call get_raytrace_coords(pcros,f1234,lambda,q,sins,mus,a_spin, &
-                              h(m),scal,rcros,mucros,phicros,tcros,sigmacros)
-                if( pcros .gt. 0.0 )then
-                    counter        = counter + 1
-                    r1(counter,m)    = rcros
-                    cosd1(counter,m) = pr    !cosdelta
-                    tc(counter,m)    = tcros
+                res = trace_lamppost(h(m), deltas)
+                if (res%status == KRZ_STATUS_NONE                  &
+                    .and. r_min <= res%x_final%r .and. r_max >= res%x_final%r  &
+                ) then
+                    counter = counter + 1
+                    r1(counter,m) = res%x_final%r
+                    cosd1(counter,m) = cos(deltas)
+                    tc(counter,m) = res%x_final%t
                     if( rout .gt. r1(counter,m) ) nout(m) = counter
                 end if
             end do 
@@ -315,76 +306,6 @@ contains
         return
     end subroutine getdcos
 
-
-    function cosidel(cosdelta,sins,mus,a_spin,h,velocity)
-    !> CALCULATION FUNCTION
-    !> Calculates cosi when given cosdelta and parameters
-    !> Inputs:
-    !>     cosdelta: cosine of the emission angle delta (see Fig 1; Dauser et 
-    !>                  al 2013)
-    !>     sins: sine of the source inclination angle
-    !>     mus: cosine of the source inclination angle
-    !>     a_spin: spin of the black hole
-    !>     h: height of the source above the black hole
-    !>     velocity: 3-velocity of the source
-        implicit none
-        double precision cosdelta,sins,mus,a_spin,h,velocity(3),cosidel
-        double precision pr,pp,pt,lambda,q,f1234(4),ptotal
-        double precision scal,p,ra,mua,phya,timea,sigmaa
-        double precision p_coord_at_inf
-        scal = 1.d0                  !Meaningless scaling factor
-        pr   = cosdelta              !cosdelta
-        pp   = sqrt( 1.d0 - pr**2 )  !sindelta
-        pt   = 0.d0
-        !Convert to LNRF (locally non-rotating reference frame)
-        call initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,f1234)
-        !Now calculate ptotal (value of p-coordinate at infinity)
-        p_coord_at_inf = p_coord_at_infinity(f1234,lambda,q,sins,mus,a_spin,h, &
-                                            scal)
-        p = 0.9999d0 * p_coord_at_inf
-        call get_raytrace_coords(p,f1234,lambda,q,sins,mus,a_spin,h,scal,      &
-                 ra,mua,phya,timea,sigmaa)
-        cosidel = mua
-        return
-    end function cosidel
-
-
-    subroutine getlimits(sins,mus,a_spin,h,velocity,muobs,x1,x2)
-    !> CALCULATION SUBROUTINE
-    !> Minimisation routine will numerically calculate cosdelta for a given cosi.
-    !> To do that, we need limits that bracket only one root. 
-    !> This routine works out sensible limits
-    !> Inputs:
-    !>     sins, mus: sine and cosine of the source inclination angle.
-    !>     a_spin: spin of the black hole.
-    !>     h: height of the source above the black hole.
-    !>     velocity: 3-velocity of the source.
-    !>     muobs: cosine of the observer inclination angle.
-    !> Outputs:
-    !>     x1, x2: limits for the minimisation routine.
-        implicit none
-        double precision sins,mus,a_spin,h,velocity(3),muobs,x1,x2
-        double precision cosdelta0,mua,cosi,cosdelta
-        !The first limit is always cosdelta=-1 (corresponding to cosi=1)
-        !Can't take cosdelta too large because this will also braket
-        !the ghost images solutions
-        !Tactic: extrapolate the initially straight line function from
-        !cosi = 1, to some well-chosen cosi value. The cosdelta resulting
-        !From this extrapolation is my second limit.
-        cosdelta0 = -0.98d0
-        mua = cosidel(cosdelta0,sins,mus,a_spin,h,velocity)
-        !Take the straight line from (cosi=1,cosdelta=-1) to 
-        !(cosi=mua,cosdelta=cosdelta0) and extrapolate down to cosi=-0.5
-        cosi = -0.5
-        cosdelta = (cosi-1.d0)*(cosdelta0+1.d0)/(mua-1.d0) - 1.0
-        cosdelta = min( cosdelta , -muobs )  !-muobs is the Newtonian limit 
-        !Use for limits
-        x1 = -1.d0
-        x2 = cosdelta
-        return
-    end subroutine getlimits
-    
-
     subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
     !> CALCULATION SUBROUTINE
     !> Routine to calculate the lensing factor l=d\cos\delta/d\cos(i)
@@ -399,134 +320,22 @@ contains
     !> OUTPUTS
     !>     lens         Lensing factor
     !>     delt         Source to observer time lag 
+        use kerrz, only: trace_lensing, LamppostContinuum
         implicit none
         double precision, intent(in)    :: a_spin,h, muobs
         double precision, intent(inout) :: cosdelta1
         double precision, intent(out)   :: lens, delt
-        double precision sins,mus,lambda,q,scal
-        double precision velocity(3),f1234(4),pp,pr,pt
-        double precision ptotal,dcosdelta,drtbis
-        double precision mua,p,phya,ra,sigmaa,timea
-        double precision par(3),x1,x2,xacc,mu2
-        double precision alpha,beta,b2,d
-        double precision p_coord_at_inf
-
-        !Settings
-        scal      = 1.d0   !Meaningless scaling factor
-        mus       = 1.d0   !Position of source: mus=0 means on-axis
-        sins      = 0.d0   !sin of same angle
-        velocity  = 0.0D0  !3-velocity of source
-        dcosdelta = 1d-2   !Step in cosdelta used for differentiation
-        xacc      = 1d-6   !Accuracy of minimisation routine
-
-        !First calculate the cosdelta corresponding to the input muobs
-      
-        !Set limits for minimisation routine
-        call getlimits(sins,mus,a_spin,h,velocity,muobs,x1,x2)
-        !Call minimisation routine
-        par(1)=a_spin
-        par(2)=h
-        par(3)=muobs
-        cosdelta1 = drtbis(mudiff,x1,x2,xacc,par)
-      
-        !Now calculate the lensing factor
-      
-        !Make cosdelta a little bit bigger and calculate the new cosi
-        mu2 = cosidel(cosdelta1+dcosdelta,sins,mus,a_spin,h,velocity) 
-        !Finally calculate the lensing factor
-        lens = dcosdelta / ( muobs - mu2 )
-
-        !Now calculate the source lag
-
-        !Set 4-momentum in the source frame
-        pr   = cosdelta1             !cosdelta
-        pp   = sqrt( 1.d0 - pr**2 )  !sindelta
-        pt   = 0.d0
-        !Convert to LNRF (locally non-rotating reference frame)
-        call initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,lambda,q,f1234)
-        !Now calculate ptotal (value of p-coordinate at infinity)
-        p_coord_at_inf = p_coord_at_infinity(f1234,lambda,q,sins,mus,a_spin,h, &
-                                            scal)
-        p = 0.9999d0 * p_coord_at_inf
-        call get_raytrace_coords(p,f1234,lambda,q,sins,mus,a_spin,h,scal,      &
-             ra,mua,phya,timea,sigmaa)
-        !Calcluate the distance from BH to centre of observer's camera
-        !For an on-axis lamppost, alpha should always be 0, but the below is general
-        if( muobs .eq. 1.d0 )then
-            d = ra
-        else
-            alpha = -lambda / sqrt( 1.0 - muobs**2 )
-            beta  = q - (alpha**2-a_spin**2)*muobs**2
-            beta = sqrt(beta)
-            b2   = alpha**2 + beta**2
-            d    = sqrt( ra**2 - b2  )
-        end if
-        !Subtract the distance - will do the same for
-        !the disk to observer lags, meaning I don't need to use the
-        !same distance for both calculations
-        delt = timea - d
+        double precision :: d
+        double precision, parameter :: r_at_inf = 1.0d5
+        type(LamppostContinuum) :: continuum
+        continuum = trace_lensing(h, r_at_inf, muobs)
+        d = continuum%alpha**2 + continuum%beta**2
+        d = sqrt( r_at_inf**2 - d  )
+        delt = continuum%time - d
+        cosdelta1 = continuum%cos_delta
+        lens = continuum%lensing_factor
         return
     end subroutine getlens
-
-
-    function mudiff(cosdelta,par)
-    !> CALCULATION FUNCTION
-    !> Calculates muobs (cosine of distant inclination angle) when given
-    !> cos(delta) (cosine of angle between initial photon trajectory and -z)
-    !> Inputs:
-    !>     cosdelta: cosine of angle between initial photon trajectory and -z
-    !>     par: array of parameters, where par(1)=a_spin, par(2)=h, par(3)=muobs
-    !> Outputs:
-    !>     mudiff: difference between calculated muobs and input muobs
-        implicit none
-        double precision mudiff,cosdelta,par(3)
-        double precision a_spin,h,muobs
-        double precision scal,mus,sins
-        double precision velocity(3),sindelta,pp,pr,pt,lambda,q,f1234(4)
-        double precision ptotal,x,y,z,xprev,yprev,zprev,delx,dely,delz
-        double precision ra,mua,phya,timea,sigmaa,p,cosdum
-        double precision p_coord_at_inf
-        a_spin = par(1)
-        h      = par(2)
-        muobs  = par(3)
-        velocity = 0.0D0
-        sindelta = sqrt( 1.d0 - cosdelta**2 )
-        if ( sindelta .eq. 0.d0 )then
-            cosdum = 1.d0
-        else
-            !Calculate 4-momentum in source rest frame tetrad
-            pp= sindelta
-            pr= cosdelta
-            pt= 0.d0
-            !Convert to LNRF (locally non-rotating reference frame)
-            scal = 1.d0
-            mus  = 1.d0
-            sins = 0.d0
-            call initial_photon(pr,pt,pp,sins,mus,a_spin,h,velocity,           &
-                                  lambda,q,f1234)
-            p_coord_at_inf = p_coord_at_infinity(f1234,lambda,q,sins,mus,      &
-                                  a_spin,h,scal)
-            p = 0.9998d0 * p_coord_at_inf
-            call get_raytrace_coords(p,f1234,lambda,q,sins,mus,a_spin,h,scal,  &
-                       ra,mua,phya,timea,sigmaa)
-            xprev = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*cos(phya)
-            yprev = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*sin(phya)
-            zprev = ra*mua
-            p = 0.9999d0 * p_coord_at_inf
-            call get_raytrace_coords(p,f1234,lambda,q,sins,mus,a_spin,h,scal,  &
-                       ra,mua,phya,timea,sigmaa)
-            x = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*cos(phya)
-            y = sqrt(ra**2+a_spin**2)*sqrt(1.d0-mua**2)*sin(phya)
-            z = ra*mua
-            delx = x - xprev
-            dely = y - yprev
-            delz = z - zprev
-            cosdum = delz / sqrt( delx**2 + dely**2 + delz**2 )
-        end if
-    
-        mudiff = cosdum - muobs
-        return
-    end function mudiff
 
     
 end module raytracing
