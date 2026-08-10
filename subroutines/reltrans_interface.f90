@@ -18,10 +18,11 @@ module reltrans_interface
         subroutine wrap_getlens(a_spin, h, muobs, lens, del_t, cosdelta)       &
             bind(C, name = "wrap_getlens")
             use raytracing, only: getlens
+            use kerrz, only: kerr_metric, krz_KerrMetric_init
             double precision, intent(in) :: a_spin, h, muobs
             double precision, intent(inout) :: lens, del_t, cosdelta
+            kerr_metric = krz_KerrMetric_init(1.0d0, a_spin)
             call getlens(a_spin, h, muobs, lens, del_t, cosdelta)
         end subroutine wrap_getlens
 
-          
 end module reltrans_interface
