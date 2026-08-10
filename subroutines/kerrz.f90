@@ -6,7 +6,7 @@ module kerrz
 
     ! This effective infinity r coordinate is for compatability with what YNOGK
     ! used to do.
-    double precision, parameter :: R_AT_INFINITY = 18000000.0d0
+    double precision, parameter :: R_AT_INFINITY = 1.0d5
 
     ! This is a singleton metric so that it does not need to be recalculated often.
     ! TODO: move this to `t_config` or related.
