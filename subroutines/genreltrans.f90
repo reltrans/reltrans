@@ -273,7 +273,7 @@ contains
 end module m_genreltrans
 
 
-subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
+subroutine genreltrans(Cp, dset, corona_config, ear, ne, param, ifl, photar)
 ! All reltrans flavours are calculated in this subroutine.
 ! Cp and dset are the settings:
 ! |Cp|=1 means use cut-off power-law, |Cp|=2 means use nthcomp
@@ -315,7 +315,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     double precision, parameter :: rnmax = 300.d0, dlogf = 0.09 !This is a resolution parameter (base 10)
     ! Args:
     integer, intent(inout) :: ifl
-    integer, intent(in) :: Cp, dset, ne, nlp
+    integer, intent(in) :: Cp, dset, ne, corona_config
     real, intent(inout) :: param(32)
     real, intent(out) :: photar(ne)
     ! Variables of the subroutine
@@ -346,7 +346,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 
     config => global_config
 
-    call unwrap_arguments(model_args, nlp, dset, param, Cp)
+    call unwrap_arguments(model_args, corona_config, dset, param, Cp)
     call config_frequency(config, model_args)
     call arguments_check(config, model_args)
 
@@ -412,11 +412,11 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if (config%needtrans)then
        ! allocate lensing/reflection fraction arrays if necessary
        if (allocated(lens)) deallocate(lens)
-       allocate (lens(nlp))
+       allocate (lens(model_args%nlp))
        if (allocated(frobs)) deallocate(frobs)
-       allocate (frobs(nlp))
+       allocate (frobs(model_args%nlp))
        if (allocated(frrel)) deallocate(frrel)
-       allocate (frrel(nlp))
+       allocate (frrel(model_args%nlp))
        ! Calculate the Kernel for the given parameters
        call rtrans(config, model_args, arrays, dset, d, nex, frobs, frrel)
        ! print *, 'gso ', gso(1)
@@ -458,34 +458,35 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! different subroutine
     if (model_args%ReIm .eq. 7) then
         ! tbd - implement zero cohernece in lag_freq
-        if (nlp .gt. 1 .and. model_args%beta_p .eq. 0.) then
+        if (model_args%nlp .gt. 1 .and. model_args%beta_p .eq. 0.) then
             call lag_freq_nocoh(nex, arrays%earx, config%nf, arrays%fix,       &
                  real(config%flo), real(config%fhi), config%Emin,              &
-                 config%Emax, nlp, arrays%contx, absorbx, real(tauso),         &
-                 real(gso), arrays%ReW0, arrays%ImW0, arrays%ReW1,             &
-                 arrays%ImW1, arrays%ReW2, arrays%ImW2, arrays%ReW3,           &
-                 arrays%ImW3, real(model_args%h), real(model_args%zcos),       &
-                 real(model_args%Gamma), real(model_args%eta),                 &
-                 model_args%boost, model_args%g, model_args%DelAB,             &
-                 config%ionvar, arrays%ReGbar, arrays%ImGbar)
+                 config%Emax, model_args%nlp, arrays%contx, absorbx,           &
+                 real(tauso), real(gso), arrays%ReW0, arrays%ImW0,             &
+                 arrays%ReW1, arrays%ImW1, arrays%ReW2, arrays%ImW2,           &
+                 arrays%ReW3, arrays%ImW3, real(model_args%h),                 &
+                 real(model_args%zcos), real(model_args%Gamma),                &
+                 real(model_args%eta), model_args%boost, model_args%g,         &
+                 model_args%DelAB, config%ionvar, arrays%ReGbar,               &
+                 arrays%ImGbar)
         else
             call lag_freq(nex, arrays%earx, config%nf, arrays%fix,             &
                  real(config%flo), real(config%fhi), config%Emin,              &
-                 config%Emax, nlp, arrays%contx, absorbx, real(tauso),         &
-                 real(gso), arrays%ReW0, arrays%ImW0, arrays%ReW1,             &
-                 arrays%ImW1, arrays%ReW2, arrays%ImW2, arrays%ReW3,           &
-                 arrays%ImW3, real(model_args%h), real(model_args%zcos),       &
-                 real(model_args%Gamma), real(model_args%eta),                 &
-                 model_args%beta_p, model_args%boost, model_args%g,            &
-                 model_args%DelAB, config%ionvar, arrays%ReGbar,               &
-                 arrays%ImGbar)
+                 config%Emax, model_args%nlp, arrays%contx, absorbx,           &
+                 real(tauso), real(gso), arrays%ReW0, arrays%ImW0,             &
+                 arrays%ReW1, arrays%ImW1, arrays%ReW2, arrays%ImW2,           &
+                 arrays%ReW3, arrays%ImW3, real(model_args%h),                 &
+                 real(model_args%zcos), real(model_args%Gamma),                &
+                 real(model_args%eta), model_args%beta_p, model_args%boost,    &
+                 model_args%g, model_args%DelAB, config%ionvar,                &
+                 arrays%ReGbar, arrays%ImGbar)
         end if
-    else if (nlp .gt. 1 .and. model_args%beta_p .eq. 0.) then
+    else if (model_args%nlp .gt. 1 .and. model_args%beta_p .eq. 0.) then
         call rawG(nex, arrays%earx, config%nf, real(config%flo),               &
-             real(config%fhi), nlp, arrays%contx, absorbx, real(tauso),        &
-             real(gso), arrays%ReW0, arrays%ImW0, arrays%ReW1, arrays%ImW1,    &
-             arrays%ReW2, arrays%ImW2, arrays%ReW3, arrays%ImW3,               &
-             real(model_args%h), real(model_args%zcos),                        &
+             real(config%fhi), model_args%nlp, arrays%contx, absorbx,          &
+             real(tauso), real(gso), arrays%ReW0, arrays%ImW0, arrays%ReW1,    &
+             arrays%ImW1, arrays%ReW2, arrays%ImW2, arrays%ReW3,               &
+             arrays%ImW3, real(model_args%h), real(model_args%zcos),           &
              real(model_args%Gamma), real(model_args%eta), model_args%boost,   &
              model_args%ReIm, model_args%g, model_args%DelAB, config%ionvar,   &
              config%DC, model_args%resp_matr, arrays%ReGrawa,                  &
@@ -524,7 +525,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ! parameters
         ! note: this must be done by rawG for two incoherent lamp posts, hence
         ! the skip below
-        if (nlp == 1 .or. model_args%beta_p .ne. 0.) then
+        if (model_args%nlp == 1 .or. model_args%beta_p .ne. 0.) then
             if (is_ref_folded(model_args%ReIm)) then
                 call propercross(nex, config%nf, arrays%earx,                  &
                      arrays%ReSrawa, arrays%ImSrawa, arrays%ReGrawa,           &
@@ -624,10 +625,10 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if (config%verbose .gt. 1 .and. abs(model_args%ReIm) .gt. 0 .and. model_args%ReIm .lt. 7) then
         if (config%DC .eq. 0 .and. model_args%beta_p .eq. 0) then
            call write_components(ne, ear, nex, arrays%earx, config%nf,         &
-                real(config%flo), real(config%fhi), nlp, arrays%contx,         &
-                absorbx, real(tauso), real(gso), arrays%ReW0, arrays%ImW0,     &
-                arrays%ReW1, arrays%ImW1, arrays%ReW2, arrays%ImW2,            &
-                arrays%ReW3, arrays%ImW3, real(model_args%h),                  &
+                real(config%flo), real(config%fhi), model_args%nlp,            &
+                arrays%contx, absorbx, real(tauso), real(gso), arrays%ReW0,    &
+                arrays%ImW0, arrays%ReW1, arrays%ImW1, arrays%ReW2,            &
+                arrays%ImW2, arrays%ReW3, arrays%ImW3, real(model_args%h),     &
                 real(model_args%zcos), real(model_args%Gamma),                 &
                 real(model_args%eta), model_args%beta_p, model_args%boost,     &
                 model_args%floHz, model_args%fhiHz, model_args%ReIm,           &
@@ -649,11 +650,11 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         open (unit = 24, file = 'Output/Continuum_spec.dat', status = 'replace', action = 'write')
         do i = 1, nex
             dE = arrays%earx(i) - arrays%earx(i-1)
-            if (nlp .eq. 1) then
+            if (model_args%nlp .eq. 1) then
                 contx_temp = arrays%contx(i, 1)/dE
             else
                 contx_temp = 0.
-                do m = 1, nlp
+                do m = 1, model_args%nlp
                     contx_temp = contx_temp + arrays%contx(i, m)
                 end do
                 contx_temp = contx_temp/((1.+model_args%eta)*dE)
