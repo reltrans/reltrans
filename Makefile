@@ -1,6 +1,9 @@
 BUILD  := build
 ROOTDIR := .
-HEADAS ?= $(error HEADAS environment variable is not set)
+
+# This line will check if HEADAS is set, and otherwise will fall back to using
+# Python and xspectrampoline to configure it:
+HEADAS ?= $(shell python3 -c "import xspectrampoline_helpers as h ; print(h.get_HEADAS())")
 HEADAS_LIB := ${HEADAS}/lib
 HEADAS_INCLUDE := ${HEADAS}/include
 
