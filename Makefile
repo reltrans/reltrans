@@ -279,3 +279,7 @@ instrument-files:
 		"https://github.com/reltrans/model-data/releases/download/v0.1.0/nicer-rmf6s-teamonly-array50.rmf" \
 		-o $(CACHEDIR)/instrument-files/nicer-rmf6s-teamonly-array50.rmf
 	@echo "Instrument files now located at '$(CACHEDIR)/instrument-files'"
+
+.PHONY: python
+python:
+	python3 ./dist-package.py
