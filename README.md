@@ -3,11 +3,12 @@
 [![Test](https://github.com/reltrans/reltrans/actions/workflows/test.yml/badge.svg)](https://github.com/reltrans/reltrans/actions/workflows/test.yml)
 [![Docs](https://img.shields.io/badge/docs-readthedocs-blue.svg?style=flat)](https://reltransdocs.readthedocs.io/en/)
 
-Reltrans is an X-ray reverberation mapping model designed to be applicable to
-both AGN and black hole X-ray binaries. It can be used to model both time
-averaged spectra, and energy-dependent cross spectra. Depending on the model
-version, the model can be used to characterize accretion flows and to estimate
-black hole mass, spin, and source distance.
+Reltrans is an X-ray reverberation mapping model that accounts for the effects
+of spacetime curvature near the black hole. It is designed to be applicable to
+both active galactic nuclei (AGN) and black hole X-ray binaries (BHXRB). It can
+be used to model both time averaged spectra, and energy-dependent cross
+spectra. Depending on the model flavour, the model can be used to characterize
+accretion flows and to estimate black hole mass, spin, and source distance.
 
 Reltrans supports Linux and MacOS, and is open source under the MIT license.
 
