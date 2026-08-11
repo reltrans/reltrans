@@ -219,7 +219,7 @@ tables-renorm:
 	python3 ./renormalise_table.py
 
 .PHONY: tables-fetch
-tables-fetch: $(RELTRANS_TABLES)
+fetch-tables: $(RELTRANS_TABLES)
 	@echo "Tables located at '$(RELTRANS_TABLES)'"
 	@echo "Please run"
 	@echo ""
