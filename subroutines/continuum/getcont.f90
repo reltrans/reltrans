@@ -51,8 +51,8 @@
          call donthcomp(earx, nex, nth_par, ifl, contx, photer)
          
          !Calculate the ratio between the two at 1 keV
-         i      = ceiling( -real(nex)*log10(earx(0)) / log10(earx(nex)/earx(0)) )
          dlogE  = log10(earx(nex)/earx(0)) / real(nex)
+         i      = ceiling( -log10(earx(0)) / dlogE )
          j      = i + nint( log10((1.+zcos)/gso(1)) / dlogE )
          renorm = contx(i) / contx_base(j)
 
