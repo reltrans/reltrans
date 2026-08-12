@@ -12,6 +12,17 @@ module kerrz
     ! TODO: move this to `t_config` or related.
     type(krz_KerrMetric) :: kerr_metric
 
+    ! This is a singleton that represents the thread pool that can be used to
+    ! parallelise kerrz specific operations.
+    type(krz_ThreadPool) :: kerrz_thread_pool
+
+    ! This is the emissivity cache that holds the last calculated emissivity
+    ! profile.
+    type(krz_EmissivityCache) :: kerrz_cache
+
+    ! This is used to track whether the threads have been initialised or not.
+    logical :: kerrz_ready = .false.
+
     type :: LamppostContinuum
         ! This is |∂cosδ / ∂cosθ|, the lensing factor.
         double precision :: lensing_factor
@@ -25,6 +36,38 @@ module kerrz
     end type LamppostContinuum
 
 contains
+
+    subroutine kerrz_init_threads()
+        !> Initialise the kerrz thread pool for parallel computations.
+        if (kerrz_ready) then
+            return
+        end if
+        ! The _8 means this is an INTEGER 8 literal in Fortran.
+        if (krz_ThreadPool_init(kerrz_thread_pool, 0_8)                        &
+            .ne. KRZ_RET_SUCCESS) then
+            write (*,*) "Failed to initialise thread pool"
+            stop 1
+        end if
+
+        ! Need a dummy metric to setup the emissivity cache.
+        kerr_metric = krz_KerrMetric_init(1.0d0, 0.998d0)
+        if (krz_EmissivityCache_init(kerrz_cache, 1000000_8)                    &
+            .ne. KRZ_RET_SUCCESS) then
+            write (*,*) "Failed to initialise emissivity cache"
+            stop 1
+        end if
+
+        kerrz_ready = .true.
+    end subroutine kerrz_init_threads
+
+    subroutine kerrz_deinit()
+        !> Cleanup the thread pool. This is not actually ever called in
+        !> reltrans, because reltrans never needs to terminate but I'm going to
+        !> leave this around as it may be useful in the future when reltrans
+        !> becomes more like a library.
+        call krz_ThreadPool_deinit(kerrz_thread_pool)
+        call krz_EmissivityCache_deinit(kerrz_cache)
+    end subroutine kerrz_deinit
 
     type(krz_TraceResult) function trace_impact_parameters(mu_obs, alpha, beta,&
         distance) result(res)
@@ -98,6 +141,32 @@ contains
             time = continuum%res%x_final%t, alpha = continuum%alpha,           &
             beta = -continuum%beta)
     end function trace_lensing
+
+    subroutine stage_ring_emissivity(radius, theta)
+        !> Calculate the emissivity profile for a ring-like corona with a
+        !> particular height and radius.
+        double precision, intent(in) :: radius, theta
+        double precision :: height, offset
+        type(krz_RingCorona) :: corona
+        height = radius * cos(theta)
+        offset = radius * sin(theta)
+        print *, "M: ", kerr_metric%M, "a: ", kerr_metric%a
+        print *, "height: ", height, "radius: ", offset
+        corona = krz_RingCorona(height, offset)
+        if (krz_emissivity_ring(kerrz_thread_pool, kerrz_cache, kerr_metric,   &
+            corona) .ne. KRZ_RET_SUCCESS) then
+            write (*,*) "Failed to calculate emissivity profile."
+            stop 1
+       end if
+        print *, "Success"
+    end subroutine stage_ring_emissivity
+
+    double precision function emissivity_at(r) result (em)
+        !> Interpolate from the emissivity cache the emissivity profile at a
+        !> particular radius on the accretion disc.
+        double precision, intent(in) :: r
+        em = krz_interpolate_emissivity(kerrz_cache, r)
+    end function emissivity_at
 
     ! These subroutines are defined for the test suite:
     subroutine test_kerrz_trace(spin, mu_obs, alpha, beta, t, r, theta, phi)   &

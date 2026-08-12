@@ -309,7 +309,7 @@ subroutine genreltrans(Cp, dset, corona_config, ear, ne, param, ifl, photar)
     use telematrix2
     use rtconstants
     use xspec_interface
-    use kerrz, only: kerr_metric, krz_KerrMetric_init
+    use kerrz, only: kerr_metric, krz_KerrMetric_init, kerrz_init_threads
     implicit none
     ! Constants
     double precision, parameter :: rnmax = 300.d0, dlogf = 0.09 !This is a resolution parameter (base 10)
@@ -374,6 +374,15 @@ subroutine genreltrans(Cp, dset, corona_config, ear, ne, param, ifl, photar)
         ! Zero all of the saved parameters on the first call.
         paramsave = 0.0d0
         spinsav = -2.d0 !this is needed to force the run of the GRtrace routine
+
+        ! If we're computing the ring-like model on the fly, initialise the
+        ! kerrz threads.
+        if (model_args%ring_like) then
+            call kerrz_init_threads()
+            ! TODO: remove this later
+            print *, "WARNING: The ring-like model is being actively developed."
+            print *, "With any result or simulation: **do not** trust your eyes!"
+        end if
 
         ! finally, let the people know what they are witnessing!
         call print_header()

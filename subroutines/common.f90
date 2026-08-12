@@ -45,6 +45,24 @@ module common_types
         ! The below are computed from the above
         ! The cosine angle
         double precision :: muobs
+
+        ! Use ring-like coronal model. Should future models get added, this
+        ! could be promoted to an enumeration of some description.
+        logical :: ring_like = .false.
+
+        ! Used only in the ring-like coronal model:
+        ! These obey that the (x, z) coordinates of the ring in the x-z plane
+        ! are:
+        !
+        !     x = ring_r * sin(ring_angle)
+        !     z = ring_r * cos(ring_angle)
+        !
+        ! The radial offset from the black hole origin to a point in the ring
+        ! (rg):
+        double precision :: ring_r = 0.0
+        ! The inclination angle (in radians) off of the spin axis at which the
+        ! ring is opened to.
+        double precision :: ring_angle = 0.0
     end type t_model_arguments
 
     type :: t_config
@@ -78,10 +96,6 @@ module common_types
         double precision :: rnmax = 300.d0, dlogf = 0.09
 
         real :: DeltaGamma = 0.01
-
-        ! Use ring-like coronal model. Should future models get added, this
-        ! could be promoted to an enumeration of some description.
-        logical :: ring_like = .false.
 
         ! Toggle whether to calculate the impulse response or not. Since the
         ! impulse response is not directly used in calculations, and must be
@@ -170,16 +184,11 @@ contains
 
     ! Unwraps the arguments from a parameter array into `args`.
     subroutine unwrap_arguments(args, nlp, dset, params, cutoff_powerlaw)
-        use rtconstants, only: parse_reim
-        double precision, parameter :: pi = acos(-1.d0)
+        use rtconstants, only: parse_reim, pi
         integer, intent(in) :: nlp, dset, cutoff_powerlaw
         real, target, intent(in) :: params(32)
         type(t_model_arguments), intent(out) :: args
         integer :: i
-        do i = 1,nlp
-            args%DelAB(i) = params(27 + (i - 1) * nlp)
-            args%g(i) = params(28 + (i - 1) * nlp)
-        end do
         if (dset .eq. 1) then
            args%Dkpc = params(9)
            args%logxi = 0.0
@@ -188,7 +197,27 @@ contains
         end if
         args%h(1) = dble(params(1))
         args%h(2) = dble(params(2))
-        args%nlp = nlp
+
+        ! Set the coronal model:
+        if (nlp == -1) then
+            args%nlp = 1
+            args%ring_like = .true.
+            ! Set the heights to zero to catch bugs, since this paramter wont be
+            ! used in the ring-like model.
+            args%h = 0.0
+            args%ring_r = dble(params(1))
+            ! Convert to radians:
+            args%ring_angle = dble(params(2)) * pi / 180.0d0
+        else
+            ! Standard n-many lampposts:
+            args%nlp = nlp
+        end if
+
+        do i = 1,args%nlp
+            args%DelAB(i) = params(27 + (i - 1) * args%nlp)
+            args%g(i) = params(28 + (i - 1) * args%nlp)
+        end do
+
         args%a = dble(params(3))
         args%inc = dble(params(4))
         args%muobs = cos(args%inc * pi / 180.d0)
@@ -243,15 +272,17 @@ contains
             write(*,*)"Warning! rin<ISCO! Set to ISCO"
             model_args%rin = config%rmin
         end if
-        do i=1,model_args%nlp
-            if (model_args%h(i) .lt. 0.d0) then
-                model_args%h(i) = abs(model_args%h(i)) * config%rh
-            end if
-            if (model_args%h(i) .lt. 1.5d0*config%rh)then
-                write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
-                model_args%h(i) = 1.5d0 * config%rh
-            end if
-        end do
+        if (.not. model_args%ring_like) then
+            do i=1,model_args%nlp
+                if (model_args%h(i) .lt. 0.d0) then
+                    model_args%h(i) = abs(model_args%h(i)) * config%rh
+                end if
+                if (model_args%h(i) .lt. 1.5d0*config%rh)then
+                    write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
+                    model_args%h(i) = 1.5d0 * config%rh
+                end if
+            end do
+        end if
     end subroutine arguments_check
 
     ! Read in environment variables that configure reltrans

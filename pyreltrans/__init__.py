@@ -170,6 +170,52 @@ class DCP_Parameters:
     def to_numpy_array(self) -> np.ndarray:
         return np.array(dataclasses.astuple(self), dtype=np.float32)
 
+@dataclasses.dataclass
+class Ring_Parameters:
+    # The ring-corona radius (rg)
+    radius: float = 4.0
+    # The ring-corona opening angle (degrees)
+    angle: float = 45.0
+    # Spin
+    a: float = 0.998
+    # Inclination (degrees)
+    inc: float = 30.0
+    # Inner radius
+    rin: float = -1.0
+    # Outer radius
+    rout: float = 1e3
+    # Cosmological redshift
+    zcos: float = 0.0
+    # Photon index
+    gamma: float = 2.0
+    # logξ ionisation parameter
+    logxi: float = 3.0
+    # Iron abundance
+    afe: float = 1.0
+    # Electron abundance
+    lognep: float = 15.0
+    # Electron temperature in observer frame
+    kte: float = 60.0
+    # Hydrogen column density
+    nh: float = 0.0
+    # Boosting factor (ad-hoc normalisation)
+    boost: float = 1.0
+    # Black hole mass in solar units
+    mass: float = 4.6e7
+    # Lowest frequency in band
+    flo_hz: float = 0.0
+    # Highest frequency in band
+    fhi_hz: float = 0.0
+    # 1 -> Re, 2 -> Im, 3 -> modulus, 4 -> time lag, 5 -> folded modulus, 6 -> folded time lag
+    re_im: float = 1.0
+    del_a: float = 0.0
+    del_ab: float = 0.0
+    g: float = 0.0
+    telescope_response: float = 1.0
+
+    def to_numpy_array(self) -> np.ndarray:
+        return np.array(dataclasses.astuple(self), dtype=np.float32)
+
 
 @dataclasses.dataclass
 class Dbl_Parameters:
@@ -430,6 +476,14 @@ class Reltrans:
         """A wrapper around the XSPEC interface of rtdist"""
         return _wrap_call(
             self.lib_reltrans.tdrtdist_,
+            energy.astype(np.float32),
+            parameters.to_numpy_array(),
+        )
+
+    def reltransring(self, energy: np.ndarray, parameters: Ring_Parameters) -> np.ndarray:
+        """A wrapper around the XSPEC interface of the ring-like coronal model."""
+        return _wrap_call(
+            self.lib_reltrans.fbreltranswip_,
             energy.astype(np.float32),
             parameters.to_numpy_array(),
         )

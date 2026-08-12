@@ -97,6 +97,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     use m_rtrans
     use raytracing, only: trace_disk_observer, getdcos, getlens
     use rtconstants, only: pi
+    use kerrz, only: stage_ring_emissivity
     implicit none
 
     type(t_config), intent(inout) :: config
@@ -213,6 +214,12 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
         pnorm = 1.d0 / (4.d0 * pi)
     else
         pnorm = pnormer(args%model%b1, args%model%b2, args%model%qboost)
+    end if
+
+    ! Before we sum the impulse components, need to make sure the emissivity
+    ! profile has been calculated.
+    if (args%model%ring_like) then
+        call stage_ring_emissivity(args%model%ring_r, args%model%ring_angle)
     end if
 
     ! the only arguments that change here are .false., nro, nphi, rn, domega
@@ -345,7 +352,7 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
             rbin = clamp_i(ceiling(log10(re / args%model%rin) /                &
                 args%dlogr), 1, args%conf%xe)
 
-            if (args%conf%ring_like) then
+            if (args%model%ring_like) then
                 call sum_ringlike_corona(i, non_relativistic, r_length,        &
                      phi_length, re, alpha, beta, taudo, g, r_grid, domega,    &
                      gbin, rbin, args)
@@ -378,6 +385,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     use rtconstants, only: pi
     use emissivities
     use impulseresponse, only: time_axis, response
+    use kerrz, only: emissivity_at
     use m_rtrans
     implicit none
 
@@ -400,21 +408,17 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
 
     double precision :: tausd, tau, emissivity
 
-    ! this is a fixed number for now, representing the number of bins in azimuth
+    ! The number of bins in coronal ring azimuth to sum over:
+    ! TODO: make this part of the config structure
     integer, parameter :: r_nphi = 50
     double precision, parameter :: dphi = 2 * pi / float(r_nphi)
     ! index counting which phi bin we are currently considering
     integer :: phi_i
     double precision :: phi
 
-    if (args%model%nlp .ne. 1) then
-        print *, "panic: expected only one corona for ring-like corona"
-        error stop 1
-    end if
-
     ! Add to reflection fraction
-    args%frobs(1) = args%frobs(1) + 2.0 * g**3 * gsd * cosfac /                &
-        dareafac(re, args%model%a) * domega(i)
+    ! TODO: get kerrz to spit this out
+    args%frobs(1) = 1.0
 
     ! Calculate flux from pixel
     gsd = dglpfacthick(re, args%model%a, args%model%h(1), args%mudisk)
@@ -428,14 +432,23 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     mue = demang(args%model%a, args%model%muobs, re, alpha, beta)
     mubin = ceiling(mue * dble(args%conf%me))
 
-    ! loop over all azmithal bins
+    ! Loop over all azmithal bins. This is in effect looping over the azimuthal
+    ! coordinate of the ring, but is equivalently looping around the azimuthal
+    ! coordinate of the accretion disc.
     do phi_i = 1, r_nphi
         phi = phi_i * dphi
 
-        ! the source to disc time of the current azimuthal bin
-        call get_emissivity_time(re, phi, emissivity, tausd)
-        ! normalise
+        ! TODO: the source to disc time of the current azimuthal bin
+        tausd = 0.0
+        emissivity = emissivity_at(re)
+
+        ! Normalise
         emissivity = emissivity / float(r_nphi)
+
+        ! TODO: for the ring-like corona, the source-to-disc time can be
+        ! deferred to be part of the continuum transfer function. I leave the
+        ! below for now so that I can check whether the rest of the modified
+        ! code is working.
 
         if (non_relativistic) then
             ! TODO: for the non-relativistic case, can likely also consider the

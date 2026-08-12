@@ -17,6 +17,7 @@ float time_difference(struct timespec start, struct timespec end) {
 // either way, forward declare this as an extern, and let it be the linker's
 // problem
 extern void tdreltransdcp_(float *, int *, float *, int *, float *);
+extern void fbreltranswip_(float *, int *, float *, int *, float *);
 
 #define LOG_ERR(...)                                                           \
   fprintf(stderr, "ERR  : " __VA_ARGS__);                                      \
@@ -47,6 +48,57 @@ typedef struct reltrans_dcp_parameters {
 RT_DCP_Params default_parameters() {
   RT_DCP_Params params = {
       .h = 6.0,
+      .a = 0.998,
+      .inc = 30.0,
+      .rin = -1.0,
+      .rout = 1e3,
+      .zcos = 0.0,
+      .gamma = 2.0,
+      .logxi = 3.0,
+      .afe = 1.0,
+      .lognep = 15,
+      .kte = 60.0,
+      .nh = 0.0,
+      .boost = 1.0,
+      .mass = 4.6e7,
+      .flo_hz = 0.0,
+      .fhi_hz = 0.0,
+      .re_im = 1.0,
+      .del_a = 0.0,
+      .del_ab = 0.0,
+      .g = 0.0,
+      .telescope_response = 1,
+  };
+  return params;
+}
+
+typedef struct reltrans_ring_parameters {
+  float r,    // ring radius (rg)
+      th,     // ring opening angle (degrees)
+      a,      // spin
+      inc,    // inclination
+      rin,    // inner radius
+      rout,   // outer radius
+      zcos,   // cosmological redshift
+      gamma,  // photon index
+      logxi,  // logξ ionisation parameter
+      afe,    // iron abundance
+      lognep, // electron abundance (?)
+      kte,    // electron temperature in observer frame
+      nh,     // hydrogen column density
+      boost,  // boosting factor (ad-hoc normalisation)
+      mass,   // black hole mass in solar units
+      flo_hz, // lowest frequency in band
+      fhi_hz, // highest frequency in band
+      re_im,  // 1 -> Re, 2 -> Im, 3 -> modulus, 4 -> time lag, 5 -> folded
+              // modulus, 6 -> folded time lag
+      del_a, del_ab, g, telescope_response;
+} RT_Ring_Params;
+
+RT_Ring_Params default_ring_parameters() {
+  RT_Ring_Params params = {
+      .r = 4.0,
+      .th = 30.0,
       .a = 0.998,
       .inc = 30.0,
       .rin = -1.0,
@@ -108,11 +160,13 @@ int main() {
     return 1;
   }
 
-  RT_DCP_Params params = default_parameters();
-  params.re_im = 5.0;
-  params.mass = 10.0;
-  params.flo_hz = 0.122;
-  params.fhi_hz = 1.024;
+  // RT_DCP_Params params = default_parameters();
+  RT_Ring_Params params = default_ring_parameters();
+
+  // params.re_im = 5.0;
+  // params.mass = 10.0;
+  // params.flo_hz = 0.122;
+  // params.fhi_hz = 1.024;
 
   // logarithmic energy grid
   for (int i = 0; i < e_num; ++i) {
@@ -125,9 +179,10 @@ int main() {
   int ifl = 1;
   e_num -= 1;
   // Run once to load everything in
-  tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
+  // tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
+  fbreltranswip_(energy, &e_num, (float *)&params, &ifl, output);
 
-  size_t num_trials = 20;
+  size_t num_trials = 1;
 
   float total_time = 0;
   float *times_millis = malloc(sizeof(float) * num_trials);
@@ -146,7 +201,8 @@ int main() {
     clock_gettime(CLOCK_MONOTONIC, &now);
 
     int ifl = 1;
-    tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
+    // tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
+    fbreltranswip_(energy, &e_num, (float *)&params, &ifl, output);
 
     clock_gettime(CLOCK_MONOTONIC, &end);
     // Convert nano-seconds to mili-seconds.
