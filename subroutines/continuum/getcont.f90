@@ -14,6 +14,16 @@
         !  zcos: host galaxy redshift
         !  (output) contx: continuum spectrum 
 
+!> Derivation of renormalisation constant:
+!> First convert to incident flux in units of [keV/cm^2/s]
+!> contx = contx * 10**(logne + logxi) / (4.0 * pi) / ergsev
+!> Then divide out ad hoc factor of 1e20 included in the xillver tables to ease comparison with reflionx
+!> contx = contx / 1e20
+!> Then divide by the integral in the rest frame from 0.1-1e3 keV
+!> contx = contx / Icomp
+!> The divide by xi and by ne/1e15
+!> contx = contx / (10**(logxi + logne - 15))
+      
       use gr_continuum
       implicit none
       integer, intent(in)           :: nex, Cp
@@ -23,8 +33,7 @@
 
       real   , parameter  :: pi = acos(-1.0),ergsev  = 1.602197e-9 ! Convert keV to ergs
       integer :: i, ifl, j
-      real    :: nth_par(5), photer(nex), E, Icomp, inc_flux
-      real    :: get_norm_cont_local
+      real    :: nth_par(5), photer(nex), E, Icomp
       real    :: contx_base(nex), renorm, dlogE
 
       Icomp = 0.0
@@ -70,9 +79,9 @@
                Icomp = Icomp + ((earx(i) + earx(i-1)) * 0.5 * contx_base(i))
             endif
          enddo
-         inc_flux = 10**(logne + logxi) / (4.0 * pi) / ergsev !calculate incident flux in units  [keV/cm^2/s]
-         get_norm_cont_local = inc_flux/ Icomp / 1e20
-         contx = contx * get_norm_cont_local / (10**(logxi + logne - 15))
+         ! Renormalise (see header for derivation)
+         contx = contx / ( 4.0*pi * ergsev * 1e5 * Icomp )
+         
       else
          !First calculate normalisation constant in source frame
          do i = 1, nex
@@ -87,9 +96,9 @@
             E   = 0.5 * ( earx(i) + earx(i-1) )
             contx(i) = E**(-1.0*real(Gamma)+1) * exp(-E/(Cutoff_obs))
          end do
-         inc_flux = 10**(logne + logxi) / (4.0 * pi) / ergsev !calculate incident flux in units  [keV/cm^2/s]
-         get_norm_cont_local = inc_flux/ Icomp / 1e20
-         contx = contx * get_norm_cont_local / (10**(logxi + logne - 15))
+         ! Renormalise (see header for derivation)
+         contx = contx / ( 4.0*pi * ergsev * 1e5 * Icomp )
+         
       end if
          
       return
