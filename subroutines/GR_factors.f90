@@ -40,7 +40,8 @@
       function dareafac(r,a)
 ! Calculates dA/dr, where A is the surface area of a disk ring
 ! *ADJUSTED FOR ORBITAL MOTION* BY MULTIPLYING BY THE LORENTZ FACTOR
-      implicit none
+! lor * sqrt(grr * g_phi_phi) * 2 pi check this 
+        implicit none
       double precision               dareafac,r,a
       double precision               Dm,dArbydr,dlorfac
       double precision, parameter :: pi = acos(-1.0)
@@ -297,7 +298,7 @@ function dglpfacthick(r,a,h,mudisk,cosdelta)
         ! write(40,*) t_r1, (r2-r1) !t_r1 is 1 when (r2-r1) > 0, is 0 when (r2-r1) < 0
         !this is very strange I would have imagined the opposite
         if ((r2-r1).lt.0.d0)then
-           dglpfacthick=-sqrt(Dh / (h**2 + a**2) )*(-vt_ - kr * vr_)
+           dglpfac thick=-sqrt(Dh / (h**2 + a**2) )*(-vt_ - kr * vr_)
         else
            dglpfacthick=-sqrt(Dh / (h**2 + a**2) )*(-vt_ + kr * vr_)
         endif
