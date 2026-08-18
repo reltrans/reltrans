@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from pyreltrans import DCP_Parameters, Dbl_Parameters, rtdist_Parameters
+from pyreltrans import DCP_Parameters, PL_Parameters, Dbl_Parameters, rtdist_Parameters
 
 from conftest import _get_snapshot
 
@@ -17,6 +17,7 @@ def test_basic_invocation(reltrans, assert_snapshot):
     output = reltrans.dcp(energy, DCP_Parameters())
     assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
 
+    
 def test_basic_absorption_invocation(reltrans, assert_snapshot):
     """A smoke test to check whether absorption is being correctly applied."""
     reltrans.reset()
@@ -149,7 +150,94 @@ def test_re_im_5_6(reltrans, assert_snapshot, telescope, envars):
     output = reltrans.dcp(energy, xrb1)
     assert_snapshot(output, name="real_part", xlabel = "Energy", domain = energy[0:-1])
 
+    
+def test_basic_invocation_reltransPL(reltrans, assert_snapshot, envars):
+    """A smoke test to check whether the default values are working."""
+    reltrans.reset()
+    energy = np.logspace(np.log10(0.1), np.log10(100), 501)
+    output = reltrans.pl(energy, PL_Parameters())
+    assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
 
+    
+def test_re_im_reltransPL(reltrans, assert_snapshot, telescope, envars):
+    """Test the re_im parameter to assert that all the different outputs of the
+    reltransPL model are working. This test requires an RMF and ARF, which is provided by
+    the `telescope` fixture."""
+    reltrans.reset()
+    energy = np.logspace(np.log10(0.1), np.log10(100), 101)
+    dE = (energy[1:] - energy[:-1])
+
+    envars["RMF_SET"] = telescope.rmf_path
+    envars["ARF_SET"] = telescope.arf_path
+    envars["EMIN_REF"] = "0.3"
+    envars["EMAX_REF"] = "10.0"
+
+    xrb1 = PL_Parameters(mass=10.0, flo_hz=0.1, fhi_hz=0.2, re_im=4.0)
+    output = reltrans.pl(energy, xrb1)
+
+    assert_snapshot(
+        output,
+        name="time_lag",
+        atol=1e-9,
+        xscale = "log",
+        xlabel = "Energy",
+        domain = energy[0:-1]
+    )
+
+    xrb1.re_im = 1
+    output = reltrans.pl(energy, xrb1)
+    assert_snapshot(
+        output,
+        name="real_part",
+        xscale = "log",
+        xlabel = "Energy",
+        domain = energy[0:-1]
+    )
+    xrb1.re_im = 2
+    output = reltrans.pl(energy, xrb1)
+    assert_snapshot(
+        output,
+        name="imaginary_part",
+        rtol=1e-3,
+        xscale = "log",
+        xlabel = "Energy",
+        domain = energy[0:-1]
+    )
+
+    xrb1.re_im = 3
+    output = reltrans.pl(energy, xrb1)
+    assert_snapshot(
+        output,
+        name="magnitude",
+        rtol=1e-3,
+        xscale = "log",
+        xlabel = "Energy",
+        domain = energy[0:-1]
+    )
+
+    xrb1.re_im = 6.0
+    output = reltrans.pl(energy, xrb1)/dE
+    assert_snapshot(
+        output,
+        name="reim6",
+        rtol=1e-3,
+        xscale = "log",
+        xlabel = "Energy",
+        domain = energy[0:-1]
+    )
+
+    xrb1.re_im = 5.0
+    output = reltrans.pl(energy, xrb1)
+    assert_snapshot(
+        output,
+        name="reim5",
+        rtol=1e-3,
+        xscale = "log",
+        xlabel = "Energy",
+        domain = energy[0:-1]
+    )
+
+    
 def test_basic_invocation_reltransDbl(reltrans, assert_snapshot, envars):
     """A smoke test to check whether the default values are working."""
     reltrans.reset()

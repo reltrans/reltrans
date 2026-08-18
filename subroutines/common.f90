@@ -139,6 +139,7 @@ contains
       !The routine reset the check variables, in order to force
       ! a fresh start of the model
       global_config%firstcall = .true.
+      call reset_instrument_files()
     end subroutine reset_reltrans
  
     subroutine reset_instrument_files() bind(C, name="reset_instrument_files")

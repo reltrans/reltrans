@@ -357,7 +357,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! freed and re-allocated
 
     if (config%firstcall) then
-        call reset_instrument_files()
         call init_fftw_allconv(IS_DEBUG_BUILD)
         ! initialise environment and allocate all arrays
         call read_environment_variables(config)

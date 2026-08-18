@@ -74,7 +74,7 @@ subroutine tdreltransPL(ear, ne, param, ifl, photar)
   implicit none
   integer, parameter :: nlp = 1 !use a single lamp post
   integer :: ne, ifl, Cp, dset
-  real    :: ear(0:ne), param(21), photar(ne), par(32)
+  real    :: ear(0:ne), param(20), photar(ne), par(32)
 ! Settings
   Cp   = -1   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter    
   dset = 0   !dset=0 means distance is not set, logxi set instead

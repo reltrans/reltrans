@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from pyreltrans import DCP_Parameters, Dbl_Parameters, rtdist_Parameters
+from pyreltrans import DCP_Parameters, PL_Parameters, Dbl_Parameters, rtdist_Parameters
 
 
 plot_spectral_kwargs = dict(
@@ -195,17 +195,22 @@ def test_resetting_between_flavours(reltrans):
     reltrans.reset()
     output_dcp = reltrans.dcp(energy, DCP_Parameters())
     reltrans.reset()
+    output_pl = reltrans.pl(energy, PL_Parameters())
+    reltrans.reset()
     output_rtdist = reltrans.rtdist(energy, rtdist_Parameters())
     reltrans.reset()
     output_dbl = reltrans.dbl_lamp(energy, Dbl_Parameters())
     reltrans.reset()
     output_dcp2 = reltrans.dcp(energy, DCP_Parameters())
     reltrans.reset()
+    output_pl2 = reltrans.pl(energy, PL_Parameters())
+    reltrans.reset()
     output_rtdist2 = reltrans.rtdist(energy, rtdist_Parameters())
     reltrans.reset()
     output_dbl2 = reltrans.dbl_lamp(energy, Dbl_Parameters())
 
     np.testing.assert_allclose(output_dcp, output_dcp2, rtol=1e-4)
+    np.testing.assert_allclose(output_pl, output_pl2, rtol=1e-4)
     np.testing.assert_allclose(output_rtdist, output_rtdist2, rtol=1e-4)
     np.testing.assert_allclose(output_dbl, output_dbl2, rtol=1e-4)
 
