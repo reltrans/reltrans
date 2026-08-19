@@ -645,6 +645,58 @@ class Reltrans:
         )
         return (lensing_factor.value, cos_delta.value, time.value)
 
+    def get_impulse_response(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        self.lib_reltrans.response_get.argtypes = [
+            ct.POINTER(ct.c_void_p),  # ptr (output)
+            ct.POINTER(ct.c_void_p),  # eaxis_ptr (output)
+            ct.POINTER(ct.c_void_p),  # taxis_ptr (output)
+            ct.POINTER(ct.c_int),     # ne (output)
+            ct.POINTER(ct.c_int)      # nt (output)
+        ]
+        self.lib_reltrans.response_get.restype = None  # subroutine returns void
+
+        ptr = ct.c_void_p()
+        eaxis_ptr = ct.c_void_p()
+        taxis_ptr = ct.c_void_p()
+        ne = ct.c_int()
+        nt = ct.c_int()
+
+        # Call the Fortran subroutine
+        self.lib_reltrans.response_get(
+            ct.byref(ptr),
+            ct.byref(eaxis_ptr),
+            ct.byref(taxis_ptr),
+            ct.byref(ne),
+            ct.byref(nt)
+        )
+
+        # Extract dimensions
+        ne_val = ne.value
+        nt_val = nt.value
+
+        # Convert C pointers to NumPy arrays
+        response_array = np.ctypeslib.as_array(
+            ct.cast(ptr, ct.POINTER(ct.c_double)),
+            shape=(nt_val, ne_val),
+        ).T
+
+        energy_axis = np.ctypeslib.as_array(
+            ct.cast(eaxis_ptr, ct.POINTER(ct.c_double)),
+            shape=(ne_val,)
+        )
+
+        time_axis = np.ctypeslib.as_array(
+            ct.cast(taxis_ptr, ct.POINTER(ct.c_double)),
+            shape=(nt_val,)
+        )
+
+        # Return copies to avoid lifetime issues with Fortran memory
+        return (
+            time_axis.copy(),
+            energy_axis.copy(),
+            response_array.copy(),
+        )
+
 
 
 __all__ = [
