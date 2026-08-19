@@ -139,7 +139,7 @@ contains
         cont = LamppostContinuum(lensing_factor=1.0/continuum%dcosd_dcosth,    &
             cos_delta = cos(pi - continuum%angle_delta),                       &
             time = continuum%res%x_final%t, alpha = continuum%alpha,           &
-            beta = -continuum%beta)
+            beta = continuum%beta)
     end function trace_lensing
 
     subroutine stage_ring_emissivity(radius, theta)
