@@ -30,3 +30,4 @@ run_model.py
 **.pdf
 .gdbinit
 test/_plots
+*delete*

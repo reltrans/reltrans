@@ -154,8 +154,12 @@ def test_re_im_5_6(reltrans, assert_snapshot, telescope, envars):
 def test_basic_invocation_reltransPL(reltrans, assert_snapshot, envars):
     """A smoke test to check whether the default values are working."""
     reltrans.reset()
+    envars["ION_ZONES"] = "1"
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
-    output = reltrans.pl(energy, PL_Parameters())
+    output1 = reltrans.dcp(energy, DCP_Parameters())
+    # output = reltrans.rtdist(energy, rtdist_Parameters(h=5.0))
+    reltrans.reset()
+    output = reltrans.pl(energy, PL_Parameters(h=10.0, boost=-1.0))
     assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
 
     

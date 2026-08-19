@@ -25,16 +25,40 @@
       integer             :: ifl, i
 
       ifl = 0
+      write(*,*) "DEBUG: Cp", Cp
       if( Cp .eq. -1 )then         !xillver
          ! Pass the null terminator for C compatability, as xsatbl is an
          ! external C function.
          call xsatbl(ear, ne, param_xillPL,                                    &
-            [trim(pathname_xillver), char(0)], ifl, photar, photer)
+              [trim(pathname_xillver), char(0)], ifl, photar, photer)
+      write(*,*) "DEBUG: inside get_xillver PL pathname", [trim(pathname_xillver), char(0)] 
+
+      write(*,*) "DEBUG: inside get_xillver PL parameters",param_xillPL, ifl
+
+         open (unit = 89, file = 'delete_DEBUG_get_xillverPL.del', status = 'replace', action = 'write') !DEBUG
+         write(89, *) "skip on" !DEBUG
+         do i = 1, ne
+            write(89,*) 0.5 * (ear(i) + ear(i-1)), photar(i) !DEBUG
+         end do
+         write(89,*) "no no"
+         write(89,*) "log y x on"
+         close(89)!DEBUG
+         
       else if ( Cp .eq. 2 )then    !xillverDCp
          ! Pass the null terminator for C compatability, as xsatbl is an
          ! external C function.
          call xsatbl(ear, ne, param_xillCp,                                    &
             [trim(pathname_xillverDCp), char(0)], ifl, photar, photer)
+         open (unit = 88, file = 'delete_DEBUG_get_xillverDCp.del', status = 'replace', action = 'write') !DEBUG
+         write(88, *) "skip on" !DEBUG
+         do i = 1, ne
+            write(88,*) 0.5 * (ear(i) + ear(i-1)), photar(i) !DEBUG
+         end do
+         write(88,*) "no no"
+         write(88,*) "log y x on"
+         close(88)!DEBUG
+      write(*,*) "DEBUG: inside get_xillver DCP parameters",param_xillPL 
+      write(*,*) "DEBUG: inside get_xillver DCP pathname", [trim(pathname_xillverDCp), char(0)] 
       else
          write(*,*) 'No xillver model available for this configuration'
          stop 
