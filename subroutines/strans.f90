@@ -97,7 +97,9 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     use m_rtrans
     use raytracing, only: trace_disk_observer, getdcos, getlens
     use rtconstants, only: pi
-    use kerrz, only: stage_ring_emissivity
+    use kerrz, only: stage_ring_emissivity, krz_ContinuumRingPoint,            &
+        ring_continuum_at, stage_ring_continuum
+    use ring_corona, only: ring_nphi, ring_weight
     implicit none
 
     type(t_config), intent(inout) :: config
@@ -123,7 +125,13 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     double precision :: dFe(model_args%nlp)
     double precision pnormer, pfunc_raw, ang_fac
     double precision rnn(config%nro), domegan(config%nro)
+    double precision :: observed_bolometric_flux
     logical dotrace
+
+    integer :: phi_i
+    double precision :: phi, lensing_factor
+
+    type(krz_ContinuumRingPoint) :: direct
 
     ! Setup the output arrays
     call bind_arguments(args, config, model_args, arrays, frobs, dFe, fi, ne)
@@ -145,8 +153,39 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     !set up saving the impulse response function if user desires
     !note: the ideal parameters to plot the transfer function are nro~=7000,nphi~=7000,nt~=2e9,nex~=2e10
 
-    !get the GR ray-tracing CONTINUUM parameters which are stored in the module gr_continuum
-    if (args%model%nlp .eq. 1) then
+    ! Get the GR ray-tracing CONTINUUM parameters which are stored in the module
+    ! gr_continuum
+    if (args%model%ring_like) then
+        call stage_ring_continuum(args%model%muobs, args%model%ring_r,         &
+            args%model%ring_angle)
+
+        ! Average the g_so. This is done because so many parts of the code
+        ! expect there to be a single unique g_so, for e.g. determining the
+        ! xilimits. This is technically a big oversimplification, especially for
+        ! timing quantities, but it's a start.
+        !
+        ! We also need to calculate the bolometric flux of the observed spectrum
+        ! for the reflection fraction calculation. This can be done at the same
+        ! time, and used as the denominator against the reflected flux later.
+        !
+        ! After this, lens(1) stores the average lensing factor.
+        !             gso(1) stores the average energyshift.
+        !             tauso(1) stores the average source-to-observer time.
+        observed_bolometric_flux = 0.0
+        lens(1) = 0.0
+        gso(1) = 0.0
+        tauso(1) = 0.0
+        do phi_i = 1, ring_nphi
+            phi = 2 * pi * phi_i * ring_weight
+            direct = ring_continuum_at(phi)
+            observed_bolometric_flux = observed_bolometric_flux +              &
+                direct%dcosd_dcosth * direct%energyshift * ring_weight
+            lens(1) = lens(1) + direct%dcosd_dcosth * ring_weight
+            gso(1) = gso(1) + direct%energyshift * ring_weight
+            tauso(1) = tauso(1) + direct%delta_t * ring_weight
+        end do
+
+    else if (args%model%nlp .eq. 1) then
        gso(1) = real(dgsofac(args%model%a, args%model%h(1)))
        call getlens(args%model%a, args%model%h(1), args%model%muobs,           &
             lens(1), tauso(1), cosdelta_obs(1))
@@ -204,22 +243,21 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     !initialize radius grid, angles, and transfer functions
     sin0 = sqrt(1.0-args%model%muobs**2)
 
-    ! Calculate dcos/dr and time lags vs r for the lamppost model
-    call getdcos(args%model%a, args%model%h, args%mudisk, ndelta,              &
-         args%model%nlp, args%model%rout, npts, rlp, dcosdr, tlp, cosd,        &
-         cosdout)
+    if (args%model%ring_like) then
+        ! Calculate the disc illumination for the ring-like corona:
+        call stage_ring_emissivity(args%model%ring_r, args%model%ring_angle)
+    else
+        ! Calculate dcos/dr and time lags vs r for the lamppost model
+        call getdcos(args%model%a, args%model%h, args%mudisk, ndelta,          &
+             args%model%nlp, args%model%rout, npts, rlp, dcosdr, tlp, cosd,    &
+             cosdout)
+     end if
 
     ! set continuum normalisations depending on model flavour
     if (dset .eq. 0)then
         pnorm = 1.d0 / (4.d0 * pi)
     else
         pnorm = pnormer(args%model%b1, args%model%b2, args%model%qboost)
-    end if
-
-    ! Before we sum the impulse components, need to make sure the emissivity
-    ! profile has been calculated.
-    if (args%model%ring_like) then
-        call stage_ring_emissivity(args%model%ring_r, args%model%ring_angle)
     end if
 
     ! the only arguments that change here are .false., nro, nphi, rn, domega
@@ -230,19 +268,25 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     call sum_impulse_components(.true., args%conf%nron, args%conf%nphin,       &
          rnn, domegan, args)
 
-    do m = 1, args%model%nlp
-        ! Calculate 4pi p(theta0,phi0) = ang_fac
-        ang_fac = 4.d0 * pi * pnorm * pfunc_raw(-cosdelta_obs(m),              &
-            args%model%b1, args%model%b2, args%model%qboost)
-        ! Adjust the lensing factor (easiest way to keep track)
-        lens(m) = lens(m) * ang_fac
-        ! Calculate the relxill reflection fraction for one columncosdout
-        frrel(m) = sysfref(args%model%rin, rlp(:, m), cosd(:, m), ndelta,      &
-            cosdout(m))
-        !Finish calculation of observer's reflection fraction
-        args%frobs(m) = args%frobs(m) / dgsofac(args%model%a,                  &
-            args%model%h(m)) / lens(m)
-    end do
+    if (args%model%ring_like) then
+
+        ! This is now the ratio of reflected / observed
+        args%frobs(1) = args%frobs(1) / observed_bolometric_flux
+    else
+        do m = 1, args%model%nlp
+            ! Calculate 4pi p(theta0,phi0) = ang_fac
+            ang_fac = 4.d0 * pi * pnorm * pfunc_raw(-cosdelta_obs(m),          &
+                args%model%b1, args%model%b2, args%model%qboost)
+            ! Adjust the lensing factor (easiest way to keep track)
+            lens(m) = lens(m) * ang_fac
+            ! Calculate the relxill reflection fraction for one columncosdout
+            frrel(m) = sysfref(args%model%rin, rlp(:, m), cosd(:, m), ndelta,  &
+                cosdout(m))
+            !Finish calculation of observer's reflection fraction
+            args%frobs(m) = args%frobs(m) / dgsofac(args%model%a,              &
+                args%model%h(m)) / lens(m)
+        end do
+    end if
 
     if (args%conf%calculate_impulse_response) then
         ! Deal with edge effects
@@ -270,6 +314,7 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
     use rtconstants, only: pi
     use emissivities
     use m_rtrans
+    use ring_corona, only: ring_nphi, ring_weight
     implicit none
     logical, intent(in) :: non_relativistic
 
@@ -303,9 +348,6 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
     ! transfer function/convolution kernel in energy (gbin), frequency (fbin),
     ! emission angle (mubin), disk radial
     ! bin (rbin) from the m-th/nl-th lamp post
-
-    ! TODO: for ring-like corona, pre-load the correct time-dependent emissivity
-    ! profile here, before the loop over observer coordinates
 
     disc_seen = .false.
     do ri = 1, r_length
@@ -385,8 +427,9 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     use rtconstants, only: pi
     use emissivities
     use impulseresponse, only: time_axis, response
-    use kerrz, only: emissivity_at
+    use kerrz, only: krz_EmissivityTrace, emissivity_values_at
     use m_rtrans
+    use ring_corona, only: ring_nphi, ring_weight, ring_em_normalisation
     implicit none
 
     logical, intent(in) :: non_relativistic
@@ -408,20 +451,10 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
 
     double precision :: tausd, tau, emissivity
 
-    ! The number of bins in coronal ring azimuth to sum over:
-    ! TODO: make this part of the config structure
-    integer, parameter :: r_nphi = 50
-    double precision, parameter :: dphi = 2 * pi / float(r_nphi)
     ! index counting which phi bin we are currently considering
     integer :: phi_i
-    double precision :: phi
-
-    ! Add to reflection fraction
-    ! TODO: get kerrz to spit this out
-    args%frobs(1) = 1.0
-
-    ! Calculate flux from pixel
-    gsd = dglpfacthick(re, args%model%a, args%model%h(1), args%mudisk)
+    double precision :: phi, lensing_factor
+    type(krz_EmissivityTrace) :: em_values
 
     normfac = real((g/(1.d0+args%model%zcos))**(2.+args%model%Gamma)*domega(i))
 
@@ -432,33 +465,44 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     mue = demang(args%model%a, args%model%muobs, re, alpha, beta)
     mubin = ceiling(mue * dble(args%conf%me))
 
-    ! Loop over all azmithal bins. This is in effect looping over the azimuthal
-    ! coordinate of the ring, but is equivalently looping around the azimuthal
-    ! coordinate of the accretion disc.
-    do phi_i = 1, r_nphi
-        phi = phi_i * dphi
+    ! Loop over all azmithal bins of the accretion disc.
+    do phi_i = 1, ring_nphi
+        phi = 2 * pi * phi_i * ring_weight
 
-        ! TODO: the source to disc time of the current azimuthal bin
-        tausd = 0.0
-        emissivity = emissivity_at(re)
+        ! Get the `tausd`, `emissivity` and `g_sd` energyshifts for the
+        ! ring-like corona. The `re` and `phi` here are both coordinates on the
+        ! accretion disc.
+        em_values = emissivity_values_at(re, phi)
+        tausd = em_values%t
+        emissivity = em_values%em * ring_weight * ring_em_normalisation
+        gsd = em_values%g
 
-        ! Normalise
-        emissivity = emissivity / float(r_nphi)
+        ! TODO: remove me once interpolations at the edges of the phi domain are
+        ! fixed.
+        if (emissivity == 0) then
+            cycle
+        end if
+
+        ! Add to reflection fraction:
+        ! This is Ingram et al. 2019 Equation (31), using the emissivity
+        ! expression and multiplying by the gsd factors to ensure the bolometric
+        ! intensity division is correct.
+        args%frobs(1) = args%frobs(1) + 4.0 * g**3 * emissivity *              &
+            gsd**(1 - args%model%Gamma) * domega(i)
 
         ! TODO: for the ring-like corona, the source-to-disc time can be
         ! deferred to be part of the continuum transfer function. I leave the
         ! below for now so that I can check whether the rest of the modified
         ! code is working.
-
         if (non_relativistic) then
             ! TODO: for the non-relativistic case, can likely also consider the
             ! corona to be a lamppost, since the spread of time values will be
             ! small, likely of order the size of the ring
             ! - this should be checked, else a full non-relatvistic version that
             !   loops over each azimuth used
-            tau = sqrt(re**2 + (args%model%h(1) - args%model%honr *            &
+            tau = sqrt(re**2 + (args%model%ring_r - args%model%honr *          &
                 re)**2) - re * (sin0 * sindisk * cos(phie) + args%model%muobs  &
-                * args%mudisk) + args%model%h(1) * args%model%muobs
+                * args%mudisk) + args%model%ring_r * args%model%muobs
             tau = (1.d0+args%model%zcos)*tau
         else
             tau = (1.d0 + args%model%zcos) * (tausd + taudo - tauso(1))

@@ -20,6 +20,10 @@ module kerrz
     ! profile.
     type(krz_EmissivityCache) :: kerrz_cache
 
+    ! This is the continuum transfer function cache that holds the last
+    ! calculated ring-like corona transfer function.
+    type(krz_ContinuumRing) :: kerrz_continuum_cache
+
     ! This is used to track whether the threads have been initialised or not.
     logical :: kerrz_ready = .false.
 
@@ -157,16 +161,50 @@ contains
             corona) .ne. KRZ_RET_SUCCESS) then
             write (*,*) "Failed to calculate emissivity profile."
             stop 1
-       end if
+        end if
         print *, "Success"
     end subroutine stage_ring_emissivity
 
-    double precision function emissivity_at(r) result (em)
+    subroutine stage_ring_continuum(mu_obs, radius, theta)
+        !> Calculate the emissivity profile for a ring-like corona with a
+        !> particular height and radius.
+        double precision, intent(in) :: mu_obs, radius, theta
+        double precision :: height, offset
+        type(krz_RingCorona) :: corona
+        type(krz_FourVector) :: x_obs
+        height = radius * cos(theta)
+        offset = radius * sin(theta)
+        corona = krz_RingCorona(height, offset)
+
+        x_obs = krz_FourVector(t = 0.0d0, r = R_AT_INFINITY,                   &
+            th = acos(mu_obs), ph = 0.0d0)
+
+        ! TODO: remove this once kerrz has fully face-on implemented
+        if (abs(x_obs%th) < 1d-3) then
+            x_obs%th = 1d-3
+        end if
+
+        if (krz_traceContinuumRing(kerrz_continuum_cache, kerr_metric, x_obs,  &
+            corona) .ne. KRZ_RET_SUCCESS) then
+            write (*,*) "Failed to calculate continuum."
+            stop 1
+        end if
+        print *, "Success"
+    end subroutine stage_ring_continuum
+
+    type(krz_EmissivityTrace) function emissivity_values_at(r, phi) result (em)
         !> Interpolate from the emissivity cache the emissivity profile at a
         !> particular radius on the accretion disc.
-        double precision, intent(in) :: r
-        em = krz_interpolate_emissivity(kerrz_cache, r)
-    end function emissivity_at
+        double precision, intent(in) :: r, phi
+        em = krz_interpolate_emissivity(kerrz_cache, r, phi)
+    end function emissivity_values_at
+
+    type(krz_ContinuumRingPoint) function ring_continuum_at(phi) result (point)
+        !> Calculate the lensing factor and energyshift at a particular `phi`
+        !> coordinate along the ring.
+        double precision, intent(in) :: phi
+        point = krz_interpolate_continuum(kerrz_continuum_cache, phi)
+    end function ring_continuum_at
 
     ! These subroutines are defined for the test suite:
     subroutine test_kerrz_trace(spin, mu_obs, alpha, beta, t, r, theta, phi)   &

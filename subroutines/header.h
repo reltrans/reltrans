@@ -3,6 +3,8 @@ include 'subroutines/xspec_interface.f90'
 include 'subroutines/modules.f90'
 include 'subroutines/common.f90'
 
+include 'subroutines/ring.f90'
+
 include 'subroutines/continuum/getcont.f90'
 include 'subroutines/continuum/init_cont.f90'
 

@@ -133,8 +133,22 @@ module common_types
         ! earx: internal energy grid array (0:nex)
         real, allocatable :: earx(:), ear(:), fix(:)
         real, allocatable :: ReGbar(:), ImGbar(:)
+
+        ! The continuum flux, `contx(num_energy_bins, num_lampposts)`.
         real, allocatable :: contx(:,:)
+
+        ! The continuum fluxes for the ring-like corona,
+        !
+        !     ring_continuums(num_energy_bins, num_azimuthal_points)
+        !
+        ! The ring-like corona stores a different continuum flux for each point
+        ! along the ring. It also uses `contx(:,1)` to store the average, as
+        ! that is still used for `xilimits` and various other ionisation-related
+        ! computations.
+        real, allocatable :: ring_continuums(:,:)
+
         double precision, allocatable :: contx_int(:)
+
         ! TRANSFER FUNCTIONS and Cross spectrum dynamic allocation + variables
         complex, dimension(:,:,:,:,:), allocatable :: ker_W0, ker_W1, ker_W2, ker_W3
         ! ker_W0(nlp,ne,nf,me,xe) Transfer function W0 - linear transfer function
@@ -363,6 +377,14 @@ contains
         allocate(arrays%contx(nex,model_args%nlp))
         allocate(arrays%contx_int(model_args%nlp))
 
+        if (model_args%ring_like) then
+            if (allocated(arrays%ring_continuums)) then
+                deallocate(arrays%ring_continuums)
+            end if
+            ! TODO: no hard code
+            allocate(arrays%ring_continuums(nex,50))
+        end if
+
         config%dloge = log10(config%Emax / config%Emin) / float(nex)
 
         ! populate the energy array
@@ -470,6 +492,14 @@ contains
 
             if (allocated(arrays%ImG)) deallocate(arrays%ImG)
             allocate(arrays%ImG(nex,config%nf))
+
+            if (model_args%ring_like) then
+                if (allocated(arrays%ring_continuums)) then
+                    deallocate(arrays%ring_continuums)
+                end if
+                ! TODO: no hard code
+                allocate(arrays%ring_continuums(nex,50))
+            end if
         end if
     end subroutine
 end module common_types

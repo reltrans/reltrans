@@ -310,6 +310,7 @@ subroutine genreltrans(Cp, dset, corona_config, ear, ne, param, ifl, photar)
     use rtconstants
     use xspec_interface
     use kerrz, only: kerr_metric, krz_KerrMetric_init, kerrz_init_threads
+    use ring_corona, only: ring_radial_gradients
     implicit none
     ! Constants
     double precision, parameter :: rnmax = 300.d0, dlogf = 0.09 !This is a resolution parameter (base 10)
@@ -437,9 +438,14 @@ subroutine genreltrans(Cp, dset, corona_config, ear, ne, param, ifl, photar)
 
     ! set up the continuum spectrum plus relative quantities (cutoff
     ! energies, lensing/gfactors, luminosity, etc)
+
     call init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
     if (dset .eq. 0) then
-       call radfunctions_dens(config, model_args, arrays)
+        if (model_args%ring_like) then
+            call ring_radial_gradients(config, model_args, arrays)
+        else
+            call radfunctions_dens(config, model_args, arrays)
+        end if
     else
        call radfuncs_dist(config, model_args, fcons)
      end if
