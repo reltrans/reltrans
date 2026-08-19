@@ -1,19 +1,18 @@
 !-----------------------------------------------------------------------
     subroutine getcont(Cp, earx, nex, Gamma, Cutoff_s, Cutoff_obs,             &
                        logxi, logne, zcos, contx)
-!!! Calculates continuum spectrum calling nthComp with the correct normalisation
-!!!based on the xillver spectrum 
-!!!  Arg:
-        !  earx: energy grid
-        !  nex: number of grid points
-        !  Gamma: continuum spectrum inclination
-        !  Cutoff_s: high energy cut-off or electron temperature (source frame)
-        !  Cutoff_obs: high energy cut-off or electron temperature (observer frame)
-        !  logxi: ionisation parameter
-        !  logne: density
-        !  zcos: host galaxy redshift
-        !  (output) contx: continuum spectrum 
-
+!> Calculates continuum spectrum calling nthComp with the correct normalisation
+!> based on the xillver spectrum
+!>   Arg:
+!> earx: energy grid
+!> nex: number of grid points
+!> Gamma: continuum spectrum inclination
+!> Cutoff_s: high energy cut-off or electron temperature (source frame)
+!> Cutoff_obs: high energy cut-off or electron temperature (observer frame)
+!> logxi: ionisation parameter
+!> logne: density
+!> zcos: host galaxy redshift
+!> (output) contx: continuum spectrum
 !> Derivation of renormalisation constant:
 !> First convert to incident flux in units of [keV/cm^2/s]
 !> contx = contx * 10**(logne + logxi) / (4.0 * pi) / ergsev
@@ -23,8 +22,7 @@
 !> contx = contx / Icomp
 !> The divide by xi and by ne/1e15
 !> contx = contx / (10**(logxi + logne - 15))
-      
-      use gr_continuum
+      use gr_continuum, only: gso
       implicit none
       integer, intent(in)           :: nex, Cp
       real   , intent(in)           :: earx(0:nex), Cutoff_s, Cutoff_obs, logxi, logne
@@ -71,7 +69,7 @@
          !have a flux of 1 (or norm within xspec) at 1keV. We need to undo that
          !catastrophic monstrosity.
          
-!The continuum needs to be renormalised according to the illuminating flux that was considered in xillver 
+!The continuum needs to be renormalised according to the illuminating flux that was considered in xillver
 !Plus we divide by a factor that depends on ionisation and density to agree with the first versions of reltrans
          do i = 1, nex
             E   = 0.5 * ( earx(i) + earx(i-1) )
@@ -103,4 +101,3 @@
          
       return
     end subroutine getcont
-!-----------------------------------------------------------------------

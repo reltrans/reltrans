@@ -361,7 +361,7 @@ subroutine genreltrans(Cp, dset, corona_config, ear, ne, param, ifl, photar)
         ! initialise environment and allocate all arrays
         call read_environment_variables(config)
         call setup_global_arrays(config, model_args%nlp)
-        call setup_arrays(config, arrays, model_args%nlp)
+        call setup_arrays(config, model_args, arrays)
 
         config%firstcall = .false.
         config%needtrans = .true.

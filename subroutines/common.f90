@@ -344,11 +344,11 @@ contains
     ! Initialise all of the configuration fields that can be derived after
     ! `read_environment_variables` has been called, and allocate the arrays
     ! in `arrays`
-    subroutine setup_arrays(config, arrays, nlp)
+    subroutine setup_arrays(config, model_args, arrays)
         use conv_mod, only: nex
         type(t_config), intent(inout) :: config
+        type(t_model_arguments), intent(in) :: model_args
         type(t_arrays), intent(inout) :: arrays
-        integer, intent(in) :: nlp
         integer :: i
 
         if (allocated(arrays%earx  )) deallocate(arrays%earx  )
@@ -360,8 +360,8 @@ contains
 
         if (allocated(arrays%contx    )) deallocate(arrays%contx    )
         if (allocated(arrays%contx_int)) deallocate(arrays%contx_int)
-        allocate(arrays%contx(nex,nlp))
-        allocate(arrays%contx_int(nlp))
+        allocate(arrays%contx(nex,model_args%nlp))
+        allocate(arrays%contx_int(model_args%nlp))
 
         config%dloge = log10(config%Emax / config%Emin) / float(nex)
 
