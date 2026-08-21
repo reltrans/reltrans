@@ -35,8 +35,8 @@ ALL_RELTRANS_SOURCE_FILES = $(shell find $(ROOTDIR)/subroutines -name '*.f90')
 
 CFLAGS := -fno-omit-frame-pointer
 
-FFLAGS := -cpp \
-		  -fPIC -fno-second-underscore \
+FFLAGS := -cpp -DHAVE_INLINE \
+		  -fPIC -fno-automatic -fno-second-underscore \
 		  -fno-omit-frame-pointer \
 		  -I$(BUILD)/include \
 		  -I$(HEADAS_INCLUDE) \
