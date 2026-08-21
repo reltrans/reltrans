@@ -1,12 +1,12 @@
 subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
-    !!!sets up the continuum arrays/quantities depending on model parameters/flavour
+!> Sets up the continuum arrays/quantities depending on model parameters/flavour
     use common_types
     use dyn_gr
     use conv_mod
     use gr_continuum
     implicit none
     type(t_config)         , intent(in)      :: config
-    type(t_model_arguments), intent(in)      :: model_args
+    type(t_model_arguments), intent(inout)   :: model_args
     type(t_arrays)         , intent(inout)   :: arrays
     integer                , intent(in)      :: dset
     integer                , intent(out)     :: Cp_cont
@@ -16,7 +16,7 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
     real :: Cutoff_s, Cutoff_obs, Eintegrate
     double precision :: lacc, ell13pt6, get_lacc, get_fcons
     
-    Cutoff_s = model_args%Cutoff_s
+    Cutoff_s   = model_args%Cutoff_s
     Cutoff_obs = model_args%Cutoff_obs
     
     if (model_args%nlp .eq. 1) then
@@ -28,21 +28,24 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
           Cutoff_obs = Cutoff_s * gso(1) / real(1.d0 + model_args%zcos)
 
           call getcont(Cp_cont, arrays%earx, nex, model_args%Gamma,            &
-              Cutoff_s, model_args%logxi, model_args%lognep,                   &
-              arrays%contx(:,1))
-          arrays%contx = lens(1) * (gso(1)                                     &
-               / (real(1.d0 + model_args%zcos))) * arrays%contx
+              Cutoff_s, Cutoff_obs, model_args%logxi, model_args%lognep,       &
+              model_args%zcos, arrays%contx(:,1))
+          arrays%contx = lens(1) / real(1.d0 + model_args%zcos)**3             &
+              * gso(1) * arrays%contx
        else if (model_args%Cp .eq. -1) then
           ! write(*,*) 'powerlaw illumination'
           Cutoff_s = real(1.d0 + model_args%zcos) * Cutoff_obs / gso(1)
           call getcont(model_args%Cp, arrays%earx, nex, model_args%Gamma,      &
-              Cutoff_obs, model_args%logxi, model_args%lognep,                 &
-              arrays%contx(:,1))
-          arrays%contx = lens(1) * (gso(1)                                     &
-              / (real(1.d0 + model_args%zcos)))**model_args%Gamma              &
+              Cutoff_s, Cutoff_obs, model_args%logxi, model_args%lognep,       &
+              model_args%zcos, arrays%contx(:,1))
+          arrays%contx = lens(1) / real(1.d0 + model_args%zcos)**2             &
+              * (gso(1) / real(1.d0 + model_args%zcos))**model_args%Gamma      &
               * arrays%contx
        endif
 
+       model_args%Cutoff_s   = Cutoff_s
+       model_args%Cutoff_obs = Cutoff_obs
+       
        if( dset .eq. 1 ) then
           fcons = get_fcons(model_args%h(1), model_args%a, model_args%zcos,    &
               model_args%Gamma, model_args%Dkpc, model_args%Mass,              &
@@ -81,8 +84,8 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
           !here the observed cutoffs are set from the temperature in the source frame
           Cutoff_obs = Cutoff_s * gso(m) / real(1.d0 + model_args%zcos)
           call getcont(model_args%Cp, arrays%earx, nex, model_args%Gamma,      &
-              Cutoff_s, model_args%logxi, model_args%lognep,                 &
-              arrays%contx(:,m))
+              Cutoff_s, Cutoff_obs, model_args%logxi, model_args%lognep,       &
+              model_args%zcos, arrays%contx(:,m))
           if (m .gt. 1) arrays%contx(:,m) = model_args%eta * arrays%contx(:,m)
           !TODO fix this section, calculate luminosities better
           if( config%verbose .gt. 0 )then
@@ -96,8 +99,8 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
           end if
           arrays%contx_int(m) = Eintegrate(config%Emin, config%Emax, nex,      &
               arrays%earx, arrays%contx(:,m), config%dloge)
-          arrays%contx(:,m) = lens(m) * (gso(m)                                      &
-                 / (real(1.d0 + model_args%zcos))) * arrays%contx(:,m)
+          arrays%contx(:,m) = lens(m) / real(1.d0 + model_args%zcos)**2        &
+              * gso(m) / real(1.d0 + model_args%zcos) * arrays%contx(:,m)
        end do
     end if
 
