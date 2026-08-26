@@ -29,7 +29,6 @@ subroutine rest_frame(model_args, arrays, Gamma, logne, Cutoff, logxi,         &
    real                :: xillpar(dim), xillparDCp(dimCp)
 
    if( model_args%Cp .ne. 0 )then
-      write(*,*) "DEBUG: model_args%Cp", model_args%Cp
       !The model is a xillver model
       !Fill parameter arrays
       xillpar(1) = Gamma                !Power law index

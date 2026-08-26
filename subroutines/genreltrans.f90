@@ -174,7 +174,6 @@ contains
                 thetae = acos(mue) * 180.0 / real(pi)
                 if (config%me .eq. 1) thetae = real(model_args%inc)
                 ! Call restframe reflection model
-                write(*,*) "DEBUG: rest frame parameter ",Gamma0, logne, Cutoff_0, logxi0, thetae  
                 call rest_frame(model_args, arrays, Gamma0, logne,             &
                     Cutoff_0, logxi0, thetae, photarx)
                 ! NON LINEAR EFFECTS
@@ -195,22 +194,13 @@ contains
                    photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10
                 end if
                 ! Multiply by E^{Gamma-1} to make less steep
-                open (unit = 97, file = 'delete_DEBUG_rest_frame.del', status = 'replace', action = 'write') !DEBUG
-                write(97, *) "skip on" !DEBUG
                 do i = 1, nex
                    E = 0.5 * (arrays%earx(i) + arrays%earx(i-1))
                    Hx(i) = photarx(i) * E**(Gamma0-1)
-                   write(97,*) E, Hx(i) !DEBUG
                    Hx_delta(i) = photarx_delta(i) * E**(Gamma0-1)
                    Hx_dlogxi(i) = photarx_dlogxi(i) * E**(Gamma0-1)
                 end do
-                write(97,*) "no no"
-                write(97,*) "log x y on"
-                close(97)
                 ! Loop through frequencies and lamp posts
-                open (unit = 99, file = 'delete_DEBUG_lineprofile.del', status = 'replace', action = 'write') !DEBUG
-                write(99, *) "skip on" !DEBUG
-                ! write(99, *) !DEBUG
                 do j = 1, config%nf
                    do i = 1, nex
                       do m = 1, model_args%nlp
@@ -230,12 +220,8 @@ contains
                              mubin, rbin))
                          imline_w3(m, i) = aimag(arrays%ker_W3(m, i, j,        &
                              mubin, rbin))
-                         E = 0.5 * (arrays%earx(i) + arrays%earx(i-1)) !DEBUG
-                         write(99,*) E, reline_w0(m, i) !DEBUG
                       end do
                    end do
-                   write(99,*) "no no"
-                   close(99) !DEBUG
                    ! TODO: this test wrapping should be inside the conv functions,
                    ! not at their callsites
                    ! Do the convolution (involves multiplying by E^{1-Gamma})
@@ -432,7 +418,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        if (allocated(frrel)) deallocate(frrel)
        allocate (frrel(nlp))
        ! Calculate the Kernel for the given parameters
-       write(*,*) "DEBUG: do rtrans"
        call rtrans(config, model_args, arrays, dset, d, nex, frobs, frrel)
        ! print *, 'gso ', gso(1)
     end if
@@ -459,7 +444,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 
     if (config%verbose .gt. 2) call CPU_TIME (time_start)
     if (config%needconv)then
-       write(*,*) "DEBUG: do convolution"
 
         call do_convolutions(config, model_args, arrays)
     end if
@@ -467,14 +451,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         call CPU_TIME (time_end)
         print *, 'Convolutions runtime: ', time_end - time_start, ' seconds'
     endif
-    open (unit = 98, file = 'delete_DEBUG_afterconv.del', status = 'replace', action = 'write') !DEBUG
-    write(98, *) "skip on" !DEBUG
-    do i = 1, nex
-       write(98,*) 0.5 * (arrays%earx(i) + arrays%earx(i-1)), arrays%ReW0(1,i,1) !DEBUG
-    end do
-    write(98,*) "no no"
-    write(98,*) "log y x on"
-    close(98)!DEBUG
     
     ! Calculate absorption
     call tbabs(arrays%earx, nex, model_args%nh, Ifl, absorbx, photerx)
@@ -700,7 +676,5 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     prev_nf = config%nf
     paramsave = param
     Cpsave = model_args%Cp
-    write (*,*) "DEBUG: end genreltrans"
-    write (*,*) 
   end subroutine genreltrans
 ! -----------------------------------------------------------------------
