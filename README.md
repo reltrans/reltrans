@@ -90,8 +90,13 @@ discuss features.
 If you use Reltrans in your research, we ask that you please cite the following papers:
 - [Ingram et al., 2019 MNRAS, 488, 324](https://ui.adsabs.harvard.edu/abs/2019MNRAS.488..324I), ([DOI](https://doi.org/10.1093/mnras/stz1720))
 - [Mastroserio et al., 2021 MNRAS, 507, 55M](https://ui.adsabs.harvard.edu/abs/2021MNRAS.507...55M/) ([DOI](https://doi.org/10.1093/mnras/stab2056))
+
+If you use the double lamppost model flavour, please cite:
+
 - [Lucchini et al., 2023 ApJ, 951, 19](https://ui.adsabs.harvard.edu/abs/2023ApJ...951...19L) ([DOI](https://doi.org/10.3847/1538-4357/acd24f))
 
 Additionally, if you use the RTDist flavour we ask that you also cite:
 
 - [Ingram et al., 2022 MNRAS, 509, 619](https://ui.adsabs.harvard.edu/abs/2022MNRAS.509..619I) ([DOI](https://doi.org/10.1093/mnras/stab2950))
+
+All of the above papers are included in the [CITATION.bib](./CITATION.bib) file.
