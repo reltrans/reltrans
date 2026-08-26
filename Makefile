@@ -1,6 +1,9 @@
 BUILD  := build
 ROOTDIR := .
-HEADAS ?= $(error HEADAS environment variable is not set)
+
+# This line will check if HEADAS is set, and otherwise will fall back to using
+# Python and xspectrampoline to configure it:
+HEADAS ?= $(shell python3 -c "import xspectrampoline_helpers as h ; print(h.get_HEADAS())")
 HEADAS_LIB := ${HEADAS}/lib
 HEADAS_INCLUDE := ${HEADAS}/include
 
@@ -219,7 +222,7 @@ tables-renorm:
 	python3 ./renormalise_table.py
 
 .PHONY: tables-fetch
-tables-fetch: $(RELTRANS_TABLES)
+fetch-tables: $(RELTRANS_TABLES)
 	@echo "Tables located at '$(RELTRANS_TABLES)'"
 	@echo "Please run"
 	@echo ""
@@ -276,3 +279,7 @@ instrument-files:
 		"https://github.com/reltrans/model-data/releases/download/v0.1.0/nicer-rmf6s-teamonly-array50.rmf" \
 		-o $(CACHEDIR)/instrument-files/nicer-rmf6s-teamonly-array50.rmf
 	@echo "Instrument files now located at '$(CACHEDIR)/instrument-files'"
+
+.PHONY: python
+python:
+	python3 ./dist-package.py
