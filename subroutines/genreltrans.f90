@@ -304,7 +304,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ! write(11,*) 'skip on'
 
         do rbin = 1, xe  !Loop over radial zones
-           write(*,*) "radius zone ", rbin
             !Set parameters with radial dependence
             Gamma0 = real(Gamma)
             logne  = logner(rbin)
@@ -319,6 +318,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             if (logxi0 .eq. 0.0 .or. ionvar .eq. 0) then
                 ionvariation = 0.0
             end if
+            write(*,*) "radius zone ", rbin, logne, logxi0, Cutoff_0, Cutoff_s
             do mubin = 1, me      !loop over emission angle zones
                 !Calculate input emission angle
                 mue    = ( real(mubin) - 0.5 ) / real(me)

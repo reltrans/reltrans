@@ -64,7 +64,7 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
         xe      = get_env_int("ION_ZONES" , 20)   !Set number of ionisation zones used
         ! Decide between zone A density profile or constant density profile
         adensity = get_env_int("A_DENSITY",0)
-        adensity = min( adensity , 1 )
+        adensity = min( adensity , 2 )
         adensity = max( adensity , 0 )
         verbose = get_env_int("REV_VERB",0)     !Set verbose level
                                           !0: Xspec output only
