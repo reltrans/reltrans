@@ -29,8 +29,8 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,eta_0,logxip,lognep,spin,h,Gam
     !The loops calculates also the correction factor mui
     
     !TBD: include luminosity ratio between LPs 
-    write(*,*) "DEBUG: ------- in the profile calculation loop ----------"
-        write(*,*) "DEBUG:    rad(i),   xitot,     logxir(i),    logner(i)"
+    ! write(*,*) "DEBUG: ------- in the profile calculation loop ----------"
+    !     write(*,*) "DEBUG:    rad(i),   xitot,     logxir(i),    logner(i)"
     do i = 1, xe        
         rad(i) = (rnmax/rin)**(real(i-1) / real(xe))
         rad(i) = rad(i) + (rnmax/rin)**(real(i) / real(xe))
@@ -82,7 +82,7 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,eta_0,logxip,lognep,spin,h,Gam
         !This and the line above calculate the gsd factor along the disk, averaging over the flux the disk sees from each LP 
         gsdr(i) = gsd_temp/xitot
         logxir(i) = log10(xitot) - logner(i)
-        write(*,*) "DEBUG: ", rad(i), xitot,  logxir(i), logner(i)
+        ! write(*,*) "DEBUG: ", rad(i), xitot,  logxir(i), logner(i)
      end do
 
      !ionisation value at ISCO to renormalise the ionisation profile
@@ -122,7 +122,7 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,eta_0,logxip,lognep,spin,h,Gam
      !This and the line above calculate the gsd factor along the disk, averaging over the flux the disk sees from each LP 
      ! gsdr(i) = gsd_temp/xitot
      logxir_isco = log10(xi_isco) - ( adensity *  mylogne_zoneB(rnorm, rin))
-    write(*,*) "DEBUG: xi_isco, logxir_isco, mylogne_zoneB(rnorm, rin) ", rnorm, xi_isco, logxir_isco, mylogne_zoneB(rnorm, rin)
+    ! write(*,*) "DEBUG: xi_isco, logxir_isco, mylogne_zoneB(rnorm, rin) ", rnorm, xi_isco, logxir_isco, mylogne_zoneB(rnorm, rin)
      
      logxinorm = logxir_isco
      lognenorm = adensity * mylogne_zoneB(rnorm, rin)
@@ -146,16 +146,16 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,eta_0,logxip,lognep,spin,h,Gam
     logxir = logxir - (logxinorm - logxip) 
     logner = logner - (lognenorm - lognep)    
     
-    write(*,*) "DEBUG: -----------------"
-    open(99, file='delete_density_profiles.qdp')
-    write(99,*) "skip on"
-        do i=1,xe
-            write(99,*) rad(i), logxir(i), logner(i)
-            write(*,*) "DEBUG: ", rad(i), logxir(i), logner(i)
-        end do
-     write(99,*) "log x on"
-     close(99)
-     write(*,*) "DEBUG: -----------------"
+    ! write(*,*) "DEBUG: -----------------"
+    ! open(99, file='delete_density_profiles.qdp')
+    ! write(99,*) "skip on"
+    !     do i=1,xe
+    !         write(99,*) rad(i), logxir(i), logner(i)
+    !         write(*,*) "DEBUG: ", rad(i), logxir(i), logner(i)
+    !     end do
+    !  write(99,*) "log x on"
+    !  close(99)
+    !  write(*,*) "DEBUG: -----------------"
 
     do m=1,nlp 
         do i=1,xe
