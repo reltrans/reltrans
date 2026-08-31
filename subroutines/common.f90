@@ -345,6 +345,7 @@ contains
     ! Reallocate arrays depending on whether they need to be resized
     subroutine realloc_arrays(config, model_args, arrays, prev_nf, flosave, fhisave)
         use conv_mod, only: nex
+        use rtconstants, only: dtol
         type(t_config), intent(in) :: config
         type(t_model_arguments), intent(in) :: model_args
         type(t_arrays), intent(inout) :: arrays
@@ -352,8 +353,7 @@ contains
         integer :: i
         logical :: needs_allocating
         double precision :: fhisave, flosave
-        double precision :: fhicheck, flocheck 
-        double precision, parameter   :: dtol = 1e-5
+        double precision :: fhicheck, flocheck
 
         fhicheck = fhisave /(4.92695275718945d-06 * model_args%Mass)
         flocheck = flosave /(4.92695275718945d-06 * model_args%Mass)            
