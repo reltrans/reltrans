@@ -52,7 +52,7 @@ class SimulationResult:
 
     def make_XSPEC(self, name: str):
         """
-        Run the requiste `flx2xsp` command to generate a mock XSPEC spectrum
+        Run the requisite `flx2xsp` command to generate a mock XSPEC spectrum
         with a dummy response file. The files will be named `{name}.pha` and
         `{name}.rsp`.
 
