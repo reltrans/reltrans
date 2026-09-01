@@ -31,3 +31,4 @@ run_model.py
 .gdbinit
 test/_plots
 *delete*
+cache/
