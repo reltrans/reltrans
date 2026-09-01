@@ -9,7 +9,6 @@ plot_spectral_kwargs = dict(
 )
 
 
-@pytest.mark.rt
 def test_basic_invocation(reltrans, assert_snapshot):
     """A smoke test to check whether the default values are working."""
     reltrans.reset()

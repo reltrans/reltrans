@@ -278,6 +278,9 @@ instrument-files:
 	curl -sL \
 		"https://github.com/reltrans/model-data/releases/download/v0.1.0/nicer-rmf6s-teamonly-array50.rmf" \
 		-o $(CACHEDIR)/instrument-files/nicer-rmf6s-teamonly-array50.rmf
+	curl -sL \
+		"https://github.com/reltrans/model-data/releases/download/v0.1.0/nicer-powerlaw.1.1e-4.fak" \
+		-o $(CACHEDIR)/instrument-files/nicer-powerlaw.1.1e-4.fak
 	@echo "Instrument files now located at '$(CACHEDIR)/instrument-files'"
 
 .PHONY: python
