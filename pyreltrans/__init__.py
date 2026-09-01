@@ -172,6 +172,53 @@ class DCP_Parameters:
 
 
 @dataclasses.dataclass
+class PL_Parameters:
+    # 1 Lamp post height
+    h: float = 6.0
+    # 2 Spin
+    a: float = 0.998
+    # 3 Inclination (degrees)
+    inc: float = 30.0
+    # 4 Inner radius
+    rin: float = -1.0
+    # 5 Outer radius
+    rout: float = 1e3
+    # 6 Cosmological redshift
+    zcos: float = 0.0
+    # 7 Photon index
+    gamma: float = 2.0
+    # 8 logξ ionisation parameter
+    logxi: float = 3.0
+    # 9 Iron abundance
+    afe: float = 1.0
+    # 10 high energy cutoff
+    Ecut: float = 300.0
+    # 11 Hydrogen column density
+    nh: float = 0.0
+    # 12 Boosting factor (ad-hoc normalisation)
+    boost: float = 1.0
+    # 13 Black hole mass in solar units
+    mass: float = 4.6e7
+    # 14 Lowest frequency in band
+    flo_hz: float = 0.0
+    # 15 Highest frequency in band
+    fhi_hz: float = 0.0
+    # 16: 1 -> Re, 2 -> Im, 3 -> modulus, 4 -> time lag, 5 -> folded modulus, 6 -> folded time lag
+    re_im: float = 1.0
+    # 17 pivoting parameter: phiA
+    del_a: float = 0.0
+    # 18 pivoting parameter: phi_AB
+    del_ab: float = 0.0
+    # 19 pivoting parameter: little g
+    g: float = 0.0
+    # 20 telescope response choise 
+    telescope_response: float = 1.0
+    
+    def to_numpy_array(self) -> np.ndarray:
+        return np.array(dataclasses.astuple(self), dtype=np.float32)
+
+
+@dataclasses.dataclass
 class Dbl_Parameters:
     # First Lamp post height
     h1: float = 6.0
@@ -418,6 +465,14 @@ class Reltrans:
             parameters.to_numpy_array(),
         )
 
+    def pl(self, energy: np.ndarray, parameters: PL_Parameters) -> np.ndarray:
+        """A wrapper around the XSPEC interface of reltransPL"""
+        return _wrap_call(
+            self.lib_reltrans.tdreltranspl_,
+            energy.astype(np.float32),
+            parameters.to_numpy_array(),
+        )
+
     def dbl_lamp(self, energy: np.ndarray, parameters: Dbl_Parameters) -> np.ndarray:
         """A wrapper around the XSPEC interface of reltransDbl"""
         return _wrap_call(
@@ -595,6 +650,7 @@ class Reltrans:
 
 __all__ = [
     DCP_Parameters,
+    PL_Parameters,
     Reltrans,
     get_reltrans_library_path,
     Dbl_Parameters,

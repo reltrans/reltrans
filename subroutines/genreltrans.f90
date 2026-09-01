@@ -444,13 +444,14 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 
     if (config%verbose .gt. 2) call CPU_TIME (time_start)
     if (config%needconv)then
+
         call do_convolutions(config, model_args, arrays)
     end if
     if (config%verbose .gt. 2) then
         call CPU_TIME (time_end)
         print *, 'Convolutions runtime: ', time_end - time_start, ' seconds'
     endif
-
+    
     ! Calculate absorption
     call tbabs(arrays%earx, nex, model_args%nh, Ifl, absorbx, photerx)
 
@@ -580,7 +581,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if (is_both_folded(model_args%reim)) then
        call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, &
                 ear, ReS, ImS, model_args%resp_matr) !S is count rate
-    else if (is_only_ref_folded(model_args%reim)) then
+    else
        call crebin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, ear,   &
              ReS, ImS) !S is in photar form
     end if
@@ -675,5 +676,5 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     prev_nf = config%nf
     paramsave = param
     Cpsave = model_args%Cp
-end subroutine genreltrans
+  end subroutine genreltrans
 ! -----------------------------------------------------------------------

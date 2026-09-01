@@ -29,7 +29,7 @@
          ! Pass the null terminator for C compatability, as xsatbl is an
          ! external C function.
          call xsatbl(ear, ne, param_xillPL,                                    &
-            [trim(pathname_xillver), char(0)], ifl, photar, photer)
+              [trim(pathname_xillver), char(0)], ifl, photar, photer)         
       else if ( Cp .eq. 2 )then    !xillverDCp
          ! Pass the null terminator for C compatability, as xsatbl is an
          ! external C function.
