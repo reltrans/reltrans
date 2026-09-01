@@ -4,6 +4,7 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
     use dyn_gr
     use conv_mod
     use gr_continuum
+    use ring_corona, only: ring_calculate_continuum
     implicit none
     type(t_config)         , intent(in)      :: config
     type(t_model_arguments), intent(inout)   :: model_args
@@ -18,8 +19,16 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
     
     Cutoff_s   = model_args%Cutoff_s
     Cutoff_obs = model_args%Cutoff_obs
-    
-    if (model_args%nlp .eq. 1) then
+
+    if (model_args%ring_like) then
+       ! TODO: check this for the ring corona. I copied it from the lamppost
+       ! case, but I'm not entirely sure what it does.
+       arrays%contx_int(1) = 1.
+       fcons = 0.0
+
+       call ring_calculate_continuum(config, model_args, arrays)
+
+    else if (model_args%nlp .eq. 1) then
        arrays%contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1
 
        if( model_args%Cp .ge. 0 ) then

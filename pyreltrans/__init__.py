@@ -170,6 +170,52 @@ class DCP_Parameters:
     def to_numpy_array(self) -> np.ndarray:
         return np.array(dataclasses.astuple(self), dtype=np.float32)
 
+@dataclasses.dataclass
+class Ring_Parameters:
+    # The ring-corona radius (rg)
+    radius: float = 4.0
+    # The ring-corona opening angle (degrees)
+    angle: float = 45.0
+    # Spin
+    a: float = 0.998
+    # Inclination (degrees)
+    inc: float = 30.0
+    # Inner radius
+    rin: float = -1.0
+    # Outer radius
+    rout: float = 1e3
+    # Cosmological redshift
+    zcos: float = 0.0
+    # Photon index
+    gamma: float = 2.0
+    # logξ ionisation parameter
+    logxi: float = 3.0
+    # Iron abundance
+    afe: float = 1.0
+    # Electron abundance
+    lognep: float = 15.0
+    # Electron temperature in observer frame
+    kte: float = 60.0
+    # Hydrogen column density
+    nh: float = 0.0
+    # Boosting factor (ad-hoc normalisation)
+    boost: float = 1.0
+    # Black hole mass in solar units
+    mass: float = 4.6e7
+    # Lowest frequency in band
+    flo_hz: float = 0.0
+    # Highest frequency in band
+    fhi_hz: float = 0.0
+    # 1 -> Re, 2 -> Im, 3 -> modulus, 4 -> time lag, 5 -> folded modulus, 6 -> folded time lag
+    re_im: float = 1.0
+    del_a: float = 0.0
+    del_ab: float = 0.0
+    g: float = 0.0
+    telescope_response: float = 1.0
+
+    def to_numpy_array(self) -> np.ndarray:
+        return np.array(dataclasses.astuple(self), dtype=np.float32)
+
 
 @dataclasses.dataclass
 class PL_Parameters:
@@ -489,6 +535,14 @@ class Reltrans:
             parameters.to_numpy_array(),
         )
 
+    def reltransring(self, energy: np.ndarray, parameters: Ring_Parameters) -> np.ndarray:
+        """A wrapper around the XSPEC interface of the ring-like coronal model."""
+        return _wrap_call(
+            self.lib_reltrans.fbreltranswip_,
+            energy.astype(np.float32),
+            parameters.to_numpy_array(),
+        )
+
     def reset(self):
         # print(f"NAME OF THE LIBRARY {self.lib_reltrans._name}")
         self.lib_reltrans.reset_reltrans()
@@ -645,6 +699,58 @@ class Reltrans:
             ct.byref(time),
         )
         return (lensing_factor.value, cos_delta.value, time.value)
+
+    def get_impulse_response(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        self.lib_reltrans.response_get.argtypes = [
+            ct.POINTER(ct.c_void_p),  # ptr (output)
+            ct.POINTER(ct.c_void_p),  # eaxis_ptr (output)
+            ct.POINTER(ct.c_void_p),  # taxis_ptr (output)
+            ct.POINTER(ct.c_int),     # ne (output)
+            ct.POINTER(ct.c_int)      # nt (output)
+        ]
+        self.lib_reltrans.response_get.restype = None  # subroutine returns void
+
+        ptr = ct.c_void_p()
+        eaxis_ptr = ct.c_void_p()
+        taxis_ptr = ct.c_void_p()
+        ne = ct.c_int()
+        nt = ct.c_int()
+
+        # Call the Fortran subroutine
+        self.lib_reltrans.response_get(
+            ct.byref(ptr),
+            ct.byref(eaxis_ptr),
+            ct.byref(taxis_ptr),
+            ct.byref(ne),
+            ct.byref(nt)
+        )
+
+        # Extract dimensions
+        ne_val = ne.value
+        nt_val = nt.value
+
+        # Convert C pointers to NumPy arrays
+        response_array = np.ctypeslib.as_array(
+            ct.cast(ptr, ct.POINTER(ct.c_double)),
+            shape=(nt_val, ne_val),
+        ).T
+
+        energy_axis = np.ctypeslib.as_array(
+            ct.cast(eaxis_ptr, ct.POINTER(ct.c_double)),
+            shape=(ne_val,)
+        )
+
+        time_axis = np.ctypeslib.as_array(
+            ct.cast(taxis_ptr, ct.POINTER(ct.c_double)),
+            shape=(nt_val,)
+        )
+
+        # Return copies to avoid lifetime issues with Fortran memory
+        return (
+            time_axis.copy(),
+            energy_axis.copy(),
+            response_array.copy(),
+        )
 
 
 

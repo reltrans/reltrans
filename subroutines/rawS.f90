@@ -13,6 +13,7 @@ subroutine sum_continuum_reflection_transfer_functions(config, model_args,     &
     !> Writes the output to `arrays%ReGraw` and `arrays%ImGraw`.
     use common_types, only: t_config, t_model_arguments, t_arrays
     use rtconstants, only: pi
+    use ring_corona, only: ring_cross_spectrum_with_continuum
     implicit none
     type(t_arrays), intent(inout) :: arrays
     type(t_config), intent(in) :: config
@@ -48,7 +49,11 @@ subroutine sum_continuum_reflection_transfer_functions(config, model_args,     &
         return
     end if
 
-    ! Calculating both the reflection and continuum components.
+    if (model_args%ring_like) then
+        ! Calculating both the reflection and continuum components:
+        call ring_cross_spectrum_with_continuum(config, model_args, arrays, nex)
+        return
+    end if
 
     ! Set up extra terms if second lamp post is presented:
     if( model_args%nlp > 1 ) then

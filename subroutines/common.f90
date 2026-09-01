@@ -45,6 +45,24 @@ module common_types
         ! The below are computed from the above
         ! The cosine angle
         double precision :: muobs
+
+        ! Use ring-like coronal model. Should future models get added, this
+        ! could be promoted to an enumeration of some description.
+        logical :: ring_like = .false.
+
+        ! Used only in the ring-like coronal model:
+        ! These obey that the (x, z) coordinates of the ring in the x-z plane
+        ! are:
+        !
+        !     x = ring_r * sin(ring_angle)
+        !     z = ring_r * cos(ring_angle)
+        !
+        ! The radial offset from the black hole origin to a point in the ring
+        ! (rg):
+        double precision :: ring_r = 0.0
+        ! The inclination angle (in radians) off of the spin axis at which the
+        ! ring is opened to.
+        double precision :: ring_angle = 0.0
     end type t_model_arguments
 
     type :: t_config
@@ -78,10 +96,6 @@ module common_types
         double precision :: rnmax = 300.d0, dlogf = 0.09
 
         real :: DeltaGamma = 0.01
-
-        ! Use ring-like coronal model. Should future models get added, this
-        ! could be promoted to an enumeration of some description.
-        logical :: ring_like = .false.
 
         ! Toggle whether to calculate the impulse response or not. Since the
         ! impulse response is not directly used in calculations, and must be
@@ -119,8 +133,22 @@ module common_types
         ! earx: internal energy grid array (0:nex)
         real, allocatable :: earx(:), ear(:), fix(:)
         real, allocatable :: ReGbar(:), ImGbar(:)
+
+        ! The continuum flux, `contx(num_energy_bins, num_lampposts)`.
         real, allocatable :: contx(:,:)
+
+        ! The continuum fluxes for the ring-like corona,
+        !
+        !     ring_continuums(num_energy_bins, num_azimuthal_points)
+        !
+        ! The ring-like corona stores a different continuum flux for each point
+        ! along the ring. It also uses `contx(:,1)` to store the average, as
+        ! that is still used for `xilimits` and various other ionisation-related
+        ! computations.
+        real, allocatable :: ring_continuums(:,:)
+
         double precision, allocatable :: contx_int(:)
+
         ! TRANSFER FUNCTIONS and Cross spectrum dynamic allocation + variables
         complex, dimension(:,:,:,:,:), allocatable :: ker_W0, ker_W1, ker_W2, ker_W3
         ! ker_W0(nlp,ne,nf,me,xe) Transfer function W0 - linear transfer function
@@ -171,16 +199,11 @@ contains
 
     ! Unwraps the arguments from a parameter array into `args`.
     subroutine unwrap_arguments(args, nlp, dset, params, cutoff_powerlaw)
-        use rtconstants, only: parse_reim
-        double precision, parameter :: pi = acos(-1.d0)
+        use rtconstants, only: parse_reim, pi
         integer, intent(in) :: nlp, dset, cutoff_powerlaw
         real, target, intent(in) :: params(32)
         type(t_model_arguments), intent(out) :: args
         integer :: i
-        do i = 1,nlp
-            args%DelAB(i) = params(27 + (i - 1) * nlp)
-            args%g(i) = params(28 + (i - 1) * nlp)
-        end do
         if (dset .eq. 1) then
            args%Dkpc = params(9)
            args%logxi = 0.0
@@ -189,7 +212,27 @@ contains
         end if
         args%h(1) = dble(params(1))
         args%h(2) = dble(params(2))
-        args%nlp = nlp
+
+        ! Set the coronal model:
+        if (nlp == -1) then
+            args%nlp = 1
+            args%ring_like = .true.
+            ! Set the heights to zero to catch bugs, since this paramter wont be
+            ! used in the ring-like model.
+            args%h = 0.0
+            args%ring_r = dble(params(1))
+            ! Convert to radians:
+            args%ring_angle = dble(params(2)) * pi / 180.0d0
+        else
+            ! Standard n-many lampposts:
+            args%nlp = nlp
+        end if
+
+        do i = 1,args%nlp
+            args%DelAB(i) = params(27 + (i - 1) * args%nlp)
+            args%g(i) = params(28 + (i - 1) * args%nlp)
+        end do
+
         args%a = dble(params(3))
         args%inc = dble(params(4))
         args%muobs = cos(args%inc * pi / 180.d0)
@@ -244,15 +287,17 @@ contains
             write(*,*)"Warning! rin<ISCO! Set to ISCO"
             model_args%rin = config%rmin
         end if
-        do i=1,model_args%nlp
-            if (model_args%h(i) .lt. 0.d0) then
-                model_args%h(i) = abs(model_args%h(i)) * config%rh
-            end if
-            if (model_args%h(i) .lt. 1.5d0*config%rh)then
-                write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
-                model_args%h(i) = 1.5d0 * config%rh
-            end if
-        end do
+        if (.not. model_args%ring_like) then
+            do i=1,model_args%nlp
+                if (model_args%h(i) .lt. 0.d0) then
+                    model_args%h(i) = abs(model_args%h(i)) * config%rh
+                end if
+                if (model_args%h(i) .lt. 1.5d0*config%rh)then
+                    write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
+                    model_args%h(i) = 1.5d0 * config%rh
+                end if
+            end do
+        end if
     end subroutine arguments_check
 
     ! Read in environment variables that configure reltrans
@@ -314,11 +359,11 @@ contains
     ! Initialise all of the configuration fields that can be derived after
     ! `read_environment_variables` has been called, and allocate the arrays
     ! in `arrays`
-    subroutine setup_arrays(config, arrays, nlp)
+    subroutine setup_arrays(config, model_args, arrays)
         use conv_mod, only: nex
         type(t_config), intent(inout) :: config
+        type(t_model_arguments), intent(in) :: model_args
         type(t_arrays), intent(inout) :: arrays
-        integer, intent(in) :: nlp
         integer :: i
 
         if (allocated(arrays%earx  )) deallocate(arrays%earx  )
@@ -330,8 +375,16 @@ contains
 
         if (allocated(arrays%contx    )) deallocate(arrays%contx    )
         if (allocated(arrays%contx_int)) deallocate(arrays%contx_int)
-        allocate(arrays%contx(nex,nlp))
-        allocate(arrays%contx_int(nlp))
+        allocate(arrays%contx(nex,model_args%nlp))
+        allocate(arrays%contx_int(model_args%nlp))
+
+        if (model_args%ring_like) then
+            if (allocated(arrays%ring_continuums)) then
+                deallocate(arrays%ring_continuums)
+            end if
+            ! TODO: no hard code
+            allocate(arrays%ring_continuums(nex,50))
+        end if
 
         config%dloge = log10(config%Emax / config%Emin) / float(nex)
 
@@ -440,6 +493,14 @@ contains
 
             if (allocated(arrays%ImG)) deallocate(arrays%ImG)
             allocate(arrays%ImG(nex,config%nf))
+
+            if (model_args%ring_like) then
+                if (allocated(arrays%ring_continuums)) then
+                    deallocate(arrays%ring_continuums)
+                end if
+                ! TODO: no hard code
+                allocate(arrays%ring_continuums(nex,50))
+            end if
         end if
     end subroutine
 end module common_types
