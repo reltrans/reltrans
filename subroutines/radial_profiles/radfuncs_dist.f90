@@ -12,7 +12,7 @@ subroutine radfuncs_dist(config, model_args, fcons)
 
   use common_types
   use dyn_gr, only: ndelta, rlp, dcosdr, cosd, npts
-  use radial_grids, only: logxir, gsdr, logner, pnorm
+  use radial_grids, only: logxir, gsdr, logner, pnorm, logxir_natural
   use env_variables, only : adensity
   implicit none
   type(t_config),          intent(in) :: config
@@ -62,6 +62,9 @@ subroutine radfuncs_dist(config, model_args, fcons)
   end do
 
 !check max and min for both ionisation and density
+
+  logxir_natural = logxir  !Need for the post processing code
+  
   logxir = max( logxir , 0.d0  )
   logxir = min( logxir , 4.7d0 )
   ! logner   = max( logner , 15.d0  )
@@ -74,10 +77,12 @@ subroutine radfuncs_dist(config, model_args, fcons)
      !Write out logxir for plots
      lximax = -huge(lximax)
      do i = 1,config%xe
-        write(188,*)re1(i),Fx(i),logxir_raw(i)
-        lximax = max( lximax , logxir(i) )
+        !write(188,*)re1(i),Fx(i),logxir_raw(i)
+        lximax = max( lximax , logxir_natural(i) )
+        !write(79,*)re1(i),logxir_natural(i)
      end do
-     write(188,*)"no no"
+     !write(79,*)"no no"
+     !write(188,*)"no no"
      write(*,*)"MAX LOGXIeff = ",lximax
   end if
 
