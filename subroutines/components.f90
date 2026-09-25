@@ -140,7 +140,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     ReGion_bar = 0.0
     ImGion_bar = 0.0
     fc = 0.5d0 * ( floHz + fhiHz )   
-    fac = 2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf))
+    fac = real(2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf)))
     do j = 1,nf
         f = floHz * (fhiHz/floHz)**( (real(j)-0.5) / real(nf) )
         do i = 1,nex 
@@ -330,8 +330,8 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
                 fac = log(gso(m)/((1.0+z)*E))
                 !set up phase factors
                 if (m .gt. 1) then
-                    phase_d = 2.*pi*tau_d*f
-                    phase_p = 2.*pi*tau_p*f
+                    phase_d = real(2.*pi*tau_d*f)
+                    phase_p = real(2.*pi*tau_p*f)
                 endif    
                 cexp_d = cmplx(cos(phase_d),sin(phase_d))
                 cexp_p = cmplx(cos(phase_p),sin(phase_p)) 
@@ -451,7 +451,7 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
                 fac = log(gso(m)/((1.0+z)*E))
                 if (m .gt. 1) then
                     tau_d = tauso(m)-tauso(1)
-                    phase_d = 2.*pi*tau_d*f  
+                    phase_d = real(2.*pi*tau_d*f)
                 endif
                 cexp_d = cmplx(cos(phase_d),sin(phase_d))     
                 cexp_phi = cmplx(cos(DelAB(m)),sin(DelAB(m)))

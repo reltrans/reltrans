@@ -40,7 +40,7 @@ subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,I
                     fac = log(gso(m)/((1.0+z)*E))
                     if (m .gt. 1) then
                         tau_d = tauso(m)-tauso(1)
-                        phase_d = 2.*pi*tau_d*f  
+                        phase_d = real(2.*pi*tau_d*f)
                     endif
                     cexp_d = cmplx(cos(phase_d),sin(phase_d))     
                     cexp_phi = cmplx(cos(DelAB(m)),sin(DelAB(m)))

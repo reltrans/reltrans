@@ -60,8 +60,8 @@ contains
         call c_tbabs(d_earx, nex, d_params, Ifl, d_absorbx, d_photerx, "")
 
         do i = 1, nex
-            absorbx(i) = d_absorbx(i)
-            photerx(i) = d_photerx(i)
+            absorbx(i) = real(d_absorbx(i))
+            photerx(i) = real(d_photerx(i))
         end do
     end subroutine tbabs
 end module xspec_interface

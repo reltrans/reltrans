@@ -156,7 +156,7 @@ contains
         do rbin = 1, config%xe !Loop over radial zones
             ! Set parameters with radial dependence
             Gamma0 = real(model_args%Gamma)
-            logne = logner(rbin)
+            logne = real(logner(rbin))
             Cutoff_0 = real(gsdr(rbin)) * model_args%Cutoff_s
             logxi0 = real(logxir(rbin))
             if (config%xe .eq. 1)then
@@ -551,9 +551,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         end do
         arrays%ReGbar = 0.0
         arrays%ImGbar = 0.0
-        fac = 2.302585 * config%fc**2 * log10(model_args%fhiHz /               &
+        fac = real(2.302585 * config%fc**2 * log10(model_args%fhiHz /          &
             model_args%floHz) / ((model_args%fhiHz - model_args%floHz) *       &
-            real(config%nf))
+            real(config%nf)))
         do j = 1, config%nf
             f = model_args%floHz * (model_args%fhiHz /                         &
                 model_args%floHz)**((real(j) - 0.5) / real(config%nf))
@@ -605,7 +605,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     else if (is_mode(model_args%reim, MODE_CROSS_SPEC_LAG)) then
        do i = 1, ne
           dE = ear(i) - ear(i-1)
-          photar(i) = atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE
+          photar(i) = real(atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE)
        end do
        if (model_args%ReIm == MODE_CROSS_SPEC_LAG_REF_FOLDED) then
           write(*, *)"Warning ReIm = 4 should not be used for fitting!"
@@ -613,7 +613,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     else if (model_args%reim == MODE_LAG_FREQ) then
        do i = 1, ne
           dE = ear(i) - ear(i-1)
-          photar(i) = atan2(ImS(i), ReS(i))/(pi*(ear(i) + ear(i-1)))*dE
+          photar(i) = real(atan2(ImS(i), ReS(i))/(pi*(ear(i) + ear(i-1)))*dE)
        end do
     end if
 

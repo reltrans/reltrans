@@ -62,8 +62,8 @@ subroutine lag_freq(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,tauso,gs
                 if (m .gt. 1) then  
                     tau_d = (tauso(m)-tauso(1))
                     tau_p = (h(m) - h(1))/(beta_p)             
-                    phase_d = 2.*pi*tau_d*f
-                    phase_p = 2.*pi*tau_p*f
+                    phase_d = real(2.*pi*tau_d*f)
+                    phase_p = real(2.*pi*tau_p*f)
                 endif  
                 cexp_d = cmplx(cos(phase_d),sin(phase_d))
                 cexp_p = cmplx(cos(phase_p),sin(phase_p)) 
@@ -102,8 +102,8 @@ subroutine lag_freq(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,tauso,gs
                 if (m .gt. 1) then
                     tau_d = (tauso(m)-tauso(1))
                     tau_p = (h(m) - h(1))/(beta_p)
-                    phase_d = 2.*pi*tau_d*f
-                    phase_p = 2.*pi*tau_p*f
+                    phase_d = real(2.*pi*tau_d*f)
+                    phase_p = real(2.*pi*tau_p*f)
                 endif    
                 cexp_d = cmplx(cos(phase_d),sin(phase_d))
                 cexp_p = cmplx(cos(phase_p),sin(phase_p)) 
@@ -177,7 +177,7 @@ subroutine lag_freq_nocoh(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,ta
                 !set up phase factors
                 if (m .gt. 1) then  
                     tau_d = (tauso(m)-tauso(1))          
-                    phase_d = 2.*pi*tau_d*f
+                    phase_d = real(2.*pi*tau_d*f)
                 endif  
                 cexp_d = cmplx(cos(phase_d),sin(phase_d))
                 cexp_phi = cmplx(cos(DelAB_nu),sin(DelAB_nu))  
@@ -205,7 +205,7 @@ subroutine lag_freq_nocoh(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,ta
                 !set up phase factors
                 if (m .gt. 1) then  
                     tau_d = (tauso(m)-tauso(1))          
-                    phase_d = 2.*pi*tau_d*f
+                    phase_d = real(2.*pi*tau_d*f)
                 endif  
                 cexp_d = cmplx(cos(phase_d),sin(phase_d))
                 cexp_phi = cmplx(cos(DelAB_nu),sin(DelAB_nu))  

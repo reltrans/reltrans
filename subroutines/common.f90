@@ -207,7 +207,7 @@ contains
         args%Nh = params(16)
         args%boost = params(17)
         args%qboost = dble(params(18))
-        args%Mass = dble(params(19))
+        args%Mass = params(19)
         args%honr = dble(params(20))
         args%b1 = dble(params(21))
         args%b2 = dble(params(22))
@@ -216,7 +216,7 @@ contains
         args%ReIm = parse_reim(int(params(25)))
         args%DelA = params(26)
         args%Anorm = params(31)
-        args%resp_matr = params(32)
+        args%resp_matr = int(params(32))
         args%Cp = cutoff_powerlaw
     end subroutine unwrap_arguments
 

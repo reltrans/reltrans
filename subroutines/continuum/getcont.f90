@@ -55,7 +55,7 @@
          nth_par(2) = Cutoff_s
          nth_par(3) = 0.05
          nth_par(4) = 1.0
-         nth_par(5) = ( 1.0 + zcos ) / real( gso(1) ) - 1.0
+         nth_par(5) = real(( 1.0 + zcos ) / real( gso(1) ) - 1.0)
          Ifl=1
          call donthcomp(earx, nex, nth_par, ifl, contx, photer)
          

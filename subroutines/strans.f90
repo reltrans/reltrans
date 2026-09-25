@@ -417,7 +417,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
         dareafac(re, args%model%a) * domega(i)
 
     ! Calculate flux from pixel
-    gsd = dglpfacthick(re, args%model%a, args%model%h(1), args%mudisk)
+    gsd = real(dglpfacthick(re, args%model%a, args%model%h(1), args%mudisk))
 
     normfac = real((g/(1.d0+args%model%zcos))**(2.+args%model%Gamma)*domega(i))
 
@@ -472,13 +472,13 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
                 args%arrays%ker_W1(1, gbin, fbin, mubin, rbin) +               &
                 real(log(gsd)) * real(args%dFe(1)) * cexp
 
-            args%arrays%ker_W2(1, gbin, fbin, mubin, rbin) =                   &
+            args%arrays%ker_W2(1, gbin, fbin, mubin, rbin) = cmplx(            &
                 args%arrays%ker_W2(1, gbin, fbin, mubin, rbin) + emissivity *  &
-                normfac * cexp
+                normfac * cexp, kind=kind(cexp))
 
-            args%arrays%ker_W3(1, gbin, fbin, mubin, rbin) =                   &
+            args%arrays%ker_W3(1, gbin, fbin, mubin, rbin) = cmplx(            &
                 args%arrays%ker_W3(1, gbin, fbin, mubin, rbin) + emissivity *  &
-                normfac * cexp
+                normfac * cexp, kind=kind(cexp))
         end do
 
         if (args%conf%calculate_impulse_response) then
@@ -561,7 +561,8 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
             args%model%qboost)
 
         ! Calculate flux from pixel
-        gsd(m) = dglpfacthick(re, args%model%a, args%model%h(m), args%mudisk)
+        gsd(m) = real(dglpfacthick(re, args%model%a, args%model%h(m),          &
+            args%mudisk))
 
         ! TODO: write into emissivity(:, m) where the emissivity
         ! now holds the times as well from the time-dependent emissivity
@@ -572,8 +573,8 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
         ! calculate extra factors that go into the transfer functions
         ! for double lps
         if (args%model%nlp .gt. 1) then
-            thetafac(m) = emissivity(m) * gso(m)**(args%model%Gamma - 2.)      &
-                * gsd(m)**(2. - args%model%Gamma)
+            thetafac(m) = real(emissivity(m) * gso(m)**(args%model%Gamma - 2.) &
+                * gsd(m)**(2. - args%model%Gamma))
         else
             ! single lamp post case, double check this later
             thetafac(m) = 1.
@@ -603,14 +604,14 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
         mubin = ceiling(mue * dble(args%conf%me))
         !calculate the extra factors for w2/3
         if (args%model%nlp .gt. 1) then
-            emisfac = (emissivity(1) + args%model%eta_0 * emissivity(2)) /     &
-                (1. + args%model%eta_0)
+            emisfac = real((emissivity(1) + args%model%eta_0 * emissivity(2)) /&
+                (1. + args%model%eta_0))
 
-            kfac = (emissivity(1) + args%model%eta_0 * emissivity(2)) /        &
-                (thetafac(1) + args%model%eta_0 * thetafac(2))
+            kfac = real((emissivity(1) + args%model%eta_0 * emissivity(2)) /   &
+                (thetafac(1) + args%model%eta_0 * thetafac(2)))
         else
-            emisfac = emissivity(1)
-            kfac = emissivity(1)
+            emisfac = real(emissivity(1))
+            kfac = real(emissivity(1))
             ! single lamp post case, double check this later
         endif
 
