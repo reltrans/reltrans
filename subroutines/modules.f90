@@ -179,7 +179,7 @@ contains
   
   subroutine init_fftw_allconv(use_estimate)
     implicit none
-    integer(c_int) :: flags, i
+    integer(c_int) :: flags
     integer, external :: omp_get_max_threads
     logical, intent(in) :: use_estimate
     INTEGER FFTW_PATIENT
@@ -220,7 +220,7 @@ contains
     complex :: conv(nec),padFT_photarx(nec)
     complex :: padFT_reline(nec),  padFT_imline(nec)            
     integer :: m, i
-    real    :: photmax, depad_conv(nex), E
+    real    :: depad_conv(nex), E
     
     do m=1,nlp  
        if (DC .eq. 1 ) then
@@ -229,7 +229,7 @@ contains
 
           call padding4FT(reline(m,:),padFT_reline)                        
 
-          conv = (padFT_photarx * padFT_reline) * nexm1
+          conv = cmplx((padFT_photarx * padFT_reline) * nexm1, kind=kind(conv))
           call de_paddingFT(dyn, conv, depad_conv)
 
           do i = 1,nex
@@ -242,7 +242,7 @@ contains
           call padding4FT(reline(m,:),padFT_reline)
           call padding4FT(imline(m,:),padFT_imline)
 
-          conv = (padFT_photarx * padFT_reline) * nexm1
+          conv = cmplx((padFT_photarx * padFT_reline) * nexm1, kind=kind(conv))
           call de_paddingFT(dyn, conv, depad_conv)
 
           do i = 1,nex
@@ -250,7 +250,7 @@ contains
              ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
           end do
 
-          conv = (padFT_photarx * padFT_imline) * nexm1
+          conv = cmplx((padFT_photarx * padFT_imline) * nexm1, kind=kind(conv))
           call de_paddingFT(dyn, conv, depad_conv)
 
           do i = 1,nex
@@ -286,7 +286,7 @@ contains
 
     call fftw_execute_dft_r2c(plan1, in, out)
 
-    padFT_line = out
+    padFT_line = cmplx(out, kind=kind(padFT_line))
 
 
   end subroutine padding4FT
@@ -322,7 +322,7 @@ contains
 
     call fftw_execute_dft_r2c(plan1, in, out)
 
-    padFT_line = out
+    padFT_line = cmplx(out, kind=kind(padFT_line))
 
   end subroutine padding4FT_xillver
 
@@ -345,7 +345,7 @@ contains
     ! Populate output array
     photmax = 0.0
     do i = 1, nex
-       out_line(i) = out_conv(i + nex/2 + 1)
+       out_line(i) = real(out_conv(i + nex/2 + 1))
        ! write(81,*) i, out_line(i)
         photmax = max( photmax , out_line(i) )
     end do

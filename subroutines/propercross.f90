@@ -201,7 +201,6 @@ subroutine propercross_NOmatrix(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
   integer, intent(in)  :: nex, nf
   real,    intent(in)  :: earx(0:nex), ReSraw(nex,nf), ImSraw(nex,nf)
   real,    intent(out) :: ReGraw(nex,nf), ImGraw(nex,nf)
-  real,    allocatable :: ReStel(:), ImStel(:)
   real                 :: reref, imref, dum, dE
   real                 :: get_env_real
   integer              :: i, j
@@ -258,10 +257,10 @@ end subroutine propercross_NOmatrix
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-   function find_nearest_index_in_energy_grid(earx, nex, Emin, Emax, E_target)
+   function find_nearest_index_in_energy_grid(nex, Emin, Emax, E_target)
      implicit none
      integer, intent(in)  :: nex
-     real,    intent(in)  :: earx(0:nex), Emin, Emax, E_target
+     real,    intent(in)  :: Emin, Emax, E_target
      integer              :: find_nearest_index_in_energy_grid
      real                 :: x
 

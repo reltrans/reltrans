@@ -37,7 +37,8 @@ subroutine sum_continuum_reflection_transfer_functions(config, model_args,     &
            do i = 1,nex
               do m=1,model_args%nlp
                   if (m .gt. 1) then
-                      arrays%ReW0(m,i,j) = model_args%eta * arrays%ReW0(m,i,j)
+                      arrays%ReW0(m,i,j) = real(model_args%eta *               &
+                          arrays%ReW0(m,i,j))
                   end if
                   arrays%ReSraw(i,j) = arrays%ReSraw(i,j) +                    &
                       (-model_args%boost) * arrays%ReW0(m,i,j)
@@ -57,14 +58,14 @@ subroutine sum_continuum_reflection_transfer_functions(config, model_args,     &
             print *, "Assertion failed: nlp must be 2, but is", model_args%nlp
             error stop 1
         end if
-        arrays%ReW0(2,:,:) = model_args%eta * arrays%ReW0(2,:,:)
-        arrays%ImW0(2,:,:) = model_args%eta * arrays%ImW0(2,:,:)
-        arrays%ReW1(2,:,:) = model_args%eta * arrays%ReW1(2,:,:)
-        arrays%ImW1(2,:,:) = model_args%eta * arrays%ImW1(2,:,:)
-        arrays%ReW2(2,:,:) = model_args%eta * arrays%ReW2(2,:,:)
-        arrays%ImW2(2,:,:) = model_args%eta * arrays%ImW2(2,:,:)
-        arrays%ReW3(2,:,:) = model_args%eta * arrays%ReW3(2,:,:)
-        arrays%ImW3(2,:,:) = model_args%eta * arrays%ImW3(2,:,:)
+        arrays%ReW0(2,:,:) = real(model_args%eta * arrays%ReW0(2,:,:))
+        arrays%ImW0(2,:,:) = real(model_args%eta * arrays%ImW0(2,:,:))
+        arrays%ReW1(2,:,:) = real(model_args%eta * arrays%ReW1(2,:,:))
+        arrays%ImW1(2,:,:) = real(model_args%eta * arrays%ImW1(2,:,:))
+        arrays%ReW2(2,:,:) = real(model_args%eta * arrays%ReW2(2,:,:))
+        arrays%ImW2(2,:,:) = real(model_args%eta * arrays%ImW2(2,:,:))
+        arrays%ReW3(2,:,:) = real(model_args%eta * arrays%ReW3(2,:,:))
+        arrays%ImW3(2,:,:) = real(model_args%eta * arrays%ImW3(2,:,:))
         tau_d = tauso(2) - tauso(1)
         tau_p = (model_args%h(2) - model_args%h(1))/(model_args%beta_p)
     end if
@@ -85,8 +86,8 @@ subroutine sum_continuum_reflection_transfer_functions(config, model_args,     &
                 if (model_args%nlp > 1) then
                     phase_d = 2d0 * pi * tau_d * f
                     phase_p = 2d0 * pi * tau_p * f
-                    cexp_d = cmplx(cos(phase_d),sin(phase_d))
-                    cexp_p = cmplx(cos(phase_p),sin(phase_p))
+                    cexp_d = cmplx(cos(phase_d),sin(phase_d), kind=kind(cexp_d))
+                    cexp_p = cmplx(cos(phase_p),sin(phase_p), kind=kind(cexp_p))
                 else
                     cexp_d = cmplx(1.0, 0.0)
                     cexp_p = cmplx(1.0, 0.0)
@@ -109,8 +110,9 @@ subroutine sum_continuum_reflection_transfer_functions(config, model_args,     &
                 ! Note: the reason we use complex here is to ease the
                 ! calculations when we add all the extra phases from the double
                 ! lamp post
-                Stemp = model_args%g(m) * cexp_phi *                           &
-                    (W1 + W2 + fac * cexp_d * arrays%contx(i,m))
+                Stemp = cmplx(model_args%g(m) * cexp_phi *                     &
+                    (W1 + W2 + fac * cexp_d * arrays%contx(i,m)),              &
+                    kind=kind(Stemp))
                 Stemp = Stemp + W0 + W3 + cexp_d*arrays%contx(i,m)
                 Stemp = cexp_p * Stemp
                 ! Separate into real/imaginary parts for compatibility with the

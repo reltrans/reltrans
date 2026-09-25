@@ -22,7 +22,7 @@
       real   , intent(out) :: photar(ne)
 
       real                :: photer(ne)
-      integer             :: ifl, i
+      integer             :: ifl
 
       ifl = 0
       if( Cp .eq. -1 )then         !xillver

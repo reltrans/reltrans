@@ -248,8 +248,8 @@ subroutine readinresp
 ! ***Must already know numchn nd nenerg***
   use telematrix
   implicit none
-  integer status,U1,readwrite,blocksize,hdutype,i,colnum,felem
-  integer nelem,j,rows,k
+  integer status,U1,readwrite,blocksize,hdutype,i,colnum
+  integer j,rows,k
   character (len=200) exname,comment
   real nullval
   real, allocatable :: area(:)
@@ -332,8 +332,8 @@ subroutine readinresp2
 ! ***Must already know numchn nd nenerg***
   use telematrix2
   implicit none
-  integer status,U1,readwrite,blocksize,hdutype,i,colnum,felem
-  integer nelem,j,rows,k
+  integer status,U1,readwrite,blocksize,hdutype,i,colnum
+  integer j,rows,k
   character (len=200) exname,comment
   real nullval
   real, allocatable :: area(:)
@@ -422,7 +422,6 @@ subroutine energyextension(U1)
   integer, INTENT(IN)  :: U1
   ! real   , INTENT(OUT) :: ECHN(numchn)
   integer status,i,colnum,felem,nelem
-  character (len=200) exname,comment
   real nullval
   logical anynull
   !Read in En(numchn)
@@ -451,7 +450,6 @@ subroutine energyextension2(U1)
   integer, INTENT(IN)  :: U1
   ! real   , INTENT(OUT) :: ECHN(numchn)
   integer status,i,colnum,felem,nelem
-  character (len=200) exname,comment
   real nullval
   logical anynull
   !Read in En(numchn)

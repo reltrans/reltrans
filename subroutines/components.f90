@@ -1,5 +1,5 @@
 subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                            h,z,Gamma,eta,beta_p,boost,floHz,fhiHz,ReIm,DelA,DelAB,g,ionvar,resp_matr)             
+                            h,z,eta,beta_p,boost,floHz,fhiHz,ReIm,DelA,DelAB,g,ionvar,resp_matr)             
     !this subroutine separates the components from the model, calculates each cross spectrum including the effects of absorRTion,
     !folds the response matrix if desired, calls the phase correction, averages over frequnecy, and prints each different components
     !to a new file. This code repeats a lot and it's a bit of a monstrosity, mostly because it's annoying to separate the transfer
@@ -14,15 +14,15 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     implicit none
     integer, intent(IN) :: ne,nex,nf,nlp,ionvar,ReIm,resp_matr
     real   , intent(IN) :: ear(0:ne),earx(0:nex),contx(nex,nlp),absorbx(nex)
-    real   , intent(IN) :: g(nlp),DelA,DelAB(nlp),boost,z,Gamma,eta,h(nlp),beta_p
+    real   , intent(IN) :: g(nlp),DelA,DelAB(nlp),boost,z,eta,h(nlp),beta_p
     real   , intent(IN) :: gso(nlp),tauso(nlp)
     real   , intent(INOUT) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
     real   , intent(INOUT) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
     real :: fac
-    real :: tempRe,tempIm,dE, corr
+    real :: dE
     real :: f,flo,fhi,floHz,fhiHz
     double precision :: fc
-    integer :: i,j,m
+    integer :: i,j
     !indiRTdual components transfer functions (S) and cross spectrum (G) dynamic allocation
     real, dimension(:,:), allocatable :: ReScont,ImScont,ReSrev,ImSrev
     real, dimension(:,:), allocatable :: ReSpiv,ImSpiv,ImSion,ReSion
@@ -72,7 +72,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     !This stores each component contribution in the Re/Im matrices 
     if (nlp .gt. 1 .and. beta_p .eq. 0.) then  
         call components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                              h,z,Gamma,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
+                              z,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
                               ReGpiv,ImGpiv,ReGion,ImGion)
         ! open (unit = 21, file = 'fort.21', status='replace', action = 'write')
         ! do j = 1, nf
@@ -85,7 +85,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
         ! close(21)
      else 
         call components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                        h,z,Gamma,eta,beta_p,boost,g,DelAB,ionvar,ReScont,ImScont,ReSrev,ImSrev,ReSpiv,ImSpiv,&
+                        h,z,eta,beta_p,boost,g,DelAB,ionvar,ReScont,ImScont,ReSrev,ImSrev,ReSpiv,ImSpiv,&
                         ReSion,ImSion) 
         ! do i = 1, nex
         !    write(20,*) ReSion(i),ImSion(i)
@@ -140,7 +140,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     ReGion_bar = 0.0
     ImGion_bar = 0.0
     fc = 0.5d0 * ( floHz + fhiHz )   
-    fac = 2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf))
+    fac = real(2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf)))
     do j = 1,nf
         f = floHz * (fhiHz/floHz)**( (real(j)-0.5) / real(nf) )
         do i = 1,nex 
@@ -267,7 +267,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
 end subroutine write_ComponentS
 
 subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                      h,z,Gamma,eta,beta_p,boost,g,DelAB,ionvar,ReScont,ImScont,ReSrev,ImSrev,&
+                      h,z,eta,beta_p,boost,g,DelAB,ionvar,ReScont,ImScont,ReSrev,ImSrev,&
                       ReSpiv,ImSpiv,ReSion,ImSion)
     ! Calculates the FT of the spectrum components before multiplying by the absorRTion model
     ! This is essentially the same as S, but it returns the FT for each component that contributes to the lags: 
@@ -281,13 +281,12 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
     implicit none
     integer, intent(IN) :: nex,nf,ionvar,nlp
     real   , intent(IN) :: earx(0:nex),contx(nex,nlp)
-    real   , intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp), beta_p, flo
+    real   , intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),eta,h(nlp),tauso(nlp), beta_p, flo
     real   , intent(INOUT) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
     real   , intent(INOUT) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
     real   , intent(INOUT) :: ReScont(nex,nf),ImScont(nex,nf),ReSrev(nex,nf),ImSrev(nex,nf)
     real   , intent(INOUT) :: ReSpiv(nex,nf),ImSpiv(nex,nf),ReSion(nex,nf),ImSion(nex,nf)
-    real E,fac,fhi,beta,f,phase_d,phase_p,tau_d,tau_p
-    real corr, contx_sum(nex)
+    real E,fac,fhi,f,phase_d,phase_p,tau_d,tau_p
     complex, dimension(:,:), allocatable :: Scont,Sreverb,Spivot,Sion
     ! complex Stemp,Scont(nex,nf),Sreverb(nex,nf),Spivot(nex,nf),Sion(nex,nf)
     complex Stemp,cexp_d,cexp_p,cexp_phi,W0,W1,W2,W3
@@ -330,8 +329,8 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
                 fac = log(gso(m)/((1.0+z)*E))
                 !set up phase factors
                 if (m .gt. 1) then
-                    phase_d = 2.*pi*tau_d*f
-                    phase_p = 2.*pi*tau_p*f
+                    phase_d = real(2.*pi*tau_d*f)
+                    phase_p = real(2.*pi*tau_p*f)
                 endif    
                 cexp_d = cmplx(cos(phase_d),sin(phase_d))
                 cexp_p = cmplx(cos(phase_p),sin(phase_p)) 
@@ -374,7 +373,7 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
 end subroutine
 
 subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                            h,z,Gamma,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
+                            z,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
                             ReGpiv,ImGpiv,ReGion,ImGion)
     use rtconstants, only: is_ref_folded,pi
     implicit none
@@ -382,9 +381,8 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
     real, intent(IN) :: earx(0:nex),contx(nex,nlp),absorbx(nex)
     real, intent(IN) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
     real, intent(IN) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
-    real, intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp)
-    real E,fac,flo,fhi,beta,f,phase_d,tau_d
-    real contx_sum(nex),corr
+    real, intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),eta,tauso(nlp)
+    real E,fac,flo,fhi,f,phase_d,tau_d
     !these are the component arrays for each lamp post separately, before the cross spectrum
     real, dimension(:,:,:), allocatable :: ReSpiv,ImSpiv,ReScont,ImScont,ReSrev,ImSrev, ReSion,ImSion
     ! real ReScont(nlp,nex,nf),ImScont(nlp,nex,nf),ReSrev(nlp,nex,nf),ImSrev(nlp,nex,nf)
@@ -451,7 +449,7 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
                 fac = log(gso(m)/((1.0+z)*E))
                 if (m .gt. 1) then
                     tau_d = tauso(m)-tauso(1)
-                    phase_d = 2.*pi*tau_d*f  
+                    phase_d = real(2.*pi*tau_d*f)
                 endif
                 cexp_d = cmplx(cos(phase_d),sin(phase_d))     
                 cexp_phi = cmplx(cos(DelAB(m)),sin(DelAB(m)))

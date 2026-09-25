@@ -25,22 +25,20 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
        if( model_args%Cp .ge. 0 ) then
           ! write(*,*) 'nthcomp illumination for nthcomp and reflionx'
           Cp_cont = 2 !This is needed since we can't use getcont(Cp,...) because in reflionx Cp = 0
-          Cutoff_obs = Cutoff_s * gso(1) / real(1.d0 + model_args%zcos)
+          Cutoff_obs = real(Cutoff_s * gso(1) / real(1.d0 + model_args%zcos))
 
           call getcont(Cp_cont, arrays%earx, nex, model_args%Gamma,            &
-              Cutoff_s, Cutoff_obs, model_args%logxi, model_args%lognep,       &
-              model_args%zcos, arrays%contx(:,1))
-          arrays%contx = lens(1) / real(1.d0 + model_args%zcos)**3             &
-              * gso(1) * arrays%contx
+              Cutoff_s, Cutoff_obs, model_args%zcos, arrays%contx(:,1))
+          arrays%contx = real(lens(1) / real(1.d0 + model_args%zcos)**3        &
+              * gso(1) * arrays%contx)
        else if (model_args%Cp .eq. -1) then
           ! write(*,*) 'powerlaw illumination'
-          Cutoff_s = real(1.d0 + model_args%zcos) * Cutoff_obs / gso(1)
+          Cutoff_s = real(real(1.d0 + model_args%zcos) * Cutoff_obs / gso(1))
           call getcont(model_args%Cp, arrays%earx, nex, model_args%Gamma,      &
-              Cutoff_s, Cutoff_obs, model_args%logxi, model_args%lognep,       &
-              model_args%zcos, arrays%contx(:,1))
-          arrays%contx = lens(1) / real(1.d0 + model_args%zcos)**2             &
+              Cutoff_s, Cutoff_obs, model_args%zcos, arrays%contx(:,1))
+          arrays%contx = real(lens(1) / real(1.d0 + model_args%zcos)**2        &
               * (gso(1) / real(1.d0 + model_args%zcos))**model_args%Gamma      &
-              * arrays%contx
+              * arrays%contx)
        endif
 
        model_args%Cutoff_s   = Cutoff_s
@@ -82,11 +80,11 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
     else
        do m=1,model_args%nlp
           !here the observed cutoffs are set from the temperature in the source frame
-          Cutoff_obs = Cutoff_s * gso(m) / real(1.d0 + model_args%zcos)
+          Cutoff_obs = real(Cutoff_s * gso(m) / real(1.d0 + model_args%zcos))
           call getcont(model_args%Cp, arrays%earx, nex, model_args%Gamma,      &
-              Cutoff_s, Cutoff_obs, model_args%logxi, model_args%lognep,       &
-              model_args%zcos, arrays%contx(:,m))
-          if (m .gt. 1) arrays%contx(:,m) = model_args%eta * arrays%contx(:,m)
+              Cutoff_s, Cutoff_obs, model_args%zcos, arrays%contx(:,m))
+          if (m .gt. 1) arrays%contx(:,m) = real(model_args%eta *              &
+              arrays%contx(:,m))
           !TODO fix this section, calculate luminosities better
           if( config%verbose .gt. 0 )then
              call sourcelum(nex, arrays%earx, arrays%contx(:,m),               &
@@ -99,8 +97,8 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
           end if
           arrays%contx_int(m) = Eintegrate(config%Emin, config%Emax, nex,      &
               arrays%earx, arrays%contx(:,m), config%dloge)
-          arrays%contx(:,m) = lens(m) / real(1.d0 + model_args%zcos)**2        &
-              * gso(m) / real(1.d0 + model_args%zcos) * arrays%contx(:,m)
+          arrays%contx(:,m) = real(lens(m) / real(1.d0 + model_args%zcos)**2   &
+              * gso(m) / real(1.d0 + model_args%zcos) * arrays%contx(:,m))
        end do
     end if
 

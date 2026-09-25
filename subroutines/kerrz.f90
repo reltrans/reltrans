@@ -1,6 +1,7 @@
 module kerrz
     use kerrz_interface
     use rtconstants, only: pi
+    use iso_c_binding, only: c_double
 
     implicit none
 
@@ -102,8 +103,8 @@ contains
     ! These subroutines are defined for the test suite:
     subroutine test_kerrz_trace(spin, mu_obs, alpha, beta, t, r, theta, phi)   &
         bind(C, name="test_kerrz_trace")
-        double precision, intent(in) :: spin, mu_obs, alpha, beta
-        double precision, intent(out) :: t, r, theta, phi
+        real(c_double), intent(in) :: spin, mu_obs, alpha, beta
+        real(c_double), intent(out) :: t, r, theta, phi
         type(krz_TraceResult) :: res
         kerr_metric = krz_KerrMetric_init(1.0d0, spin)
         res = trace_impact_parameters(mu_obs, alpha, beta)
@@ -115,8 +116,8 @@ contains
 
     subroutine test_kerrz_trace_lamppost(spin, h, delta_s, t, r, theta, phi)   &
         bind(C, name="test_kerrz_trace_lamppost")
-        double precision, intent(in) :: spin, h, delta_s
-        double precision, intent(out) :: t, r, theta, phi
+        real(c_double), intent(in) :: spin, h, delta_s
+        real(c_double), intent(out) :: t, r, theta, phi
         type(krz_TraceResult) :: res
         kerr_metric = krz_KerrMetric_init(1.0d0, spin)
         res = trace_lamppost(h, delta_s)
@@ -128,8 +129,8 @@ contains
 
     subroutine test_kerrz_lensing(spin, h, r_obs, mu_obs, lensing_factor,      &
         cos_delta, time) bind(C, name="test_kerrz_lensing")
-        double precision, intent(in) :: spin, h, r_obs, mu_obs
-        double precision, intent(out) :: lensing_factor, cos_delta, time
+        real(c_double), intent(in) :: spin, h, r_obs, mu_obs
+        real(c_double), intent(out) :: lensing_factor, cos_delta, time
         type(LamppostContinuum) :: cont
         kerr_metric = krz_KerrMetric_init(1.0d0, spin)
         cont = trace_lensing(h, r_obs, mu_obs)

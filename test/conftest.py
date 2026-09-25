@@ -29,6 +29,11 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
+def pytest_configure(config):
+    # Register custom marks so pytest does not warn about unknown marks.
+    config.addinivalue_line("markers", "rt: reltrans model tests")
+
+
 def _get_calling_function_name(name: str | None) -> str:
     """
     Get the calling function's name. A name may be provided that will be

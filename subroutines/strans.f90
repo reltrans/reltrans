@@ -147,15 +147,15 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     !get the GR ray-tracing CONTINUUM parameters which are stored in the module gr_continuum
     if (args%model%nlp .eq. 1) then
        gso(1) = real(dgsofac(args%model%a, args%model%h(1)))
-       call getlens(args%model%a, args%model%h(1), args%model%muobs,           &
-            lens(1), tauso(1), cosdelta_obs(1))
+       call getlens(args%model%h(1), args%model%muobs, lens(1), tauso(1),      &
+            cosdelta_obs(1))
        if (tauso(1) .ne. tauso(1)) stop "tauso is NaN"
     else
        !here the observed cutoffs are set from the temperature in the source frame
        do m = 1, args%model%nlp
           gso(m) = real(dgsofac(args%model%a, args%model%h(m)))
-          call getlens(args%model%a, args%model%h(m), args%model%muobs,        &
-               lens(m), tauso(m), cosdelta_obs(m))
+          call getlens(args%model%h(m), args%model%muobs, lens(m), tauso(m),   &
+               cosdelta_obs(m))
           if (tauso(m) .ne. tauso(m)) stop "tauso is NaN"
        enddo
     endif
@@ -185,8 +185,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
         if (abs(mudsav-args%mudisk) .gt. tiny(args%mudisk)) dotrace = .true.
         if (dotrace) then
             call trace_disk_observer(args%conf%nro, args%conf%nphi, rn,        &
-                 args%mueff,args%model%muobs, args%model%a, args%r_isco,       &
-                 args%model%rout, args%mudisk, d)
+                 args%mueff,args%model%muobs, args%r_isco, args%model%rout, d)
             spinsav = args%model%a
             musav = args%model%muobs
             routsav = args%model%rout
@@ -204,9 +203,8 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     sin0 = sqrt(1.0-args%model%muobs**2)
 
     ! Calculate dcos/dr and time lags vs r for the lamppost model
-    call getdcos(args%model%a, args%model%h, args%mudisk, ndelta,              &
-         args%model%nlp, args%model%rout, npts, rlp, dcosdr, tlp, cosd,        &
-         cosdout)
+    call getdcos(args%model%h, ndelta, args%model%nlp, args%model%rout, npts,  &
+         rlp, dcosdr, tlp, cosd, cosdout)
 
     ! set continuum normalisations depending on model flavour
     if (dset .eq. 0)then
@@ -347,12 +345,10 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
 
             if (args%conf%ring_like) then
                 call sum_ringlike_corona(i, non_relativistic, r_length,        &
-                     phi_length, re, alpha, beta, taudo, g, r_grid, domega,    &
-                     gbin, rbin, args)
+                     re, alpha, beta, taudo, g, domega, gbin, rbin, args)
             else
                 call sum_multiple_lampposts(i, non_relativistic, r_length,     &
-                     phi_length, re, alpha, beta, taudo, g, r_grid, domega,    &
-                     gbin, rbin, args)
+                     re, alpha, beta, taudo, g, domega, gbin, rbin, args)
             endif
         end do
 
@@ -370,8 +366,8 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
     end do
 end subroutine sum_impulse_components
 
-subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
-     re, alpha, beta, taudo, g, r_grid, domega, gbin, rbin, args)
+subroutine sum_ringlike_corona(i, non_relativistic, r_length,                  &
+     re, alpha, beta, taudo, g, domega, gbin, rbin, args)
     use dyn_gr
     use radial_grids
     use gr_continuum
@@ -382,8 +378,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     implicit none
 
     logical, intent(in) :: non_relativistic
-    integer, intent(in) :: i, r_length, phi_length, gbin, rbin
-    double precision, intent(in) :: r_grid(r_length)
+    integer, intent(in) :: i, r_length, gbin, rbin
     double precision, intent(in) :: domega(r_length)
     double precision, intent(in) :: alpha, beta, taudo, g, re
 
@@ -417,7 +412,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
         dareafac(re, args%model%a) * domega(i)
 
     ! Calculate flux from pixel
-    gsd = dglpfacthick(re, args%model%a, args%model%h(1), args%mudisk)
+    gsd = real(dglpfacthick(re, args%model%a, args%model%h(1), args%mudisk))
 
     normfac = real((g/(1.d0+args%model%zcos))**(2.+args%model%Gamma)*domega(i))
 
@@ -472,13 +467,13 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
                 args%arrays%ker_W1(1, gbin, fbin, mubin, rbin) +               &
                 real(log(gsd)) * real(args%dFe(1)) * cexp
 
-            args%arrays%ker_W2(1, gbin, fbin, mubin, rbin) =                   &
+            args%arrays%ker_W2(1, gbin, fbin, mubin, rbin) = cmplx(            &
                 args%arrays%ker_W2(1, gbin, fbin, mubin, rbin) + emissivity *  &
-                normfac * cexp
+                normfac * cexp, kind=kind(cexp))
 
-            args%arrays%ker_W3(1, gbin, fbin, mubin, rbin) =                   &
+            args%arrays%ker_W3(1, gbin, fbin, mubin, rbin) = cmplx(            &
                 args%arrays%ker_W3(1, gbin, fbin, mubin, rbin) + emissivity *  &
-                normfac * cexp
+                normfac * cexp, kind=kind(cexp))
         end do
 
         if (args%conf%calculate_impulse_response) then
@@ -491,8 +486,8 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     end do
 end subroutine sum_ringlike_corona
 
-subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
-     re, alpha, beta, taudo, g, r_grid, domega, gbin, rbin, args)
+subroutine sum_multiple_lampposts(i, non_relativistic, r_length,               &
+     re, alpha, beta, taudo, g, domega, gbin, rbin, args)
     use dyn_gr
     use radial_grids
     use gr_continuum
@@ -503,8 +498,7 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
     implicit none
 
     logical, intent(in) :: non_relativistic
-    integer, intent(in) :: i, r_length, phi_length, gbin, rbin
-    double precision, intent(in) :: r_grid(r_length)
+    integer, intent(in) :: i, r_length, gbin, rbin
     double precision, intent(in) :: domega(r_length)
     double precision, intent(in) :: alpha, beta, taudo, g, re
 
@@ -561,7 +555,8 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
             args%model%qboost)
 
         ! Calculate flux from pixel
-        gsd(m) = dglpfacthick(re, args%model%a, args%model%h(m), args%mudisk)
+        gsd(m) = real(dglpfacthick(re, args%model%a, args%model%h(m),          &
+            args%mudisk))
 
         ! TODO: write into emissivity(:, m) where the emissivity
         ! now holds the times as well from the time-dependent emissivity
@@ -572,8 +567,8 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
         ! calculate extra factors that go into the transfer functions
         ! for double lps
         if (args%model%nlp .gt. 1) then
-            thetafac(m) = emissivity(m) * gso(m)**(args%model%Gamma - 2.)      &
-                * gsd(m)**(2. - args%model%Gamma)
+            thetafac(m) = real(emissivity(m) * gso(m)**(args%model%Gamma - 2.) &
+                * gsd(m)**(2. - args%model%Gamma))
         else
             ! single lamp post case, double check this later
             thetafac(m) = 1.
@@ -603,14 +598,14 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
         mubin = ceiling(mue * dble(args%conf%me))
         !calculate the extra factors for w2/3
         if (args%model%nlp .gt. 1) then
-            emisfac = (emissivity(1) + args%model%eta_0 * emissivity(2)) /     &
-                (1. + args%model%eta_0)
+            emisfac = real((emissivity(1) + args%model%eta_0 * emissivity(2)) /&
+                (1. + args%model%eta_0))
 
-            kfac = (emissivity(1) + args%model%eta_0 * emissivity(2)) /        &
-                (thetafac(1) + args%model%eta_0 * thetafac(2))
+            kfac = real((emissivity(1) + args%model%eta_0 * emissivity(2)) /   &
+                (thetafac(1) + args%model%eta_0 * thetafac(2)))
         else
-            emisfac = emissivity(1)
-            kfac = emissivity(1)
+            emisfac = real(emissivity(1))
+            kfac = real(emissivity(1))
             ! single lamp post case, double check this later
         endif
 

@@ -95,7 +95,7 @@ def _wrap_getrgrid(f, rnmin, rnmax, mueff, nro, nphi):
     return rn, domega
 
 
-def _wrap_trace_disk_observer(f, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
+def _wrap_trace_disk_observer(f, nphi, rn, mueff, mu0, spin, rmin, rout, d):
     nro = len(rn)
     # ctypes scalars
     nro_c = ct.c_int(nro)
@@ -106,7 +106,6 @@ def _wrap_trace_disk_observer(f, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk,
     spin_c = ct.c_double(spin)
     rmin_c = ct.c_double(rmin)
     rout_c = ct.c_double(rout)
-    mudisk_c = ct.c_double(mudisk)
     d_c = ct.c_double(d)
     rn = np.asarray(rn, dtype=np.float64)
     f(
@@ -118,7 +117,6 @@ def _wrap_trace_disk_observer(f, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk,
         ct.byref(spin_c),
         ct.byref(rmin_c),
         ct.byref(rout_c),
-        ct.byref(mudisk_c),
         ct.byref(d_c),
     )
 
@@ -452,7 +450,6 @@ class Reltrans:
             ct.POINTER(ct.c_double),  # spin
             ct.POINTER(ct.c_double),  # rmin
             ct.POINTER(ct.c_double),  # rout
-            ct.POINTER(ct.c_double),  # mudisk
             ct.POINTER(ct.c_double),  # d
         ]
         self.lib_reltrans.trace_disk_observer.restype = None
@@ -571,7 +568,7 @@ class Reltrans:
             float(fractional_rms_sq_per_hz.value),
         )
 
-    def trace_disk_observer(self, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
+    def trace_disk_observer(self, nphi, rn, mueff, mu0, spin, rmin, rout, d):
         _wrap_trace_disk_observer(
             self.lib_reltrans.trace_disk_observer,
             nphi,
@@ -581,7 +578,6 @@ class Reltrans:
             spin,
             rmin,
             rout,
-            mudisk,
             d,
         )
 

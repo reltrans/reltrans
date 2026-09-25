@@ -156,7 +156,7 @@ contains
         do rbin = 1, config%xe !Loop over radial zones
             ! Set parameters with radial dependence
             Gamma0 = real(model_args%Gamma)
-            logne = logner(rbin)
+            logne = real(logner(rbin))
             Cutoff_0 = real(gsdr(rbin)) * model_args%Cutoff_s
             logxi0 = real(logxir(rbin))
             if (config%xe .eq. 1)then
@@ -290,12 +290,10 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 ! Internal variables:
 ! constants:
 ! pi: greek pi
-! rnmax: maximum radius to consider GR effects
 ! nphi, rno: resolution variables, number of pixels on the observer's camera(b
 ! and phib)
 ! Emax, Emin: minimum and maximum range of the internal energy grid which is
 ! different than the xspec one
-! dlogf: resolution parameter of the frequency grid
 ! dyn:   limit to check the saved values
 ! ionvar: sets the ionisation variation (1 = w/ ion var; 0 = w/o ion var)
 
@@ -311,8 +309,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use xspec_interface
     use kerrz, only: kerr_metric, krz_KerrMetric_init
     implicit none
-    ! Constants
-    double precision, parameter :: rnmax = 300.d0, dlogf = 0.09 !This is a resolution parameter (base 10)
     ! Args:
     integer, intent(inout) :: ifl
     integer, intent(in) :: Cp, dset, ne, nlp
@@ -465,8 +461,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                  config%Emax, nlp, arrays%contx, absorbx, real(tauso),         &
                  real(gso), arrays%ReW0, arrays%ImW0, arrays%ReW1,             &
                  arrays%ImW1, arrays%ReW2, arrays%ImW2, arrays%ReW3,           &
-                 arrays%ImW3, real(model_args%h), real(model_args%zcos),       &
-                 real(model_args%Gamma), real(model_args%eta),                 &
+                 arrays%ImW3, real(model_args%zcos), real(model_args%eta),     &
                  model_args%boost, model_args%g, model_args%DelAB,             &
                  config%ionvar, arrays%ReGbar, arrays%ImGbar)
         else
@@ -476,7 +471,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                  real(gso), arrays%ReW0, arrays%ImW0, arrays%ReW1,             &
                  arrays%ImW1, arrays%ReW2, arrays%ImW2, arrays%ReW3,           &
                  arrays%ImW3, real(model_args%h), real(model_args%zcos),       &
-                 real(model_args%Gamma), real(model_args%eta),                 &
+                 real(model_args%eta),                                         &
                  model_args%beta_p, model_args%boost, model_args%g,            &
                  model_args%DelAB, config%ionvar, arrays%ReGbar,               &
                  arrays%ImGbar)
@@ -486,8 +481,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
              real(config%fhi), nlp, arrays%contx, absorbx, real(tauso),        &
              real(gso), arrays%ReW0, arrays%ImW0, arrays%ReW1, arrays%ImW1,    &
              arrays%ReW2, arrays%ImW2, arrays%ReW3, arrays%ImW3,               &
-             real(model_args%h), real(model_args%zcos),                        &
-             real(model_args%Gamma), real(model_args%eta), model_args%boost,   &
+             real(model_args%zcos), real(model_args%eta), model_args%boost,    &
              model_args%ReIm, model_args%g, model_args%DelAB, config%ionvar,   &
              config%DC, model_args%resp_matr, arrays%ReGrawa,                  &
              arrays%ImGrawa)
@@ -551,9 +545,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         end do
         arrays%ReGbar = 0.0
         arrays%ImGbar = 0.0
-        fac = 2.302585 * config%fc**2 * log10(model_args%fhiHz /               &
+        fac = real(2.302585 * config%fc**2 * log10(model_args%fhiHz /          &
             model_args%floHz) / ((model_args%fhiHz - model_args%floHz) *       &
-            real(config%nf))
+            real(config%nf)))
         do j = 1, config%nf
             f = model_args%floHz * (model_args%fhiHz /                         &
                 model_args%floHz)**((real(j) - 0.5) / real(config%nf))
@@ -605,7 +599,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     else if (is_mode(model_args%reim, MODE_CROSS_SPEC_LAG)) then
        do i = 1, ne
           dE = ear(i) - ear(i-1)
-          photar(i) = atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE
+          photar(i) = real(atan2(ImS(i), ReS(i)) / (2.0*pi*config%fc) * dE)
        end do
        if (model_args%ReIm == MODE_CROSS_SPEC_LAG_REF_FOLDED) then
           write(*, *)"Warning ReIm = 4 should not be used for fitting!"
@@ -613,7 +607,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     else if (model_args%reim == MODE_LAG_FREQ) then
        do i = 1, ne
           dE = ear(i) - ear(i-1)
-          photar(i) = atan2(ImS(i), ReS(i))/(pi*(ear(i) + ear(i-1)))*dE
+          photar(i) = real(atan2(ImS(i), ReS(i))/(pi*(ear(i) + ear(i-1)))*dE)
        end do
     end if
 
@@ -629,8 +623,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                 absorbx, real(tauso), real(gso), arrays%ReW0, arrays%ImW0,     &
                 arrays%ReW1, arrays%ImW1, arrays%ReW2, arrays%ImW2,            &
                 arrays%ReW3, arrays%ImW3, real(model_args%h),                  &
-                real(model_args%zcos), real(model_args%Gamma),                 &
-                real(model_args%eta), model_args%beta_p, model_args%boost,     &
+                real(model_args%zcos), real(model_args%eta),                   &
+                model_args%beta_p, model_args%boost,                           &
                 model_args%floHz, model_args%fhiHz, model_args%ReIm,           &
                 model_args%DelA, model_args%DelAB, model_args%g,               &
                 config%ionvar, model_args%resp_matr)
