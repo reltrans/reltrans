@@ -29,19 +29,25 @@
       FUNCTION ran1(idum)
       INTEGER idum,IA,IM,IQ,IR,NTAB,NDIV
       REAL ran1,AM,EPS,RNMX
-      PARAMETER (IA=16807,IM=2147483647,AM=1./IM,IQ=127773,IR=2836,&
-      NTAB=32,NDIV=1+(IM-1)/NTAB,EPS=1.2e-7,RNMX=1.-EPS)
+!     NDIV = 1+(IM-1)/NTAB, written out to avoid an integer-division warning
+      PARAMETER (IA=16807,IM=2147483647,AM=1./real(IM),IQ=127773,IR=2836,&
+      NTAB=32,NDIV=67108864,EPS=1.2e-7,RNMX=1.-EPS)
       INTEGER j,k,iv(NTAB),iy
       SAVE iv,iy
       DATA iv /NTAB*0/, iy /0/
       if (idum.le.0.or.iy.eq.0) then
         idum=max(-idum,1)
-        do 11 j=NTAB+8,1,-1
+        do 11 j=NTAB+8,NTAB+1,-1
           k=idum/IQ
           idum=IA*(idum-k*IQ)-IR*k
           if (idum.lt.0) idum=idum+IM
-          if (j.le.NTAB) iv(j)=idum
 11      continue
+        do 12 j=NTAB,1,-1
+          k=idum/IQ
+          idum=IA*(idum-k*IQ)-IR*k
+          if (idum.lt.0) idum=idum+IM
+          iv(j)=idum
+12      continue
         iy=iv(1)
       endif
       k=idum/IQ
