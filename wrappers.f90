@@ -221,7 +221,7 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
   implicit none
   integer, parameter :: nlp = 1 !use a single lamp post
   integer :: ne, ifl, Cp, dset
-  real    :: ear(0:ne), param(25), photar(ne), par(32), getcountrate
+  real    :: ear(0:ne), param(25), photar(ne), par(32)
   double precision    :: honr,pi,cosi,cos0
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
@@ -286,7 +286,7 @@ subroutine tdrtdistX(ear, ne, param, ifl, photar)
   implicit none
   integer, parameter :: nlp = 1 !use a single lamp post
   integer :: ne, ifl, Cp, dset
-  real    :: ear(0:ne), param(25), photar(ne), par(32), getcountrate
+  real    :: ear(0:ne), param(25), photar(ne), par(32)
   double precision    :: honr,pi,cosi,cos0
 ! Settings
   Cp   = 0   !Cp=0 means use the reflionx model with nthcomp and free density 
@@ -352,7 +352,6 @@ subroutine simrtdbl(ear, ne, param, ifl, photar)
   integer :: ne, ifl, Cp, dset, i
   real    :: ear(0:ne), param(28), photar(ne), par(32)
   real    :: gammac2, Texp, E, dE, getcountrate
-  real    :: rephotar(ne), imphotar(ne)
   real, parameter :: Emin = 1e-1, Emax = 300.0
   integer, parameter :: nex=2**12
   integer, parameter :: nlp = 2 !use a double lamp post
@@ -528,7 +527,6 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   integer :: ne, ifl, Cp, dset, i
   real    :: ear(0:ne), param(27), photar(ne), par(32)
   real    :: gammac2, Texp, E, dE, getcountrate
-  real    :: rephotar(ne), imphotar(ne)
   real, parameter :: Emin = 1e-1, Emax = 300.0
   integer, parameter :: nex=2**12
   integer, parameter :: nlp = 1 !use a single lamp post
@@ -725,7 +723,6 @@ subroutine simrelt_extra(ear, ne, param, ifl, photar, br, mur, variability)
   integer :: Cp, dset, i
   real    :: par(32), Pr
   real    :: gammac2, Texp, E, dE, getcountrate
-  real    :: rephotar(ne), imphotar(ne)
   real, parameter :: Emin = 1e-1, Emax = 300.0
   integer, parameter :: nex=2**12
   real :: earx(0:nex),photarx(nex),pow

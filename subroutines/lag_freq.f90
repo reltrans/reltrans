@@ -10,7 +10,7 @@ subroutine lag_freq(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,tauso,gs
     implicit none
     integer, intent(in) :: nex,nf,ionvar,nlp
     integer             :: Ea1,Ea2,Eb1,Eb2       
-    real   , intent(in) :: g(nlp),DelAB(nlp),boost,z,Gamma,Emin,Emax,beta_p,eta
+    real   , intent(in) :: g(nlp),DelAB(nlp),boost,z,Emin,Emax,beta_p,eta
     real   , intent(in) :: gso(nlp),tauso(nlp),h(nlp)
     real                :: gslope,ABslope
     real   , intent(in) :: earx(0:nex),contx(nex,nlp),absorbx(nex),fix(0:nf)
@@ -18,9 +18,9 @@ subroutine lag_freq(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,tauso,gs
                            ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)                       
     real,    intent(out):: ReGraw(nf),ImGraw(nf)
     real                :: ReGrawEa,ImGrawEa,ReGrawEb,ImGrawEb
-    real                :: E,fac,TempReG,TempImG 
+    real                :: E,fac
     real                :: f,DelAB_nu,g_nu
-    real                :: tau_d,phase_d,tau_p,phase_p,beta,flo,fhi
+    real                :: tau_d,phase_d,tau_p,phase_p,flo,fhi
     complex             :: W0,W1,W2,W3,Sraw,cexp_p,cexp_d,cexp_phi,Stemp
     integer             :: i,j,m
 
@@ -135,24 +135,24 @@ subroutine lag_freq(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,tauso,gs
 end subroutine lag_freq
 
 subroutine lag_freq_nocoh(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,&
-                          ReW3,ImW3,h,z,Gamma,eta,boost,g,DelAB,ionvar,ReGraw,ImGraw)
+                          ReW3,ImW3,z,eta,boost,g,DelAB,ionvar,ReGraw,ImGraw)
                                 
     use rtconstants, only: pi
     implicit none
     integer, intent(in) :: nex,nf,ionvar,nlp
     integer             :: Ea1,Ea2,Eb1,Eb2       
-    real   , intent(in) :: g(nlp),DelAB(nlp),boost,z,Gamma,Emin,Emax,eta
-    real   , intent(in) :: gso(nlp),tauso(nlp),h(nlp)
+    real   , intent(in) :: g(nlp),DelAB(nlp),boost,z,Emin,Emax,eta
+    real   , intent(in) :: gso(nlp),tauso(nlp)
     real                :: gslope,ABslope
     real   , intent(in) :: earx(0:nex),contx(nex,nlp),absorbx(nex),fix(0:nf)
     real                :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf),&
                            ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)                       
     real,    intent(out):: ReGraw(nf),ImGraw(nf)
     real                :: ReGrawEa,ImGrawEa,ReGrawEb,ImGrawEb
-    real                :: E,fac,TempReG,TempImG 
+    real                :: E,fac
     real                :: f,DelAB_nu,g_nu
     real                :: tau_d,phase_d,flo,fhi
-    complex             :: W0,W1,W2,W3,Sraw,cexp_d,cexp_phi,Stemp
+    complex             :: W0,W1,W2,W3,cexp_d,cexp_phi,Stemp
     integer             :: i,j,m
 
     call energy_bounds(nex,Emin,Emax,Ea1,Ea2,Eb1,Eb2)

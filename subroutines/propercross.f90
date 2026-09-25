@@ -201,7 +201,6 @@ subroutine propercross_NOmatrix(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
   integer, intent(in)  :: nex, nf
   real,    intent(in)  :: earx(0:nex), ReSraw(nex,nf), ImSraw(nex,nf)
   real,    intent(out) :: ReGraw(nex,nf), ImGraw(nex,nf)
-  real,    allocatable :: ReStel(:), ImStel(:)
   real                 :: reref, imref, dum, dE
   real                 :: get_env_real
   integer              :: i, j

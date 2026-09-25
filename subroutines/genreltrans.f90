@@ -290,12 +290,10 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 ! Internal variables:
 ! constants:
 ! pi: greek pi
-! rnmax: maximum radius to consider GR effects
 ! nphi, rno: resolution variables, number of pixels on the observer's camera(b
 ! and phib)
 ! Emax, Emin: minimum and maximum range of the internal energy grid which is
 ! different than the xspec one
-! dlogf: resolution parameter of the frequency grid
 ! dyn:   limit to check the saved values
 ! ionvar: sets the ionisation variation (1 = w/ ion var; 0 = w/o ion var)
 
@@ -311,8 +309,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use xspec_interface
     use kerrz, only: kerr_metric, krz_KerrMetric_init
     implicit none
-    ! Constants
-    double precision, parameter :: rnmax = 300.d0, dlogf = 0.09 !This is a resolution parameter (base 10)
     ! Args:
     integer, intent(inout) :: ifl
     integer, intent(in) :: Cp, dset, ne, nlp

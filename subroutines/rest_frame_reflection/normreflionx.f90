@@ -4,12 +4,11 @@ subroutine normreflionx(ear,ne,Gamma,Afe,logne,kTe,logxi,thetae,photar)
 ! ! Returns reflionx model renormalised with xillverDCp
 ! !  
   implicit none
-  integer ne,ifl,j,jmax
-  parameter (jmax=20)
+  integer ne,ifl
   integer, parameter :: dim = 6, dimCp = 7
   real ear(0:ne),Gamma,Afe,logne,kTe,logxi,thetae,photar(ne)
   real kTbb, param(7), xillpar(dim), xillparDCp(dimCp), xillphotar(ne)
-  real E,dE,rintegral,xintegral,fac,lognej,lognex
+  real E,rintegral,xintegral,fac,lognex
   integer i,Cp,ilo,ihi
 ! Set integration bounds
   ilo = ceiling( log( 50.0 / ear(0) ) / log(ear(ne)/ear(0)) * real(ne) )

@@ -30,11 +30,11 @@ contains
     !>     re1: array of radial coordinate at the disk for each ray.
         use dyn_gr, only: pem1, re1, taudo1
         use kerrz, only: krz_TraceResult, trace_impact_parameters,             &
-            KRZ_STATUS_NONE, kerr_metric
+            KRZ_STATUS_NONE
         implicit none
         integer, intent(in) :: nro,nphi
-        double precision, intent(in) :: rn(nro),mueff,mu0,spin,rmin,rout
-        double precision, intent(in) :: mudisk,d
+        double precision, intent(in) :: rn(nro),mueff,mu0,rmin,rout
+        double precision, intent(in) :: d
         double precision :: phin, alpha, beta, cos0
         integer i,j
         type(krz_TraceResult) :: res

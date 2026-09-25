@@ -179,7 +179,7 @@ contains
   
   subroutine init_fftw_allconv(use_estimate)
     implicit none
-    integer(c_int) :: flags, i
+    integer(c_int) :: flags
     integer, external :: omp_get_max_threads
     logical, intent(in) :: use_estimate
     INTEGER FFTW_PATIENT
@@ -220,7 +220,7 @@ contains
     complex :: conv(nec),padFT_photarx(nec)
     complex :: padFT_reline(nec),  padFT_imline(nec)            
     integer :: m, i
-    real    :: photmax, depad_conv(nex), E
+    real    :: depad_conv(nex), E
     
     do m=1,nlp  
        if (DC .eq. 1 ) then
