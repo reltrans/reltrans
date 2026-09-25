@@ -9,7 +9,6 @@ plot_spectral_kwargs = dict(
 )
 
 
-@pytest.mark.rt
 def test_basic_invocation_reltransPL(reltrans, assert_snapshot, envars):
     """A smoke test to check if reltransPL does NOT return NAN."""
     reltrans.reset()
