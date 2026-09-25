@@ -3,13 +3,13 @@
     implicit none
     integer, intent(in) :: DC, nlp 
     real                :: dyn
-    real, intent(in)    :: photarx(nex),earx(nex),Gamma
+    real, intent(in)    :: photarx(nex),earx(0:nex),Gamma
     real, intent(in)    :: reline(nlp,nex), imline(nlp,nex)
     real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
     complex :: FTphotarx(nex_conv), FTreline(nex_conv), FTimline(nex_conv)
     complex :: FTreconv(4*nex),FTimconv(4*nex)
     integer :: m, i
-    real    :: photmax, depad_conv(nex), E
+    real    :: depad_conv(nex), E
     ! real, parameter :: nexm1 = 1. / real(nex_conv)
     
     do m=1,nlp  
