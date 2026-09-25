@@ -185,8 +185,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
         if (abs(mudsav-args%mudisk) .gt. tiny(args%mudisk)) dotrace = .true.
         if (dotrace) then
             call trace_disk_observer(args%conf%nro, args%conf%nphi, rn,        &
-                 args%mueff,args%model%muobs, args%model%a, args%r_isco,       &
-                 args%model%rout, args%mudisk, d)
+                 args%mueff,args%model%muobs, args%r_isco, args%model%rout, d)
             spinsav = args%model%a
             musav = args%model%muobs
             routsav = args%model%rout
@@ -204,9 +203,8 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     sin0 = sqrt(1.0-args%model%muobs**2)
 
     ! Calculate dcos/dr and time lags vs r for the lamppost model
-    call getdcos(args%model%a, args%model%h, args%mudisk, ndelta,              &
-         args%model%nlp, args%model%rout, npts, rlp, dcosdr, tlp, cosd,        &
-         cosdout)
+    call getdcos(args%model%h, ndelta, args%model%nlp, args%model%rout, npts,  &
+         rlp, dcosdr, tlp, cosd, cosdout)
 
     ! set continuum normalisations depending on model flavour
     if (dset .eq. 0)then

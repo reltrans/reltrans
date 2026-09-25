@@ -2,7 +2,7 @@ module reltrans_interface
 !> This module defines the library interface for reltrans.
     contains
         subroutine wrap_trace_disk_observer(nro,nphi,rn,mueff,mu0,spin,rmin,   &
-                   rout,mudisk,d) bind(C, name = "trace_disk_observer")
+                   rout,d) bind(C, name = "trace_disk_observer")
             use raytracing, only: trace_disk_observer
             use kerrz, only: kerr_metric, krz_KerrMetric_init
             use iso_c_binding, only: c_int, c_double
@@ -11,8 +11,7 @@ module reltrans_interface
             real(c_double), intent(in) :: rn(nro), mueff, mu0, spin, rmin, rout
             real(c_double), intent(in) :: d
             kerr_metric = krz_KerrMetric_init(1.0d0, spin)
-            call trace_disk_observer(nro,nphi,rn,mueff,mu0,spin,rmin,rout,     &
-                                    mudisk,d)
+            call trace_disk_observer(nro,nphi,rn,mueff,mu0,rmin,rout,d)
             return
         end subroutine wrap_trace_disk_observer
 
