@@ -17,10 +17,10 @@ module xspec_interface
             !> It will call the C_tbabs symbol in the libXSFunctions shared
             !> library.
             use iso_c_binding, only: c_double, c_int, c_char
+            integer(c_int), value, intent(in) :: nex, Ifl
             real(c_double), intent(in) :: earx(nex+1)
             real(c_double), intent(in) :: params(1)
             real(c_double), intent(inout) :: absorbx(nex), photerx(nex)
-            integer(c_int), value, intent(in) :: nex, Ifl
             character(kind = c_char), intent(in) :: str(*)
         end subroutine c_tbabs
 

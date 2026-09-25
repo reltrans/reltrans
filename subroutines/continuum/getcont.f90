@@ -25,9 +25,10 @@
 !> contx = contx / (10**(logxi + logne - 15))
       
       use gr_continuum
+      use xspec_interface, only: donthcomp
       implicit none
       integer, intent(in)           :: nex, Cp
-      real   , intent(in)           :: earx(0:nex), Cutoff_s, Cutoff_obs, logxi, logne
+      real   , intent(in)           :: earx(0:nex), Cutoff_s, Cutoff_obs
       real   , intent(out)          :: contx(nex)
       double precision , intent(in) :: Gamma, zcos
 
