@@ -147,15 +147,15 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     !get the GR ray-tracing CONTINUUM parameters which are stored in the module gr_continuum
     if (args%model%nlp .eq. 1) then
        gso(1) = real(dgsofac(args%model%a, args%model%h(1)))
-       call getlens(args%model%a, args%model%h(1), args%model%muobs,           &
-            lens(1), tauso(1), cosdelta_obs(1))
+       call getlens(args%model%h(1), args%model%muobs, lens(1), tauso(1),      &
+            cosdelta_obs(1))
        if (tauso(1) .ne. tauso(1)) stop "tauso is NaN"
     else
        !here the observed cutoffs are set from the temperature in the source frame
        do m = 1, args%model%nlp
           gso(m) = real(dgsofac(args%model%a, args%model%h(m)))
-          call getlens(args%model%a, args%model%h(m), args%model%muobs,        &
-               lens(m), tauso(m), cosdelta_obs(m))
+          call getlens(args%model%h(m), args%model%muobs, lens(m), tauso(m),   &
+               cosdelta_obs(m))
           if (tauso(m) .ne. tauso(m)) stop "tauso is NaN"
        enddo
     endif
@@ -345,12 +345,10 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
 
             if (args%conf%ring_like) then
                 call sum_ringlike_corona(i, non_relativistic, r_length,        &
-                     phi_length, re, alpha, beta, taudo, g, r_grid, domega,    &
-                     gbin, rbin, args)
+                     re, alpha, beta, taudo, g, domega, gbin, rbin, args)
             else
                 call sum_multiple_lampposts(i, non_relativistic, r_length,     &
-                     phi_length, re, alpha, beta, taudo, g, r_grid, domega,    &
-                     gbin, rbin, args)
+                     re, alpha, beta, taudo, g, domega, gbin, rbin, args)
             endif
         end do
 
@@ -368,8 +366,8 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
     end do
 end subroutine sum_impulse_components
 
-subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
-     re, alpha, beta, taudo, g, r_grid, domega, gbin, rbin, args)
+subroutine sum_ringlike_corona(i, non_relativistic, r_length,                  &
+     re, alpha, beta, taudo, g, domega, gbin, rbin, args)
     use dyn_gr
     use radial_grids
     use gr_continuum
@@ -380,8 +378,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     implicit none
 
     logical, intent(in) :: non_relativistic
-    integer, intent(in) :: i, r_length, phi_length, gbin, rbin
-    double precision, intent(in) :: r_grid(r_length)
+    integer, intent(in) :: i, r_length, gbin, rbin
     double precision, intent(in) :: domega(r_length)
     double precision, intent(in) :: alpha, beta, taudo, g, re
 
@@ -489,8 +486,8 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     end do
 end subroutine sum_ringlike_corona
 
-subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
-     re, alpha, beta, taudo, g, r_grid, domega, gbin, rbin, args)
+subroutine sum_multiple_lampposts(i, non_relativistic, r_length,               &
+     re, alpha, beta, taudo, g, domega, gbin, rbin, args)
     use dyn_gr
     use radial_grids
     use gr_continuum
@@ -501,8 +498,7 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length, phi_length,   &
     implicit none
 
     logical, intent(in) :: non_relativistic
-    integer, intent(in) :: i, r_length, phi_length, gbin, rbin
-    double precision, intent(in) :: r_grid(r_length)
+    integer, intent(in) :: i, r_length, gbin, rbin
     double precision, intent(in) :: domega(r_length)
     double precision, intent(in) :: alpha, beta, taudo, g, re
 

@@ -1,6 +1,6 @@
 !-----------------------------------------------------------------------
-    subroutine getcont(Cp, earx, nex, Gamma, Cutoff_s, Cutoff_obs,             &
-                       logxi, logne, zcos, contx)
+    subroutine getcont(Cp, earx, nex, Gamma, Cutoff_s, Cutoff_obs, zcos,       &
+                       contx)
 !!! Calculates continuum spectrum calling nthComp with the correct normalisation
 !!!based on the xillver spectrum 
 !!!  Arg:
@@ -9,8 +9,6 @@
         !  Gamma: continuum spectrum inclination
         !  Cutoff_s: high energy cut-off or electron temperature (source frame)
         !  Cutoff_obs: high energy cut-off or electron temperature (observer frame)
-        !  logxi: ionisation parameter
-        !  logne: density
         !  zcos: host galaxy redshift
         !  (output) contx: continuum spectrum 
 

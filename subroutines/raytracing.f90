@@ -7,8 +7,7 @@ module raytracing
     implicit none
 
 contains
-    subroutine trace_disk_observer(nro,nphi,rn,mueff,mu0,spin,rmin,rout,mudisk,&
-                                    d)
+    subroutine trace_disk_observer(nro,nphi,rn,mueff,mu0,rmin,rout,d)
     !> CALCULATION SUBROUTINE
     !> Traces rays in full GR for the camera defined by rn(nro), nro, nphi
     !> to convert alpha and beta to r and tau_do (don't care about phi)
@@ -19,10 +18,8 @@ contains
     !>     rn: array of radial points in the disk.
     !>     mueff: effective cosine of the inclination angle of the disk.
     !>     mu0: cosine of the inclination angle of the observer.
-    !>     spin: spin of the black hole.
     !>     rmin: minimum radius of the disk.
     !>     rout: maximum radius of the disk.
-    !>     mudisk: cosine of the inclination angle of the disk.
     !>     d: distance from the black hole to the observer.
     !> Outputs:
     !>     pem1: array of p-coordinate at the disk for each ray.
@@ -71,17 +68,14 @@ contains
     end subroutine trace_disk_observer
 
     
-    subroutine getdcos(a_spin,h,mudisk,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,     &
-                        cosdout)
+    subroutine getdcos(h,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
     !> CALCULATION SUBROUTINE
     !> For n values of the emission angle, delta, the code calculates the r and t 
     !> coordinates for the geodesic for mu=mudisk; i.e. the crossing points of a 
     !> thin disk.
     !> Note that mudisk = (h/r) / sqrt( (h/r)**2 + 1 )
     !> INPUTS
-    !>    a_spin       Dimensionless spin parameter
     !>    h            Height of on-axis, isotropically emitting source
-    !>    mudisk       cos(theta) of disk surface (mu=0 for h/r=0)
     !>    n            Number of values of emission angle delta (see Fig 1 Dauser 
     !>                 et al 2013) calculated
     !>    rout         Disk outer radius
@@ -98,7 +92,7 @@ contains
         use kerrz, only: kerr_metric, krz_TraceResult, trace_lamppost,         &
             KRZ_STATUS_NONE
         implicit none
-        double precision, intent(in )   :: a_spin, h(2), mudisk, rout
+        double precision, intent(in )   :: h(2), rout
         integer         , intent(in )   :: n, nlp
         integer         , intent(inout) :: npts(nlp)
         double precision, intent(inout) :: r1(n,nlp)
@@ -168,14 +162,13 @@ contains
         return
     end subroutine getdcos
 
-    subroutine getlens(a_spin,h,muobs,lens,delt,cosdelta1)
+    subroutine getlens(h,muobs,lens,delt,cosdelta1)
     !> CALCULATION SUBROUTINE
     !> Routine to calculate the lensing factor l=d\cos\delta/d\cos(i)
     !> and the source to observer time lag.
     !> Both calculations need us to know the delta value for the geodesic
     !> that ends up at angle i at infinity.
     !> INPUTS
-    !>     a_spin       Dimensionless spin parameter
     !>     h            Height of on-axis, isotropically emitting source
     !>     muobs        Cosine of inclination angle
     !
@@ -184,7 +177,7 @@ contains
     !>     delt         Source to observer time lag 
         use kerrz, only: trace_lensing, LamppostContinuum
         implicit none
-        double precision, intent(in)    :: a_spin,h, muobs
+        double precision, intent(in)    :: h, muobs
         double precision, intent(inout) :: cosdelta1
         double precision, intent(out)   :: lens, delt
         double precision :: d

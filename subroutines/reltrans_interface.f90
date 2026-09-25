@@ -23,7 +23,7 @@ module reltrans_interface
             real(c_double), intent(in) :: a_spin, h, muobs
             real(c_double), intent(inout) :: lens, del_t, cosdelta
             kerr_metric = krz_KerrMetric_init(1.0d0, a_spin)
-            call getlens(a_spin, h, muobs, lens, del_t, cosdelta)
+            call getlens(h, muobs, lens, del_t, cosdelta)
         end subroutine wrap_getlens
 
 end module reltrans_interface

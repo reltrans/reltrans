@@ -1,5 +1,5 @@
 subroutine lag_freq(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                    h,z,Gamma,eta,beta_p,boost,g,DelAB,ionvar,ReGraw,ImGraw)
+                    h,z,eta,beta_p,boost,g,DelAB,ionvar,ReGraw,ImGraw)
 
 ! Calculates the energy-averaged cross spectrum in the energy bins of interest. REDO ALL THIS COMMENT IT'S WRONG
 !

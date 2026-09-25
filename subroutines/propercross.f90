@@ -257,10 +257,10 @@ end subroutine propercross_NOmatrix
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-   function find_nearest_index_in_energy_grid(earx, nex, Emin, Emax, E_target)
+   function find_nearest_index_in_energy_grid(nex, Emin, Emax, E_target)
      implicit none
      integer, intent(in)  :: nex
-     real,    intent(in)  :: earx(0:nex), Emin, Emax, E_target
+     real,    intent(in)  :: Emin, Emax, E_target
      integer              :: find_nearest_index_in_energy_grid
      real                 :: x
 

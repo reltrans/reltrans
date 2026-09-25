@@ -461,8 +461,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                  config%Emax, nlp, arrays%contx, absorbx, real(tauso),         &
                  real(gso), arrays%ReW0, arrays%ImW0, arrays%ReW1,             &
                  arrays%ImW1, arrays%ReW2, arrays%ImW2, arrays%ReW3,           &
-                 arrays%ImW3, real(model_args%h), real(model_args%zcos),       &
-                 real(model_args%Gamma), real(model_args%eta),                 &
+                 arrays%ImW3, real(model_args%zcos), real(model_args%eta),     &
                  model_args%boost, model_args%g, model_args%DelAB,             &
                  config%ionvar, arrays%ReGbar, arrays%ImGbar)
         else
@@ -472,7 +471,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                  real(gso), arrays%ReW0, arrays%ImW0, arrays%ReW1,             &
                  arrays%ImW1, arrays%ReW2, arrays%ImW2, arrays%ReW3,           &
                  arrays%ImW3, real(model_args%h), real(model_args%zcos),       &
-                 real(model_args%Gamma), real(model_args%eta),                 &
+                 real(model_args%eta),                                         &
                  model_args%beta_p, model_args%boost, model_args%g,            &
                  model_args%DelAB, config%ionvar, arrays%ReGbar,               &
                  arrays%ImGbar)
@@ -482,8 +481,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
              real(config%fhi), nlp, arrays%contx, absorbx, real(tauso),        &
              real(gso), arrays%ReW0, arrays%ImW0, arrays%ReW1, arrays%ImW1,    &
              arrays%ReW2, arrays%ImW2, arrays%ReW3, arrays%ImW3,               &
-             real(model_args%h), real(model_args%zcos),                        &
-             real(model_args%Gamma), real(model_args%eta), model_args%boost,   &
+             real(model_args%zcos), real(model_args%eta), model_args%boost,    &
              model_args%ReIm, model_args%g, model_args%DelAB, config%ionvar,   &
              config%DC, model_args%resp_matr, arrays%ReGrawa,                  &
              arrays%ImGrawa)
@@ -625,8 +623,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                 absorbx, real(tauso), real(gso), arrays%ReW0, arrays%ImW0,     &
                 arrays%ReW1, arrays%ImW1, arrays%ReW2, arrays%ImW2,            &
                 arrays%ReW3, arrays%ImW3, real(model_args%h),                  &
-                real(model_args%zcos), real(model_args%Gamma),                 &
-                real(model_args%eta), model_args%beta_p, model_args%boost,     &
+                real(model_args%zcos), real(model_args%eta),                   &
+                model_args%beta_p, model_args%boost,                           &
                 model_args%floHz, model_args%fhiHz, model_args%ReIm,           &
                 model_args%DelA, model_args%DelAB, model_args%g,               &
                 config%ionvar, model_args%resp_matr)

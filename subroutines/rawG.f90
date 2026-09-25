@@ -1,4 +1,4 @@
-subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,h,z,Gamma,eta,&
+subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,z,eta,&
                 boost,ReIm,g,DelAB,ionvar,DC,resp_matr,ReGraw,ImGraw)
                 
     use rtconstants
@@ -7,7 +7,7 @@ subroutine rawG(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,I
     complex W0,W1,W2,W3,Sraw(nlp,nex,nf),cexp_d,cexp_phi,Stemp   
     real earx(0:nex),absorbx(nex),contx(nex,nlp),tauso(nlp),ReW0(nlp,nex,nf),ImW0(nlp,nex,nf)
     real ReW1(nlp,nex,nf),ImW1(nlp,nex,nf),ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
-    real DelAB(nlp),g(nlp),boost,z,gso(nlp),Gamma,eta,ReSraw(nlp,nex,nf),ImSraw(nlp,nex,nf),h(nlp) 
+    real DelAB(nlp),g(nlp),boost,z,gso(nlp),eta,ReSraw(nlp,nex,nf),ImSraw(nlp,nex,nf)
     real tau_d,phase_d,E,fac,f,flo,fhi,ReGtemp(nlp,nex,nf),ImGtemp(nlp,nex,nf),ReGraw(nex,nf),ImGraw(nex,nf)
     integer i,j,m,ReIm,resp_matr
     
