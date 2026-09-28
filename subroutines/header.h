@@ -1,7 +1,9 @@
 include 'subroutines/kerrz.f90'
+include 'subroutines/rt_timing.f90'
 include 'subroutines/xspec_interface.f90'
 include 'subroutines/modules.f90'
 include 'subroutines/common.f90'
+include 'subroutines/rt_state.f90'
 
 include 'subroutines/continuum/getcont.f90'
 include 'subroutines/continuum/init_cont.f90'
@@ -79,3 +81,4 @@ include 'subroutines/strans.f90'
 include 'subroutines/xilimits.f90'
 
 include 'subroutines/reltrans_interface.f90'
+include 'subroutines/rt_hooks.f90'

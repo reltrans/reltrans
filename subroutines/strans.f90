@@ -97,6 +97,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     use m_rtrans
     use raytracing, only: trace_disk_observer, getdcos, getlens
     use rtconstants, only: pi
+    use rt_timing
     implicit none
 
     type(t_config), intent(inout) :: config
@@ -145,6 +146,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     !note: the ideal parameters to plot the transfer function are nro~=7000,nphi~=7000,nt~=2e9,nex~=2e10
 
     !get the GR ray-tracing CONTINUUM parameters which are stored in the module gr_continuum
+    call tic(T_GETLENS)
     if (args%model%nlp .eq. 1) then
        gso(1) = real(dgsofac(args%model%a, args%model%h(1)))
        call getlens(args%model%h(1), args%model%muobs, lens(1), tauso(1),      &
@@ -160,6 +162,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
        enddo
     endif
 
+    call toc(T_GETLENS)
     ! Set up observer's camera ( alpha = rn sin(phin), beta = mueff rn cos(phin) )
     ! to do full GR ray tracing with
     rnmin = rfunc(args%model%a, args%model%muobs)
@@ -184,8 +187,10 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
         endif
         if (abs(mudsav-args%mudisk) .gt. tiny(args%mudisk)) dotrace = .true.
         if (dotrace) then
+            call tic(T_TRACE)
             call trace_disk_observer(args%conf%nro, args%conf%nphi, rn,        &
                  args%mueff,args%model%muobs, args%r_isco, args%model%rout, d)
+            call toc(T_TRACE)
             spinsav = args%model%a
             musav = args%model%muobs
             routsav = args%model%rout
@@ -203,8 +208,10 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     sin0 = sqrt(1.0-args%model%muobs**2)
 
     ! Calculate dcos/dr and time lags vs r for the lamppost model
+    call tic(T_GETDCOS)
     call getdcos(args%model%h, ndelta, args%model%nlp, args%model%rout, npts,  &
          rlp, dcosdr, tlp, cosd, cosdout)
+    call toc(T_GETDCOS)
 
     ! set continuum normalisations depending on model flavour
     if (dset .eq. 0)then
@@ -215,11 +222,17 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
 
     ! the only arguments that change here are .false., nro, nphi, rn, domega
     ! the first call is for the relativistic version
+    call tic(T_SUM_GR)
     call sum_impulse_components(.false., args%conf%nro, args%conf%nphi, rn,    &
          domega, args)
+    call toc(T_SUM_GR)
+    call tic(T_SUM_FLAT)
     ! then for the non-relativistic flat-space version
     call sum_impulse_components(.true., args%conf%nron, args%conf%nphin,       &
          rnn, domegan, args)
+    call toc(T_SUM_FLAT)
+
+    call rt_store_and_override(args)
 
     do m = 1, args%model%nlp
         ! Calculate 4pi p(theta0,phi0) = ang_fac
@@ -658,3 +671,40 @@ function newtex(rlp, dcosdr, ndelta, re, h, honr, kk)
   return
 end function newtex
 !-----------------------------------------------------------------------
+
+! B1 investigation: store the rtrans state and kernels, optionally replace the
+! kernels with an externally supplied one.
+subroutine rt_store_and_override(args)
+    use m_rtrans
+    use rt_state
+    implicit none
+    type(t_rtrans_args), intent(inout) :: args
+    integer :: ne, nf, xe
+    ne = size(args%arrays%ker_W0, 2)
+    nf = args%conf%nf
+    xe = args%conf%xe
+    sv_model = args%model
+    sv_mudisk = args%mudisk
+    sv_risco = args%r_isco
+    sv_mueff = args%mueff
+    sv_nf = nf; sv_xe = xe; sv_ne = ne
+    if (allocated(sv_fi)) deallocate(sv_fi)
+    allocate(sv_fi(nf)); sv_fi = args%fi(1:nf)
+    if (allocated(sv_w0)) deallocate(sv_w0, sv_w1, sv_w2, sv_w3)
+    allocate(sv_w0(ne,nf,xe), sv_w1(ne,nf,xe), sv_w2(ne,nf,xe), sv_w3(ne,nf,xe))
+    sv_w0 = args%arrays%ker_W0(1,:,1:nf,1,:)
+    sv_w1 = args%arrays%ker_W1(1,:,1:nf,1,:)
+    sv_w2 = args%arrays%ker_W2(1,:,1:nf,1,:)
+    sv_w3 = args%arrays%ker_W3(1,:,1:nf,1,:)
+    if (ov_active) then
+        if (size(ov_w0,1) .ne. ne .or. size(ov_w0,2) .ne. nf .or. size(ov_w0,3) .ne. xe) then
+            print *, "rt_store_and_override: kernel shape mismatch", shape(ov_w0), ne, nf, xe
+            error stop 1
+        end if
+        args%arrays%ker_W0(1,:,1:nf,1,:) = ov_w0
+        args%arrays%ker_W1(1,:,1:nf,1,:) = ov_w1
+        ! for a single lamppost W2 = W3 = W0 (see sum_multiple_lampposts)
+        args%arrays%ker_W2(1,:,1:nf,1,:) = ov_w0
+        args%arrays%ker_W3(1,:,1:nf,1,:) = ov_w0
+    end if
+end subroutine rt_store_and_override

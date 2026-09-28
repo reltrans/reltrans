@@ -113,6 +113,7 @@ contains
         use conv_mod, only: nex, conv_one_FFTw
         use gr_continuum, only: gso, lens
         use radial_grids, only: logner, gsdr, logxir
+        use rt_timing
         type(t_config), intent(in) :: config
         type(t_model_arguments), intent(in) :: model_args
         type(t_arrays), intent(inout) :: arrays
@@ -169,6 +170,7 @@ contains
                 ionvariation = 0.0
             end if
             do mubin = 1, config%me !loop over emission angle zones
+                call tic(T_RESTFRAME)
                 ! Calculate input emission angle
                 mue = (real(mubin) - 0.5) / real(config%me)
                 thetae = acos(mue) * 180.0 / real(pi)
@@ -200,6 +202,8 @@ contains
                    Hx_delta(i) = photarx_delta(i) * E**(Gamma0-1)
                    Hx_dlogxi(i) = photarx_dlogxi(i) * E**(Gamma0-1)
                 end do
+                call toc(T_RESTFRAME)
+                call tic(T_FFTCONV)
                 ! Loop through frequencies and lamp posts
                 do j = 1, config%nf
                    do i = 1, nex
@@ -267,6 +271,7 @@ contains
                       end if
                    endif
                 end do
+                call toc(T_FFTCONV)
             end do
         end do
     end subroutine do_convolutions
@@ -308,6 +313,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use rtconstants
     use xspec_interface
     use kerrz, only: kerr_metric, krz_KerrMetric_init
+    use rt_timing
     implicit none
     ! Args:
     integer, intent(inout) :: ifl
@@ -341,6 +347,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! make arrays static so its values are kept between function calls
 
     config => global_config
+    call tic(T_TOTAL)
 
     call unwrap_arguments(model_args, nlp, dset, param, Cp)
     call config_frequency(config, model_args)
@@ -414,7 +421,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        if (allocated(frrel)) deallocate(frrel)
        allocate (frrel(nlp))
        ! Calculate the Kernel for the given parameters
+       call tic(T_RTRANS)
        call rtrans(config, model_args, arrays, dset, d, nex, frobs, frrel)
+       call toc(T_RTRANS)
        ! print *, 'gso ', gso(1)
     end if
     if (config%verbose .gt. 2) then
@@ -424,12 +433,14 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 
     ! set up the continuum spectrum plus relative quantities (cutoff
     ! energies, lensing/gfactors, luminosity, etc)
+    call tic(T_INITCONT)
     call init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
     if (dset .eq. 0) then
        call radfunctions_dens(config, model_args, arrays)
     else
        call radfuncs_dist(config, model_args, fcons)
      end if
+    call toc(T_INITCONT)
 
      ! do this for each lamp post, then find some sort of weird average?
     if (config%verbose .gt. 0) then
@@ -441,8 +452,11 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if (config%verbose .gt. 2) call CPU_TIME (time_start)
     if (config%needconv)then
 
+        call tic(T_CONV_TOTAL)
         call do_convolutions(config, model_args, arrays)
+        call toc(T_CONV_TOTAL)
     end if
+    call tic(T_POST)
     if (config%verbose .gt. 2) then
         call CPU_TIME (time_end)
         print *, 'Convolutions runtime: ', time_end - time_start, ' seconds'
@@ -670,5 +684,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     prev_nf = config%nf
     paramsave = param
     Cpsave = model_args%Cp
+    call toc(T_POST)
+    call toc(T_TOTAL)
   end subroutine genreltrans
 ! -----------------------------------------------------------------------

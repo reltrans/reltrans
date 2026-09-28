@@ -274,6 +274,11 @@ contains
         config%refvar = get_env_int("REF_VAR", 1)
         ! include ionisation changes
         config%ionvar = get_env_int("ION_VAR", 1)
+        ! Image-plane resolution overrides (B1 investigation)
+        config%nro = get_env_int("RT_NRO", config%nro)
+        config%nphi = get_env_int("RT_NPHI", config%nphi)
+        config%nron = get_env_int("RT_NRON", config%nron)
+        config%nphin = get_env_int("RT_NPHIN", config%nphin)
 
         ! these are set in `env_variables`
         ! seed for simulation
