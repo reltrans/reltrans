@@ -2,51 +2,7 @@ module m_genreltrans
     use common_types
     implicit none
 
-    interface
-        ! The interface around the XSPEC C_tbabs function.
-        ! It will call the C_tbabs symbol in the libXSFunctions shared library.
-        subroutine c_tbabs(earx, nex, params, Ifl, absorbx, photerx, str)      &
-            bind(C, name = "C_tbabs")
-            use iso_c_binding, only: c_double, c_int, c_char
-            real(c_double), intent(in) :: earx(nex+1)
-            real(c_double), intent(in) :: params(1)
-            real(c_double), intent(inout) :: absorbx(nex), photerx(nex)
-            integer(c_int), value, intent(in) :: nex, Ifl
-            character(kind = c_char), intent(in) :: str(*)
-        end subroutine c_tbabs
-    end interface
-
 contains
-
-    ! Call the tbabs function from the XSPEC model library.
-    !
-    ! This wrapper temporarily performs a runtime cast on all of the arrays to
-    ! double precision, as the C_tbabs function that we will eventually call
-    ! expects double precision, whilst much of reltrans still uses `real`, which
-    ! maps to single precision.
-    !
-    ! Once the precision has been modified, this function can be simplified.
-    subroutine tbabs(earx, nex, nh, Ifl, absorbx, photerx)
-        real, intent(in) :: earx(0:nex), nh
-        real, intent(inout) :: absorbx(nex), photerx(nex)
-        integer, intent(in) :: nex, Ifl
-
-        double precision :: d_earx(0:nex), d_absorbx(nex), d_photerx(nex),     &
-            d_params(1)
-        integer i
-
-        do i = 0, nex
-            d_earx(i) = earx(i)
-        end do
-
-        d_params(1) = nh
-        call c_tbabs(d_earx, nex, d_params, Ifl, d_absorbx, d_photerx, "")
-
-        do i = 1, nex
-            absorbx(i) = d_absorbx(i)
-            photerx(i) = d_photerx(i)
-        end do
-    end subroutine tbabs
 
     ! Allocate the global arrays that reltrans needs
     subroutine setup_global_arrays(config, nlp)
@@ -354,6 +310,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use saved_variables
     use telematrix2
     use rtconstants
+    use xspec_interface
+    use kerrz, only: kerr_metric, krz_KerrMetric_init
     implicit none
     ! Constants
     double precision, parameter :: rnmax = 300.d0, dlogf = 0.09 !This is a resolution parameter (base 10)
@@ -389,9 +347,13 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! make arrays static so its values are kept between function calls
 
     config => global_config
+
     call unwrap_arguments(model_args, nlp, dset, param, Cp)
     call config_frequency(config, model_args)
     call arguments_check(config, model_args)
+
+    ! Setup kerrz things for these parameters
+    kerr_metric = krz_KerrMetric_init(1.0d0, model_args%a)
 
     ! TODO: check to make sure nlp hasn't changed, else many arrays need to be
     ! freed and re-allocated
@@ -410,7 +372,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         !is set to true externally
         prev_nf = 0 
         ! set sensible distance for observer from the BH
-        d = max(1.0d4, 2.0d2 * config%rnmax**2)
+        d = 1.0d5
         ! Zero all of the saved parameters on the first call.
         paramsave = 0.0d0
         spinsav = -2.d0 !this is needed to force the run of the GRtrace routine
@@ -484,13 +446,14 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 
     if (config%verbose .gt. 2) call CPU_TIME (time_start)
     if (config%needconv)then
+
         call do_convolutions(config, model_args, arrays)
     end if
     if (config%verbose .gt. 2) then
         call CPU_TIME (time_end)
         print *, 'Convolutions runtime: ', time_end - time_start, ' seconds'
     endif
-
+    
     ! Calculate absorption
     call tbabs(arrays%earx, nex, model_args%nh, Ifl, absorbx, photerx)
 
@@ -532,15 +495,10 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
              arrays%ImGrawa)
     else
         ! Calculate raw FT of the full spectrum without absorption
-        call rawS(nex, arrays%earx, config%nf, real(config%flo),               &
-             real(config%fhi), nlp, arrays%contx, real(tauso), real(gso),      &
-             arrays%ReW0, arrays%ImW0, arrays%ReW1, arrays%ImW1,               &
-             arrays%ReW2, arrays%ImW2, arrays%ReW3, arrays%ImW3,               &
-             real(model_args%h), real(model_args%zcos),                        &
-             real(model_args%Gamma), real(model_args%eta),                     &
-             model_args%beta_p, model_args%boost, model_args%g,                &
-             model_args%DelAB, config%ionvar, config%DC, arrays%ReSraw,        &
-             arrays%ImSraw)
+        ! This was once called `rawS` and this comment will help anyone grepping
+        ! find it.
+        call sum_continuum_reflection_transfer_functions(config, model_args,   &
+            arrays, nex, tauso, gso)
 
         ! Include absorption in the model
         do j = 1, config%nf
@@ -625,7 +583,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if (is_both_folded(model_args%reim)) then
        call cfoldandbin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, &
                 ear, ReS, ImS, model_args%resp_matr) !S is count rate
-    else if (is_only_ref_folded(model_args%reim)) then
+    else
        call crebin(nex, arrays%earx, arrays%ReGbar, arrays%ImGbar, ne, ear,   &
              ReS, ImS) !S is in photar form
     end if
@@ -720,5 +678,5 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     prev_nf = config%nf
     paramsave = param
     Cpsave = model_args%Cp
-end subroutine genreltrans
+  end subroutine genreltrans
 ! -----------------------------------------------------------------------

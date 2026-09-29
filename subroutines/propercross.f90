@@ -98,7 +98,7 @@ subroutine response_and_energy_bounds(resp_matr)
      if( needchans )then
         Elo = get_env_real("EMIN_REF",0.0)
         Ehi = get_env_real("EMAX_REF",0.0)
-        if (Elo .eq. 0.0) then 
+        if (Elo .eq. 0.0) then
            write(*,*)"Enter lower energy in reference band"
            read(*,*)Elo
         endif
@@ -203,15 +203,22 @@ subroutine propercross_NOmatrix(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
   real,    intent(out) :: ReGraw(nex,nf), ImGraw(nex,nf)
   real,    allocatable :: ReStel(:), ImStel(:)
   real                 :: reref, imref, dum, dE
+  real                 :: get_env_real
   integer              :: i, j
 
 
 !Get energy bounds of the reference band
      if( needchans )then
-        write(*,*)"Enter lower energy in reference band"
-        read(*,*)Elo
-        write(*,*)"Enter upper energy in reference band"
+        Elo = get_env_real("EMIN_REF",0.0)
+        Ehi = get_env_real("EMAX_REF",0.0)
+        if (Elo .eq. 0.0) then
+           write(*,*)"Enter lower energy in reference band"
+           read(*,*)Elo
+        endif
+        if (Ehi .eq. 0.0) then  
+           write(*,*)"Enter upper energy in reference band"
         read(*,*)Ehi
+        end if
         if( Elo .gt. Ehi )then
            dum = Elo
            Elo = Ehi
@@ -231,8 +238,6 @@ subroutine propercross_NOmatrix(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
 
      !Calculate `raw' cross-spectrum
      do j = 1, nf
-        !Fold around the response matrix
-!        call cfold(nex, earx, ReSraw(:,j), ImSraw(:,j), ReStel, ImStel)
         !Calcluate reference band
         reref = 0.0
         imref = 0.0

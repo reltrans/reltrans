@@ -54,6 +54,7 @@ module common_types
         ! me: Number of mue bins
         ! xe: Number of logr bins: bins 1:xe-1 are logarithmically spaced, bin
         ! xe is everything else
+        ! ionvar: ionvar=1 means include ionization variations, ionvar=0 means don't.
         integer :: me, xe, nex, m, ionvar, refvar
 
         ! TODO: are these really constants, or are they hidden variables?
@@ -108,6 +109,7 @@ module common_types
         integer :: mubin, rbin, ibin
 
         ! variable for non linear effects
+        ! DC == 1 means calculate the DC component, else opposite.
         integer :: DC, ionvariation
         real :: dlogxi1, dlogxi2
 
@@ -137,6 +139,7 @@ contains
       !The routine reset the check variables, in order to force
       ! a fresh start of the model
       global_config%firstcall = .true.
+      call reset_instrument_files()
     end subroutine reset_reltrans
  
     subroutine reset_instrument_files() bind(C, name="reset_instrument_files")
@@ -343,6 +346,7 @@ contains
     ! Reallocate arrays depending on whether they need to be resized
     subroutine realloc_arrays(config, model_args, arrays, prev_nf, flosave, fhisave)
         use conv_mod, only: nex
+        use rtconstants, only: dtol
         type(t_config), intent(in) :: config
         type(t_model_arguments), intent(in) :: model_args
         type(t_arrays), intent(inout) :: arrays
@@ -350,8 +354,7 @@ contains
         integer :: i
         logical :: needs_allocating
         double precision :: fhisave, flosave
-        double precision :: fhicheck, flocheck 
-        double precision, parameter   :: dtol = 1e-5
+        double precision :: fhicheck, flocheck
 
         fhicheck = fhisave /(4.92695275718945d-06 * model_args%Mass)
         flocheck = flosave /(4.92695275718945d-06 * model_args%Mass)            

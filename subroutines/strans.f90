@@ -171,7 +171,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
          args%conf%nron, args%conf%nphin, rnn, domegan)
 
     ! Trace rays in full GR for the small camera (ie with relativistic effects) from the osberver to the disk,
-    !which is why it doesnt depend on h
+    ! which is why it doesnt depend on h
         dotrace = .false.
         if (abs(spinsav - args%model%a) .gt. tiny(args%model%a)) then
             dotrace = .true.

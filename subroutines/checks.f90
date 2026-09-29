@@ -57,12 +57,12 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
 !> Outputs:
 !>     needtrans: if true, we must do the kernel calculation
 !>     neecconv:  if true, we must do the convolution
+    use rtconstants, only: dtol
     implicit none 
     integer         , intent(in)  :: Cp, Cpsave, nf, nfsave
     real            , intent(in)  :: param(32), paramsave(32)
     real            , parameter   :: tol = 1e-7
     double precision, intent(in)  :: fhi, flo, fhisave, flosave
-    double precision, parameter   :: dtol = 1e-5
     logical         , intent(out) :: needtrans,needconv
     integer :: i
 

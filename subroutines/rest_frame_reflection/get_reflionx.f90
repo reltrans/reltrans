@@ -1,5 +1,6 @@
 !-----------------------------------------------------------------------
 subroutine get_reflionx(ear, ne, param, ifl, photar)
+  use xspec_interface, only: xsatbl
   use xillver_tables
   implicit none
   integer, intent(in)  :: ne, ifl

@@ -1,10 +1,20 @@
 BUILD  := build
 ROOTDIR := .
-HEADAS ?= $(error HEADAS environment variable is not set)
+
+# This line will check if HEADAS is set, and otherwise will fall back to using
+# Python and xspectrampoline to configure it:
+HEADAS ?= $(shell python3 -c "import xspectrampoline_helpers as h ; print(h.get_HEADAS())")
 HEADAS_LIB := ${HEADAS}/lib
 HEADAS_INCLUDE := ${HEADAS}/include
 
 VERSION := $(shell cat VERSION)
+
+# A cache directory for static files that should be persistent between `make
+# clean` calls.
+CACHEDIR := cache
+# Where the reltrans tables are stored. This will use the user's environment
+# variable if set.
+RELTRANS_TABLES ?= $(CACHEDIR)/tables
 
 # These may be set when invoking `make`, such as `make DEBUG=1 SANITIZE=1`.
 # The `DEBUG` option compiles a debug build of reltrans (see below).
@@ -31,12 +41,16 @@ CFLAGS := -fno-omit-frame-pointer
 FFLAGS := -cpp -DHAVE_INLINE \
 		  -fPIC -fno-automatic -fno-second-underscore \
 		  -fno-omit-frame-pointer \
-		  -fopenmp \
 		  -I$(BUILD)/include \
 		  -I$(HEADAS_INCLUDE) \
 		  -I$(HEADAS_INCLUDE)/fftw \
 		  -J$(BUILD)/cache \
 		  -I$(BUILD)/cache
+
+LDFLAGS := -lkerrz -Wl,-rpath,'$(abspath $(BUILD)/lib)' -L$(BUILD)/lib \
+	-L$(HEADAS_LIB) -lXSFunctions -lXSModel -lfftw3 \
+	$(shell ls -1 $(HEADAS_LIB)/libcfitsio.*$(SHARED_EXT)* | head -n1) \
+	-Wl,-rpath,'$(HEADAS_LIB)'
 
 # Only pass the version macro if git found a tag
 ifneq ($(VERSION),)
@@ -52,6 +66,8 @@ else
 	# The default arguments used to compile reltrans
 	FFLAGS += -O3
 	CFLAGS += -O3
+	# For production releases also enable link-time optimisations
+	LDFLAGS += -flto
 endif
 
 ifeq ($(SANITIZE),1)
@@ -95,13 +111,12 @@ ifeq ($(TARGET),Darwin)
 endif
 endif
 
-LDFLAGS := -L$(BUILD)/lib -L$(HEADAS_LIB) \
-	-lXSFunctions -lXSModel -lfftw3 $(shell ls -1 $(HEADAS_LIB)/libcfitsio.*$(SHARED_EXT)* | head -n1) \
-	-Wl,-rpath,'$(HEADAS_LIB)'
-
 # the path to the reltrans library for the -L linker flag
 LIB_PATH := $(abspath $(BUILD)/lib)
 RELTRANS_SHARED_LIBRARY := $(BUILD)/lib/libreltrans.$(SHARED_EXT)
+LIB_KERRZ = $(shell python3 -c "import kerrz_lib ; print(kerrz_lib.bindings.KERRZ_PATH)")
+LIB_KERRZ_SYMLINK := $(BUILD)/lib/libkerrz.$(SHARED_EXT)
+KERRZ_F90 := $(BUILD)/cache/kerrz.f90
 
 all: $(BUILD) $(RELTRANS_SHARED_LIBRARY)
 
@@ -140,10 +155,10 @@ $(BUILD)/bin/dummy: ./utils/dummy.c $(BUILD)/lib/libreltrans.$(SHARED_EXT)
 # someone wants to install it to a different location, the easiest thing to do
 # would be to either tell them to run `make BUILD=/path/to/opt/`, or to invoke
 # `install_name_tool` (see discussion in PR #55).
-$(RELTRANS_SHARED_LIBRARY): $(BUILD)/cache/wrappers.o $(BUILD)/cache/constants.o
+$(RELTRANS_SHARED_LIBRARY): $(BUILD)/cache/wrappers.o $(BUILD)/cache/kerrz.o $(BUILD)/cache/constants.o
 	$(FC) $(FFLAGS) $^ -o $(abspath $@) $(LDFLAGS)
 
-$(BUILD)/cache/wrappers.o: $(ROOTDIR)/wrappers.f90 $(BUILD)/cache/constants.o $(ALL_RELTRANS_SOURCE_FILES)
+$(BUILD)/cache/wrappers.o: $(ROOTDIR)/wrappers.f90 $(BUILD)/cache/kerrz.o $(BUILD)/cache/constants.o $(ALL_RELTRANS_SOURCE_FILES)
 	$(FC) $(FFLAGS) -c $< -o $@
 
 $(BUILD)/cache/%.o: $(ROOTDIR)/subroutines/%.f90
@@ -162,6 +177,17 @@ clean:
 .PHONY: format
 format:
 	clang-format -i ./utils/cli.c
+
+$(BUILD)/cache/kerrz.o: $(KERRZ_F90) $(LIB_KERRZ_SYMLINK)
+	$(FC) $(FFLAGS) -c $< -o $@
+
+$(LIB_KERRZ_SYMLINK):
+	# Assume kerrz is pip-installed
+	# so just symlink the library so we have the library in a convenient place
+	ln -s "$(LIB_KERRZ)" "$@"
+
+$(KERRZ_F90):
+	ln -s $(shell python3 -c "import kerrz_lib ; print(kerrz_lib.bindings.KERRZ_PATH.parent / 'kerrz.f90')") "$@"
 
 .PHONY: xspec
 xspec: $(RELTRANS_SHARED_LIBRARY) xspec/lmodel_reltrans.dat xspec/compile_reltrans.xcm
@@ -190,7 +216,73 @@ xspec: $(RELTRANS_SHARED_LIBRARY) xspec/lmodel_reltrans.dat xspec/compile_reltra
 	@echo "For more information, consult the reltrans documentation (see the"
 	@echo "README included in the repository)."
 
-.PHONY: tables
-tables:
+.PHONY: tables-renorm
+tables-renorm:
 	# Normalise the tables
 	python3 ./renormalise_table.py
+
+.PHONY: tables-fetch
+fetch-tables: $(RELTRANS_TABLES)
+	@echo "Tables located at '$(RELTRANS_TABLES)'"
+	@echo "Please run"
+	@echo ""
+	@echo "    export RELTRANS_TABLES=$(RELTRANS_TABLES)"
+	@echo ""
+	@echo "to instruct reltrans to use that path. Add to your `~/.bashrc` to"
+	@echo "make the change persistent. To redownload the tables, use"
+	@echo ""
+	@echo "    unset RELTRANS_TABLES"
+	@echo ""
+	@echo "and remove the '$(CACHEDIR)/tables' directory."
+
+$(CACHEDIR)/tables:
+	mkdir -p $@
+	@echo "Downloading pre-normalised tables (may take a few minutes)..."
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillver-a-Ec5_normalised.fits \
+		-o $(@)/xillver-a-Ec5_normalised.fits
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-00 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-00
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-01 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-01
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-02 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-02
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-03 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-03
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-04 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-04
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-05 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-05
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-06 \
+		-o $(@)/xillverCp_v3.4_normalised.fits-06
+	curl -sL \
+		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverD-5_normalised.fits \
+		-o $(@)/xillverD-5_normalised.fits
+	( cd $(CACHEDIR)/tables && \
+		cat `ls xillverCp_v3.4_normalised.fits-* | sort -V` > xillverCp_v3.4_normalised.fits )
+
+.PHONY: instrument-files
+instrument-files:
+	@echo "Downloading test suite instrument files..."
+	mkdir -p $(CACHEDIR)/instrument-files
+	curl -sL \
+		"https://github.com/reltrans/model-data/releases/download/v0.1.0/nicer-consim135p-teamonly-array50.arf" \
+		-o $(CACHEDIR)/instrument-files/nicer-consim135p-teamonly-array50.arf
+	curl -sL \
+		"https://github.com/reltrans/model-data/releases/download/v0.1.0/nicer-rmf6s-teamonly-array50.rmf" \
+		-o $(CACHEDIR)/instrument-files/nicer-rmf6s-teamonly-array50.rmf
+	curl -sL \
+		"https://github.com/reltrans/model-data/releases/download/v0.1.0/nicer-powerlaw.1.1e-4.fak" \
+		-o $(CACHEDIR)/instrument-files/nicer-powerlaw.1.1e-4.fak
+	@echo "Instrument files now located at '$(CACHEDIR)/instrument-files'"
+
+.PHONY: python
+python:
+	python3 ./dist-package.py

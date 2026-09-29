@@ -74,7 +74,7 @@ subroutine tdreltransPL(ear, ne, param, ifl, photar)
   implicit none
   integer, parameter :: nlp = 1 !use a single lamp post
   integer :: ne, ifl, Cp, dset
-  real    :: ear(0:ne), param(21), photar(ne), par(32)
+  real    :: ear(0:ne), param(20), photar(ne), par(32)
 ! Settings
   Cp   = -1   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter    
   dset = 0   !dset=0 means distance is not set, logxi set instead
@@ -699,18 +699,38 @@ end subroutine simrtdist
 
 !-----------------------------------------------------------------------
 subroutine simrelt(ear, ne, param, ifl, photar)
+  implicit none
+  integer, intent(in) :: ne
+  integer, intent(inout) :: ifl
+  real, intent(in) :: ear(0:ne), param(24)
+  real, intent(inout) :: photar(ne)
+  real :: br, mur, variability
+  call simrelt_extra(ear, ne, param, ifl, photar, br, mur, variability)
+end subroutine simrelt
+
+subroutine simrelt_extra(ear, ne, param, ifl, photar, br, mur, variability)
+  ! This function is exactly the same as the simrelt function but writes the br,
+  ! mur, and Pr variables back out for the Python interface.
+  !   br: background count rate
+  !   mur: source count rate
+  !   variability: (fractional rms)^2 / Hz
   use telematrix
   use common_types, only: reset_instrument_files
   implicit none
-  integer :: ne, ifl, Cp, dset, i
-  real    :: ear(0:ne), param(24), photar(ne), par(32)
+  integer, intent(in) :: ne
+  integer, intent(inout) :: ifl
+  real, intent(in) :: ear(0:ne), param(24)
+  real, intent(inout) :: photar(ne)
+  real, intent(out) :: br, mur, variability
+  integer :: Cp, dset, i
+  real    :: par(32), Pr
   real    :: gammac2, Texp, E, dE, getcountrate
   real    :: rephotar(ne), imphotar(ne)
   real, parameter :: Emin = 1e-1, Emax = 300.0
   integer, parameter :: nex=2**12
   real :: earx(0:nex),photarx(nex),pow
-  real :: Pr,rephotarx(nex),imphotarx(nex),mur,mus
-  real :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,br,bs(ne)
+  real :: rephotarx(nex),imphotarx(nex),mus
+  real :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,bs(ne),std_deviation
   real :: flo,fhi,fc,lag(ne),gasdev,lagsim(ne)
   real, parameter :: pi = acos(-1.0)
   integer idum, unit,xunit,status,j
@@ -721,6 +741,10 @@ subroutine simrelt(ear, ne, param, ifl, photar)
   data idum/-2851043/
   save idum
   character (len=200) command,flxlagfile,phalagfile,rsplagfile,lagfile,root
+
+  character (len=200) cross_path
+  integer cross_fd
+
   ! Reset instrument files lest they have changed
   call reset_instrument_files()
 
@@ -825,7 +849,8 @@ subroutine simrelt(ear, ne, param, ifl, photar)
   mur = getcountrate(Elo,Ehi,nex,earx,photarx)
   Prnoise = 2.0 * ( br + mur )
   write(*,*)"br,mur=",br,mur
-  write(*,*)"Pr (fractional rms)^2/Hz",Pr/mur**2
+  variability = Pr/mur**2
+  write(*,*)"Pr (fractional rms)^2/Hz", variability
   ! write(*,*)"count rate reference band", mur 
   
 ! open file to write the lag simulation to
@@ -842,7 +867,12 @@ subroutine simrelt(ear, ne, param, ifl, photar)
   open(xunit,file=flxlagfile)
   call ftgiou(unit,status)
   open(unit,file=lagfile)
-  
+
+  cross_path = 'sim_cross_' // trim(root) // '.dat'
+
+  call ftgiou(cross_fd,status)
+  open(cross_fd,file=cross_path)
+
 ! Loop through energy bins
   write(unit,*)"skip on"
   write(unit,*)"read serr 1 2"
@@ -867,17 +897,21 @@ subroutine simrelt(ear, ne, param, ifl, photar)
      ! write(14,* ) E,0.5*dE, dlag(i)
      dlag(i) = sqrt( dlag(i) )
      dlag(i) = dlag(i) / ( 2.0 * pi * fc )
+     std_deviation = dlag(i)
      !Now generate simulated data
      lagsim(i) = lag(i) + gasdev(idum) * dlag(i)
      !Write out
      write(unit,*)E,0.5*dE,lagsim(i),dlag(i),lag(i)
      write(xunit,*)ear(i-1),ear(i),dE*lagsim(i),dE*dlag(i)
+     write(cross_fd,*) E,0.5*dE,mus,ReG,ImG,std_deviation
   end do
   close(unit)
   call ftfiou(unit,status)
   close(xunit)
   call ftfiou(xunit,status)
- 
+  close(cross_fd)
+  call ftfiou(cross_fd,status)
+
   Command = 'flx2xsp ' // trim(flxlagfile) // ' ' // trim(phalagfile)
   command = trim(command) // ' ' // trim(rsplagfile)
   write(*,*)"-----------------------------------------------"
@@ -886,6 +920,6 @@ subroutine simrelt(ear, ne, param, ifl, photar)
   write(*,*)"-----------------------------------------------"
  
   return
-end subroutine simrelt
+end subroutine simrelt_extra
 !-----------------------------------------------------------------------
 

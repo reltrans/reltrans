@@ -78,11 +78,11 @@ int main() {
   int e_num = 1001;
 
   setenv("ARF_SET",
-         "./Benchmarks/resp_matrix/"
+         "./cache/instrument-files/"
          "nicer-consim135p-teamonly-array50.arf",
          1);
   setenv("RMF_SET",
-         "./Benchmarks/resp_matrix/"
+         "./cache/instrument-files/"
          "nicer-rmf6s-teamonly-array50.rmf",
          1);
   setenv("EMIN_REF", "0.3", 1);
