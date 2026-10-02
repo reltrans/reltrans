@@ -234,6 +234,7 @@ contains
     ! - Checks `a`, `rin`, `h` are in bounds.
     ! - Sets the inner radius to the ISCO.
     subroutine arguments_check(config, model_args)
+        use kerrz, only: krz_KerrMetric_init
         type(t_config), intent(inout) :: config
         type(t_model_arguments), intent(inout) :: model_args
         integer :: i
@@ -243,6 +244,8 @@ contains
         ! some kind of warning perhaps?
         if (abs(model_args%a) .gt. 0.999) then
             model_args%a = sign(1.d0,model_args%a) * 0.999
+            ! Recalculate the kerrz metric with the new spin:
+            model_args%metric = krz_KerrMetric_init(1.0d0, model_args%a)
         end if
         config%rmin = disco(model_args%a)
         config%rh = 1.d0+sqrt(1.d0-model_args%a**2)
