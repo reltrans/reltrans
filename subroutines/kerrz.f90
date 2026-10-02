@@ -89,7 +89,7 @@ contains
             x%th = 1d-3
         end if
 
-        continuum = krz_traceContinuumLamppost(metric, x, h)
+        continuum = krz_traceContinuumLamppost(metric, x, h, 0.0d0)
 
         ! Note the angle mapping to be consistent with the Reltrans convention.
         ! Also the sign change on beta.
