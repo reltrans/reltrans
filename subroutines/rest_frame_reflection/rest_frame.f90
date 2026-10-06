@@ -18,15 +18,16 @@ subroutine rest_frame(model_args, arrays, Gamma, logne, Cutoff, logxi,         &
 
 !       Last change: Gullo - 2022 Oct
 
+   use rtconstants, only: wp
    use common_types
    use conv_mod, only: nex
    implicit none
    type(t_model_arguments), intent(in) :: model_args
    type(t_arrays),          intent(in) :: arrays
-   real, intent(in)    :: Gamma, logne, Cutoff, logxi, thetae
-   real, intent(out)   :: photar(nex)
+   real(wp), intent(in)    :: Gamma, logne, Cutoff, logxi, thetae
+   real(wp), intent(out)   :: photar(nex)
    integer, parameter  :: dim = 6, dimCp = 8
-   real                :: xillpar(dim), xillparDCp(dimCp)
+   real(wp)            :: xillpar(dim), xillparDCp(dimCp)
 
    if( model_args%Cp .ne. 0 )then
       !The model is a xillver model
@@ -39,14 +40,14 @@ subroutine rest_frame(model_args, arrays, Gamma, logne, Cutoff, logxi,         &
          xillpar(4) = logne             !logne
       end if
       xillpar(5) = thetae               !emission angle
-      xillpar(6) = 0.0                  !redshift
+      xillpar(6) = 0.0_wp               !redshift
       xillparDCp(1) = Gamma             !photon index
       xillparDCp(2) = model_args%Afe    !Afe
       xillparDCp(3) = logxi             !ionization par
       xillparDCp(4) = Cutoff            !kTe
       xillparDCp(5) = logne             !logne
       xillparDCp(6) = thetae            !emission angle
-      xillparDCp(7) = 0.0               !redshift
+      xillparDCp(7) = 0.0_wp            !redshift
 
       call get_xillver(arrays%earx, nex, dim, dimCp, xillpar, xillparDCp,      &
           model_args%Cp, photar)

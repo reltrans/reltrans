@@ -1,4 +1,5 @@
 module common_types
+    use rtconstants, only: wp
     implicit none
 
     ! this should be moved so that all of the wrappers pass the following
@@ -7,44 +8,44 @@ module common_types
         ! These are hardcoded with a fixed size of 2, since nlp <= 2. by not
         ! having them be pointers or dynamically allocated, it makes reasoning
         ! about the code a little easier.
-        double precision :: h(2)
-        real :: DelAB(2), g(2)
+        real(wp) :: h(2)
+        real(wp) :: DelAB(2), g(2)
         ! Black hole spin (dimensionless):
-        double precision :: a
+        real(wp) :: a
         ! Observer inclination in degrees:
-        double precision :: inc
+        real(wp) :: inc
         ! Inner and outer radii of the accretion disc (rg):
-        double precision :: rin, rout
+        real(wp) :: rin, rout
         ! Scale height of the accretion disc
-        double precision :: honr
+        real(wp) :: honr
         ! Cosmological redshift:
-        double precision :: zcos
+        real(wp) :: zcos
         ! Photon index
-        double precision :: Gamma
-        real :: logxi, Afe, lognep, Cutoff_obs, Cutoff_s, Dkpc, Anorm, beta_p
-        real :: Nh, boost, Mass, floHz, fhiHz, DelA
+        real(wp) :: Gamma
+        real(wp) :: logxi, Afe, lognep, Cutoff_obs, Cutoff_s, Dkpc, Anorm, beta_p
+        real(wp) :: Nh, boost, Mass, floHz, fhiHz, DelA
         integer :: nlp, ReIm, resp_matr, Cp
 
         ! eta: Fourier frequency dependent normalisation ratio C1(vc) / C2(vc)
         ! See Lucchini et al. 2023 for details.
-        double precision :: eta
+        real(wp) :: eta
 
         ! eta_0: Time-averaged normalisation ratio C1 / C2 between the continuum
         ! of the two lampposts. It sets the continuum cutoff and disc
         ! ionisation.
         ! See Lucchini et al. 2023 for details.
-        double precision :: eta_0
+        real(wp) :: eta_0
 
         ! Asymmetry parameter of angular emissivity function:
-        double precision :: qboost
+        real(wp) :: qboost
 
         ! Linear coefficient of angular emissivity function (b1) and quadratic
         ! coefficient of angular emissivity function (b2):
-        double precision :: b1, b2
+        real(wp) :: b1, b2
 
         ! The below are computed from the above
         ! The cosine angle
-        double precision :: muobs
+        real(wp) :: muobs
     end type t_model_arguments
 
     type :: t_config
@@ -71,13 +72,13 @@ module common_types
 
         ! Emin, Emax: min and max of the internal energy grid
         ! (different from output grid)
-        real :: Emin = 1e-2, Emax = 3e3, dyn = 0.0
+        real(wp) :: Emin = 1e-2_wp, Emax = 3e3_wp, dyn = 0.0_wp
 
         ! rnmax: max radius for which GR ray-tracing is used
         ! dlogf: a resolution parameter in base 10
-        double precision :: rnmax = 300.d0, dlogf = 0.09
+        real(wp) :: rnmax = 300.0_wp, dlogf = 0.09_wp
 
-        real :: DeltaGamma = 0.01
+        real(wp) :: DeltaGamma = 0.01_wp
 
         ! Use ring-like coronal model. Should future models get added, this
         ! could be promoted to an enumeration of some description.
@@ -91,19 +92,19 @@ module common_types
         ! internal frequency grid
         ! Number of frequency bins
         integer :: nf
-        real :: f, fac
-        double precision :: fc, flo, fhi
+        real(wp) :: f, fac
+        real(wp) :: fc, flo, fhi
         ! internal frequency grid, for when we do lag/frequency spectra
         integer :: fbinx
-        real, allocatable :: fix(:)
+        real(wp), allocatable :: fix(:)
 
         ! relativistic parameters and limit on rin and h
-        double precision :: rmin, rh
-        double precision, allocatable :: height(:)
+        real(wp) :: rmin, rh
+        real(wp), allocatable :: height(:)
 
         ! internal energy grid (nex) and output/xspec (ne) energy grid
         ! dloge: logarithmic resolution of the internal energy grid
-        real :: E, dE, dloge
+        real(wp) :: E, dE, dloge
 
         ! Radial and angle profile
         integer :: mubin, rbin, ibin
@@ -111,25 +112,25 @@ module common_types
         ! variable for non linear effects
         ! DC == 1 means calculate the DC component, else opposite.
         integer :: DC, ionvariation
-        real :: dlogxi1, dlogxi2
+        real(wp) :: dlogxi1, dlogxi2
 
      end type t_config
 
     type :: t_arrays
         ! earx: internal energy grid array (0:nex)
-        real, allocatable :: earx(:), ear(:), fix(:)
-        real, allocatable :: ReGbar(:), ImGbar(:)
-        real, allocatable :: contx(:,:)
-        double precision, allocatable :: contx_int(:)
+        real(wp), allocatable :: earx(:), ear(:), fix(:)
+        real(wp), allocatable :: ReGbar(:), ImGbar(:)
+        real(wp), allocatable :: contx(:,:)
+        real(wp), allocatable :: contx_int(:)
         ! TRANSFER FUNCTIONS and Cross spectrum dynamic allocation + variables
-        complex, dimension(:,:,:,:,:), allocatable :: ker_W0, ker_W1, ker_W2, ker_W3
+        complex(wp), dimension(:,:,:,:,:), allocatable :: ker_W0, ker_W1, ker_W2, ker_W3
         ! ker_W0(nlp,ne,nf,me,xe) Transfer function W0 - linear transfer function
         ! ker_W1(nlp,ne,nf,me,xe) Transfer function W1 - one aspect of photon index variations
         ! ker_W2(nlp,ne,nf,me,xe) Transfer function W2 - other aspect of photon index variations
         ! ker_W3(nlp,ne,nf,me,xe) Transfer function W3 - ionization variations
-        real, dimension(:,:,:), allocatable :: ReW0, ImW0, ReW1, ImW1
-        real, dimension(:,:,:), allocatable :: ReW2, ImW2, ReW3, ImW3
-        real, dimension(:,:), allocatable :: ReSraw, ImSraw, ReSrawa, ImSrawa, ReGrawa, ImGrawa, ReG, ImG
+        real(wp), dimension(:,:,:), allocatable :: ReW0, ImW0, ReW1, ImW1
+        real(wp), dimension(:,:,:), allocatable :: ReW2, ImW2, ReW3, ImW3
+        real(wp), dimension(:,:), allocatable :: ReSraw, ImSraw, ReSrawa, ImSrawa, ReGrawa, ImGrawa, ReG, ImG
     end type t_arrays
 
     type(t_config), target, save :: global_config
@@ -172,9 +173,9 @@ contains
     ! Unwraps the arguments from a parameter array into `args`.
     subroutine unwrap_arguments(args, nlp, dset, params, cutoff_powerlaw)
         use rtconstants, only: parse_reim
-        double precision, parameter :: pi = acos(-1.d0)
+        real(wp), parameter :: pi = acos(-1.0_wp)
         integer, intent(in) :: nlp, dset, cutoff_powerlaw
-        real, target, intent(in) :: params(32)
+        real(wp), target, intent(in) :: params(32)
         type(t_model_arguments), intent(out) :: args
         integer :: i
         do i = 1,nlp
@@ -183,20 +184,20 @@ contains
         end do
         if (dset .eq. 1) then
            args%Dkpc = params(9)
-           args%logxi = 0.0
+           args%logxi = 0.0_wp
         else
            args%logxi = params(9)
         end if
-        args%h(1) = dble(params(1))
-        args%h(2) = dble(params(2))
+        args%h(1) = params(1)
+        args%h(2) = params(2)
         args%nlp = nlp
-        args%a = dble(params(3))
-        args%inc = dble(params(4))
-        args%muobs = cos(args%inc * pi / 180.d0)
-        args%rin = dble(params(5))
-        args%rout = dble(params(6))
-        args%zcos = dble(params(7))
-        args%Gamma = dble(params(8))
+        args%a = params(3)
+        args%inc = params(4)
+        args%muobs = cos(args%inc * pi / 180.0_wp)
+        args%rin = params(5)
+        args%rout = params(6)
+        args%zcos = params(7)
+        args%Gamma = params(8)
         args%Afe = params(10)
         args%lognep = params(11)
         args%Cutoff_s = params(12)
@@ -206,11 +207,11 @@ contains
         args%beta_p = params(15)
         args%Nh = params(16)
         args%boost = params(17)
-        args%qboost = dble(params(18))
+        args%qboost = params(18)
         args%Mass = params(19)
-        args%honr = dble(params(20))
-        args%b1 = dble(params(21))
-        args%b2 = dble(params(22))
+        args%honr = params(20)
+        args%b1 = params(21)
+        args%b2 = params(22)
         args%floHz = params(23)
         args%fhiHz = params(24)
         args%ReIm = parse_reim(int(params(25)))
@@ -228,16 +229,16 @@ contains
         type(t_config), intent(inout) :: config
         type(t_model_arguments), intent(inout) :: model_args
         integer :: i
-        double precision :: disco
+        real(wp) :: disco
 
         ! TODO: should this be printing if it modifies the input parameters?
         ! some kind of warning perhaps?
-        if (abs(model_args%a) .gt. 0.999) then
-            model_args%a = sign(1.d0,model_args%a) * 0.999
+        if (abs(model_args%a) .gt. 0.999_wp) then
+            model_args%a = sign(1.0_wp,model_args%a) * 0.999_wp
         end if
         config%rmin = disco(model_args%a)
-        config%rh = 1.d0+sqrt(1.d0-model_args%a**2)
-        if (model_args%rin .lt. 0.d0) then
+        config%rh = 1.0_wp+sqrt(1.0_wp-model_args%a**2)
+        if (model_args%rin .lt. 0.0_wp) then
             model_args%rin = abs(model_args%rin) * config%rmin
         end if
         if (model_args%rin .lt. config%rmin)then
@@ -245,12 +246,12 @@ contains
             model_args%rin = config%rmin
         end if
         do i=1,model_args%nlp
-            if (model_args%h(i) .lt. 0.d0) then
+            if (model_args%h(i) .lt. 0.0_wp) then
                 model_args%h(i) = abs(model_args%h(i)) * config%rh
             end if
-            if (model_args%h(i) .lt. 1.5d0*config%rh)then
+            if (model_args%h(i) .lt. 1.5_wp*config%rh)then
                 write(*,*)"Warning! h<1.5*rh! Set to 1.5*rh"
-                model_args%h(i) = 1.5d0 * config%rh
+                model_args%h(i) = 1.5_wp * config%rh
             end if
         end do
     end subroutine arguments_check
@@ -299,7 +300,7 @@ contains
         write(*,*)
         write(*,*) 'RADIAL ZONES', config%xe
         write(*,*) 'ANGLE ZONES', config%me
-        if (adensity .eq. 0.0) then
+        if (adensity .eq. 0.0_wp) then
             write(*,*) 'A_DENSITY:', adensity, 'Density profile is constant'
         else
             write(*,*) 'A_DENSITY:', adensity, 'Density profile is zone A SS73'
@@ -333,12 +334,12 @@ contains
         allocate(arrays%contx(nex,nlp))
         allocate(arrays%contx_int(nlp))
 
-        config%dloge = log10(config%Emax / config%Emin) / float(nex)
+        config%dloge = log10(config%Emax / config%Emin) / real(nex, wp)
 
         ! populate the energy array
         do i = 0,nex
            arrays%earx(i) = config%Emin                                        &
-               * (config%Emax/config%Emin)**(float(i)/float(nex))
+               * (config%Emax/config%Emin)**(real(i, wp)/real(nex, wp))
         end do
 
     end subroutine setup_arrays
@@ -353,15 +354,15 @@ contains
         integer, intent(in) :: prev_nf
         integer :: i
         logical :: needs_allocating
-        double precision :: fhisave, flosave
-        double precision :: fhicheck, flocheck
+        real(wp) :: fhisave, flosave
+        real(wp) :: fhicheck, flocheck
 
-        fhicheck = fhisave /(4.92695275718945d-06 * model_args%Mass)
-        flocheck = flosave /(4.92695275718945d-06 * model_args%Mass)            
+        fhicheck = fhisave /(4.92695275718945e-06_wp * model_args%Mass)
+        flocheck = flosave /(4.92695275718945e-06_wp * model_args%Mass)            
 
-        if ( abs(1. - model_args%floHz/flocheck) .gt. dtol ) then
+        if ( abs(1.0_wp - model_args%floHz/flocheck) .gt. dtol ) then
             needs_allocating = .true.
-        else if ( abs(1. - model_args%fhiHz/fhicheck) .gt. dtol ) then
+        else if ( abs(1.0_wp - model_args%fhiHz/fhicheck) .gt. dtol ) then
             needs_allocating = .true.
         else if (allocated(arrays%fix)) then
             needs_allocating = prev_nf .ne. config%nf
@@ -377,7 +378,7 @@ contains
             do i = 0, config%nf
                 arrays%fix(i) = model_args%floHz                               &
                     *(model_args%fhiHz                                         &
-                    / model_args%floHz)**(real(i) / real(config%nf))
+                    / model_args%floHz)**(real(i, wp) / real(config%nf, wp))
             end do
                        
             ! reallocate the transfer function arrays

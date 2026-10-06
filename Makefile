@@ -47,7 +47,8 @@ FFLAGS := -cpp -DHAVE_INLINE \
 		  -J$(BUILD)/cache \
 		  -I$(BUILD)/cache \
 		  -Wunused -Wall -Wextra -Wshadow -Wduplicated-cond \
-		  -Wuninitialized -Wmissing-declarations -Wline-truncation
+		  -Wuninitialized -Wmissing-declarations -Wline-truncation \
+		  -Wno-compare-reals
 
 LDFLAGS := -lkerrz -Wl,-rpath,'$(abspath $(BUILD)/lib)' -L$(BUILD)/lib \
 	-L$(HEADAS_LIB) -lXSFunctions -lXSModel -lfftw3 \

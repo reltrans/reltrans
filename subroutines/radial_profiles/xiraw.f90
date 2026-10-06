@@ -2,11 +2,12 @@
 function xiraw(re,spin,h,honr,rlp,dcosdr,ndelta,rmin,npts,mudisk,gsd)
     ! In: re,spin,h,honr,rlp,dcosdr,ndelta,rmin,npts
     ! Out: logxiraw,gsd
+    use rtconstants, only: wp
     implicit none
     integer ndelta,npts,kk,get_index
-    double precision re,spin,h,honr,rlp(ndelta),dcosdr(ndelta),rmin,gsd
-    double precision cosfac,interper,xiraw,dareafac,dglpfacthick,newtex
-    double precision mudisk
+    real(wp) re,spin,h,honr,rlp(ndelta),dcosdr(ndelta),rmin,gsd
+    real(wp) cosfac,interper,xiraw,dareafac,dglpfacthick,newtex
+    real(wp) mudisk
     !Calculate source to disc blueshift at this radius
     gsd = dglpfacthick(re,spin,h,mudisk)
     !Find the rlp bin that corresponds to re

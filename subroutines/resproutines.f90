@@ -5,22 +5,23 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
 ! Output: {ReG(nex) ,ImG(nex) ]: in units of photar; i.e. (dN/dE)*dE
 ! G is folded around the instrument response and re-binned onto the
 ! input energy array ear(0:ne)
+  use rtconstants, only: wp
   use telematrix
   use telematrix2
   implicit none
   integer, intent(in) :: nex,ne,resp_matr
-  real earx(0:nex),ReGx(nex),ImGx(nex),ear(0:ne),ReG(ne),ImG(ne)
-  real E,dE,E2ReGx(nex),E2ImGx(nex)
+  real(wp) earx(0:nex),ReGx(nex),ImGx(nex),ear(0:ne),ReG(ne),ImG(ne)
+  real(wp) E,dE,E2ReGx(nex),E2ImGx(nex)
   ! real ReGi(nenerg),ImGi(nenerg)
   ! real ReGtel(numchn),ImGtel(numchn)
  
-  real, allocatable :: ReGtel(:), ImGtel(:), ReGi(:), ImGi(:)
+  real(wp), allocatable :: ReGtel(:), ImGtel(:), ReGi(:), ImGi(:)
 
   integer :: i,j,k
   
   !Convert to E^2*dN/dE for better accuracy
   do i = 1,nex
-     E  = 0.5 * ( earx(i) + earx(i-1) )
+     E  = 0.5_wp * ( earx(i) + earx(i-1) )
      dE = earx(i) - earx(i-1)
      E2ReGx(i) = E**2 * ReGx(i) / dE
      E2ImGx(i) = E**2 * ImGx(i) / dE
@@ -39,15 +40,15 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
 
      !Convert back to (dN/dE)*dE
      do i = 1,nenerg
-        E  = 0.5 * ( En(i) + En(i-1) )
+        E  = 0.5_wp * ( En(i) + En(i-1) )
         dE = En(i) - En(i-1)
         ReGi(i) = ReGi(i) / E**2 * dE
         ImGi(i) = ImGi(i) / E**2 * dE
      end do
 
      !Fold around response
-     ReGtel = 0.0
-     ImGtel = 0.0
+     ReGtel = 0.0_wp
+     ImGtel = 0.0_wp
      do J = 1,NENERG
         do K = 1,NGRP(J)
            do I = FCHAN(J,K)+1,LCHAN(J,K)
@@ -60,7 +61,7 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
 
      !Convert Gtel from photar to dN/dE
      do I = 1,numchn
-        E  = 0.5 * ( ECHN(I) + ECHN(I-1) )
+        E  = 0.5_wp * ( ECHN(I) + ECHN(I-1) )
         dE = ( ECHN(I) - ECHN(I-1) )
         ReGtel(I) = ReGtel(I) / dE  
         ImGtel(I) = ImGtel(I) / dE        
@@ -72,7 +73,7 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
      
     !Convert G from dN/dE to photar
      do i = 1,ne
-        E  = 0.5 * ( ear(i) + ear(i-1) )
+        E  = 0.5_wp * ( ear(i) + ear(i-1) )
         dE = ear(i) - ear(i-1)
         ReG(i) = ReG(i) * dE  
         ImG(i) = ImG(i) * dE  
@@ -96,15 +97,15 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
      call rebinE(earx,E2ImGx,nex,En2,ImGi,nenerg2)
      !Convert back to (dN/dE)*dE
      do i = 1,nenerg2
-        E  = 0.5 * ( En2(i) + En2(i-1) )
+        E  = 0.5_wp * ( En2(i) + En2(i-1) )
         dE = En2(i) - En2(i-1)
         ReGi(i) = ReGi(i) / E**2 * dE
         ImGi(i) = ImGi(i) / E**2 * dE
      end do
      
      !Fold around response
-     ReGtel = 0.0
-     ImGtel = 0.0
+     ReGtel = 0.0_wp
+     ImGtel = 0.0_wp
      do J = 1,NENERG2
         do K = 1,NGRP2(J)
            do I = FCHAN2(J,K)+1,LCHAN2(J,K)
@@ -117,7 +118,7 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
 
      !Convert Gtel from photar to dN/dE
      do I = 1,numchn2
-        E  = 0.5 * ( ECHN2(I) + ECHN2(I-1) )
+        E  = 0.5_wp * ( ECHN2(I) + ECHN2(I-1) )
         dE = ( ECHN2(I) - ECHN2(I-1) )
         ReGtel(I) = ReGtel(I) / dE  
         ImGtel(I) = ImGtel(I) / dE      
@@ -129,7 +130,7 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
      
     !Convert G from dN/dE to photar
      do i = 1,ne
-        E  = 0.5 * ( ear(i) + ear(i-1) )
+        E  = 0.5_wp * ( ear(i) + ear(i-1) )
         dE = ear(i) - ear(i-1)
         ReG(i) = ReG(i) * dE  
         ImG(i) = ImG(i) * dE  
@@ -150,15 +151,16 @@ subroutine cfold(nex, earx, ReGx, ImGx, ReGtel, ImGtel)
 ! Initmatrix must have alreadt been called
 ! Input (ReGx,ImGx) is in terms of **PHOTAR**; i.e. (dN/dE)*dE
 ! RGtel, ImGtel is in count rate vs channel number
+  use rtconstants, only: wp
   use telematrix
   implicit none
   integer nex,i,j,k
-  real earx(0:nex),ReGx(nex),ImGx(nex),ReGtel(numchn),ImGtel(numchn)
-  real ReGi(nenerg),ImGi(nenerg),E,dE,E2ReGx(nex),E2ImGx(nex)
+  real(wp) earx(0:nex),ReGx(nex),ImGx(nex),ReGtel(numchn),ImGtel(numchn)
+  real(wp) ReGi(nenerg),ImGi(nenerg),E,dE,E2ReGx(nex),E2ImGx(nex)
   
   !Convert to E^2*dN/dE for better accuracy
   do i = 1,nex
-     E  = 0.5 * ( earx(i) + earx(i-1) )
+     E  = 0.5_wp * ( earx(i) + earx(i-1) )
      dE = earx(i) - earx(i-1)
      E2ReGx(i) = E**2 * ReGx(i) / dE
      E2ImGx(i) = E**2 * ImGx(i) / dE
@@ -170,15 +172,15 @@ subroutine cfold(nex, earx, ReGx, ImGx, ReGtel, ImGtel)
   
   !Convert back to (dN/dE)*dE
   do i = 1,nenerg
-     E  = 0.5 * ( En(i) + En(i-1) )
+     E  = 0.5_wp * ( En(i) + En(i-1) )
      dE = En(i) - En(i-1)
      ReGi(i) = ReGi(i) / E**2 * dE
      ImGi(i) = ImGi(i) / E**2 * dE
   end do
 
   !Fold around response
-  ReGtel = 0.0
-  ImGtel = 0.0
+  ReGtel = 0.0_wp
+  ImGtel = 0.0_wp
   do J = 1, NENERG
      do K = 1,NGRP(J)
         do I = FCHAN(J,K) + 1, LCHAN(J,K)
@@ -198,15 +200,16 @@ subroutine cfold2(nex, earx, ReGx, ImGx, ReGtel, ImGtel)
 ! Initmatrix must have alreadt been called
 ! Input (ReGx,ImGx) is in terms of **PHOTAR**; i.e. (dN/dE)*dE
 ! RGtel, ImGtel is in count rate vs channel number
+  use rtconstants, only: wp
   use telematrix2
   implicit none
   integer nex,i,j,k
-  real earx(0:nex),ReGx(nex),ImGx(nex),ReGtel(numchn2),ImGtel(numchn2)
-  real ReGi(nenerg2),ImGi(nenerg2),E,dE,E2ReGx(nex),E2ImGx(nex)
+  real(wp) earx(0:nex),ReGx(nex),ImGx(nex),ReGtel(numchn2),ImGtel(numchn2)
+  real(wp) ReGi(nenerg2),ImGi(nenerg2),E,dE,E2ReGx(nex),E2ImGx(nex)
   
   !Convert to E^2*dN/dE for better accuracy
   do i = 1,nex
-     E  = 0.5 * ( earx(i) + earx(i-1) )
+     E  = 0.5_wp * ( earx(i) + earx(i-1) )
      dE = earx(i) - earx(i-1)
      E2ReGx(i) = E**2 * ReGx(i) / dE
      E2ImGx(i) = E**2 * ImGx(i) / dE
@@ -218,15 +221,15 @@ subroutine cfold2(nex, earx, ReGx, ImGx, ReGtel, ImGtel)
   
   !Convert back to (dN/dE)*dE
   do i = 1,nenerg2
-     E  = 0.5 * ( En2(i) + En2(i-1) )
+     E  = 0.5_wp * ( En2(i) + En2(i-1) )
      dE = En2(i) - En2(i-1)
      ReGi(i) = ReGi(i) / E**2 * dE
      ImGi(i) = ImGi(i) / E**2 * dE
   end do
 
   !Fold around response
-  ReGtel = 0.0
-  ImGtel = 0.0
+  ReGtel = 0.0_wp
+  ImGtel = 0.0_wp
   do J = 1, NENERG2
      do K = 1,NGRP2(J)
         do I = FCHAN2(J,K) + 1, LCHAN2(J,K)
@@ -246,13 +249,14 @@ end subroutine cfold2
 subroutine readinresp
 ! Reads in the response matrix
 ! ***Must already know numchn nd nenerg***
+  use rtconstants, only: wp
   use telematrix
   implicit none
   integer status,U1,readwrite,blocksize,hdutype,i,colnum
   integer j,rows,k
   character (len=200) exname,comment
-  real nullval
-  real, allocatable :: area(:)
+  real(wp) nullval
+  real(wp), allocatable :: area(:)
   logical anynull
   status = 0
   call ftgiou(U1,status)
@@ -307,7 +311,7 @@ subroutine readinresp
      !Read in rows and re-normalise response matrix
      do J = 1,NENERG
         colnum = 3
-        call ftgcve(U1,colnum,J,1,1,nullval,AREA(J),anynull,status)
+        call ftgcvd(U1,colnum,J,1,1,nullval,AREA(J),anynull,status)
         if( status .ne. 0 ) stop 'problem reading AREA'
         do K = 1,NGRP(J)
            do I = FCHAN(J,K)+1,LCHAN(J,K)
@@ -330,13 +334,14 @@ end subroutine readinresp
 subroutine readinresp2
 ! Reads in the second response matrix 
 ! ***Must already know numchn nd nenerg***
+  use rtconstants, only: wp
   use telematrix2
   implicit none
   integer status,U1,readwrite,blocksize,hdutype,i,colnum
   integer j,rows,k
   character (len=200) exname,comment
-  real nullval
-  real, allocatable :: area(:)
+  real(wp) nullval
+  real(wp), allocatable :: area(:)
   logical anynull
   status = 0
   call ftgiou(U1,status)
@@ -398,7 +403,7 @@ subroutine readinresp2
      !Read in rows and re-normalise response matrix
      do J = 1,NENERG2
         colnum = 3
-        call ftgcve(U1,colnum,J,1,1,nullval,AREA(J),anynull,status)
+        call ftgcvd(U1,colnum,J,1,1,nullval,AREA(J),anynull,status)
         if( status .ne. 0 ) stop 'problem reading AREA'
         do K = 1,NGRP2(J)
            do I = FCHAN2(J,K)+1,LCHAN2(J,K)
@@ -417,12 +422,13 @@ end subroutine readinresp2
 
 !-----------------------------------------------------------------------
 subroutine energyextension(U1)
+  use rtconstants, only: wp
   use telematrix
   implicit none
   integer, INTENT(IN)  :: U1
   ! real   , INTENT(OUT) :: ECHN(numchn)
   integer status,i,colnum,felem,nelem
-  real nullval
+  real(wp) nullval
   logical anynull
   !Read in En(numchn)
   do I = 1, numchn
@@ -431,12 +437,12 @@ subroutine energyextension(U1)
      colnum  = 2
      felem   = 1
      nelem   = 1
-     nullval = -1.0
+     nullval = -1.0_wp
      anynull = .false.
-     call ftgcve(U1,colnum,I,felem,nelem,nullval,ECHN(I-1),anynull,status)
+     call ftgcvd(U1,colnum,I,felem,nelem,nullval,ECHN(I-1),anynull,status)
      !Read in E_MAX
      colnum  = 3
-     call ftgcve(U1,colnum,I,felem,nelem,nullval,ECHN(I),anynull,status)
+     call ftgcvd(U1,colnum,I,felem,nelem,nullval,ECHN(I),anynull,status)
      if( status .ne. 0 ) stop 'problem reading in EBOUNDS'
   end do
   return
@@ -445,12 +451,13 @@ end subroutine energyextension
 
 !-----------------------------------------------------------------------
 subroutine energyextension2(U1)
+  use rtconstants, only: wp
   use telematrix2
   implicit none
   integer, INTENT(IN)  :: U1
   ! real   , INTENT(OUT) :: ECHN(numchn)
   integer status,i,colnum,felem,nelem
-  real nullval
+  real(wp) nullval
   logical anynull
   !Read in En(numchn)
   do I = 1, numchn2
@@ -459,12 +466,12 @@ subroutine energyextension2(U1)
      colnum  = 2
      felem   = 1
      nelem   = 1
-     nullval = -1.0
+     nullval = -1.0_wp
      anynull = .false.
-     call ftgcve(U1,colnum,I,felem,nelem,nullval,ECHN2(I-1),anynull,status)
+     call ftgcvd(U1,colnum,I,felem,nelem,nullval,ECHN2(I-1),anynull,status)
      !Read in E_MAX
      colnum  = 3
-     call ftgcve(U1,colnum,I,felem,nelem,nullval,ECHN2(I),anynull,status)
+     call ftgcvd(U1,colnum,I,felem,nelem,nullval,ECHN2(I),anynull,status)
      if( status .ne. 0 ) stop 'problem reading in EBOUNDS'
   end do
   return
@@ -474,42 +481,44 @@ end subroutine energyextension2
 
 !-----------------------------------------------------------------------
 subroutine matrixextension(U1)
+  use rtconstants, only: wp
   use telematrix
   implicit none
-  integer status,U1,i,colnum,felem,nelem,j,k,i0,arrayj(5000)
-  real nullval,arraye(5000)
+  integer status,U1,i,colnum,felem,nelem,j,k,i0,arrayj(5000),inullval
+  real(wp) nullval,arraye(5000)
   logical anynull
   !Read in resp(numchn,nenerg) and En
-  resp = 0.0
+  resp = 0.0_wp
   do J = 1,NENERG
      status = 0
      !Read in ENERG_LO
      colnum  = 1
      felem   = 1
      nelem   = 1
-     nullval = -1.0
+     nullval = -1.0_wp
+     inullval = -1
      anynull = .false.
-     call ftgcve(U1,colnum,J,felem,nelem,nullval,En(J-1),anynull,status)
+     call ftgcvd(U1,colnum,J,felem,nelem,nullval,En(J-1),anynull,status)
      if( status .ne. 0 ) stop 'problem reading ENERG_LO'
      !Read in ENERG_HI
      colnum  = 2
-     call ftgcve(U1,colnum,J,felem,nelem,nullval,En(J),anynull,status)
+     call ftgcvd(U1,colnum,J,felem,nelem,nullval,En(J),anynull,status)
      if( status .ne. 0 ) stop 'problem reading ENERG_HI'
      !Read in NGRP(J)
      colnum  = 3
-     call ftgcvj(U1,colnum,J,felem,nelem,nullval,NGRP(J),anynull,status)
+     call ftgcvj(U1,colnum,J,felem,nelem,inullval,NGRP(J),anynull,status)
      if( status .ne. 0 ) stop 'problem reading NGRP'
      !Read in FCHAN(J,K)
      colnum = 4
      anynull = .false.
-     call ftgcvj(U1,colnum,J,1,NGRP(J),nullval,ARRAYJ,anynull,status)
+     call ftgcvj(U1,colnum,J,1,NGRP(J),inullval,ARRAYJ,anynull,status)
      do K = 1,NGRP(J)
         FCHAN(J,K) = ARRAYJ(K)
      end do
      if( status .ne. 0 ) stop 'problem reading FCHAN'
      !Read in NCHAN(J,K)
      colnum = 5
-     call ftgcvj(U1,colnum,J,1,NGRP(J),nullval,ARRAYJ,anynull,status)
+     call ftgcvj(U1,colnum,J,1,NGRP(J),inullval,ARRAYJ,anynull,status)
      do K = 1,NGRP(J)
         NCHAN(J,K) = ARRAYJ(K)
         LCHAN(J,K) = FCHAN(J,K)+NCHAN(J,K)
@@ -522,7 +531,7 @@ subroutine matrixextension(U1)
         nelem = nelem + NCHAN(J,K)
      end do
      !Now can read in and put in a sensible format
-     call ftgcve(U1,colnum,J,1,nelem,nullval,ARRAYE,anynull,status)
+     call ftgcvd(U1,colnum,J,1,nelem,nullval,ARRAYE,anynull,status)
      if( status .ne. 0 ) stop 'problem reading MATRIX'
      if( anynull ) write(*,*)"Null values in MATRIX"
      I0 = 0
@@ -540,42 +549,44 @@ end subroutine matrixextension
 
 !-----------------------------------------------------------------------
 subroutine matrixextension2(U1)
+  use rtconstants, only: wp
   use telematrix2
   implicit none
-  integer status,U1,i,colnum,felem,nelem,j,k,i0,arrayj(5000)
-  real nullval,arraye(5000)
+  integer status,U1,i,colnum,felem,nelem,j,k,i0,arrayj(5000),inullval
+  real(wp) nullval,arraye(5000)
   logical anynull
   !Read in resp(numchn,nenerg) and En
-  resp2 = 0.0
+  resp2 = 0.0_wp
   do J = 1,NENERG2
      status = 0
      !Read in ENERG_LO
      colnum  = 1
      felem   = 1
      nelem   = 1
-     nullval = -1.0
+     nullval = -1.0_wp
+     inullval = -1
      anynull = .false.
-     call ftgcve(U1,colnum,J,felem,nelem,nullval,En2(J-1),anynull,status)
+     call ftgcvd(U1,colnum,J,felem,nelem,nullval,En2(J-1),anynull,status)
      if( status .ne. 0 ) stop 'problem reading ENERG_LO'
      !Read in ENERG_HI
      colnum  = 2
-     call ftgcve(U1,colnum,J,felem,nelem,nullval,En2(J),anynull,status)
+     call ftgcvd(U1,colnum,J,felem,nelem,nullval,En2(J),anynull,status)
      if( status .ne. 0 ) stop 'problem reading ENERG_HI'
      !Read in NGRP(J)
      colnum  = 3
-     call ftgcvj(U1,colnum,J,felem,nelem,nullval,NGRP2(J),anynull,status)
+     call ftgcvj(U1,colnum,J,felem,nelem,inullval,NGRP2(J),anynull,status)
      if( status .ne. 0 ) stop 'problem reading NGRP'
      !Read in FCHAN(J,K)
      colnum = 4
      anynull = .false.
-     call ftgcvj(U1,colnum,J,1,NGRP2(J),nullval,ARRAYJ,anynull,status)
+     call ftgcvj(U1,colnum,J,1,NGRP2(J),inullval,ARRAYJ,anynull,status)
      do K = 1,NGRP2(J)
         FCHAN2(J,K) = ARRAYJ(K)
      end do
      if( status .ne. 0 ) stop 'problem reading FCHAN'
      !Read in NCHAN(J,K)
      colnum = 5
-     call ftgcvj(U1,colnum,J,1,NGRP2(J),nullval,ARRAYJ,anynull,status)
+     call ftgcvj(U1,colnum,J,1,NGRP2(J),inullval,ARRAYJ,anynull,status)
      do K = 1,NGRP2(J)
         NCHAN2(J,K) = ARRAYJ(K)
         LCHAN2(J,K) = FCHAN2(J,K)+NCHAN2(J,K)
@@ -588,7 +599,7 @@ subroutine matrixextension2(U1)
         nelem = nelem + NCHAN2(J,K)
      end do
      !Now can read in and put in a sensible format
-     call ftgcve(U1,colnum,J,1,nelem,nullval,ARRAYE,anynull,status)
+     call ftgcvd(U1,colnum,J,1,nelem,nullval,ARRAYE,anynull,status)
      if( status .ne. 0 ) stop 'problem reading MATRIX'
      if( anynull ) write(*,*)"Null values in MATRIX"
      I0 = 0

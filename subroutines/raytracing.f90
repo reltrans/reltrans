@@ -3,7 +3,7 @@ module raytracing
 !> calculations. All the subroutines only serve as interfaces to the actual 
 !> implementations but allows for easy substitution without changing the rest of
 !> the code.
-    use rtconstants, only: pi
+    use rtconstants, only: pi, wp
     implicit none
 
 contains
@@ -30,18 +30,18 @@ contains
             KRZ_STATUS_NONE
         implicit none
         integer, intent(in) :: nro,nphi
-        double precision, intent(in) :: rn(nro),mueff,mu0,rmin,rout
-        double precision, intent(in) :: d
-        double precision :: phin, alpha, beta, cos0
+        real(wp), intent(in) :: rn(nro),mueff,mu0,rmin,rout
+        real(wp), intent(in) :: d
+        real(wp) :: phin, alpha, beta, cos0
         integer i,j
         type(krz_TraceResult) :: res
         cos0  = mu0
-        taudo1   = 0.0
-        re1      = 0.0
+        taudo1   = 0.0_wp
+        re1      = 0.0_wp
         !TODO: kerrz optimisation here! 
         do i = 1,nro
             do j = 1,NPHI
-                phin  = (j-0.5) * 2.d0 * pi / dble(nphi)
+                phin  = (j-0.5_wp) * 2.0_wp * pi / real(nphi, wp)
                 alpha = rn(i) * sin(phin)
                 beta  = -rn(i) * cos(phin) * mueff
 
@@ -56,11 +56,11 @@ contains
                     !
                     ! It is technically redundant, as a negative value could be
                     ! written into `re1` instead.
-                    pem1(j,i) = 1.0d0
+                    pem1(j,i) = 1.0_wp
                     taudo1(j,i) = res%x_final%t - d
                     re1(j,i) = res%x_final%r
                 else
-                    pem1(j, i) = -1.0d0
+                    pem1(j, i) = -1.0_wp
                 end if
               end do
         end do
@@ -92,19 +92,19 @@ contains
         use kerrz, only: kerr_metric, krz_TraceResult, trace_lamppost,         &
             KRZ_STATUS_NONE
         implicit none
-        double precision, intent(in )   :: h(2), rout
+        real(wp), intent(in )   :: h(2), rout
         integer         , intent(in )   :: n, nlp
         integer         , intent(inout) :: npts(nlp)
-        double precision, intent(inout) :: r1(n,nlp)
-        double precision, intent(out)   :: dcosdr(n,nlp), tc(n,nlp), cosd1(n,nlp), cosdout(nlp)
+        real(wp), intent(inout) :: r1(n,nlp)
+        real(wp), intent(out)   :: dcosdr(n,nlp), tc(n,nlp), cosd1(n,nlp), cosdout(nlp)
         integer  m,j,k,counter,nout(nlp)
-        double precision rhorizon
-        double precision deltamin,deltamax, deltas,r_min,r_max
+        real(wp) rhorizon
+        real(wp) deltamin,deltamax, deltas,r_min,r_max
         type(krz_TraceResult) :: res
         rhorizon = kerr_metric%horizon_radius
         ! Set minimum and maximum disk radii
         r_min = kerr_metric%isco
-        r_max = 1d10
+        r_max = 1e10_wp
 
         ! Loop over each lamppost here:
         do m=1,nlp
@@ -118,7 +118,7 @@ contains
             do j = 1,n
             ! Run through linear steps in the angle delta (see Fig 1; Dauser et
             ! al 2013)
-                deltas   = deltamin + (j-1) * (deltamax-deltamin)/float(n-1)
+                deltas   = deltamin + (j-1) * (deltamax-deltamin)/real(n-1, wp)
                 res = trace_lamppost(h(m), deltas)
                 if (res%status == KRZ_STATUS_NONE                  &
                     .and. r_min <= res%x_final%r .and. r_max >= res%x_final%r  &
@@ -177,11 +177,11 @@ contains
     !>     delt         Source to observer time lag 
         use kerrz, only: trace_lensing, LamppostContinuum
         implicit none
-        double precision, intent(in)    :: h, muobs
-        double precision, intent(inout) :: cosdelta1
-        double precision, intent(out)   :: lens, delt
-        double precision :: d
-        double precision, parameter :: r_at_inf = 1.0d5
+        real(wp), intent(in)    :: h, muobs
+        real(wp), intent(inout) :: cosdelta1
+        real(wp), intent(out)   :: lens, delt
+        real(wp) :: d
+        real(wp), parameter :: r_at_inf = 1.0e5_wp
         type(LamppostContinuum) :: continuum
         continuum = trace_lensing(h, r_at_inf, muobs)
         d = continuum%alpha**2 + continuum%beta**2

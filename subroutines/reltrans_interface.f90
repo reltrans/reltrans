@@ -1,5 +1,6 @@
 module reltrans_interface
 !> This module defines the library interface for reltrans.
+    use rtconstants, only: wp
     contains
         subroutine wrap_trace_disk_observer(nro,nphi,rn,mueff,mu0,spin,rmin,   &
                    rout,d) bind(C, name = "trace_disk_observer")
@@ -10,7 +11,7 @@ module reltrans_interface
             integer(c_int), intent(in) :: nro, nphi
             real(c_double), intent(in) :: rn(nro), mueff, mu0, spin, rmin, rout
             real(c_double), intent(in) :: d
-            kerr_metric = krz_KerrMetric_init(1.0d0, spin)
+            kerr_metric = krz_KerrMetric_init(1.0_wp, spin)
             call trace_disk_observer(nro,nphi,rn,mueff,mu0,rmin,rout,d)
             return
         end subroutine wrap_trace_disk_observer
@@ -22,7 +23,7 @@ module reltrans_interface
             use iso_c_binding, only: c_double
             real(c_double), intent(in) :: a_spin, h, muobs
             real(c_double), intent(inout) :: lens, del_t, cosdelta
-            kerr_metric = krz_KerrMetric_init(1.0d0, a_spin)
+            kerr_metric = krz_KerrMetric_init(1.0_wp, a_spin)
             call getlens(h, muobs, lens, del_t, cosdelta)
         end subroutine wrap_getlens
 

@@ -6,12 +6,13 @@
 ! llo and lhi are respectively the closest low and hight values to l. 
 ! note: if you used chclose to extract the index of the closest values you       
 !      also need ch_ind_val to find the corresponding array values.
+      use rtconstants, only: wp
       implicit none
       integer line_dim,i
-      double precision ::l,llo,lhi
-      complex :: line1_lo(line_dim),line1_hi(line_dim),line1(line_dim),grad1,cons1 
-      complex :: line2_lo(line_dim),line2_hi(line_dim),line2(line_dim),grad2,cons2 
-      double precision :: da
+      real(wp) ::l,llo,lhi
+      complex(wp) :: line1_lo(line_dim),line1_hi(line_dim),line1(line_dim),grad1,cons1 
+      complex(wp) :: line2_lo(line_dim),line2_hi(line_dim),line2(line_dim),grad2,cons2 
+      real(wp) :: da
       if ( lhi .lt. llo ) then
          write(*,*)
          write(*,'(a)', advance="no") 'error in myinterp: low index is' 
@@ -26,12 +27,12 @@
       end if
       da = lhi - llo
       do i = 1,line_dim
-        grad1 = ( line1_hi(i) - line1_lo(i) ) / real(da)
-        cons1 = line1_lo(i) - grad1*real(llo)
-        line1(i) = grad1*real(l) + cons1
-        grad2 = ( line2_hi(i) - line2_lo(i) ) / real(da)
-        cons2 = line2_lo(i) - grad2*real(llo)
-        line2(i) = grad2*real(l) + cons2
+        grad1 = ( line1_hi(i) - line1_lo(i) ) / da
+        cons1 = line1_lo(i) - grad1*llo
+        line1(i) = grad1*l + cons1
+        grad2 = ( line2_hi(i) - line2_lo(i) ) / da
+        cons2 = line2_lo(i) - grad2*llo
+        line2(i) = grad2*l + cons2
       end do
       return
  666  stop

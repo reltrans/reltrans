@@ -57,12 +57,12 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
 !> Outputs:
 !>     needtrans: if true, we must do the kernel calculation
 !>     neecconv:  if true, we must do the convolution
-    use rtconstants, only: dtol
+    use rtconstants, only: dtol, wp
     implicit none 
     integer         , intent(in)  :: Cp, Cpsave, nf, nfsave
-    real            , intent(in)  :: param(32), paramsave(32)
-    real            , parameter   :: tol = 1e-7
-    double precision, intent(in)  :: fhi, flo, fhisave, flosave
+    real(wp)        , intent(in)  :: param(32), paramsave(32)
+    real(wp)        , parameter   :: tol = 1e-7_wp
+    real(wp), intent(in)  :: fhi, flo, fhisave, flosave
     logical         , intent(out) :: needtrans,needconv
     integer :: i
 
@@ -95,9 +95,9 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
     ! Now check if frequency range and frequency grid have changed 
     if( nf .ne. nfsave ) then
         needtrans = .true.
-    else if( abs(1.- (fhi / fhisave) ) .gt. dtol) then
+    else if( abs(1.0_wp- (fhi / fhisave) ) .gt. dtol) then
         needtrans = .true.
-    else if( abs(1. - (flo - flosave) ) .gt. dtol) then
+    else if( abs(1.0_wp - (flo - flosave) ) .gt. dtol) then
         needtrans = .true.
     end if
     !Now for needconv

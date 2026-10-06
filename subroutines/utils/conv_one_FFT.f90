@@ -1,15 +1,16 @@
   subroutine conv_one_FFT(dyn,earx,Gamma,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
+    use rtconstants, only: wp
     use conv_mod
     implicit none
     integer, intent(in) :: DC, nlp 
-    real                :: dyn
-    real, intent(in)    :: photarx(nex),earx(0:nex),Gamma
-    real, intent(in)    :: reline(nlp,nex), imline(nlp,nex)
-    real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
-    complex :: FTphotarx(nex_conv), FTreline(nex_conv), FTimline(nex_conv)
-    complex :: FTreconv(4*nex),FTimconv(4*nex)
+    real(wp)            :: dyn
+    real(wp), intent(in)    :: photarx(nex),earx(0:nex),Gamma
+    real(wp), intent(in)    :: reline(nlp,nex), imline(nlp,nex)
+    real(wp), intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
+    complex(wp) :: FTphotarx(nex_conv), FTreline(nex_conv), FTimline(nex_conv)
+    complex(wp) :: FTreconv(4*nex),FTimconv(4*nex)
     integer :: m, i
-    real    :: depad_conv(nex), E
+    real(wp) :: depad_conv(nex), E
     ! real, parameter :: nexm1 = 1. / real(nex_conv)
     
     do m=1,nlp  
@@ -20,7 +21,7 @@
           call pad4invFFT(dyn,nex,FTreconv,depad_conv)
 
           do i = 1,nex
-             E             = 0.5 * ( earx(i) + earx(i-1) )
+             E             = 0.5_wp * ( earx(i) + earx(i-1) )
              ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
           end do
            
@@ -33,14 +34,14 @@
           call pad4invFFT(dyn,nex,FTreconv,depad_conv)
            
           do i = 1,nex
-             E             = 0.5 * ( earx(i) + earx(i-1) )
+             E             = 0.5_wp * ( earx(i) + earx(i-1) )
              ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
           end do
            
           call pad4invFFT(dyn,nex,FTimconv,depad_conv) 
 
           do i = 1,nex
-             E             = 0.5 * ( earx(i) + earx(i-1) )
+             E             = 0.5_wp * ( earx(i) + earx(i-1) )
              ImW_conv(m,i) = ImW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
           end do
           

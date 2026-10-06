@@ -1,4 +1,5 @@
 module xspec_interface
+    use rtconstants, only: wp
     implicit none
     interface
         subroutine xsatbl(ear,ne,params,filename,ifl,photar,photer)            &
@@ -26,42 +27,55 @@ module xspec_interface
 
         subroutine donthcomp(earx, nex, params, Ifl, absorbx, photerx)
             !> The interface around the XSPEC donthcomp. Note that this is a
-            !> Fortran function and so does not need to be bound to a C symbol.
-            real, intent(in) :: earx(nex+1)
-            real, intent(in) :: params(5)
-            real, intent(inout) :: absorbx(nex), photerx(nex)
+            !> single-precision Fortran function and so does not need to be
+            !> bound to a C symbol. Call it through `nthcomp` below.
+            use rtconstants, only: sp
             integer, intent(in) :: nex, Ifl
+            real(sp), intent(in) :: earx(nex+1)
+            real(sp), intent(in) :: params(5)
+            real(sp), intent(inout) :: absorbx(nex), photerx(nex)
         end subroutine donthcomp
     end interface
 contains
 
     subroutine tbabs(earx, nex, nh, Ifl, absorbx, photerx)
         !> Call the tbabs function from the XSPEC model library.
-        !>
-        !> This wrapper temporarily performs a runtime cast on all of the arrays
-        !> to double precision, as the C_tbabs function that we
-        !> will eventually call expects double precision, whilst much of reltrans
-        !> still uses `real`, which maps to single precision.
-        !>
-        !> Once the precision has been modified, this function can be simplified.
-        real, intent(in) :: earx(0:nex), nh
-        real, intent(inout) :: absorbx(nex), photerx(nex)
+        real(wp), intent(in) :: earx(0:nex), nh
+        real(wp), intent(inout) :: absorbx(nex), photerx(nex)
         integer, intent(in) :: nex, Ifl
 
-        double precision :: d_earx(0:nex), d_absorbx(nex), d_photerx(nex),     &
-            d_params(1)
-        integer i
-
-        do i = 0, nex
-            d_earx(i) = earx(i)
-        end do
-
-        d_params(1) = nh
-        call c_tbabs(d_earx, nex, d_params, Ifl, d_absorbx, d_photerx, "")
-
-        do i = 1, nex
-            absorbx(i) = real(d_absorbx(i))
-            photerx(i) = real(d_photerx(i))
-        end do
+        call c_tbabs(earx, nex, [nh], Ifl, absorbx, photerx, "")
     end subroutine tbabs
+
+    subroutine nthcomp(earx, nex, params, Ifl, photarx, photerx)
+        !> Call the single-precision XSPEC donthcomp model, converting the
+        !> arguments to and from the working precision.
+        use rtconstants, only: sp
+        integer, intent(in) :: nex, Ifl
+        real(wp), intent(in) :: earx(0:nex), params(5)
+        real(wp), intent(out) :: photarx(nex), photerx(nex)
+        real(sp) :: s_earx(0:nex), s_photarx(nex), s_photerx(nex)
+
+        s_earx = real(earx, sp)
+        call donthcomp(s_earx, nex, real(params, sp), Ifl, s_photarx,          &
+            s_photerx)
+        photarx = real(s_photarx, wp)
+        photerx = real(s_photerx, wp)
+    end subroutine nthcomp
+
+    subroutine table_model(ear, ne, params, filename, ifl, photar)
+        !> Interpolate a spectrum from an XSPEC table model file using the
+        !> single-precision xsatbl, converting the arguments to and from the
+        !> working precision. `filename` must be null terminated.
+        use iso_c_binding, only: c_float, c_char
+        integer, intent(in) :: ne, ifl
+        real(wp), intent(in) :: ear(0:ne), params(:)
+        character(kind=c_char), intent(in) :: filename(*)
+        real(wp), intent(out) :: photar(ne)
+        real(c_float) :: s_photar(ne), s_photer(ne)
+
+        call xsatbl(real(ear, c_float), ne, real(params, c_float), filename,   &
+            ifl, s_photar, s_photer)
+        photar = real(s_photar, wp)
+    end subroutine table_model
 end module xspec_interface

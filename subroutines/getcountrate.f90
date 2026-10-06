@@ -1,10 +1,11 @@
 !-----------------------------------------------------------------------
 function getcountrate(E1,E2,nex,earx,photarx)
+  use rtconstants, only: wp
   use telematrix
   implicit none
   integer :: nex
-  real :: getcountrate,E1,E2,earx(0:nex),photarx(nex)
-  real,    allocatable :: spec(:)
+  real(wp) :: getcountrate,E1,E2,earx(0:nex),photarx(nex)
+  real(wp),    allocatable :: spec(:)
   integer :: I1,I2,i
   
 !Read from response file
@@ -29,7 +30,7 @@ function getcountrate(E1,E2,nex,earx,photarx)
   call fold(nex, earx, photarx, spec)
   
 ! Calculate count rate from spec
-  getcountrate = 0.0
+  getcountrate = 0.0_wp
   do i = I1,I2
      getcountrate = getcountrate + spec(i)
   end do

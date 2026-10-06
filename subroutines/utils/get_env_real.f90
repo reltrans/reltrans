@@ -1,8 +1,9 @@
 !-----------------------------------------------------------------------
       function get_env_real(name, default)
+        use rtconstants, only: wp
         implicit none
         integer           :: stat 
-        real              :: get_env_real, default
+        real(wp)          :: get_env_real, default
         character (len=5) :: str
         character (len=*) :: name
         stat = 0
