@@ -3,11 +3,13 @@ subroutine readinbkg
 ! Reads in the background spectrum
 ! ***Must already know numchn***
 ! ***Must have already initialised bkgcounts and bkgrate***  
+  use rtconstants, only: wp
   use telematrix
   implicit none
   integer status,U1,readwrite,blocksize,i,colnum,felem
   integer nelem
-  real nullval,Texp,bcorr, get_env_real
+  integer nullval
+  real(wp) Texp,bcorr, get_env_real
   logical anynull
   character (len=500) strenv
   character (len=200) comment, bkgenv
@@ -21,8 +23,8 @@ subroutine readinbkg
   endif
 
 ! Get background scaling factor
-  bcorr = get_env_real("BACKSCL",0.0)
-  if (bcorr .eq. 0.0) then
+  bcorr = get_env_real("BACKSCL",0.0_wp)
+  if (bcorr .eq. 0.0_wp) then
      write(*,*)"Enter BACKSCAL factor (enter 1 if you dont know what this is)"
      read(*,*)bcorr
   endif
@@ -49,7 +51,7 @@ subroutine readinbkg
      colnum  = 2
      felem   = 1
      nelem   = 1
-     nullval = -1.0
+     nullval = -1
      anynull = .false.
      status = 0
      call FTGCVJ(U1,colnum,i,felem,nelem,nullval,bkgcounts(i),anynull,status)
@@ -57,11 +59,11 @@ subroutine readinbkg
   end do
 
 ! Read in the exposure time
-  call ftgkye(U1,'EXPOSURE',Texp,comment,status)
+  call ftgkyd(U1,'EXPOSURE',Texp,comment,status)
 
 ! Convert to count rate
   do i = 1,numchn
-     bkgrate(i) = real( bkgcounts(i) ) / Texp
+     bkgrate(i) = real( bkgcounts(i) , wp) / Texp
   end do
 
 ! Apply background scaling factor

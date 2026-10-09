@@ -12,24 +12,24 @@ subroutine sum_continuum_reflection_transfer_functions(config, model_args,     &
     !>
     !> Writes the output to `arrays%ReGraw` and `arrays%ImGraw`.
     use common_types, only: t_config, t_model_arguments, t_arrays
-    use rtconstants, only: pi
+    use rtconstants, only: pi, wp
     implicit none
     type(t_arrays), intent(inout) :: arrays
     type(t_config), intent(in) :: config
     type(t_model_arguments), intent(in) :: model_args
-    double precision, intent(in) :: tauso(2), gso(2)
+    real(wp), intent(in) :: tauso(2), gso(2)
     integer, intent(in) :: nex
     ! Specific to the double lamp post model:
-    double precision :: tau_d, tau_p, phase_d, phase_p
-    complex :: cexp_d, cexp_p
+    real(wp) :: tau_d, tau_p, phase_d, phase_p
+    complex(wp) :: cexp_d, cexp_p
     ! Various loop variables:
     integer :: i, j, m
-    double precision :: f, E, fac
-    complex :: W0, W1, W2, W3, Stemp, cexp_phi
+    real(wp) :: f, E, fac
+    complex(wp) :: W0, W1, W2, W3, Stemp, cexp_phi
 
     ! Zero outputs
-    arrays%ReSraw = 0.
-    arrays%ImSraw = 0.
+    arrays%ReSraw = 0.0_wp
+    arrays%ImSraw = 0.0_wp
 
     if (model_args%boost .lt. 0 .and. config%DC .eq. 1) then
         ! Reflection only:
@@ -37,7 +37,8 @@ subroutine sum_continuum_reflection_transfer_functions(config, model_args,     &
            do i = 1,nex
               do m=1,model_args%nlp
                   if (m .gt. 1) then
-                      arrays%ReW0(m,i,j) = model_args%eta * arrays%ReW0(m,i,j)
+                      arrays%ReW0(m,i,j) = model_args%eta *                    &
+                          arrays%ReW0(m,i,j)
                   end if
                   arrays%ReSraw(i,j) = arrays%ReSraw(i,j) +                    &
                       (-model_args%boost) * arrays%ReW0(m,i,j)
@@ -71,51 +72,51 @@ subroutine sum_continuum_reflection_transfer_functions(config, model_args,     &
 
     do j=1,config%nf
         if (config%DC == 1) then
-            f = 0d0
+            f = 0.0_wp
         else
             f = config%flo *                                                   &
-                (config%fhi/config%flo)**((real(j)-0.5d0) / real(config%nf))
+                (config%fhi/config%flo)**((real(j, wp)-0.5_wp) / real(config%nf, wp))
         endif
         do i=1,nex
             do m=1,model_args%nlp
-                E = 0.5d0 * ( arrays%earx(i) + arrays%earx(i-1) )
-                fac = log(gso(m)/((1d0+model_args%zcos)*E))
+                E = 0.5_wp * ( arrays%earx(i) + arrays%earx(i-1) )
+                fac = log(gso(m)/((1.0_wp+model_args%zcos)*E))
 
                 ! Set up phase factors
                 if (model_args%nlp > 1) then
-                    phase_d = 2d0 * pi * tau_d * f
-                    phase_p = 2d0 * pi * tau_p * f
-                    cexp_d = cmplx(cos(phase_d),sin(phase_d))
-                    cexp_p = cmplx(cos(phase_p),sin(phase_p))
+                    phase_d = 2.0_wp * pi * tau_d * f
+                    phase_p = 2.0_wp * pi * tau_p * f
+                    cexp_d = cmplx(cos(phase_d),sin(phase_d), kind=wp)
+                    cexp_p = cmplx(cos(phase_p),sin(phase_p), kind=wp)
                 else
-                    cexp_d = cmplx(1.0, 0.0)
-                    cexp_p = cmplx(1.0, 0.0)
+                    cexp_d = cmplx(1.0_wp, 0.0_wp, kind=wp)
+                    cexp_p = cmplx(1.0_wp, 0.0_wp, kind=wp)
                 end if
 
                 ! Set up transfer functions
                 W0 = model_args%boost *                                        &
-                    cmplx(arrays%ReW0(m,i,j),arrays%ImW0(m,i,j))
+                    cmplx(arrays%ReW0(m,i,j),arrays%ImW0(m,i,j), kind=wp)
                 W1 = (1-config%DC) * model_args%boost *                        &
-                    cmplx(arrays%ReW1(m,i,j),arrays%ImW1(m,i,j))
+                    cmplx(arrays%ReW1(m,i,j),arrays%ImW1(m,i,j), kind=wp)
                 W2 = (1-config%DC) * model_args%boost *                        &
-                    cmplx(arrays%ReW2(m,i,j),arrays%ImW2(m,i,j))
+                    cmplx(arrays%ReW2(m,i,j),arrays%ImW2(m,i,j), kind=wp)
                 W3 = config%ionvar * (1-config%DC) * model_args%boost *        &
-                    cmplx(arrays%ReW3(m,i,j),arrays%ImW3(m,i,j))
+                    cmplx(arrays%ReW3(m,i,j),arrays%ImW3(m,i,j), kind=wp)
 
                 cexp_phi =                                                     &
-                    cmplx(cos(model_args%DelAB(m)),sin(model_args%DelAB(m)))
+                    cmplx(cos(model_args%DelAB(m)),sin(model_args%DelAB(m)), kind=wp)
 
                 ! Calculate complex covariance
                 ! Note: the reason we use complex here is to ease the
                 ! calculations when we add all the extra phases from the double
                 ! lamp post
-                Stemp = model_args%g(m) * cexp_phi *                           &
+                Stemp = model_args%g(m) * cexp_phi *                     &
                     (W1 + W2 + fac * cexp_d * arrays%contx(i,m))
                 Stemp = Stemp + W0 + W3 + cexp_d*arrays%contx(i,m)
                 Stemp = cexp_p * Stemp
                 ! Separate into real/imaginary parts for compatibility with the
                 ! rest of the code
-                arrays%ReSraw(i,j) = arrays%ReSraw(i,j) + real(Stemp)
+                arrays%ReSraw(i,j) = arrays%ReSraw(i,j) + real(Stemp, wp)
                 arrays%ImSraw(i,j) = arrays%ImSraw(i,j) + aimag(Stemp)
             end do
          end do

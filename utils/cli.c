@@ -16,14 +16,14 @@ float time_difference(struct timespec start, struct timespec end) {
 
 // either way, forward declare this as an extern, and let it be the linker's
 // problem
-extern void tdreltransdcp_(float *, int *, float *, int *, float *);
+extern void tdreltransdcp_(double *, int *, double *, int *, double *);
 
 #define LOG_ERR(...)                                                           \
   fprintf(stderr, "ERR  : " __VA_ARGS__);                                      \
   putc('\n', stderr)
 
 typedef struct reltrans_dcp_parameters {
-  float h,    // lamp post height
+  double h,   // lamp post height
       a,      // spin
       inc,    // inclination
       rin,    // inner radius
@@ -73,8 +73,8 @@ RT_DCP_Params default_parameters() {
 
 int main() {
   const char *output_file = "output.txt";
-  const float e_min = 0.1;
-  const float e_max = 1000.0;
+  const double e_min = 0.1;
+  const double e_max = 1000.0;
   int e_num = 1001;
 
   setenv("ARF_SET",
@@ -90,19 +90,19 @@ int main() {
   setenv("EMIN_REF2", "10.0", 1);
   setenv("EMAX_REF2", "20.0", 1);
 
-  float *energy = malloc(sizeof(float) * e_num);
+  double *energy = malloc(sizeof(double) * e_num);
   if (energy == NULL) {
     LOG_ERR("Failed to allocate energy array");
     return 1;
   }
 
-  float *output = malloc(sizeof(float) * e_num);
+  double *output = malloc(sizeof(double) * e_num);
   if (output == NULL) {
     LOG_ERR("Failed to allocate output array");
     return 1;
   }
 
-  float *comparison = malloc(sizeof(float) * e_num);
+  double *comparison = malloc(sizeof(double) * e_num);
   if (comparison == NULL) {
     LOG_ERR("Failed to allocate comparison array");
     return 1;
@@ -116,7 +116,7 @@ int main() {
 
   // logarithmic energy grid
   for (int i = 0; i < e_num; ++i) {
-    energy[i] = e_min * powf(e_max / e_min, ((float)i) / e_num);
+    energy[i] = e_min * pow(e_max / e_min, ((double)i) / e_num);
   }
 
   // zero the output buffer
@@ -125,7 +125,7 @@ int main() {
   int ifl = 1;
   e_num -= 1;
   // Run once to load everything in
-  tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
+  tdreltransdcp_(energy, &e_num, (double *)&params, &ifl, output);
 
   size_t num_trials = 20;
 
@@ -146,7 +146,7 @@ int main() {
     clock_gettime(CLOCK_MONOTONIC, &now);
 
     int ifl = 1;
-    tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
+    tdreltransdcp_(energy, &e_num, (double *)&params, &ifl, output);
 
     clock_gettime(CLOCK_MONOTONIC, &end);
     // Convert nano-seconds to mili-seconds.

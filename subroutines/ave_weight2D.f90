@@ -1,9 +1,10 @@
 !-----------------------------------------------------------------------
       function ave_weight2D(par1,par1_lo,par1_hi,par2,par2_lo,par2_hi&
            ,val_1lo_2lo,val_1lo_2hi,val_1hi_2lo,val_1hi_2hi)
+        use rtconstants, only: wp
         implicit none
         
-        double precision :: par1,par1_lo,par1_hi,par2,par2_lo,par2_hi,val_1lo_2lo&
+        real(wp) :: par1,par1_lo,par1_hi,par2,par2_lo,par2_hi,val_1lo_2lo&
              ,val_1lo_2hi,val_1hi_2lo,val_1hi_2hi,temp1,temp2,ave_weight2D
 
 

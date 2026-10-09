@@ -1,5 +1,5 @@
 subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                            h,z,Gamma,eta,beta_p,boost,floHz,fhiHz,ReIm,DelA,DelAB,g,ionvar,resp_matr)             
+                            h,z,eta,beta_p,boost,floHz,fhiHz,ReIm,DelA,DelAB,g,ionvar,resp_matr)             
     !this subroutine separates the components from the model, calculates each cross spectrum including the effects of absorRTion,
     !folds the response matrix if desired, calls the phase correction, averages over frequnecy, and prints each different components
     !to a new file. This code repeats a lot and it's a bit of a monstrosity, mostly because it's annoying to separate the transfer
@@ -13,27 +13,27 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     use rtconstants
     implicit none
     integer, intent(IN) :: ne,nex,nf,nlp,ionvar,ReIm,resp_matr
-    real   , intent(IN) :: ear(0:ne),earx(0:nex),contx(nex,nlp),absorbx(nex)
-    real   , intent(IN) :: g(nlp),DelA,DelAB(nlp),boost,z,Gamma,eta,h(nlp),beta_p
-    real   , intent(IN) :: gso(nlp),tauso(nlp)
-    real   , intent(INOUT) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
-    real   , intent(INOUT) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
-    real :: fac
-    real :: tempRe,tempIm,dE, corr
-    real :: f,flo,fhi,floHz,fhiHz
-    double precision :: fc
-    integer :: i,j,m
+    real(wp) , intent(IN) :: ear(0:ne),earx(0:nex),contx(nex,nlp),absorbx(nex)
+    real(wp) , intent(IN) :: g(nlp),DelA,DelAB(nlp),boost,z,eta,h(nlp),beta_p
+    real(wp) , intent(IN) :: gso(nlp),tauso(nlp)
+    real(wp) , intent(INOUT) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
+    real(wp) , intent(INOUT) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
+    real(wp) :: fac
+    real(wp) :: dE
+    real(wp) :: f,flo,fhi,floHz,fhiHz
+    real(wp) :: fc
+    integer :: i,j
     !indiRTdual components transfer functions (S) and cross spectrum (G) dynamic allocation
-    real, dimension(:,:), allocatable :: ReScont,ImScont,ReSrev,ImSrev
-    real, dimension(:,:), allocatable :: ReSpiv,ImSpiv,ImSion,ReSion
-    real, dimension(:,:), allocatable :: ReGcont,ImGcont,ReGrev,ImGrev 
-    real, dimension(:,:), allocatable :: ReGpiv,ImGpiv,ReGion,ImGion
+    real(wp), dimension(:,:), allocatable :: ReScont,ImScont,ReSrev,ImSrev
+    real(wp), dimension(:,:), allocatable :: ReSpiv,ImSpiv,ImSion,ReSion
+    real(wp), dimension(:,:), allocatable :: ReGcont,ImGcont,ReGrev,ImGrev 
+    real(wp), dimension(:,:), allocatable :: ReGpiv,ImGpiv,ReGion,ImGion
 
-    real :: ReGcont_bar(nex),ImGcont_bar(nex),ReGpiv_bar(nex),ImGpiv_bar(nex)
-    real :: ReGrev_bar(nex),ImGrev_bar(nex),ReGion_bar(nex),ImGion_bar(nex)
+    real(wp) :: ReGcont_bar(nex),ImGcont_bar(nex),ReGpiv_bar(nex),ImGpiv_bar(nex)
+    real(wp) :: ReGrev_bar(nex),ImGrev_bar(nex),ReGion_bar(nex),ImGion_bar(nex)
     !Arrays for each component that make up the final output to file    
-    real :: ReScont_print(ne),ImScont_print(ne),ReSpiv_print(ne),ImSpiv_print(ne)
-    real :: ener(ne),ReSrev_print(ne),ImSrev_print(ne),ReSion_print(ne),ImSion_print(ne)
+    real(wp) :: ReScont_print(ne),ImScont_print(ne),ReSpiv_print(ne),ImSpiv_print(ne)
+    real(wp) :: ener(ne),ReSrev_print(ne),ImSrev_print(ne),ReSion_print(ne),ImSion_print(ne)
     !strings to open the output files
     character (len=30) path
     
@@ -70,9 +70,9 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
  
     write(*,*) 'inside components'
     !This stores each component contribution in the Re/Im matrices 
-    if (nlp .gt. 1 .and. beta_p .eq. 0.) then  
+    if (nlp .gt. 1 .and. beta_p .eq. 0.0_wp) then  
         call components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                              h,z,Gamma,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
+                              z,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
                               ReGpiv,ImGpiv,ReGion,ImGion)
         ! open (unit = 21, file = 'fort.21', status='replace', action = 'write')
         ! do j = 1, nf
@@ -85,7 +85,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
         ! close(21)
      else 
         call components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                        h,z,Gamma,eta,beta_p,boost,g,DelAB,ionvar,ReScont,ImScont,ReSrev,ImSrev,ReSpiv,ImSpiv,&
+                        h,z,eta,beta_p,boost,g,DelAB,ionvar,ReScont,ImScont,ReSrev,ImSrev,ReSpiv,ImSpiv,&
                         ReSion,ImSion) 
         ! do i = 1, nex
         !    write(20,*) ReSion(i),ImSion(i)
@@ -105,7 +105,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
             end do
         end do    
         !Calculate raw cross-spectrum from S(E,\nu) and the reference band parameters, for each component separately
-        if (ReIm .gt. 0.0) then
+        if (ReIm .gt. 0.0_wp) then
             call propercross(nex,nf,earx,ReScont,ImScont,ReGcont,ImGcont,resp_matr)
             call propercross(nex,nf,earx,ReSrev,ImSrev,ReGrev,ImGrev,resp_matr)     
             call propercross(nex,nf,earx,ReSpiv,ImSpiv,ReGpiv,ImGpiv,resp_matr)   
@@ -131,18 +131,18 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
         end do
     end do
     !Calculate frequency-averaged spectra 
-    ReGcont_bar = 0.0
-    ImGcont_bar = 0.0
-    ReGrev_bar = 0.0
-    ImGrev_bar = 0.0
-    ReGpiv_bar = 0.0
-    ImGpiv_bar = 0.0
-    ReGion_bar = 0.0
-    ImGion_bar = 0.0
-    fc = 0.5d0 * ( floHz + fhiHz )   
-    fac = 2.302585* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf))
+    ReGcont_bar = 0.0_wp
+    ImGcont_bar = 0.0_wp
+    ReGrev_bar = 0.0_wp
+    ImGrev_bar = 0.0_wp
+    ReGpiv_bar = 0.0_wp
+    ImGpiv_bar = 0.0_wp
+    ReGion_bar = 0.0_wp
+    ImGion_bar = 0.0_wp
+    fc = 0.5_wp * ( floHz + fhiHz )   
+    fac = 2.302585_wp* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf, wp))
     do j = 1,nf
-        f = floHz * (fhiHz/floHz)**( (real(j)-0.5) / real(nf) )
+        f = floHz * (fhiHz/floHz)**( (real(j, wp)-0.5_wp) / real(nf, wp) )
         do i = 1,nex 
             ReGcont_bar(i) = ReGcont_bar(i) + ReGcont(i,j) / f
             ImGcont_bar(i) = ImGcont_bar(i) + ImGcont(i,j) / f
@@ -164,7 +164,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     ImGion_bar = ImGion_bar * fac      
     !calculate energy array for output; for the energy we take average energy of the bin
     do i=1,ne 
-        ener(i) = (ear(i)+ear(i-1))/2.   
+        ener(i) = (ear(i)+ear(i-1))/2.0_wp   
     end do    
        
     path = 'Output/PivPL.dat'
@@ -211,10 +211,10 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
         else if (is_mode(ReIm, MODE_CROSS_SPEC_LAG)) then
             do i = 1,ne
                 dE = ear(i) - ear(i-1)
-                write (11,*) ener(i), atan2(ImScont_print(i),ReScont_print(i)) / ( 2.0*pi*fc )
-                write (12,*) ener(i), atan2(ImSrev_print(i),ReSrev_print(i)) / ( 2.0*pi*fc )
-                write (13,*) ener(i), atan2(ImSpiv_print(i),ReSpiv_print(i)) / ( 2.0*pi*fc ) 
-                write (14,*) ener(i), atan2(ImSion_print(i),ReSion_print(i)) / ( 2.0*pi*fc )
+                write (11,*) ener(i), atan2(ImScont_print(i),ReScont_print(i)) / ( 2.0_wp*pi*fc )
+                write (12,*) ener(i), atan2(ImSrev_print(i),ReSrev_print(i)) / ( 2.0_wp*pi*fc )
+                write (13,*) ener(i), atan2(ImSpiv_print(i),ReSpiv_print(i)) / ( 2.0_wp*pi*fc ) 
+                write (14,*) ener(i), atan2(ImSion_print(i),ReSion_print(i)) / ( 2.0_wp*pi*fc )
             end do
         end if
     else
@@ -233,10 +233,10 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
         else if (ReIm == MODE_CROSS_SPEC_LAG_BOTH_FOLDED) then
             do i = 1, ne
                 dE = ear(i) - ear(i-1)
-                write (11,*) ener(i), atan2(ImScont_print(i),ReScont_print(i)) / ( 2.0*pi*fc )
-                write (12,*) ener(i), atan2(ImSrev_print(i),ReSrev_print(i)) / ( 2.0*pi*fc ) 
-                write (13,*) ener(i), atan2(ImSpiv_print(i),ReSpiv_print(i)) / ( 2.0*pi*fc )
-                write (14,*) ener(i), atan2(ImSion_print(i),ReSion_print(i)) / ( 2.0*pi*fc )
+                write (11,*) ener(i), atan2(ImScont_print(i),ReScont_print(i)) / ( 2.0_wp*pi*fc )
+                write (12,*) ener(i), atan2(ImSrev_print(i),ReSrev_print(i)) / ( 2.0_wp*pi*fc ) 
+                write (13,*) ener(i), atan2(ImSpiv_print(i),ReSpiv_print(i)) / ( 2.0_wp*pi*fc )
+                write (14,*) ener(i), atan2(ImSion_print(i),ReSion_print(i)) / ( 2.0_wp*pi*fc )
             end do
         end if
     end if
@@ -267,7 +267,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
 end subroutine write_ComponentS
 
 subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                      h,z,Gamma,eta,beta_p,boost,g,DelAB,ionvar,ReScont,ImScont,ReSrev,ImSrev,&
+                      h,z,eta,beta_p,boost,g,DelAB,ionvar,ReScont,ImScont,ReSrev,ImSrev,&
                       ReSpiv,ImSpiv,ReSion,ImSion)
     ! Calculates the FT of the spectrum components before multiplying by the absorRTion model
     ! This is essentially the same as S, but it returns the FT for each component that contributes to the lags: 
@@ -280,17 +280,16 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
     use rtconstants
     implicit none
     integer, intent(IN) :: nex,nf,ionvar,nlp
-    real   , intent(IN) :: earx(0:nex),contx(nex,nlp)
-    real   , intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp), beta_p, flo
-    real   , intent(INOUT) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
-    real   , intent(INOUT) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
-    real   , intent(INOUT) :: ReScont(nex,nf),ImScont(nex,nf),ReSrev(nex,nf),ImSrev(nex,nf)
-    real   , intent(INOUT) :: ReSpiv(nex,nf),ImSpiv(nex,nf),ReSion(nex,nf),ImSion(nex,nf)
-    real E,fac,fhi,beta,f,phase_d,phase_p,tau_d,tau_p
-    real corr, contx_sum(nex)
-    complex, dimension(:,:), allocatable :: Scont,Sreverb,Spivot,Sion
+    real(wp) , intent(IN) :: earx(0:nex),contx(nex,nlp)
+    real(wp) , intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),eta,h(nlp),tauso(nlp), beta_p, flo
+    real(wp) , intent(INOUT) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
+    real(wp) , intent(INOUT) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
+    real(wp) , intent(INOUT) :: ReScont(nex,nf),ImScont(nex,nf),ReSrev(nex,nf),ImSrev(nex,nf)
+    real(wp) , intent(INOUT) :: ReSpiv(nex,nf),ImSpiv(nex,nf),ReSion(nex,nf),ImSion(nex,nf)
+    real(wp) E,fac,fhi,f,phase_d,phase_p,tau_d,tau_p
+    complex(wp), dimension(:,:), allocatable :: Scont,Sreverb,Spivot,Sion
     ! complex Stemp,Scont(nex,nf),Sreverb(nex,nf),Spivot(nex,nf),Sion(nex,nf)
-    complex Stemp,cexp_d,cexp_p,cexp_phi,W0,W1,W2,W3
+    complex(wp) Stemp,cexp_d,cexp_p,cexp_phi,W0,W1,W2,W3
     integer i,j,m
 
     if(.not. allocated(Scont  )) allocate(Scont   (nex,nf) )
@@ -298,16 +297,16 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
     if(.not. allocated(Spivot )) allocate(Spivot  (nex,nf) )
     if(.not. allocated(Sion   )) allocate(Sion    (nex,nf) )  
     
-    Scont = 0.
-    Sreverb = 0.
-    Spivot = 0.
-    Sion = 0.
+    Scont = 0.0_wp
+    Sreverb = 0.0_wp
+    Spivot = 0.0_wp
+    Sion = 0.0_wp
        
     !TBD initialize new lags to 0/1 as appropriate here
-    phase_d = 0.
-    phase_p = 0.
-    tau_d = 0.
-    tau_p = 0.
+    phase_d = 0.0_wp
+    phase_p = 0.0_wp
+    tau_d = 0.0_wp
+    tau_p = 0.0_wp
     
     do m=1,nlp 
         if( m .gt. 1 ) then
@@ -324,23 +323,23 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
             tau_p = (h(m) - h(1))/(beta_p) !I think this is fine, but may need an extra factor c? double check the sign
         end if
         do j = 1,nf
-            f = flo * (fhi/flo)**(  (real(j)-0.5) / real(nf) )
+            f = flo * (fhi/flo)**(  (real(j, wp)-0.5_wp) / real(nf, wp) )
             do i = 1,nex
-                E   = 0.5 * ( earx(i) + earx(i-1) )
-                fac = log(gso(m)/((1.0+z)*E))
+                E   = 0.5_wp * ( earx(i) + earx(i-1) )
+                fac = log(gso(m)/((1.0_wp+z)*E))
                 !set up phase factors
                 if (m .gt. 1) then
-                    phase_d = 2.*pi*tau_d*f
-                    phase_p = 2.*pi*tau_p*f
+                    phase_d = 2.0_wp*pi*tau_d*f
+                    phase_p = 2.0_wp*pi*tau_p*f
                 endif    
-                cexp_d = cmplx(cos(phase_d),sin(phase_d))
-                cexp_p = cmplx(cos(phase_p),sin(phase_p)) 
-                cexp_phi = cmplx(cos(DelAB(m)),sin(DelAB(m)))             
+                cexp_d = cmplx(cos(phase_d),sin(phase_d), kind=wp)
+                cexp_p = cmplx(cos(phase_p),sin(phase_p), kind=wp) 
+                cexp_phi = cmplx(cos(DelAB(m)),sin(DelAB(m)), kind=wp)             
                 !set up transfer functions 
-                W0 = boost * cmplx(ReW0(m,i,j),ImW0(m,i,j))
-                W1 = boost * cmplx(ReW1(m,i,j),ImW1(m,i,j))
-                W2 = boost * cmplx(ReW2(m,i,j),ImW2(m,i,j))                       
-                W3 = ionvar * boost * cmplx(ReW3(m,i,j),ImW3(m,i,j))
+                W0 = boost * cmplx(ReW0(m,i,j),ImW0(m,i,j), kind=wp)
+                W1 = boost * cmplx(ReW1(m,i,j),ImW1(m,i,j), kind=wp)
+                W2 = boost * cmplx(ReW2(m,i,j),ImW2(m,i,j), kind=wp)                       
+                W3 = ionvar * boost * cmplx(ReW3(m,i,j),ImW3(m,i,j), kind=wp)
                 !calculate complex covariance
                 !note: the reason we use complex here is to ease the calculations 
                 !when we add all the extra phases from the double lamp post 
@@ -357,13 +356,13 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
         enddo 
     end do
 
-    ReScont = real(Scont)
+    ReScont = real(Scont, wp)
     ImScont = aimag(Scont)
-    ReSrev = real(Sreverb)
+    ReSrev = real(Sreverb, wp)
     ImSrev = aimag(Sreverb)
-    ReSpiv = real(Spivot)
+    ReSpiv = real(Spivot, wp)
     ImSpiv = aimag(Spivot)
-    ReSion = real(Sion)
+    ReSion = real(Sion, wp)
     ImSion = aimag(Sion)
     if(allocated(Scont  )) deallocate(Scont  )
     if(allocated(Sreverb)) deallocate(Sreverb)
@@ -374,33 +373,32 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
 end subroutine
 
 subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                            h,z,Gamma,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
+                            z,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
                             ReGpiv,ImGpiv,ReGion,ImGion)
-    use rtconstants, only: is_ref_folded,pi
+    use rtconstants, only: is_ref_folded,pi, wp
     implicit none
     integer, intent(IN) :: nex,nf,ionvar,nlp,ReIm,resp_matr
-    real, intent(IN) :: earx(0:nex),contx(nex,nlp),absorbx(nex)
-    real, intent(IN) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
-    real, intent(IN) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
-    real, intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp)
-    real E,fac,flo,fhi,beta,f,phase_d,tau_d
-    real contx_sum(nex),corr
+    real(wp), intent(IN) :: earx(0:nex),contx(nex,nlp),absorbx(nex)
+    real(wp), intent(IN) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
+    real(wp), intent(IN) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
+    real(wp), intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),eta,tauso(nlp)
+    real(wp) E,fac,flo,fhi,f,phase_d,tau_d
     !these are the component arrays for each lamp post separately, before the cross spectrum
-    real, dimension(:,:,:), allocatable :: ReSpiv,ImSpiv,ReScont,ImScont,ReSrev,ImSrev, ReSion,ImSion
+    real(wp), dimension(:,:,:), allocatable :: ReSpiv,ImSpiv,ReScont,ImScont,ReSrev,ImSrev, ReSion,ImSion
     ! real ReScont(nlp,nex,nf),ImScont(nlp,nex,nf),ReSrev(nlp,nex,nf),ImSrev(nlp,nex,nf)
     !these are the  component arrays for each lamp post separately, after the cross spectrum
 
-    real, dimension(:,:,:), allocatable :: ReGcont_temp,ImGcont_temp,ReGrev_temp,ImGrev_temp
-    real, dimension(:,:,:), allocatable :: ReGpiv_temp,ImGpiv_temp,ReGion_temp,ImGion_temp
+    real(wp), dimension(:,:,:), allocatable :: ReGcont_temp,ImGcont_temp,ReGrev_temp,ImGrev_temp
+    real(wp), dimension(:,:,:), allocatable :: ReGpiv_temp,ImGpiv_temp,ReGion_temp,ImGion_temp
     ! real ReGcont_temp(nlp,nex,nf),ImGcont_temp(nlp,nex,nf),ReGrev_temp(nlp,nex,nf),ImGrev_temp(nlp,nex,nf)
     ! real ReGpiv_temp(nlp,nex,nf),ImGpiv_temp(nlp,nex,nf),ReGion_temp(nlp,nex,nf),ImGion_temp(nlp,nex,nf)    
     !these are the arrays containing the sum of the two lamp posts for zero coherence 
-    real, intent(INOUT) :: ReGcont(nex,nf),ImGcont(nex,nf),ReGrev(nex,nf),ImGrev(nex,nf)
-    real, intent(INOUT) :: ReGpiv(nex,nf),ImGpiv(nex,nf),ReGion(nex,nf),ImGion(nex,nf)
+    real(wp), intent(INOUT) :: ReGcont(nex,nf),ImGcont(nex,nf),ReGrev(nex,nf),ImGrev(nex,nf)
+    real(wp), intent(INOUT) :: ReGpiv(nex,nf),ImGpiv(nex,nf),ReGion(nex,nf),ImGion(nex,nf)
     !this complex stuff is purely to make writing the phases easier
-    complex, dimension(:,:,:), allocatable :: Scont,Sreverb,Spivot,Sion
+    complex(wp), dimension(:,:,:), allocatable :: Scont,Sreverb,Spivot,Sion
     ! complex Stemp,Scont(nlp,nex,nf),Sreverb(nlp,nex,nf),Spivot(nlp,nex,nf),Sion(nlp,nex,nf)
-    complex Stemp, cexp_d,cexp_phi,W0,W1,W2,W3
+    complex(wp) Stemp, cexp_d,cexp_phi,W0,W1,W2,W3
     integer i,j,m
 
     if(.not. allocated(ReGcont_temp)) allocate(ReGcont_temp(nlp,nex,nf) )
@@ -425,41 +423,41 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
     if(.not. allocated(Spivot      )) allocate(Spivot      (nlp,nex,nf) )
     if(.not. allocated(Sion        )) allocate(Sion        (nlp,nex,nf) )  
 
-    Scont   = 0.
-    Sreverb = 0.
-    Spivot  = 0.
-    Scont   = 0.
-    Sion    = 0.
+    Scont   = 0.0_wp
+    Sreverb = 0.0_wp
+    Spivot  = 0.0_wp
+    Scont   = 0.0_wp
+    Sion    = 0.0_wp
     
-    ReGcont = 0.
-    ImGcont = 0.
-    ReGrev = 0.
-    ImGrev = 0.
-    ReGpiv = 0.
-    ImGpiv = 0.
-    ReGion = 0.
-    ImGion = 0.
+    ReGcont = 0.0_wp
+    ImGcont = 0.0_wp
+    ReGrev = 0.0_wp
+    ImGrev = 0.0_wp
+    ReGpiv = 0.0_wp
+    ImGpiv = 0.0_wp
+    ReGion = 0.0_wp
+    ImGion = 0.0_wp
     
-    phase_d = 0.
-    tau_d = 0.
+    phase_d = 0.0_wp
+    tau_d = 0.0_wp
     
     do m=1,nlp 
         do j = 1,nf 
-            f = flo * (fhi/flo)**(  (real(j)-0.5) / real(nf) )
+            f = flo * (fhi/flo)**(  (real(j, wp)-0.5_wp) / real(nf, wp) )
             do i = 1,nex
-                E   = 0.5 * ( earx(i) + earx(i-1) )
-                fac = log(gso(m)/((1.0+z)*E))
+                E   = 0.5_wp * ( earx(i) + earx(i-1) )
+                fac = log(gso(m)/((1.0_wp+z)*E))
                 if (m .gt. 1) then
                     tau_d = tauso(m)-tauso(1)
-                    phase_d = 2.*pi*tau_d*f  
+                    phase_d = 2.0_wp*pi*tau_d*f
                 endif
-                cexp_d = cmplx(cos(phase_d),sin(phase_d))     
-                cexp_phi = cmplx(cos(DelAB(m)),sin(DelAB(m)))
+                cexp_d = cmplx(cos(phase_d),sin(phase_d), kind=wp)     
+                cexp_phi = cmplx(cos(DelAB(m)),sin(DelAB(m)), kind=wp)
                 !set up transfer functions 
-                W0 = boost * cmplx(ReW0(m,i,j),ImW0(m,i,j))
-                W1 = boost * cmplx(ReW1(m,i,j),ImW1(m,i,j))
-                W2 = boost * cmplx(ReW2(m,i,j),ImW2(m,i,j))                       
-                W3 = ionvar * boost * cmplx(ReW3(m,i,j),ImW3(m,i,j))
+                W0 = boost * cmplx(ReW0(m,i,j),ImW0(m,i,j), kind=wp)
+                W1 = boost * cmplx(ReW1(m,i,j),ImW1(m,i,j), kind=wp)
+                W2 = boost * cmplx(ReW2(m,i,j),ImW2(m,i,j), kind=wp)                       
+                W3 = ionvar * boost * cmplx(ReW3(m,i,j),ImW3(m,i,j), kind=wp)
                 !calculate complex covariance
                 !note: the reason we use complex here is to ease the calculations 
                 !when we add all the extra phases from the double lamp post 
@@ -475,13 +473,13 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
         enddo    
     end do
     
-    ReScont = real(Scont)
+    ReScont = real(Scont, wp)
     ImScont = aimag(Scont)
-    ReSrev = real(Sreverb)
+    ReSrev = real(Sreverb, wp)
     ImSrev = aimag(Sreverb)
-    ReSpiv = real(Spivot)
+    ReSpiv = real(Spivot, wp)
     ImSpiv = aimag(Spivot)
-    ReSion = real(Sion)
+    ReSion = real(Sion, wp)
     ImSion = aimag(Sion)
 
     ! open (unit = 22, file = 'fort.22', status='replace', action = 'write')
@@ -509,14 +507,14 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
         do j=1,nf 
             do i=1,nex 
                 if (m .gt. 1) then
-                    ReGcont_temp(m,i,j) = eta**2.*ReGcont_temp(m,i,j)
-                    ImGcont_temp(m,i,j) = eta**2.*ImGcont_temp(m,i,j)
-                    ReGrev_temp(m,i,j) = eta**2.*ReGrev_temp(m,i,j)
-                    ImGrev_temp(m,i,j) = eta**2.*ImGrev_temp(m,i,j)
-                    ReGpiv_temp(m,i,j) = eta**2.*ReGpiv_temp(m,i,j)
-                    ImGpiv_temp(m,i,j) = eta**2.*ImGpiv_temp(m,i,j)
-                    ReGion_temp(m,i,j) = eta**2.*ReGion_temp(m,i,j)
-                    ImGion_temp(m,i,j) = eta**2.*ImGion_temp(m,i,j)
+                    ReGcont_temp(m,i,j) = eta**2.0_wp*ReGcont_temp(m,i,j)
+                    ImGcont_temp(m,i,j) = eta**2.0_wp*ImGcont_temp(m,i,j)
+                    ReGrev_temp(m,i,j) = eta**2.0_wp*ReGrev_temp(m,i,j)
+                    ImGrev_temp(m,i,j) = eta**2.0_wp*ImGrev_temp(m,i,j)
+                    ReGpiv_temp(m,i,j) = eta**2.0_wp*ReGpiv_temp(m,i,j)
+                    ImGpiv_temp(m,i,j) = eta**2.0_wp*ImGpiv_temp(m,i,j)
+                    ReGion_temp(m,i,j) = eta**2.0_wp*ReGion_temp(m,i,j)
+                    ImGion_temp(m,i,j) = eta**2.0_wp*ImGion_temp(m,i,j)
                 endif
                 ReGcont(i,j) = ReGcont(i,j) + ReGcont_temp(m,i,j)
                 ImGcont(i,j) = ImGcont(i,j) + ImGcont_temp(m,i,j)

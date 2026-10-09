@@ -14,27 +14,27 @@
       ! photar: (output) xillver energy spectrum
 
 !!! Last change: Gullo - 2023 Nov
+      use rtconstants, only: wp
       use xillver_tables
-      use xspec_interface, only: xsatbl
+      use xspec_interface, only: table_model
       implicit none
       integer, intent(in)  :: ne, Cp, dim, dimCp
-      real   , intent(in)  :: ear(0:ne), param_xillPL(dim), param_xillCp(dimCp)
-      real   , intent(out) :: photar(ne)
+      real(wp) , intent(in)  :: ear(0:ne), param_xillPL(dim), param_xillCp(dimCp)
+      real(wp) , intent(out) :: photar(ne)
 
-      real                :: photer(ne)
-      integer             :: ifl, i
+      integer             :: ifl
 
       ifl = 0
       if( Cp .eq. -1 )then         !xillver
          ! Pass the null terminator for C compatability, as xsatbl is an
          ! external C function.
-         call xsatbl(ear, ne, param_xillPL,                                    &
-              [trim(pathname_xillver), char(0)], ifl, photar, photer)         
+         call table_model(ear, ne, param_xillPL,                               &
+              [trim(pathname_xillver), char(0)], ifl, photar)
       else if ( Cp .eq. 2 )then    !xillverDCp
          ! Pass the null terminator for C compatability, as xsatbl is an
          ! external C function.
-         call xsatbl(ear, ne, param_xillCp,                                    &
-            [trim(pathname_xillverDCp), char(0)], ifl, photar, photer)
+         call table_model(ear, ne, param_xillCp,                               &
+            [trim(pathname_xillverDCp), char(0)], ifl, photar)
       else
          write(*,*) 'No xillver model available for this configuration'
          stop 

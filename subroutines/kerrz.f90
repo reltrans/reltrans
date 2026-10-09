@@ -1,23 +1,24 @@
 module kerrz
     use kerrz_interface
-    use rtconstants, only: pi
+    use rtconstants, only: pi, wp
+    use iso_c_binding, only: c_double
 
     implicit none
 
     ! This effective infinity r coordinate is for compatability with what YNOGK
     ! used to do.
-    double precision, parameter :: R_AT_INFINITY = 1.0d5
+    real(wp), parameter :: R_AT_INFINITY = 1.0e5_wp
 
     type :: LamppostContinuum
         ! This is |∂cosδ / ∂cosθ|, the lensing factor.
-        double precision :: lensing_factor
+        real(wp) :: lensing_factor
         ! The cosine of the angle on the local sky, with δ=0 pointing towards
         ! the black hole.
-        double precision :: cos_delta
+        real(wp) :: cos_delta
         ! The corona-to-observer time.
-        double precision :: time
+        real(wp) :: time
         ! The impact parameters for this geodesic.
-        double precision :: alpha, beta
+        real(wp) :: alpha, beta
     end type LamppostContinuum
 
 contains
@@ -29,9 +30,9 @@ contains
         !> infinity, though the exact distance can be set with the optional
         !> `distance` parameter.
         type(krz_KerrMetric), intent(in) :: metric
-        double precision, intent(in) :: mu_obs, alpha, beta
-        double precision, optional, intent(in) :: distance
-        double precision :: dist
+        real(wp), intent(in) :: mu_obs, alpha, beta
+        real(wp), optional, intent(in) :: distance
+        real(wp) :: dist
         type(krz_InitialConditions) :: ic
         type(krz_FourVector) :: x_obs
 
@@ -39,16 +40,16 @@ contains
         if (present(distance)) dist = distance
         if (.not. present(distance)) dist = R_AT_INFINITY
 
-        x_obs = krz_FourVector(t = 0.0d0, r = dist, th = acos(mu_obs),         &
-            ph = 0.0d0)
+        x_obs = krz_FourVector(t = 0.0_wp, r = dist, th = acos(mu_obs),        &
+            ph = 0.0_wp)
 
         ! TODO: remove this once kerrz has fully face-on implemented
-        if (abs(x_obs%th) < 1d-3) then
-            x_obs%th = 1d-3
+        if (abs(x_obs%th) < 1e-3_wp) then
+            x_obs%th = 1e-3_wp
         end if
 
         ic = krz_fromImpactParameters(metric, x_obs, alpha, beta)
-        res = krz_traceToAngle(metric, ic, pi / 2.0)
+        res = krz_traceToAngle(metric, ic, pi / 2.0_wp)
     end function trace_impact_parameters
 
     type(krz_TraceResult) function trace_lamppost(metric, h, delta_s)          &
@@ -60,7 +61,7 @@ contains
         !> directly downwards towards the black hole, and `delta_s = pi` directly
         !> upwards towards infinity.
         type(krz_KerrMetric), intent(in) :: metric
-        double precision, intent(in) :: h, delta_s
+        real(wp), intent(in) :: h, delta_s
         type(krz_InitialConditions) :: ic
         type(krz_FourVector) :: x
         type(krz_OrthonormalFrame) :: frame
@@ -69,31 +70,31 @@ contains
         ! currently in kerrz so it is marginally offset here to avoid errors.
         ! TODO: cache the frame and pass it in as an argument to avoid
         ! recomputation.
-        x = krz_FourVector(t=0.0d0, r=h, th=1.0d-5, ph=0.0d0)
+        x = krz_FourVector(t=0.0_wp, r=h, th=1.0e-5_wp, ph=0.0_wp)
         frame = krz_stationaryFrame(metric, x)
-        ic = krz_fromSkyAngles(metric, frame, delta_s - pi, 0.0d0)
-        res = krz_traceToAngle(metric, ic, pi / 2.0)
+        ic = krz_fromSkyAngles(metric, frame, delta_s - pi, 0.0_wp)
+        res = krz_traceToAngle(metric, ic, pi / 2.0_wp)
     end function trace_lamppost
 
     type(LamppostContinuum) function trace_lensing(metric, h, r_obs, mu_obs)   &
         result(cont)
         type(krz_KerrMetric), intent(in) :: metric
-        double precision, intent(in) :: h, r_obs, mu_obs
+        real(wp), intent(in) :: h, r_obs, mu_obs
         type(krz_ContinuumLamppost) :: continuum
         type(krz_FourVector) :: x
 
-        x = krz_FourVector(t=0.0d0, r=r_obs, th=acos(mu_obs), ph=0.0d0)
+        x = krz_FourVector(t=0.0_wp, r=r_obs, th=acos(mu_obs), ph=0.0_wp)
 
         ! TODO: remove this once kerrz has fully face-on implemented
-        if (abs(x%th) < 1d-3) then
-            x%th = 1d-3
+        if (abs(x%th) < 1e-3_wp) then
+            x%th = 1e-3_wp
         end if
 
-        continuum = krz_traceContinuumLamppost(metric, x, h, 0.0d0)
+        continuum = krz_traceContinuumLamppost(metric, x, h, 0.0_wp)
 
         ! Note the angle mapping to be consistent with the Reltrans convention.
         ! Also the sign change on beta.
-        cont = LamppostContinuum(lensing_factor=1.0/continuum%dcosd_dcosth,    &
+        cont = LamppostContinuum(lensing_factor=1.0_wp/continuum%dcosd_dcosth, &
             cos_delta = cos(pi - continuum%angle_delta),                       &
             time = continuum%res%x_final%t, alpha = continuum%alpha,           &
             beta = -continuum%beta)
@@ -102,11 +103,11 @@ contains
     ! These subroutines are defined for the test suite:
     subroutine test_kerrz_trace(spin, mu_obs, alpha, beta, t, r, theta, phi)   &
         bind(C, name="test_kerrz_trace")
-        double precision, intent(in) :: spin, mu_obs, alpha, beta
-        double precision, intent(out) :: t, r, theta, phi
+        real(c_double), intent(in) :: spin, mu_obs, alpha, beta
+        real(c_double), intent(out) :: t, r, theta, phi
         type(krz_KerrMetric) :: metric
         type(krz_TraceResult) :: res
-        metric = krz_KerrMetric_init(1.0d0, spin)
+        metric = krz_KerrMetric_init(1.0_wp, spin)
         res = trace_impact_parameters(metric, mu_obs, alpha, beta)
         t = res%x_final%t
         r = res%x_final%r
@@ -116,11 +117,11 @@ contains
 
     subroutine test_kerrz_trace_lamppost(spin, h, delta_s, t, r, theta, phi)   &
         bind(C, name="test_kerrz_trace_lamppost")
-        double precision, intent(in) :: spin, h, delta_s
-        double precision, intent(out) :: t, r, theta, phi
+        real(c_double), intent(in) :: spin, h, delta_s
+        real(c_double), intent(out) :: t, r, theta, phi
         type(krz_KerrMetric) :: metric
         type(krz_TraceResult) :: res
-        metric = krz_KerrMetric_init(1.0d0, spin)
+        metric = krz_KerrMetric_init(1.0_wp, spin)
         res = trace_lamppost(metric, h, delta_s)
         t = res%x_final%t
         r = res%x_final%r
@@ -130,11 +131,11 @@ contains
 
     subroutine test_kerrz_lensing(spin, h, r_obs, mu_obs, lensing_factor,      &
         cos_delta, time) bind(C, name="test_kerrz_lensing")
-        double precision, intent(in) :: spin, h, r_obs, mu_obs
-        double precision, intent(out) :: lensing_factor, cos_delta, time
+        real(c_double), intent(in) :: spin, h, r_obs, mu_obs
+        real(c_double), intent(out) :: lensing_factor, cos_delta, time
         type(krz_KerrMetric) :: metric
         type(LamppostContinuum) :: cont
-        metric = krz_KerrMetric_init(1.0d0, spin)
+        metric = krz_KerrMetric_init(1.0_wp, spin)
         cont = trace_lensing(metric, h, r_obs, mu_obs)
         lensing_factor = cont%lensing_factor
         cos_delta = cont%cos_delta

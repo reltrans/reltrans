@@ -1,14 +1,15 @@
 !-----------------------------------------------------------------------
 subroutine propercross(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw, resp_matr)
+  use rtconstants, only: wp
   use telematrix
   use telematrix2
   implicit none
   integer, intent(in)  :: nex, nf, resp_matr
-  real,    intent(in)  :: earx(0:nex), ReSraw(nex,nf), ImSraw(nex,nf)
-  real,    intent(out) :: ReGraw(nex,nf), ImGraw(nex,nf)
-  real,    allocatable :: ReStel(:), ImStel(:)
-  real,    allocatable :: ReStel2(:), ImStel2(:)
-  real                 :: reref, imref
+  real(wp),    intent(in)  :: earx(0:nex), ReSraw(nex,nf), ImSraw(nex,nf)
+  real(wp),    intent(out) :: ReGraw(nex,nf), ImGraw(nex,nf)
+  real(wp),    allocatable :: ReStel(:), ImStel(:)
+  real(wp),    allocatable :: ReStel2(:), ImStel2(:)
+  real(wp)             :: reref, imref
   integer              :: i, j
 
 
@@ -28,8 +29,8 @@ subroutine propercross(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw, resp_matr)
         call cfold(nex, earx, ReSraw(:,j), ImSraw(:,j), ReStel, ImStel)
         ! write(*,*) 'finished'
         !Calcluate reference band
-        reref = 0.0
-        imref = 0.0
+        reref = 0.0_wp
+        imref = 0.0_wp
         do i = Ilo, Ihi
            reref = reref + ReStel(i)
            imref = imref + ImStel(i)
@@ -54,8 +55,8 @@ subroutine propercross(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw, resp_matr)
         call cfold2(nex, earx, ReSraw(:,j), ImSraw(:,j), ReStel2, ImStel2)
         ! write(*,*) 'finished'
         !Calcluate reference band
-        reref = 0.0
-        imref = 0.0
+        reref = 0.0_wp
+        imref = 0.0_wp
         ! write(*,*) 'Calculating the refenrece band with the second matrix'
         do i = Ilo2, Ihi2
            reref = reref + ReStel2(i)
@@ -79,13 +80,14 @@ end subroutine propercross
 
 !-----------------------------------------------------------------------
 subroutine response_and_energy_bounds(resp_matr)
+  use rtconstants, only: wp
   use telematrix
   use telematrix2
   implicit none
   integer, INTENT(IN) :: resp_matr
   
-  real     :: dum
-  real     :: get_env_real
+  real(wp) :: dum
+  real(wp) :: get_env_real
   integer  :: i
   
 !Read from response file
@@ -96,13 +98,13 @@ subroutine response_and_energy_bounds(resp_matr)
      endif
 !Get energy bounds of the reference band
      if( needchans )then
-        Elo = get_env_real("EMIN_REF",0.0)
-        Ehi = get_env_real("EMAX_REF",0.0)
-        if (Elo .eq. 0.0) then
+        Elo = get_env_real("EMIN_REF",0.0_wp)
+        Ehi = get_env_real("EMAX_REF",0.0_wp)
+        if (Elo .eq. 0.0_wp) then
            write(*,*)"Enter lower energy in reference band"
            read(*,*)Elo
         endif
-        if (Ehi .eq. 0.0) then  
+        if (Ehi .eq. 0.0_wp) then  
            write(*,*)"Enter upper energy in reference band"
         read(*,*)Ehi
         end if
@@ -130,13 +132,13 @@ subroutine response_and_energy_bounds(resp_matr)
      endif
 !second response matrix     
      if( needchans2 )then
-        Elo2 = get_env_real("EMIN_REF2",0.0)
-        Ehi2 = get_env_real("EMAX_REF2",0.0)
-        if (Elo2 .eq. 0.0) then
+        Elo2 = get_env_real("EMIN_REF2",0.0_wp)
+        Ehi2 = get_env_real("EMAX_REF2",0.0_wp)
+        if (Elo2 .eq. 0.0_wp) then
            write(*,*)"Enter lower energy in reference band of the second response"
            read(*,*)Elo2
         endif
-        if (Ehi2 .eq. 0.0) then
+        if (Ehi2 .eq. 0.0_wp) then
            write(*,*)"Enter upper energy in reference band of the second response"
            read(*,*)Ehi2
         endif
@@ -196,26 +198,26 @@ subroutine response_and_energy_bounds(resp_matr)
 
 !-----------------------------------------------------------------------
 subroutine propercross_NOmatrix(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
+  use rtconstants, only: wp
   use telematrix
   implicit none
   integer, intent(in)  :: nex, nf
-  real,    intent(in)  :: earx(0:nex), ReSraw(nex,nf), ImSraw(nex,nf)
-  real,    intent(out) :: ReGraw(nex,nf), ImGraw(nex,nf)
-  real,    allocatable :: ReStel(:), ImStel(:)
-  real                 :: reref, imref, dum, dE
-  real                 :: get_env_real
+  real(wp),    intent(in)  :: earx(0:nex), ReSraw(nex,nf), ImSraw(nex,nf)
+  real(wp),    intent(out) :: ReGraw(nex,nf), ImGraw(nex,nf)
+  real(wp)             :: reref, imref, dum, dE
+  real(wp)             :: get_env_real
   integer              :: i, j
 
 
 !Get energy bounds of the reference band
      if( needchans )then
-        Elo = get_env_real("EMIN_REF",0.0)
-        Ehi = get_env_real("EMAX_REF",0.0)
-        if (Elo .eq. 0.0) then
+        Elo = get_env_real("EMIN_REF",0.0_wp)
+        Ehi = get_env_real("EMAX_REF",0.0_wp)
+        if (Elo .eq. 0.0_wp) then
            write(*,*)"Enter lower energy in reference band"
            read(*,*)Elo
         endif
-        if (Ehi .eq. 0.0) then  
+        if (Ehi .eq. 0.0_wp) then  
            write(*,*)"Enter upper energy in reference band"
         read(*,*)Ehi
         end if
@@ -239,8 +241,8 @@ subroutine propercross_NOmatrix(nex, nf, earx, ReSraw, ImSraw, ReGraw, ImGraw)
      !Calculate `raw' cross-spectrum
      do j = 1, nf
         !Calcluate reference band
-        reref = 0.0
-        imref = 0.0
+        reref = 0.0_wp
+        imref = 0.0_wp
         do i = Ilo, Ihi
            dE = earx(i) - earx(i-1)
            reref = reref + ReSraw(i,j) 
@@ -258,12 +260,13 @@ end subroutine propercross_NOmatrix
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-   function find_nearest_index_in_energy_grid(earx, nex, Emin, Emax, E_target)
+   function find_nearest_index_in_energy_grid(nex, Emin, Emax, E_target)
+     use rtconstants, only: wp
      implicit none
      integer, intent(in)  :: nex
-     real,    intent(in)  :: earx(0:nex), Emin, Emax, E_target
+     real(wp),    intent(in)  :: Emin, Emax, E_target
      integer              :: find_nearest_index_in_energy_grid
-     real                 :: x
+     real(wp)             :: x
 
      x = nex * log(E_target/Emin) / log(Emax/Emin)
      find_nearest_index_in_energy_grid = max(0, min(nex, nint(x)))

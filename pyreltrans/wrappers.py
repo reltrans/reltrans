@@ -9,7 +9,6 @@ import importlib.resources
 import numpy as np
 
 f_double = ct.POINTER(ct.c_double)
-f_float = ct.POINTER(ct.c_float)
 f_int = ct.POINTER(ct.c_int)
 
 
@@ -61,13 +60,13 @@ def get_reltrans_library_path(lib_name="libreltrans") -> str:
 
 def _wrap_call(f, energy: np.ndarray, params: np.ndarray) -> np.ndarray:
     ne = len(energy) - 1
-    output = np.zeros(ne, dtype=np.float32)
+    output = np.zeros(ne, dtype=np.float64)
     f(
-        energy.ctypes.data_as(f_float),
+        energy.ctypes.data_as(f_double),
         ct.byref(ct.c_int(ne)),
-        params.ctypes.data_as(f_float),
+        params.ctypes.data_as(f_double),
         ct.byref(ct.c_int(1)),
-        output.ctypes.data_as(f_float),
+        output.ctypes.data_as(f_double),
     )
     return output
 
@@ -95,7 +94,7 @@ def _wrap_getrgrid(f, rnmin, rnmax, mueff, nro, nphi):
     return rn, domega
 
 
-def _wrap_trace_disk_observer(f, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
+def _wrap_trace_disk_observer(f, nphi, rn, mueff, mu0, spin, rmin, rout, d):
     nro = len(rn)
     # ctypes scalars
     nro_c = ct.c_int(nro)
@@ -106,7 +105,6 @@ def _wrap_trace_disk_observer(f, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk,
     spin_c = ct.c_double(spin)
     rmin_c = ct.c_double(rmin)
     rout_c = ct.c_double(rout)
-    mudisk_c = ct.c_double(mudisk)
     d_c = ct.c_double(d)
     rn = np.asarray(rn, dtype=np.float64)
     f(
@@ -118,7 +116,6 @@ def _wrap_trace_disk_observer(f, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk,
         ct.byref(spin_c),
         ct.byref(rmin_c),
         ct.byref(rout_c),
-        ct.byref(mudisk_c),
         ct.byref(d_c),
     )
 
@@ -170,7 +167,7 @@ class DCP_Parameters:
     telescope_response: float = 1.0
 
     def to_numpy_array(self) -> np.ndarray:
-        return np.array(dataclasses.astuple(self), dtype=np.float32)
+        return np.array(dataclasses.astuple(self), dtype=np.float64)
 
 
 @dataclasses.dataclass
@@ -217,7 +214,7 @@ class PL_Parameters:
     telescope_response: float = 1.0
 
     def to_numpy_array(self) -> np.ndarray:
-        return np.array(dataclasses.astuple(self), dtype=np.float32)
+        return np.array(dataclasses.astuple(self), dtype=np.float64)
 
 
 @dataclasses.dataclass
@@ -272,7 +269,7 @@ class Dbl_Parameters:
     telescope_response: float = 1.0
 
     def to_numpy_array(self) -> np.ndarray:
-        return np.array(dataclasses.astuple(self), dtype=np.float32)
+        return np.array(dataclasses.astuple(self), dtype=np.float64)
 
 
 @dataclasses.dataclass
@@ -325,7 +322,7 @@ class rtdist_Parameters:
     telescope_response: float = 1.0
 
     def to_numpy_array(self) -> np.ndarray:
-        return np.array(dataclasses.astuple(self), dtype=np.float32)
+        return np.array(dataclasses.astuple(self), dtype=np.float64)
 
 
 @dataclasses.dataclass
@@ -373,7 +370,7 @@ class Simrelt_Parameters:
     use_telescope_response: float = 1
 
     def to_numpy_array(self) -> np.ndarray:
-        return np.array(dataclasses.astuple(self), dtype=np.float32)
+        return np.array(dataclasses.astuple(self), dtype=np.float64)
 
     def to_DCP_Parameters(self) -> DCP_Parameters:
         """
@@ -411,24 +408,24 @@ class Reltrans:
         )
         self.lib_reltrans.FNINIT()
         self.lib_reltrans.tdreltransdcp_.argtypes = [
-            f_float,
+            f_double,
             f_int,
-            f_float,
+            f_double,
             f_int,
-            f_float,
+            f_double,
         ]
         self.lib_reltrans.tdreltransdcp_.restype = None
 
         self.lib_reltrans.simrelt_extra_.argtypes = [
-            f_float,
+            f_double,
             f_int,
-            f_float,
+            f_double,
             f_int,
-            f_float,
+            f_double,
             # Extra:
-            f_float,
-            f_float,
-            f_float,
+            f_double,
+            f_double,
+            f_double,
         ]
         self.lib_reltrans.simrelt_extra_.restype = None
 
@@ -452,7 +449,6 @@ class Reltrans:
             ct.POINTER(ct.c_double),  # spin
             ct.POINTER(ct.c_double),  # rmin
             ct.POINTER(ct.c_double),  # rout
-            ct.POINTER(ct.c_double),  # mudisk
             ct.POINTER(ct.c_double),  # d
         ]
         self.lib_reltrans.trace_disk_observer.restype = None
@@ -504,7 +500,7 @@ class Reltrans:
         """A wrapper around the XSPEC interface of reltransDcp"""
         return _wrap_call(
             self.lib_reltrans.tdreltransdcp_,
-            energy.astype(np.float32),
+            energy.astype(np.float64),
             parameters.to_numpy_array(),
         )
 
@@ -512,7 +508,7 @@ class Reltrans:
         """A wrapper around the XSPEC interface of reltransPL"""
         return _wrap_call(
             self.lib_reltrans.tdreltranspl_,
-            energy.astype(np.float32),
+            energy.astype(np.float64),
             parameters.to_numpy_array(),
         )
 
@@ -520,7 +516,7 @@ class Reltrans:
         """A wrapper around the XSPEC interface of reltransDbl"""
         return _wrap_call(
             self.lib_reltrans.tdreltransdbl_,
-            energy.astype(np.float32),
+            energy.astype(np.float64),
             parameters.to_numpy_array(),
         )
 
@@ -528,7 +524,7 @@ class Reltrans:
         """A wrapper around the XSPEC interface of rtdist"""
         return _wrap_call(
             self.lib_reltrans.tdrtdist_,
-            energy.astype(np.float32),
+            energy.astype(np.float64),
             parameters.to_numpy_array(),
         )
 
@@ -544,22 +540,22 @@ class Reltrans:
     def simrelt(
         self, energy: np.ndarray, parameters: Dbl_Parameters
     ) -> tuple[float, float, float]:
-        _energy = energy.astype(np.float32)
+        _energy = energy.astype(np.float64)
         _params = parameters.to_numpy_array()
 
         ne = len(energy) - 1
-        output = np.zeros(ne, dtype=np.float32)
+        output = np.zeros(ne, dtype=np.float64)
 
-        background_count_rate = ct.c_float(0)  # output
-        source_count_rate = ct.c_float(0)  # output
-        fractional_rms_sq_per_hz = ct.c_float(0)  # output
+        background_count_rate = ct.c_double(0)  # output
+        source_count_rate = ct.c_double(0)  # output
+        fractional_rms_sq_per_hz = ct.c_double(0)  # output
 
         self.lib_reltrans.simrelt_extra_(
-            _energy.ctypes.data_as(f_float),
+            _energy.ctypes.data_as(f_double),
             ct.byref(ct.c_int(ne)),
-            _params.ctypes.data_as(f_float),
+            _params.ctypes.data_as(f_double),
             ct.byref(ct.c_int(1)),
-            output.ctypes.data_as(f_float),
+            output.ctypes.data_as(f_double),
             # The extra arguments
             ct.byref(background_count_rate),
             ct.byref(source_count_rate),
@@ -571,7 +567,7 @@ class Reltrans:
             float(fractional_rms_sq_per_hz.value),
         )
 
-    def trace_disk_observer(self, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk, d):
+    def trace_disk_observer(self, nphi, rn, mueff, mu0, spin, rmin, rout, d):
         _wrap_trace_disk_observer(
             self.lib_reltrans.trace_disk_observer,
             nphi,
@@ -581,7 +577,6 @@ class Reltrans:
             spin,
             rmin,
             rout,
-            mudisk,
             d,
         )
 

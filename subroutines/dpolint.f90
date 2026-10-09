@@ -1,10 +1,11 @@
 !-----------------------------------------------------------------------
       SUBROUTINE dpolint(xa,ya,n,x,y,dy)
+      use rtconstants, only: wp
       INTEGER n,NMAX
-      double precision dy,x,y,xa(n),ya(n)
+      real(wp) dy,x,y,xa(n),ya(n)
       PARAMETER (NMAX=10)
       INTEGER i,m,ns
-      double precision den,dif,dift,ho,hp,w,c(NMAX),d(NMAX)
+      real(wp) den,dif,dift,ho,hp,w,c(NMAX),d(NMAX)
       ns=1
       dif=abs(x-xa(1))
       do 11 i=1,n
@@ -24,7 +25,7 @@
           hp=xa(i+m)-x
           w=c(i+1)-d(i)
           den=ho-hp
-          if(den.eq.0.)stop 'failure in dpolint'
+          if(den.eq.0.0_wp)stop 'failure in dpolint'
           den=w/den
           d(i)=hp*den
           c(i)=ho*den

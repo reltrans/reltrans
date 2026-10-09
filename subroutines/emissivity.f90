@@ -6,6 +6,7 @@ module emissivities
     ! interoperability with the C abstract binary interface. That is to say,
     ! Fortran ints may be compile differently that C ints in terms of bits, so
     ! the bindings give stable types across systems.
+    use rtconstants, only: wp
     use iso_c_binding, only: c_double
 
     implicit none
@@ -57,19 +58,19 @@ contains
     ! black hole `spin`, the power-law index `Gamma`, the cosine factor `cosfac
     ! = |dcos\delta/dr|`, the angular emissivity `ptf`, and the redshift along a
     ! geodesic from the source to the disc `gsd`
-    double precision function determine_emissivity(re, spin, Gamma, cosfac,    &
+    real(wp) function determine_emissivity(re, spin, Gamma, cosfac,            &
         ptf, gsd) result(em)
         use rtconstants, only: pi
-        double precision, intent(in) :: ptf, spin, cosfac, re, Gamma
-        real, intent(in) :: gsd
+        real(wp), intent(in) :: ptf, spin, cosfac, re, Gamma
+        real(wp), intent(in) :: gsd
 
         ! functions used
-        double precision :: dareafac
+        real(wp) :: dareafac
 
         if (associated(ext_emissivity)) then
             em = ext_emissivity(re, spin)
         else
-            em = gsd**Gamma * 2.d0 * pi * ptf
+            em = gsd**Gamma * 2.0_wp * pi * ptf
             em = em * cosfac / dareafac(re, spin)
         end if
     end function determine_emissivity
@@ -77,14 +78,14 @@ contains
     ! Get the extrema source-to-disc time at a particular emissision radius on
     ! the disc `re`
     subroutine get_emissivity_time(re, phi, em, tau)
-        double precision, intent(in) :: re, phi
-        double precision, intent(out) :: em, tau
+        real(wp), intent(in) :: re, phi
+        real(wp), intent(out) :: em, tau
         if (associated(ext_emissivity_time)) then
             call ext_emissivity_time(re, phi, em, tau)
         else
             print *, "WARN: ext_emissivity_time not associated"
-            tau = 0.d0
-            em = 0.d0
+            tau = 0.0_wp
+            em = 0.0_wp
         end if
     end subroutine get_emissivity_time
 

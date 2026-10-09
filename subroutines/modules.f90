@@ -2,13 +2,14 @@
 module telematrix
   !Module containing definitions needs to fold around the telescope
   !response matrix
+  use rtconstants, only: wp
   logical              :: needchans, needresp, arf, needbkg
   integer              :: nenerg, numchn, Ilo, Ihi, needEs
-  real                 :: Elo, Ehi
-  real,    allocatable :: En(:), resp(:,:), ECHN(:)
+  real(wp)             :: Elo, Ehi
+  real(wp),    allocatable :: En(:), resp(:,:), ECHN(:)
   integer, allocatable :: NGRP(:), FCHAN(:,:), LCHAN(:,:), NCHAN(:,:)
   integer, allocatable :: bkgcounts(:)
-  real, allocatable    :: bkgrate(:)
+  real(wp), allocatable    :: bkgrate(:)
   character (len=500) respname, arfname, bkgname
   data needresp/.true./
   data needchans/.true./
@@ -18,10 +19,11 @@ end module telematrix
 module telematrix2
   !Module containing definitions needs to fold around the telescope
   !response matrix
+  use rtconstants, only: wp
   logical              :: needchans2, needresp2, arf2
   integer              :: nenerg2, numchn2, Ilo2, Ihi2, needEs2
-  real                 :: Elo2, Ehi2
-  real,    allocatable :: En2(:), resp2(:,:), ECHN2(:)
+  real(wp)             :: Elo2, Ehi2
+  real(wp),    allocatable :: En2(:), resp2(:,:), ECHN2(:)
   integer, allocatable :: NGRP2(:), FCHAN2(:,:), LCHAN2(:,:), NCHAN2(:,:)
   character (len=500) respname2, arfname2
 
@@ -58,8 +60,9 @@ module env_variables
 end module env_variables
 
 module saved_variables
+  use rtconstants, only: wp
   implicit none
-  double precision spinsav,musav,routsav,mudsav
+  real(wp) spinsav,musav,routsav,mudsav
   save spinsav,musav,routsav,mudsav
 end module saved_variables
 
@@ -74,11 +77,12 @@ MODULE dyn_gr
 !          pem=-1.D0, if the photon goto infinity.
 !          pem=-2.D0, if the photon fall into event horizon.       
 !---------------------------------------------------------------------
+    use rtconstants, only: wp
     implicit none
     integer, parameter :: ndelta = 1000
     integer         , dimension(:)  , allocatable :: npts
-    double precision, dimension(:,:), allocatable :: re1, taudo1, pem1
-    double precision, dimension(:,:), allocatable :: dcosdr, cosd, rlp, tlp
+    real(wp), dimension(:,:), allocatable :: re1, taudo1, pem1
+    real(wp), dimension(:,:), allocatable :: dcosdr, cosd, rlp, tlp
 
   contains
 
@@ -145,19 +149,22 @@ module xillver_tables
 end module xillver_tables
 
 module gr_continuum
+  use rtconstants, only: wp
   implicit none
-  double precision, dimension(:), allocatable :: tauso, gso, lens, cosdelta_obs
+  real(wp), dimension(:), allocatable :: tauso, gso, lens, cosdelta_obs
   save lens
 end module gr_continuum
 
 module radial_grids
+  use rtconstants, only: wp
   implicit none
-  double precision , dimension(:), allocatable :: logxir, logner, gsdr, dfer_arr
-  double precision :: pnorm
+  real(wp) , dimension(:), allocatable :: logxir, logner, gsdr, dfer_arr
+  real(wp) :: pnorm
   save logxir, gsdr, logner
 end module radial_grids
 
 module conv_mod
+  use rtconstants, only: wp
   use, intrinsic :: iso_c_binding
   implicit none
   include 'fftw3.f03'
@@ -167,7 +174,7 @@ module conv_mod
   ! real   , dimension(2 * nex_conv) :: adata,bdata,cdata
   ! complex, dimension(nex_conv) :: ac,bc,cc
   
-  double precision, parameter :: nexm1 = 1. / real(nex_conv, kind(8))
+  real(wp), parameter :: nexm1 = 1.0_wp / real(nex_conv, wp)
 
   type(C_ptr) :: plan1, plan2
   real(   c_double), pointer, dimension(:) :: in,  out_conv
@@ -179,7 +186,7 @@ contains
   
   subroutine init_fftw_allconv(use_estimate)
     implicit none
-    integer(c_int) :: flags, i
+    integer(c_int) :: flags
     integer, external :: omp_get_max_threads
     logical, intent(in) :: use_estimate
     INTEGER FFTW_PATIENT
@@ -213,14 +220,14 @@ contains
   subroutine conv_one_FFTw(dyn,earx,Gamma,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
     implicit none
     integer, intent(in) :: DC, nlp 
-    real                :: dyn
-    real, intent(in)    :: photarx(nex), earx(0:nex), Gamma
-    real, intent(in)    :: reline(nlp,nex), imline(nlp,nex)
-    real, intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
-    complex :: conv(nec),padFT_photarx(nec)
-    complex :: padFT_reline(nec),  padFT_imline(nec)            
+    real(wp)            :: dyn
+    real(wp), intent(in)    :: photarx(nex), earx(0:nex), Gamma
+    real(wp), intent(in)    :: reline(nlp,nex), imline(nlp,nex)
+    real(wp), intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
+    complex(wp) :: conv(nec),padFT_photarx(nec)
+    complex(wp) :: padFT_reline(nec),  padFT_imline(nec)            
     integer :: m, i
-    real    :: photmax, depad_conv(nex), E
+    real(wp) :: depad_conv(nex), E
     
     do m=1,nlp  
        if (DC .eq. 1 ) then
@@ -233,7 +240,7 @@ contains
           call de_paddingFT(dyn, conv, depad_conv)
 
           do i = 1,nex
-             E             = 0.5 * ( earx(i) + earx(i-1) )
+             E             = 0.5_wp * ( earx(i) + earx(i-1) )
              ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
           end do
                    
@@ -246,7 +253,7 @@ contains
           call de_paddingFT(dyn, conv, depad_conv)
 
           do i = 1,nex
-             E             = 0.5 * ( earx(i) + earx(i-1) )
+             E             = 0.5_wp * ( earx(i) + earx(i-1) )
              ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
           end do
 
@@ -254,7 +261,7 @@ contains
           call de_paddingFT(dyn, conv, depad_conv)
 
           do i = 1,nex
-             E             = 0.5 * ( earx(i) + earx(i-1) )
+             E             = 0.5_wp * ( earx(i) + earx(i-1) )
              ImW_conv(m,i) = ImW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
           end do
           
@@ -265,18 +272,18 @@ contains
 
   subroutine padding4FT(line, padFT_line)
     implicit none 
-    real           , intent(in)  :: line(nex)
-    complex        , intent(out) :: padFT_line(nec)
+    real(wp)       , intent(in)  :: line(nex)
+    complex(wp)    , intent(out) :: padFT_line(nec)
     
     integer :: i 
 
     ! Fill padded arrays
-    in(1) = 0.0
+    in(1) = 0.0_wp
     do i = 1, nex
         in(i+1) = line(i)
     end do
     do i = 2, 3 * nex
-        in(i + nex) = 0.
+        in(i + nex) = 0.0_wp
     end do
 
     ! do i=1, nex_conv
@@ -293,26 +300,26 @@ contains
 
   subroutine padding4FT_xillver(line, padFT_line)
     implicit none 
-    real           , intent(in)  :: line(nex)
-    complex        , intent(out) :: padFT_line(nec)
+    real(wp)       , intent(in)  :: line(nex)
+    complex(wp)    , intent(out) :: padFT_line(nec)
 
     integer :: i
-    real    :: m
+    real(wp) :: m
 
     ! Fill padded arrays
     ! in(1) = 0.0
-    m = 0.1
+    m = 0.1_wp
     do i = 1, 641
-       in(i) = m * real(i) + line(642) - (m * 642)
-       if (in(i) .lt. 0.0) then
-          in(i) = 0.0
+       in(i) = m * real(i, wp) + line(642) - (m * 642)
+       if (in(i) .lt. 0.0_wp) then
+          in(i) = 0.0_wp
        endif
     end do
     do i = 642, nex
         in(i) = line(i)
     end do
     do i = 1, 3 * nex
-        in(i + nex) = 0.
+        in(i + nex) = 0.0_wp
     end do
 
     ! do i=1, nex_conv
@@ -328,12 +335,12 @@ contains
 
   subroutine de_paddingFT(dyn, padFT_line, out_line)
     implicit none 
-    real    , intent(in) :: dyn
-    complex , intent(in) :: padFT_line(nec)
-    real    , intent(out):: out_line(nex)
+    real(wp) , intent(in) :: dyn
+    complex(wp) , intent(in) :: padFT_line(nec)
+    real(wp) , intent(out):: out_line(nex)
 
     integer :: i 
-    real    :: photmax
+    real(wp) :: photmax
 
     in_conv = padFT_line
 
@@ -343,7 +350,7 @@ contains
     ! enddo
     
     ! Populate output array
-    photmax = 0.0
+    photmax = 0.0_wp
     do i = 1, nex
        out_line(i) = out_conv(i + nex/2 + 1)
        ! write(81,*) i, out_line(i)
@@ -352,7 +359,7 @@ contains
 
     ! Clean any residual edge effects
     do i = 1, nex
-        if( abs(out_line(i)) .lt. abs(dyn * photmax) ) out_line(i) = 0.0
+        if( abs(out_line(i)) .lt. abs(dyn * photmax) ) out_line(i) = 0.0_wp
     end do
 
     return 

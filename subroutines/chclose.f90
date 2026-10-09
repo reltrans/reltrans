@@ -4,8 +4,9 @@
 !      it returns the closest indices of the array 
 !     note: if you want to use an array like v(0:dim) you must pass to the function
 !      dim+1 as a adim. then subtract -1 to the result indices
+      use rtconstants, only: wp
       implicit none
-      double precision :: a,amin,amax,el
+      real(wp) :: a,amin,amax,el
       integer adim,ihi,ilo
       if (a.lt.amin.or.a.gt.amax) then
          write(*,*) "value", a
@@ -26,7 +27,7 @@
        write(*,*) 'warning: in chclose the array dimension is less 1'
        goto 666
       endif
-      el = (a-amin)*float(adim-1)/(amax-amin) + 1.0
+      el = (a-amin)*real(adim-1, wp)/(amax-amin) + 1.0_wp
       ihi = min( ceiling( el ) , adim )
       ilo = max( floor( el )   , 1    )      
       return

@@ -10,6 +10,7 @@ subroutine radfuncs_dist(config, model_args, fcons)
 ! logner(1:xe) -- Log10 of electron density as a function of r (via radial_grids)
 !note: this does not work with multiple lamposts for now
 
+  use rtconstants, only: wp
   use common_types
   use dyn_gr, only: ndelta, rlp, dcosdr, cosd, npts
   use radial_grids, only: logxir, gsdr, logner, pnorm
@@ -17,27 +18,27 @@ subroutine radfuncs_dist(config, model_args, fcons)
   implicit none
   type(t_config),          intent(in) :: config
   type(t_model_arguments), intent(in) :: model_args
-  double precision,        intent(in) :: fcons
+  real(wp),        intent(in) :: fcons
   integer          :: i, kk, get_index, get_env_int, verbose
-  double precision :: re,re1(config%xe),zA_logne,cosfac,mus,interper,newtex,mudisk
-  double precision, parameter :: pi = acos(-1.d0)
-  double precision :: ptf,pfunc_raw,gsd,dglpfacthick,eps_bol,Fx(config%xe),logxir_raw(config%xe),mui,dinang
-  double precision :: dareafac,lximax
+  real(wp) :: re,re1(config%xe),zA_logne,cosfac,mus,interper,newtex,mudisk
+  real(wp), parameter :: pi = acos(-1.0_wp)
+  real(wp) :: ptf,pfunc_raw,gsd,dglpfacthick,eps_bol,Fx(config%xe),logxir_raw(config%xe),mui,dinang
+  real(wp) :: dareafac,lximax
   
 ! Set disk opening angle
-  mudisk   = model_args%honr / sqrt( model_args%honr**2 + 1.d0  )
+  mudisk   = model_args%honr / sqrt( model_args%honr**2 + 1.0_wp  )
 ! Now loop through xe radial bins
   do i = 1,config%xe
      !Radius
-     re     = (config%rnmax/model_args%rin)**(real(i-1) / real(config%xe))
-     re     = re + (config%rnmax/model_args%rin)**(real(i) / real(config%xe))
-     re     = re * model_args%rin * 0.5
+     re     = (config%rnmax/model_args%rin)**(real(i-1, wp) / real(config%xe, wp))
+     re     = re + (config%rnmax/model_args%rin)**(real(i, wp) / real(config%xe, wp))
+     re     = re * model_args%rin * 0.5_wp
      re1(i) = re
      !Density
      !IF adensity = 0 logner(i)=dble(model_args%lognep) for every i
      !IF adensity = 1 logner(i)=zA_logne(re,model_args%rin,dble(model_args%lognep) where re depends on i
-     logner(i) = abs(dble(model_args%lognep) * (adensity - 1))
-     logner(i) = logner(i) + (adensity * zA_logne(re,model_args%rin,dble(model_args%lognep)))
+     logner(i) = abs(model_args%lognep * (adensity - 1))
+     logner(i) = logner(i) + (adensity * zA_logne(re,model_args%rin,model_args%lognep))
      !Interpolate functions from rpl grid
      kk     = get_index(rlp,ndelta,re,config%rmin,npts(1))
      cosfac = interper(rlp,dcosdr,ndelta,re,kk)
@@ -51,19 +52,19 @@ subroutine radfuncs_dist(config, model_args, fcons)
      gsd     = dglpfacthick(re,model_args%a,model_args%h(1),mudisk)
      !gsd     = dglpfac(re,model_args%a,model_args%h(1))
      gsdr(i) = gsd
-     eps_bol = gsd**2 * 2.0 * pi * ptf
+     eps_bol = gsd**2 * 2.0_wp * pi * ptf
      eps_bol = eps_bol * cosfac / dareafac(re,model_args%a)
      Fx(i)   = fcons * eps_bol
      !Calculate logxi(r)
-     logxir_raw(i) = log10( 4.0 * pi * Fx(i) ) - logner(i)
+     logxir_raw(i) = log10( 4.0_wp * pi * Fx(i) ) - logner(i)
      !Now adjust to effective ionization parameter
      mui       = dinang(model_args%a, re, model_args%h(1), mus)
-     logxir(i) = logxir_raw(i) - 0.1505 - log10(mui)
+     logxir(i) = logxir_raw(i) - 0.1505_wp - log10(mui)
   end do
 
 !check max and min for both ionisation and density
-  logxir = max( logxir , 0.d0  )
-  logxir = min( logxir , 4.7d0 )
+  logxir = max( logxir , 0.0_wp  )
+  logxir = min( logxir , 4.7_wp )
   ! logner   = max( logner , 15.d0  )
   ! logner   = min( logner , 22.d0 )
   !...no need to enforce limits on logne since this is done in myreflect()

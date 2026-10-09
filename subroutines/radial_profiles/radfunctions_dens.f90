@@ -8,6 +8,7 @@ subroutine radfunctions_dens(config, model_args, arrays)
     !       gsdr(1:config%xe)   - source-to-disc blueshift factor as a function of radius
     !       logner(1:config%xe) - log10 of electron density as a function of radius
     !       dfer_arr(1:config%xe) - emissivity-related radial scaling array
+    use rtconstants, only: wp
     use common_types
     use env_variables, only : adensity
     use dyn_gr, only: ndelta, rlp, dcosdr, cosd, npts
@@ -17,20 +18,20 @@ subroutine radfunctions_dens(config, model_args, arrays)
     type(t_model_arguments), intent(in)    :: model_args
     type(t_arrays)         , intent(in)    :: arrays
 
-    real                           :: gso(model_args%nlp)
-    double precision :: rlp_column(ndelta),dcosdr_column(ndelta),cosd_column(ndelta), dgsofac
+    real(wp)                       :: gso(model_args%nlp)
+    real(wp) :: rlp_column(ndelta),dcosdr_column(ndelta),cosd_column(ndelta), dgsofac
     integer          :: i, kk, get_index, l, m
     ! old variable declaration
     ! integer          :: get_env_int
-    double precision :: logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd(model_args%nlp)
+    real(wp) :: logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd(model_args%nlp)
     ! old variable declaration
     ! double precision :: rp, dglpfacthick
-    double precision :: xi_lp(config%xe,model_args%nlp), logxi_lp(config%xe,model_args%nlp), logxip_lp(model_args%nlp)
-    double precision :: xitot, xiraw, mylogne, mudisk, gsd_temp
-    double precision, allocatable :: rad(:)
+    real(wp) :: xi_lp(config%xe,model_args%nlp), logxi_lp(config%xe,model_args%nlp), logxip_lp(model_args%nlp)
+    real(wp) :: xitot, xiraw, mylogne, mudisk, gsd_temp
+    real(wp), allocatable :: rad(:)
 
     ! Set disk opening angle
-    mudisk   = model_args%honr / sqrt( model_args%honr**2 + 1.d0  )
+    mudisk   = model_args%honr / sqrt( model_args%honr**2 + 1.0_wp  )
     
     allocate(rad(config%xe))
     !Now calculate logxi itself
@@ -40,12 +41,12 @@ subroutine radfunctions_dens(config, model_args, arrays)
 
     !TBD: include luminosity ratio between LPs 
     do i = 1, config%xe
-        rad(i) = (config%rnmax/model_args%rin)**(real(i-1) / real(config%xe))
-        rad(i) = rad(i) + (config%rnmax/model_args%rin)**(real(i) / real(config%xe))
-        rad(i) = rad(i) * model_args%rin * 0.5
+        rad(i) = (config%rnmax/model_args%rin)**(real(i-1, wp) / real(config%xe, wp))
+        rad(i) = rad(i) + (config%rnmax/model_args%rin)**(real(i, wp) / real(config%xe, wp))
+        rad(i) = rad(i) * model_args%rin * 0.5_wp
         !Initialize total ionization tracker
-        xitot = 0. 
-        gsd_temp = 0.
+        xitot = 0.0_wp 
+        gsd_temp = 0.0_wp
         !Now calculate the raw density (this matters only for high dens model reltransD)
         logner(i) = adensity * mylogne(rad(i), model_args%rin)
         do m=1,model_args%nlp
@@ -54,7 +55,7 @@ subroutine radfunctions_dens(config, model_args, arrays)
                 dcosdr_column(l) = dcosdr(l,m)
                 cosd_column(l) = cosd(l,m)
             end do    
-            gso(m) = real( dgsofac(model_args%a, model_args%h(m)) )
+            gso(m) = dgsofac(model_args%a, model_args%h(m))
             xi_lp(i,m) = xiraw(rad(i), model_args%a, model_args%h(m),         &
                 model_args%honr, rlp_column, dcosdr_column, ndelta,            &
                 config%rmin, npts(m), mudisk, gsd(m))
@@ -66,7 +67,7 @@ subroutine radfunctions_dens(config, model_args, arrays)
                 ndelta, rad(i), model_args%h(m), model_args%honr, kk)
             mui = dinang(model_args%a, rad(i), model_args%h(m), mus)
             !Correction to account for the radial dependence of incident angle, and for the g factors
-            xi_lp(i,m) = xi_lp(i,m) / (sqrt(2.) * mui)                        &
+            xi_lp(i,m) = xi_lp(i,m) / (sqrt(2.0_wp) * mui)                    &
                 * arrays%contx_int(m) * (gso(m))**(model_args%Gamma - 2)
             xitot = xitot + xi_lp(i,m)
             gsd_temp = gsd_temp + gsd(m)*xi_lp(i,m)
@@ -78,15 +79,15 @@ subroutine radfunctions_dens(config, model_args, arrays)
     !After the loop calculate the max and the min - ionization renormalized wrt to the first LP
     logxinorm = maxval(logxir)
     lognenorm = minval(logner)
-    logxir = logxir - (logxinorm - dble(model_args%logxi))
-    logner = logner - (lognenorm - dble(model_args%lognep))
+    logxir = logxir - (logxinorm - model_args%logxi)
+    logner = logner - (lognenorm - model_args%lognep)
     
     do m=1,model_args%nlp
         do i=1,config%xe
             logxi_lp(i,m) = log10(xi_lp(i,m)) - logner(i) - lognenorm         &
-                - logxinorm + dble(model_args%lognep) + dble(model_args%logxi)
+                - logxinorm + model_args%lognep + model_args%logxi
         end do
-        logxip_lp(m) = max(maxval(logxi_lp(:,m)),0.d0)
+        logxip_lp(m) = max(maxval(logxi_lp(:,m)),0.0_wp)
     end do
     
     !Write radii, ionisation (for both and each LP), gamma factors, and log(xi(r))+log(ne(r)) (which is nearly the same as
@@ -107,8 +108,8 @@ subroutine radfunctions_dens(config, model_args, arrays)
     end if
     
     !check max and min for ionisation 
-    logxir = max( logxir , 0.d0  )
-    logxir = min( logxir , 4.7d0 )
+    logxir = max( logxir , 0.0_wp  )
+    logxir = min( logxir , 4.7_wp )
     
     deallocate(rad)
 

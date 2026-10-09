@@ -24,10 +24,11 @@
       function areafac(r,a)
 ! Calculates dA/dr, where A is the surface area of a disk ring
 ! *ADJUSTED FOR ORBITAL MOTION* BY MULTIPLYING BY THE LORENTZ FACTOR
+      use rtconstants, only: wp
       implicit none
-      real areafac,r,a
-      real Dm,dArbydr,pi,lorfac
-      pi = acos(-1.0)
+      real(wp) areafac,r,a
+      real(wp) Dm,dArbydr,pi,lorfac
+      pi = acos(-1.0_wp)
       Dm     = r**2 - 2*r + a**2
       dArbydr = ( r**4+a**2*r**2+2*a**2*r ) / Dm
       dArbydr = 2*pi*sqrt(dArbydr)
@@ -40,10 +41,11 @@
       function dareafac(r,a)
 ! Calculates dA/dr, where A is the surface area of a disk ring
 ! *ADJUSTED FOR ORBITAL MOTION* BY MULTIPLYING BY THE LORENTZ FACTOR
+      use rtconstants, only: wp
       implicit none
-      double precision dareafac,r,a
-      double precision Dm,dArbydr,pi,dlorfac
-      pi = acos(-1.0)
+      real(wp) dareafac,r,a
+      real(wp) Dm,dArbydr,pi,dlorfac
+      pi = acos(-1.0_wp)
       Dm     = r**2 - 2*r + a**2
       dArbydr = ( r**4+a**2*r**2+2*a**2*r ) / Dm
       dArbydr = 2*pi*sqrt(dArbydr)
@@ -57,13 +59,14 @@
 ! Calculates blue shift expreienced by a photon travelling from
 ! an on-axis point source to a point on a Keplerian disk
 ! Works for pro- and retrograde spins.
+      use rtconstants, only: wp
       implicit none
-      real glpfac,r,a,h
-      real angvel,Dh,gphiphi
-      angvel = 1.0 / ( r**1.5 + abs(a) )
+      real(wp) glpfac,r,a,h
+      real(wp) angvel,Dh,gphiphi
+      angvel = 1.0_wp / ( r**1.5_wp + abs(a) )
       Dh     = h**2 - 2*h + a**2
       gphiphi = r**2+a**2+2*a**2/r
-      glpfac = 1-2./r+4*a*angvel/r-gphiphi*angvel**2
+      glpfac = 1-2.0_wp/r+4*a*angvel/r-gphiphi*angvel**2
       glpfac = Dh/(h**2+a**2) / glpfac
       glpfac = sqrt( glpfac )
       return
@@ -96,16 +99,17 @@ function dglpfacthick(r,a,h,mu)
 ! an on-axis point source to a point on a Keplerian disk with constant
 ! scaleheight (h/r=0 is mu=0)
 ! Works for pro- and retrograde spins.
+  use rtconstants, only: wp
   implicit none
-  double precision dglpfacthick,r,a,h,mu,gsd
-  double precision angvel,Dh,gphiphi,sindisk,mathcalA,Sig
-  angvel   = 1.0 / ( r**1.5 + abs(a) )
+  real(wp) dglpfacthick,r,a,h,mu,gsd
+  real(wp) angvel,Dh,gphiphi,sindisk,mathcalA,Sig
+  angvel   = 1.0_wp / ( r**1.5_wp + abs(a) )
   Dh       = h**2 - 2*h + a**2
-  sindisk  = sqrt( 1.d0 - mu**2 )
-  mathcalA = (r**2+a**2)**2 - (r**2-2.0*r+a**2)*a**2*sindisk
+  sindisk  = sqrt( 1.0_wp - mu**2 )
+  mathcalA = (r**2+a**2)**2 - (r**2-2.0_wp*r+a**2)*a**2*sindisk
   Sig      = r**2 + a**2 * mu**2
   gphiphi  = mathcalA * sindisk**2 / Sig
-  gsd = 1.0-2.0*r/Sig + 4.0*a*r*sindisk**2/Sig*angvel - gphiphi*angvel**2
+  gsd = 1.0_wp-2.0_wp*r/Sig + 4.0_wp*a*r*sindisk**2/Sig*angvel - gphiphi*angvel**2
   gsd = Dh/(h**2+a**2) / gsd
   gsd = sqrt( gsd )
   dglpfacthick = gsd
@@ -118,20 +122,21 @@ end function dglpfacthick
 function dlgfacthick(a,mu0,alpha,r,mu)
 ! Calculates g-factor for a photon travelling from disc to observer.
 ! Disc has constant mu.
+  use rtconstants, only: wp
   implicit none
-  double precision dlgfacthick,a,mu0,alpha,r,mu
-  double precision sin0,sindisk,angvel,mathcalA,Delta,Sig
-  double precision gtt,gtphi,gphiphi,pt,pphi,num,den
+  real(wp) dlgfacthick,a,mu0,alpha,r,mu
+  real(wp) sin0,sindisk,angvel,mathcalA,Delta,Sig
+  real(wp) gtt,gtphi,gphiphi,pt,pphi,num,den
 ! Useful factors
-  sin0     = sqrt( 1.0 - mu0**2 )      
-  sindisk  = sqrt( 1.d0 - mu**2 )
-  angvel   = 1.0 / ( r**1.5 + abs(a) )
-  mathcalA = (r**2+a**2)**2 - (r**2-2.0*r+a**2)*a**2*sindisk
+  sin0     = sqrt( 1.0_wp - mu0**2 )      
+  sindisk  = sqrt( 1.0_wp - mu**2 )
+  angvel   = 1.0_wp / ( r**1.5_wp + abs(a) )
+  mathcalA = (r**2+a**2)**2 - (r**2-2.0_wp*r+a**2)*a**2*sindisk
   Delta    = r**2 - 2*r + a**2    
   Sig      = r**2 + a**2 * mu**2
 ! Metric components
-  gtt      = -( 1.0 - 2.0*r / Sig )
-  gtphi    = -2.0*a*r*sindisk**2 / Sig
+  gtt      = -( 1.0_wp - 2.0_wp*r / Sig )
+  gtphi    = -2.0_wp*a*r*sindisk**2 / Sig
   gphiphi  = mathcalA * sindisk**2 / Sig
 ! 4-momentum
   pt   = -a * ( alpha*sin0 + a*sindisk**2 )
@@ -141,7 +146,7 @@ function dlgfacthick(a,mu0,alpha,r,mu)
   pphi = pphi + a * ( r**2 + a**2 + a*alpha*sin0 ) / Delta
   pphi = pphi / Sig
 ! gdo calc
-  num = sqrt( -gtt - 2.0*gtphi*angvel - gphiphi*angvel**2 )
+  num = sqrt( -gtt - 2.0_wp*gtphi*angvel - gphiphi*angvel**2 )
   den = -gtt*pt - gtphi*(pt*angvel+pphi) - gphiphi*pphi*angvel
   dlgfacthick = num / den
   return
@@ -154,8 +159,9 @@ end function dlgfacthick
 ! Calculates blue shift expreienced by a photon travelling from
 ! an on-axis point source to a distant, stationary observer.
 ! Works for pro- and retrograde spins.
+      use rtconstants, only: wp
       implicit none
-      double precision dgsofac,a,h,Dh
+      real(wp) dgsofac,a,h,Dh
       Dh      = h**2 - 2*h + a**2
       dgsofac = Dh / ( h**2 + a**2 )
       dgsofac = sqrt( dgsofac )
@@ -168,14 +174,15 @@ end function dlgfacthick
 !-----------------------------------------------------------------------
       function lorfac(r,a)
 ! Calculates Lorentz factor for rotating disk element
+      use rtconstants, only: wp
       implicit none
-      real lorfac,r,a
-      real Delta,BigA,Omega,v
+      real(wp) lorfac,r,a
+      real(wp) Delta,BigA,Omega,v
       Delta  = r**2 - 2*r + a**2
       BigA   = (r**2+a**2)**2 - a**2*Delta
-      Omega  = 1.0 / ( r**1.5 + abs(a) )
+      Omega  = 1.0_wp / ( r**1.5_wp + abs(a) )
       v      = ( Omega * bigA - 2*a*r ) / ( r**2 * sqrt(Delta) )
-      lorfac = ( 1 - v**2 )**(-0.5)
+      lorfac = ( 1 - v**2 )**(-0.5_wp)
       return
       end
 !-----------------------------------------------------------------------
@@ -184,14 +191,15 @@ end function dlgfacthick
 !-----------------------------------------------------------------------
       function dlorfac(r,a)
 ! Calculates Lorentz factor for rotating disk element
+      use rtconstants, only: wp
       implicit none
-      double precision dlorfac,r,a
-      double precision Delta,BigA,Omega,v
+      real(wp) dlorfac,r,a
+      real(wp) Delta,BigA,Omega,v
       Delta   = r**2 - 2*r + a**2
       BigA    = (r**2+a**2)**2 - a**2*Delta
-      Omega   = 1.0 / ( r**1.5 + abs(a) )
+      Omega   = 1.0_wp / ( r**1.5_wp + abs(a) )
       v       = ( Omega * bigA - 2*a*r ) / ( r**2 * sqrt(Delta) )
-      dlorfac = ( 1 - v**2 )**(-0.5)
+      dlorfac = ( 1 - v**2 )**(-0.5_wp)
       return
       end
 !-----------------------------------------------------------------------
