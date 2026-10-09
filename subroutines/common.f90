@@ -1,8 +1,10 @@
 module common_types
     use rtconstants, only: wp
+    use kerrz, only: krz_KerrMetric
     implicit none
 
-    ! this should be moved so that all of the wrappers pass the following
+    ! This type is instantiated per-call, so is thread safe.
+    ! TODO: This should be moved so that all of the wrappers pass the following
     ! instead of a params array
     type :: t_model_arguments
         ! These are hardcoded with a fixed size of 2, since nlp <= 2. by not
@@ -46,8 +48,12 @@ module common_types
         ! The below are computed from the above
         ! The cosine angle
         real(wp) :: muobs
+
+        ! The kerrz metric used during computations.
+        type(krz_KerrMetric) :: metric
     end type t_model_arguments
 
+    ! This type is shared between calls so is not thread safe.
     type :: t_config
         integer :: verbose = 0
         ! firstcall: is this the first time the model has been called?
@@ -172,6 +178,7 @@ contains
 
     ! Unwraps the arguments from a parameter array into `args`.
     subroutine unwrap_arguments(args, nlp, dset, params, cutoff_powerlaw)
+        use kerrz, only: krz_KerrMetric_init
         use rtconstants, only: parse_reim
         real(wp), parameter :: pi = acos(-1.0_wp)
         integer, intent(in) :: nlp, dset, cutoff_powerlaw
@@ -219,6 +226,8 @@ contains
         args%Anorm = params(31)
         args%resp_matr = int(params(32))
         args%Cp = cutoff_powerlaw
+        ! And finally initialise the kerrz metric:
+        args%metric = krz_KerrMetric_init(1.0_wp, args%a)
     end subroutine unwrap_arguments
 
     ! Adjust the model parameters to sane values and set the derived values in
@@ -226,6 +235,7 @@ contains
     ! - Checks `a`, `rin`, `h` are in bounds.
     ! - Sets the inner radius to the ISCO.
     subroutine arguments_check(config, model_args)
+        use kerrz, only: krz_KerrMetric_init
         type(t_config), intent(inout) :: config
         type(t_model_arguments), intent(inout) :: model_args
         integer :: i
@@ -235,6 +245,8 @@ contains
         ! some kind of warning perhaps?
         if (abs(model_args%a) .gt. 0.999_wp) then
             model_args%a = sign(1.0_wp,model_args%a) * 0.999_wp
+            ! Recalculate the kerrz metric with the new spin:
+            model_args%metric = krz_KerrMetric_init(1.0_wp, model_args%a)
         end if
         config%rmin = disco(model_args%a)
         config%rh = 1.0_wp+sqrt(1.0_wp-model_args%a**2)

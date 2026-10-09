@@ -7,12 +7,13 @@ module raytracing
     implicit none
 
 contains
-    subroutine trace_disk_observer(nro,nphi,rn,mueff,mu0,rmin,rout,d)
+    subroutine trace_disk_observer(metric,nro,nphi,rn,mueff,mu0,rmin,rout,d)
     !> CALCULATION SUBROUTINE
     !> Traces rays in full GR for the camera defined by rn(nro), nro, nphi
     !> to convert alpha and beta to r and tau_do (don't care about phi)
     !> Used to be called GRtrace.
     !> Inputs:
+    !>     metric: the kerrz metric (sets the black hole spin).
     !>     nro: number of radial points in the disk.
     !>     nphi: number of azimuthal points in the disk.
     !>     rn: array of radial points in the disk.
@@ -27,8 +28,9 @@ contains
     !>     re1: array of radial coordinate at the disk for each ray.
         use dyn_gr, only: pem1, re1, taudo1
         use kerrz, only: krz_TraceResult, trace_impact_parameters,             &
-            KRZ_STATUS_NONE
+            KRZ_STATUS_NONE, krz_KerrMetric
         implicit none
+        type(krz_KerrMetric), intent(in) :: metric
         integer, intent(in) :: nro,nphi
         real(wp), intent(in) :: rn(nro),mueff,mu0,rmin,rout
         real(wp), intent(in) :: d
@@ -45,7 +47,7 @@ contains
                 alpha = rn(i) * sin(phin)
                 beta  = -rn(i) * cos(phin) * mueff
 
-                res = trace_impact_parameters(mu0, alpha, beta, d)
+                res = trace_impact_parameters(metric, mu0, alpha, beta, d)
 
                 ! Do not include sub-isco contributions for now:
                 if (res%status == KRZ_STATUS_NONE .and.            &
@@ -68,13 +70,14 @@ contains
     end subroutine trace_disk_observer
 
     
-    subroutine getdcos(h,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
+    subroutine getdcos(metric,h,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
     !> CALCULATION SUBROUTINE
     !> For n values of the emission angle, delta, the code calculates the r and t 
     !> coordinates for the geodesic for mu=mudisk; i.e. the crossing points of a 
     !> thin disk.
     !> Note that mudisk = (h/r) / sqrt( (h/r)**2 + 1 )
     !> INPUTS
+    !>    metric       kerrz metric (sets the black hole spin)
     !>    h            Height of on-axis, isotropically emitting source
     !>    n            Number of values of emission angle delta (see Fig 1 Dauser 
     !>                 et al 2013) calculated
@@ -89,9 +92,10 @@ contains
     !>    cosdout      cosd at the outer disk radius
     !>
     !> TODO: replace this with a kerrz emissivity call.
-        use kerrz, only: kerr_metric, krz_TraceResult, trace_lamppost,         &
+        use kerrz, only: krz_KerrMetric, krz_TraceResult, trace_lamppost,         &
             KRZ_STATUS_NONE
         implicit none
+        type(krz_KerrMetric), intent(in) :: metric
         real(wp), intent(in )   :: h(2), rout
         integer         , intent(in )   :: n, nlp
         integer         , intent(inout) :: npts(nlp)
@@ -101,9 +105,9 @@ contains
         real(wp) rhorizon
         real(wp) deltamin,deltamax, deltas,r_min,r_max
         type(krz_TraceResult) :: res
-        rhorizon = kerr_metric%horizon_radius
+        rhorizon = metric%horizon_radius
         ! Set minimum and maximum disk radii
-        r_min = kerr_metric%isco
+        r_min = metric%isco
         r_max = 1e10_wp
 
         ! Loop over each lamppost here:
@@ -119,7 +123,7 @@ contains
             ! Run through linear steps in the angle delta (see Fig 1; Dauser et
             ! al 2013)
                 deltas   = deltamin + (j-1) * (deltamax-deltamin)/real(n-1, wp)
-                res = trace_lamppost(h(m), deltas)
+                res = trace_lamppost(metric, h(m), deltas)
                 if (res%status == KRZ_STATUS_NONE                  &
                     .and. r_min <= res%x_final%r .and. r_max >= res%x_final%r  &
                 ) then
@@ -162,28 +166,30 @@ contains
         return
     end subroutine getdcos
 
-    subroutine getlens(h,muobs,lens,delt,cosdelta1)
+    subroutine getlens(metric,h,muobs,lens,delt,cosdelta1)
     !> CALCULATION SUBROUTINE
     !> Routine to calculate the lensing factor l=d\cos\delta/d\cos(i)
     !> and the source to observer time lag.
     !> Both calculations need us to know the delta value for the geodesic
     !> that ends up at angle i at infinity.
     !> INPUTS
+    !>     metric       kerrz metric (sets the black hole spin)
     !>     h            Height of on-axis, isotropically emitting source
     !>     muobs        Cosine of inclination angle
     !
     !> OUTPUTS
     !>     lens         Lensing factor
     !>     delt         Source to observer time lag 
-        use kerrz, only: trace_lensing, LamppostContinuum
+        use kerrz, only: trace_lensing, LamppostContinuum, krz_KerrMetric
         implicit none
+        type(krz_KerrMetric), intent(in) :: metric
         real(wp), intent(in)    :: h, muobs
         real(wp), intent(inout) :: cosdelta1
         real(wp), intent(out)   :: lens, delt
         real(wp) :: d
         real(wp), parameter :: r_at_inf = 1.0e5_wp
         type(LamppostContinuum) :: continuum
-        continuum = trace_lensing(h, r_at_inf, muobs)
+        continuum = trace_lensing(metric, h, r_at_inf, muobs)
         d = continuum%alpha**2 + continuum%beta**2
         d = sqrt( r_at_inf**2 - d  )
         delt = continuum%time - d

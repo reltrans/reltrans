@@ -148,15 +148,15 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     !get the GR ray-tracing CONTINUUM parameters which are stored in the module gr_continuum
     if (args%model%nlp .eq. 1) then
        gso(1) = dgsofac(args%model%a, args%model%h(1))
-       call getlens(args%model%h(1), args%model%muobs, lens(1), tauso(1),      &
-            cosdelta_obs(1))
+       call getlens(args%model%metric, args%model%h(1), args%model%muobs,      &
+            lens(1), tauso(1), cosdelta_obs(1))
        if (tauso(1) .ne. tauso(1)) stop "tauso is NaN"
     else
        !here the observed cutoffs are set from the temperature in the source frame
        do m = 1, args%model%nlp
           gso(m) = dgsofac(args%model%a, args%model%h(m))
-          call getlens(args%model%h(m), args%model%muobs, lens(m), tauso(m),   &
-               cosdelta_obs(m))
+          call getlens(args%model%metric, args%model%h(m), args%model%muobs,   &
+               lens(m), tauso(m), cosdelta_obs(m))
           if (tauso(m) .ne. tauso(m)) stop "tauso is NaN"
        enddo
     endif
@@ -185,8 +185,9 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
         endif
         if (abs(mudsav-args%mudisk) .gt. tiny(args%mudisk)) dotrace = .true.
         if (dotrace) then
-            call trace_disk_observer(args%conf%nro, args%conf%nphi, rn,        &
-                 args%mueff,args%model%muobs, args%r_isco, args%model%rout, d)
+            call trace_disk_observer(args%model%metric, args%conf%nro,         &
+                args%conf%nphi, rn, args%mueff, args%model%muobs, args%r_isco, &
+                args%model%rout, d)
             spinsav = args%model%a
             musav = args%model%muobs
             routsav = args%model%rout
@@ -204,8 +205,8 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     sin0 = sqrt(1.0_wp-args%model%muobs**2)
 
     ! Calculate dcos/dr and time lags vs r for the lamppost model
-    call getdcos(args%model%h, ndelta, args%model%nlp, args%model%rout, npts,  &
-         rlp, dcosdr, tlp, cosd, cosdout)
+    call getdcos(args%model%metric, args%model%h, ndelta, args%model%nlp,      &
+         args%model%rout, npts, rlp, dcosdr, tlp, cosd, cosdout)
 
     ! set continuum normalisations depending on model flavour
     if (dset .eq. 0)then

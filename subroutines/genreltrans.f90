@@ -308,7 +308,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use telematrix2
     use rtconstants
     use xspec_interface
-    use kerrz, only: kerr_metric, krz_KerrMetric_init
     implicit none
     ! Args:
     integer, intent(inout) :: ifl
@@ -346,9 +345,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     call unwrap_arguments(model_args, nlp, dset, param, Cp)
     call config_frequency(config, model_args)
     call arguments_check(config, model_args)
-
-    ! Setup kerrz things for these parameters
-    kerr_metric = krz_KerrMetric_init(1.0_wp, model_args%a)
 
     ! TODO: check to make sure nlp hasn't changed, else many arrays need to be
     ! freed and re-allocated
