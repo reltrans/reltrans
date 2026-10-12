@@ -40,12 +40,12 @@
 !> Call with a negative `idum` to (re)initialise the sequence, and do not
 !> alter `idum` between calls. The same seed should give the same sequence on
 !> every compiler and platform.
-      use rtconstants, only: sp
+      use rtconstants, only: wp
       INTEGER idum,IA,IM,IQ,IR,NTAB,NDIV
-      real(sp) ran1,AM,EPS,RNMX
+      real(wp) ran1,AM,EPS,RNMX
 !     NDIV = 1+(IM-1)/NTAB, written out to avoid an integer-division warning
-      PARAMETER (IA=16807,IM=2147483647,AM=1.0_sp/real(IM, sp),IQ=127773,&
-      IR=2836,NTAB=32,NDIV=67108864,EPS=1.2e-7_sp,RNMX=1.0_sp-EPS)
+      PARAMETER (IA=16807,IM=2147483647,AM=1.0_wp/real(IM, wp),IQ=127773,&
+      IR=2836,NTAB=32,NDIV=67108864,EPS=1.2e-7_wp,RNMX=1.0_wp-EPS)
       INTEGER j,k,iv(NTAB),iy
       SAVE iv,iy
       DATA iv /NTAB*0/, iy /0/
