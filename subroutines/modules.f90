@@ -154,6 +154,7 @@ module radial_grids
   implicit none
   double precision , dimension(:), allocatable :: logxir, logner, gsdr, dfer_arr
   double precision , dimension(:), allocatable :: logxir_natural
+  ! logxir_natural: unmodified (natural) ionization parameter before clipping
   double precision :: pnorm
   save logxir, gsdr, logner, logxir_natural
 end module radial_grids

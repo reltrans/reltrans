@@ -160,7 +160,7 @@ contains
             Gamma0 = real(model_args%Gamma)
             logne = logner(rbin)
             Cutoff_0 = real(gsdr(rbin)) * model_args%Cutoff_s
-            logxi0 = real(logxir(rbin))            
+            logxi0 = real(logxir(rbin))
             if (config%xe .eq. 1)then
                 Cutoff_0 = model_args%Cutoff_s
                 logne = model_args%lognep
@@ -638,39 +638,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                 config%ionvar, model_args%resp_matr)
         ! catch case here for coherence = 0 or 1
         end if
-        ! this writes the full model as returned to Xspec
-        ! note that xspec gets output in e.g. lags*dE, and we want just the
-        ! lags, so a factor dE needs to be included
-        ! add writing of components for lag frequency spectrum
-!        open (unit = 14, file = 'Output/Total.dat', status = 'replace', action = 'write')
-!        do i = 1, ne
-!            dE = ear(i) - ear(i-1)
-!            write (14, *) (ear(i)+ear(i-1))/2., photar(i)/dE
-!        end do
-!        close(14)
-!        ! print continuum for both single and multiple LPs REDO THIS
-!        open (unit = 24, file = 'Output/Continuum_spec.dat', status = 'replace', action = 'write')
-!        do i = 1, nex
-!            dE = arrays%earx(i) - arrays%earx(i-1)
-!            if (nlp .eq. 1) then
-!                contx_temp = arrays%contx(i, 1)/dE
-!            else
-!                contx_temp = 0.
-!                do m = 1, nlp
-!                    contx_temp = contx_temp + arrays%contx(i, m)
-!                end do
-!                contx_temp = contx_temp/((1.+model_args%eta)*dE)
-!            end if
-!            write (24, *) (arrays%earx(i)+arrays%earx(i-1))/2., contx_temp
-!        end do
-!        close(24)
-!    else if (is_mode(model_args%ReIm, MODE_LAG_FREQ)) then
-!       open (unit = 14, file = 'Output/Total.dat', status = 'replace', action = 'write')
-!        do i = 1, ne
-!            dE = ear(i) - ear(i-1)
-!            write (14, *) (ear(i)+ear(i-1))/2., photar(i)/dE
-!        end do
-!        close(14)
     endif
 
     fhisave = config%fhi

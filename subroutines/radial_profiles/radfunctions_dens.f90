@@ -98,25 +98,11 @@ subroutine radfunctions_dens(config, model_args, arrays)
         do m = 1, model_args%nlp
             print*, "Peak ionisation from LP", m, ": ", logxip_lp(m)
         end do
- !       open (unit = 27, file = 'Output/RadialScalings.dat', status='replace', action = 'write')
- !           do i = 1, config%xe
- !               write(27,*) rad(i), logxir(i), gsdr(i), logxir(i)+logner(i),   &
- !                   (logxi_lp(i,m), m=1,model_args%nlp), dfer_arr(i)
- !           end do 
-        !       close(27)
     end if
-    
-    !check max and min for ionisation 
 
+    ! logxir_natural: unmodified (natural) ionization parameter before clipping
     logxir_natural = logxir  !Need for the post processing code
-
-    ! if( config%verbose .gt. 2 ) then
-    !    do i = 1,config%xe
-    !       write(78,*)rad(i),logxir_natural(i)
-    !    end do
-    !    write(78,*)"no no"
-    ! end if
-    
+    !check max and min for ionisation 
     logxir = max( logxir , 0.d0  )
     logxir = min( logxir , 4.7d0 )
     
