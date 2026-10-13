@@ -1,22 +1,23 @@
 !-----------------------------------------------------------------------
 subroutine sourcelum(nex,earx,contx,mass,gso,gamma)
 !> Calculates implied source luminosity in units of the Eddington limit       
+    use rtconstants, only: wp
     integer nex,i
-    real earx(0:nex),contx(nex),integral,E,lambda,mass
-    real gso,Gamma,F
+    real(wp) earx(0:nex),contx(nex),integral,E,lambda,mass
+    real(wp) gso,Gamma,F
 ! contx(i) is photar(i), so no need to multiply by dE
-    integral = 0.0
-    F        = 0.0
+    integral = 0.0_wp
+    F        = 0.0_wp
     do i = 1,nex
-        E  = 0.5 * ( earx(i) + earx(i-1) )
+        E  = 0.5_wp * ( earx(i) + earx(i-1) )
         integral = integral + E * contx(i)
-        if( E .gt. 13.6e-3 .and. E .gt. 13.6 ) F = F + E * contx(i)
+        if( E .gt. 13.6e-3_wp .and. E .gt. 13.6_wp ) F = F + E * contx(i)
     end do
     ! write(*,*) "for lambda calculation", gso, gamma, integral, mass
-    lambda = 1.5217e-3 * gso**(gamma-2.0) * integral / mass
+    lambda = 1.5217e-3_wp * gso**(gamma-2.0_wp) * integral / mass
     !write(*,*)"\mathcal{F} = norm * ",integral*1.6e-9,"erg/cm^2/s"
     write(*,*)"Ls/Ledd = norm * (D/kpc)**2 *",lambda
-    write(*,*)"Lacc/Ledd = norm * (D/kpc)**2 *",2.0*lambda
+    write(*,*)"Lacc/Ledd = norm * (D/kpc)**2 *",2.0_wp*lambda
 ! Ls = A * 4*pi*D**2 * gso**(Gamma-2) * I; units erg/s
 ! A        = reltrans norm; units = cm^{-2}
 ! D        = Distance; units = cm

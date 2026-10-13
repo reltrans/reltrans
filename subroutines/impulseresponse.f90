@@ -13,39 +13,40 @@ module impulseresponse
     !
     ! `c_loc` is a relatively uncommon one and is for reading the address of a C
     ! pointer.
+    use rtconstants, only: wp
     use iso_c_binding, only: c_ptr, c_loc, c_int
     implicit none
 
-    double precision, allocatable, target :: response(:, :)
-    double precision, allocatable, target :: time_axis(:)
-    double precision, allocatable, target :: energy_axis(:)
+    real(wp), allocatable, target :: response(:, :)
+    real(wp), allocatable, target :: time_axis(:)
+    real(wp), allocatable, target :: energy_axis(:)
 
-    double precision :: time_ax_min = 1.0
-    double precision :: time_ax_max = 2.0e3
+    real(wp) :: time_ax_min = 1.0_wp
+    real(wp) :: time_ax_max = 2.0e3_wp
 
     integer :: n_ebins, n_tbins
 contains
 
     ! Calculate the size of the axes deltas
     subroutine response_calculate_deltas(dlogt, dg)
-        double precision, intent(out) :: dlogt, dg
-        dlogt = log10( time_ax_max/time_ax_min ) / float(n_tbins)
-        dg = 2.0 / float(n_ebins)
+        real(wp), intent(out) :: dlogt, dg
+        dlogt = log10( time_ax_max/time_ax_min ) / real(n_tbins, wp)
+        dg = 2.0_wp / real(n_ebins, wp)
     end subroutine response_calculate_deltas
 
     ! Populate the axes of the impulse response matrix
     subroutine response_setup_axes(dlogt, dg)
         ! the time axis is logarithmic
-        double precision, intent(in) :: dlogt, dg
-        double precision :: g
+        real(wp), intent(in) :: dlogt, dg
+        real(wp) :: g
         integer :: i
 
         do i = 0,n_tbins
-            time_axis(i) = time_ax_min * 10.0**( i * dlogt )
+            time_axis(i) = time_ax_min * 10.0_wp**( i * dlogt )
         end do
 
         ! the energy axis is linear
-        g = 0.0
+        g = 0.0_wp
         do i = 0,n_ebins
             energy_axis(i) = g
             g = g + dg
@@ -56,7 +57,7 @@ contains
     ! dg arguments
     subroutine response_allocate(ne, nt, dlogt, dg)
         integer, intent(in) :: ne, nt
-        double precision, intent(out) :: dlogt, dg
+        real(wp), intent(out) :: dlogt, dg
 
         if (.not. allocated(response)) then
             allocate(response(ne, nt))
@@ -73,7 +74,7 @@ contains
         end if
 
         ! Zero the matrix
-        response = 0.0
+        response = 0.0_wp
     end subroutine response_allocate
 
     ! Zero the edges of the impulse response
@@ -81,13 +82,13 @@ contains
         integer :: i
         ! Loop over t bins
         do i = 1,n_tbins
-            response(1,i)  = 0.0
-            response(n_ebins,i) = 0.0
+            response(1,i)  = 0.0_wp
+            response(n_ebins,i) = 0.0_wp
         end do
         ! Loop over g bins
         do i = 1,n_ebins
-            response(i,1)  = 0.0
-            response(i,n_tbins) = 0.0
+            response(i,1)  = 0.0_wp
+            response(i,n_tbins) = 0.0_wp
         end do
     end subroutine response_zero_edges
 

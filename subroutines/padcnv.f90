@@ -3,13 +3,14 @@ subroutine pad4FFT(ne,photar,padFT)
 ! Takes spectrum photar(1:ne), pads out with zeros to make it a length
 ! of 4*ne, and Fourier transforms to padFT(1:4*ne), which is a function
 ! of 1/E
+  use rtconstants, only: wp
   implicit none
   integer ne,i
-  real photar(ne),padphot(4*ne)
-  complex padFT(4*ne)
+  real(wp) photar(ne),padphot(4*ne)
+  complex(wp) padFT(4*ne)
   
 ! Pad out the array
-  padphot = 0.0
+  padphot = 0.0_wp
   do i = 1,ne
      padphot(i+2*ne) = photar(i)
   end do
@@ -28,16 +29,17 @@ end subroutine pad4FFT
 subroutine pad4invFFT(dyn,ne,padFT,conv)
 ! Takes padFT(1:4*ne), and zero-padded function of 1/E and inverse
 ! Fourier transforms to conv(ne), which is a non-zero padded spectrum
+  use rtconstants, only: wp
   implicit none
   integer ne,i
-  real dyn,conv(ne),padconv(4*ne),photmax
-  complex padFT(4*ne)
+  real(wp) dyn,conv(ne),padconv(4*ne),photmax
+  complex(wp) padFT(4*ne)
 
 ! Inverse Fourier transform padded FT
   call E_invFT(4*ne,padFT,padconv)
 
 ! Populate output array
-  photmax = 0.0
+  photmax = 0.0_wp
   do i = 1,ne
     conv(i) = padconv(i+5*ne/2)
     photmax = max( photmax , conv(i) )
@@ -45,7 +47,7 @@ subroutine pad4invFFT(dyn,ne,padFT,conv)
 
 ! Clean any residual edge effects
   do i = 1,ne
-    if( abs(conv(i)) .lt. abs(dyn*photmax) ) conv(i) = 0.0
+    if( abs(conv(i)) .lt. abs(dyn*photmax) ) conv(i) = 0.0_wp
   end do
 
   return
@@ -61,14 +63,15 @@ subroutine E_invFT(nex,cc,conv)
 ! Takes the complex array cc(1:nex), which is a function of 1/E
 ! and inverse Fourier transforms to get back a real spectrum as a
 ! function of E, conv(1:nex)
+  use rtconstants, only: wp
   implicit none
   integer nex,i
-  real conv(nex),cdata(2*nex)
-  complex cc(nex)
+  real(wp) conv(nex),cdata(2*nex)
+  complex(wp) cc(nex)
 
 ! Put back into four1 style arrays
   do i = 1,nex
-    cdata(2*i-1) =  real( cc(i) )
+    cdata(2*i-1) =  real( cc(i) , wp)
     cdata(2*i  ) = aimag( cc(i) )
   end do
       
@@ -99,14 +102,15 @@ subroutine E_FT(nex,photarx,bc)
 ! which is complex and a function of 1/E.
 ! Uses FFTs, so nex must be a power of 2.
 ! Uses the inverse transform of four1.
+  use rtconstants, only: wp
   implicit none
   integer nex,i
-  real photarx(nex)
-  real bdata(2*nex)
-  complex bc(nex)
+  real(wp) photarx(nex)
+  real(wp) bdata(2*nex)
+  complex(wp) bc(nex)
 
 ! Move arrays into arrays for four1
-  bdata = 0.0
+  bdata = 0.0_wp
   !-ve frequencies
   do i = 1,nex/2-1
     bdata(2*i+nex+1) = photarx(i)
@@ -129,7 +133,7 @@ subroutine E_FT(nex,photarx,bc)
 
 ! Now put into complex arrays
   do i = 1,nex
-    bc(i) = complex( bdata(2*i-1) , bdata(2*i) ) / sqrt(float(nex))
+    bc(i) = cmplx(bdata(2*i-1), bdata(2*i), kind=wp) / sqrt(real(nex, wp))
   end do
 
   ! do i = 1, nex

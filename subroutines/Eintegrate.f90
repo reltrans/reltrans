@@ -3,11 +3,12 @@ function Eintegrate(Elo,Ehi,nex,earx,photarx,dlogE)
 ! Integrates specific flux from Elo to Ehi
 ! Photarx is specific photon flux, therefore integral is
 ! sum_i E(i) * photarx(i)
+  use rtconstants, only: wp
   implicit none
   integer nex
-  real Eintegrate,Elo,Ehi,earx(0:nex),photarx(nex),Emin,dlogE
+  real(wp) Eintegrate,Elo,Ehi,earx(0:nex),photarx(nex),Emin,dlogE
   integer ilo,ihi,i
-  real E
+  real(wp) E
 ! Calculate integration bounds
   Emin = earx(0)
   ilo  = ceiling( log10(Elo/Emin) / dlogE )
@@ -18,9 +19,9 @@ function Eintegrate(Elo,Ehi,nex,earx,photarx,dlogE)
   ihi  = max(ihi,1)
   ihi  = max(ihi,ilo)
 ! Do the integration
-  Eintegrate = 0.0
+  Eintegrate = 0.0_wp
   do i = ilo,ihi
-     E = 0.5 * ( earx(i) + earx(i-1) )
+     E = 0.5_wp * ( earx(i) + earx(i-1) )
      Eintegrate = Eintegrate + E * photarx(i)
   end do
   return

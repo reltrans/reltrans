@@ -8,8 +8,15 @@ module rtconstants
 !> Physical constants should not be defined here, as a constants module already
 !> exists in `amodules.f90`.
 !> TODO: move `constants` in `amodules.f90` here.
+    use, intrinsic :: iso_fortran_env, only: real32, real64
     implicit none
     public
+
+    !> The working precision used for all real and complex values in reltrans.
+    integer, parameter :: wp = real64
+    !> Single precision. Only for interfaces to external single-precision
+    !> routines (XSPEC's xsatbl and donthcomp); do not use for computation.
+    integer, parameter :: sp = real32
 
     !> The `re_im` parameter enumeration. Possible values are:
     !> These are the possible output modes that reltrans can compute.
@@ -35,8 +42,8 @@ module rtconstants
     ! It can be queried to see if the compiler is building for production or in
     ! debug mode.
     logical, parameter :: IS_DEBUG_BUILD = (RELTRANS_BUILD_DEBUG == 1)
-    double precision, parameter :: pi = acos(-1.d0)
-    double precision, parameter :: dtol = 1d-8
+    real(wp), parameter :: pi = acos(-1.0_wp)
+    real(wp), parameter :: dtol = 1e-8_wp
 
 contains
 

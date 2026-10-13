@@ -3,26 +3,24 @@ module raytracing
 !> calculations. All the subroutines only serve as interfaces to the actual 
 !> implementations but allows for easy substitution without changing the rest of
 !> the code.
-    use rtconstants, only: pi
+    use rtconstants, only: pi, wp
     implicit none
 
 contains
-    subroutine trace_disk_observer(metric,nro,nphi,rn,mueff,mu0,spin,rmin,     &
-        rout,mudisk,d)
+    subroutine trace_disk_observer(metric,nro,nphi,rn,mueff,mu0,rmin,rout,d)
     !> CALCULATION SUBROUTINE
     !> Traces rays in full GR for the camera defined by rn(nro), nro, nphi
     !> to convert alpha and beta to r and tau_do (don't care about phi)
     !> Used to be called GRtrace.
     !> Inputs:
+    !>     metric: the kerrz metric (sets the black hole spin).
     !>     nro: number of radial points in the disk.
     !>     nphi: number of azimuthal points in the disk.
     !>     rn: array of radial points in the disk.
     !>     mueff: effective cosine of the inclination angle of the disk.
     !>     mu0: cosine of the inclination angle of the observer.
-    !>     spin: spin of the black hole.
     !>     rmin: minimum radius of the disk.
     !>     rout: maximum radius of the disk.
-    !>     mudisk: cosine of the inclination angle of the disk.
     !>     d: distance from the black hole to the observer.
     !> Outputs:
     !>     pem1: array of p-coordinate at the disk for each ray.
@@ -34,18 +32,18 @@ contains
         implicit none
         type(krz_KerrMetric), intent(in) :: metric
         integer, intent(in) :: nro,nphi
-        double precision, intent(in) :: rn(nro),mueff,mu0,spin,rmin,rout
-        double precision, intent(in) :: mudisk,d
-        double precision :: phin, alpha, beta, cos0
+        real(wp), intent(in) :: rn(nro),mueff,mu0,rmin,rout
+        real(wp), intent(in) :: d
+        real(wp) :: phin, alpha, beta, cos0
         integer i,j
         type(krz_TraceResult) :: res
         cos0  = mu0
-        taudo1   = 0.0
-        re1      = 0.0
+        taudo1   = 0.0_wp
+        re1      = 0.0_wp
         !TODO: kerrz optimisation here! 
         do i = 1,nro
             do j = 1,NPHI
-                phin  = (j-0.5) * 2.d0 * pi / dble(nphi)
+                phin  = (j-0.5_wp) * 2.0_wp * pi / real(nphi, wp)
                 alpha = rn(i) * sin(phin)
                 beta  = -rn(i) * cos(phin) * mueff
 
@@ -60,11 +58,11 @@ contains
                     !
                     ! It is technically redundant, as a negative value could be
                     ! written into `re1` instead.
-                    pem1(j,i) = 1.0d0
+                    pem1(j,i) = 1.0_wp
                     taudo1(j,i) = res%x_final%t - d
                     re1(j,i) = res%x_final%r
                 else
-                    pem1(j, i) = -1.0d0
+                    pem1(j, i) = -1.0_wp
                 end if
               end do
         end do
@@ -72,16 +70,15 @@ contains
     end subroutine trace_disk_observer
 
     
-    subroutine getdcos(metric,h,mudisk,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,     &
-                        cosdout)
+    subroutine getdcos(metric,h,n,nlp,rout,npts,r1,dcosdr,tc,cosd1,cosdout)
     !> CALCULATION SUBROUTINE
     !> For n values of the emission angle, delta, the code calculates the r and t 
     !> coordinates for the geodesic for mu=mudisk; i.e. the crossing points of a 
     !> thin disk.
     !> Note that mudisk = (h/r) / sqrt( (h/r)**2 + 1 )
     !> INPUTS
+    !>    metric       kerrz metric (sets the black hole spin)
     !>    h            Height of on-axis, isotropically emitting source
-    !>    mudisk       cos(theta) of disk surface (mu=0 for h/r=0)
     !>    n            Number of values of emission angle delta (see Fig 1 Dauser 
     !>                 et al 2013) calculated
     !>    rout         Disk outer radius
@@ -99,19 +96,19 @@ contains
             KRZ_STATUS_NONE
         implicit none
         type(krz_KerrMetric), intent(in) :: metric
-        double precision, intent(in )   :: h(2), mudisk, rout
+        real(wp), intent(in )   :: h(2), rout
         integer         , intent(in )   :: n, nlp
         integer         , intent(inout) :: npts(nlp)
-        double precision, intent(inout) :: r1(n,nlp)
-        double precision, intent(out)   :: dcosdr(n,nlp), tc(n,nlp), cosd1(n,nlp), cosdout(nlp)
+        real(wp), intent(inout) :: r1(n,nlp)
+        real(wp), intent(out)   :: dcosdr(n,nlp), tc(n,nlp), cosd1(n,nlp), cosdout(nlp)
         integer  m,j,k,counter,nout(nlp)
-        double precision rhorizon
-        double precision deltamin,deltamax, deltas,r_min,r_max
+        real(wp) rhorizon
+        real(wp) deltamin,deltamax, deltas,r_min,r_max
         type(krz_TraceResult) :: res
         rhorizon = metric%horizon_radius
         ! Set minimum and maximum disk radii
         r_min = metric%isco
-        r_max = 1d10
+        r_max = 1e10_wp
 
         ! Loop over each lamppost here:
         do m=1,nlp
@@ -125,7 +122,7 @@ contains
             do j = 1,n
             ! Run through linear steps in the angle delta (see Fig 1; Dauser et
             ! al 2013)
-                deltas   = deltamin + (j-1) * (deltamax-deltamin)/float(n-1)
+                deltas   = deltamin + (j-1) * (deltamax-deltamin)/real(n-1, wp)
                 res = trace_lamppost(metric, h(m), deltas)
                 if (res%status == KRZ_STATUS_NONE                  &
                     .and. r_min <= res%x_final%r .and. r_max >= res%x_final%r  &
@@ -176,6 +173,7 @@ contains
     !> Both calculations need us to know the delta value for the geodesic
     !> that ends up at angle i at infinity.
     !> INPUTS
+    !>     metric       kerrz metric (sets the black hole spin)
     !>     h            Height of on-axis, isotropically emitting source
     !>     muobs        Cosine of inclination angle
     !
@@ -185,11 +183,11 @@ contains
         use kerrz, only: trace_lensing, LamppostContinuum, krz_KerrMetric
         implicit none
         type(krz_KerrMetric), intent(in) :: metric
-        double precision, intent(in)    :: h, muobs
-        double precision, intent(inout) :: cosdelta1
-        double precision, intent(out)   :: lens, delt
-        double precision :: d
-        double precision, parameter :: r_at_inf = 1.0d5
+        real(wp), intent(in)    :: h, muobs
+        real(wp), intent(inout) :: cosdelta1
+        real(wp), intent(out)   :: lens, delt
+        real(wp) :: d
+        real(wp), parameter :: r_at_inf = 1.0e5_wp
         type(LamppostContinuum) :: continuum
         continuum = trace_lensing(metric, h, r_at_inf, muobs)
         d = continuum%alpha**2 + continuum%beta**2

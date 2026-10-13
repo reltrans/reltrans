@@ -1,12 +1,12 @@
 !-----------------------------------------------------------------------
 subroutine get_reflionx(ear, ne, param, ifl, photar)
-  use xspec_interface, only: xsatbl
+  use rtconstants, only: wp
+  use xspec_interface, only: table_model
   use xillver_tables
   implicit none
   integer, intent(in)  :: ne, ifl
-  real,    intent(in)  :: ear(0:ne), param(7)
-  real,    intent(out) :: photar(ne)
-  real                 :: photer(ne)
+  real(wp),    intent(in)  :: ear(0:ne), param(7)
+  real(wp),    intent(out) :: photar(ne)
   character (len=500)  :: filenm,strenv
   character (len=200)  :: envnm
   logical              :: needfile
@@ -27,8 +27,8 @@ subroutine get_reflionx(ear, ne, param, ifl, photar)
   end if
 ! Interpolate a spectrum from it
 ! Pass the null terminator for C compatability, as xsatbl is an external C function.
-  call xsatbl(ear, ne, param,  [trim(path_name_reflionx_table), char(0)], ifl, &
-    photar, photer)
+  call table_model(ear, ne, param, [trim(path_name_reflionx_table), char(0)],  &
+    ifl, photar)
   return
 end subroutine get_reflionx
 !-----------------------------------------------------------------------
