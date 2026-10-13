@@ -13,7 +13,7 @@ subroutine radfuncs_dist(config, model_args, fcons)
   use rtconstants, only: wp
   use common_types
   use dyn_gr, only: ndelta, rlp, dcosdr, cosd, npts
-  use radial_grids, only: logxir, gsdr, logner, pnorm
+  use radial_grids, only: logxir, gsdr, logner, pnorm, logxir_natural
   use env_variables, only : adensity
   implicit none
   type(t_config),          intent(in) :: config
@@ -62,23 +62,21 @@ subroutine radfuncs_dist(config, model_args, fcons)
      logxir(i) = logxir_raw(i) - 0.1505_wp - log10(mui)
   end do
 
-!check max and min for both ionisation and density
+  ! logxir_natural: unmodified (natural) ionization parameter before clipping
+  ! logxir: effective ionization parameter after clipping
+  logxir_natural = logxir  ! Need for the post processing code
+  
+  !check max and min for both ionisation and density
   logxir = max( logxir , 0.0_wp  )
   logxir = min( logxir , 4.7_wp )
-  ! logner   = max( logner , 15.d0  )
-  ! logner   = min( logner , 22.d0 )
-  !...no need to enforce limits on logne since this is done in myreflect()
-  !This is needed because reflionx has a different maximum to xillverDCp
 
   verbose = get_env_int("REV_VERB",0)
   if( verbose .gt. 2 )then
      !Write out logxir for plots
      lximax = -huge(lximax)
      do i = 1,config%xe
-        write(188,*)re1(i),Fx(i),logxir_raw(i)
-        lximax = max( lximax , logxir(i) )
+        lximax = max( lximax , logxir_natural(i) )
      end do
-     write(188,*)"no no"
      write(*,*)"MAX LOGXIeff = ",lximax
   end if
 

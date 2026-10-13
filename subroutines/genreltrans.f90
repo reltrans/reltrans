@@ -9,16 +9,18 @@ contains
     subroutine setup_global_arrays(config, nlp)
         use dyn_gr, only: ndelta, cosd, dcosdr, rlp, tlp, npts, re1, pem1, taudo1
         use gr_continuum, only: tauso, gso, cosdelta_obs
-        use radial_grids, only: logxir, gsdr, dfer_arr, logner
+        use radial_grids, only: logxir, gsdr, dfer_arr, logner, logxir_natural
         integer, intent(in) :: nlp
         type(t_config), intent(in) :: config
         ! allocate arrays for radial profiles
         if (allocated(dfer_arr)) deallocate(dfer_arr)
         if (allocated(logxir)) deallocate(logxir)
+        if (allocated(logxir_natural)) deallocate(logxir_natural)
         if (allocated(gsdr)) deallocate(gsdr)
         if (allocated(logner)) deallocate(logner)
         allocate(dfer_arr(config%xe))
         allocate(logxir (config%xe))
+        allocate(logxir_natural(config%xe))
         allocate(gsdr (config%xe))
         allocate(logner (config%xe))
 
@@ -627,39 +629,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                 config%ionvar, model_args%resp_matr)
         ! catch case here for coherence = 0 or 1
         end if
-        ! this writes the full model as returned to Xspec
-        ! note that xspec gets output in e.g. lags*dE, and we want just the
-        ! lags, so a factor dE needs to be included
-        ! add writing of components for lag frequency spectrum
-        open (unit = 14, file = 'Output/Total.dat', status = 'replace', action = 'write')
-        do i = 1, ne
-            dE = ear(i) - ear(i-1)
-            write (14, *) (ear(i)+ear(i-1))/2.0_wp, photar(i)/dE
-        end do
-        close(14)
-        ! print continuum for both single and multiple LPs REDO THIS
-        open (unit = 24, file = 'Output/Continuum_spec.dat', status = 'replace', action = 'write')
-        do i = 1, nex
-            dE = arrays%earx(i) - arrays%earx(i-1)
-            if (nlp .eq. 1) then
-                contx_temp = arrays%contx(i, 1)/dE
-            else
-                contx_temp = 0.0_wp
-                do m = 1, nlp
-                    contx_temp = contx_temp + arrays%contx(i, m)
-                end do
-                contx_temp = contx_temp/((1.0_wp+model_args%eta)*dE)
-            end if
-            write (24, *) (arrays%earx(i)+arrays%earx(i-1))/2.0_wp, contx_temp
-        end do
-        close(24)
-    else if (is_mode(model_args%ReIm, MODE_LAG_FREQ)) then
-       open (unit = 14, file = 'Output/Total.dat', status = 'replace', action = 'write')
-        do i = 1, ne
-            dE = ear(i) - ear(i-1)
-            write (14, *) (ear(i)+ear(i-1))/2.0_wp, photar(i)/dE
-        end do
-        close(14)
     endif
 
     fhisave = config%fhi

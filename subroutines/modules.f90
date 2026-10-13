@@ -159,8 +159,10 @@ module radial_grids
   use rtconstants, only: wp
   implicit none
   real(wp) , dimension(:), allocatable :: logxir, logner, gsdr, dfer_arr
+  real(wp) , dimension(:), allocatable :: logxir_natural
+  ! logxir_natural: unmodified (natural) ionization parameter before clipping
   real(wp) :: pnorm
-  save logxir, gsdr, logner
+  save logxir, gsdr, logner, logxir_natural
 end module radial_grids
 
 module conv_mod

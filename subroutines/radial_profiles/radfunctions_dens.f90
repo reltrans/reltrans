@@ -12,7 +12,7 @@ subroutine radfunctions_dens(config, model_args, arrays)
     use common_types
     use env_variables, only : adensity
     use dyn_gr, only: ndelta, rlp, dcosdr, cosd, npts
-    use radial_grids, only: logxir, gsdr, logner, dfer_arr
+    use radial_grids, only: logxir, gsdr, logner, dfer_arr, logxir_natural
     implicit none
     type(t_config)         , intent(in)    :: config
     type(t_model_arguments), intent(in)    :: model_args
@@ -99,14 +99,10 @@ subroutine radfunctions_dens(config, model_args, arrays)
         do m = 1, model_args%nlp
             print*, "Peak ionisation from LP", m, ": ", logxip_lp(m)
         end do
-        open (unit = 27, file = 'Output/RadialScalings.dat', status='replace', action = 'write')
-            do i = 1, config%xe
-                write(27,*) rad(i), logxir(i), gsdr(i), logxir(i)+logner(i),   &
-                    (logxi_lp(i,m), m=1,model_args%nlp), dfer_arr(i)
-            end do 
-        close(27)    
     end if
-    
+
+    ! logxir_natural: unmodified (natural) ionization parameter before clipping
+    logxir_natural = logxir  !Need for the post processing code
     !check max and min for ionisation 
     logxir = max( logxir , 0.0_wp  )
     logxir = min( logxir , 4.7_wp )

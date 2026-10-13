@@ -9,52 +9,54 @@ program ppmain
   integer iparam(15),i
 
 ! Input parameters
-  param(1)  = 11.4144          !h
-  param(2)  = 0.998            !a
-  param(3)  = 42.2816          !inc
-  param(4)  = -2.95166         !rin
+  param(1)  = 6.03206          !h
+  param(2)  = 0.900832         !a
+  param(3)  = 57.0023          !inc
+  param(4)  = -1.0             !rin
   param(5)  = 2e4              !rout
-  param(6)  = 0.0              !zcos
-  param(7)  = 1.70545          !Gamma
-  param(8)  = 3.39811          !logxi
-  param(9)  = 2.64304          !Afe
-  param(10) = 19.0404          !lognep
-  param(11) = 359.389          !kTe
-  param(12) = 0.0              !Nh
-  param(13) = 0.294556         !boost
-  param(14) = 14.8223          !Mass
-  param(15) = 0.0999336        !Anorm
+  param(6)  = 2.49170E-02      !zcos
+  param(7)  = 2.45424          !Gamma
+  param(8)  = 2.34330          !logxi
+  param(9)  = 1.03405          !Afe
+  param(10) = 16.9942          !lognep
+  param(11) = 50.0             !kTe
+  param(12) = 5.02998E-02      !Nh
+  param(13) = 1.0              !boost
+  param(14) = 3.08431E+06      !Mass
+  param(15) = 2.19479E-04      !Anorm
 
 ! Settings
   chainmode = .false.  !Reading in a chain (true) or just entering one parameter set (false)
   xe        = 20       !Number of radial zones
-  adensity  = 1        !1 = zone A ne; 0 = const ne
+  adensity  = 0        !1 = zone A ne; 0 = const ne
   
 ! Name of input chain
-  chainfile = '/Users/administrator/Dropbox/Patrick_CygX1_RXTE/post_referee_fits/contour_plots/'
-  chainfile = trim(chainfile) // 'adam_dcp_final.out'
+  chainfile = '/Users/administrator/Dropbox/NewAthena_WPs/cosmology/simdata/'
+  chainfile = trim(chainfile) // 'Ark564_DCPfitback3.fits'
+  
 
 ! Name of output chain (with distance column added)
-  newchainfile = 'adam_dcp_final_dist.out'
+  newchainfile = '/Users/administrator/Dropbox/NewAthena_WPs/cosmology/simdata/'
+  newchainfile = trim(newchainfile) // 'Ark564_DCPfitback3_dist.fits'
 
 ! Column number corresponding to each parameter in the chain
   !(not used if chainmode=false)
   !0 means that the parameter was fixed to the value in param(:)
-  iparam(1)  = 5           !h
-  iparam(2)  = 0           !a
-  iparam(3)  = 6           !inc
-  iparam(4)  = 7           !rin
+  iparam(1)  = 1           !h
+  iparam(2)  = 2           !a
+  iparam(3)  = 3           !inc
+  iparam(4)  = 0           !rin
   iparam(5)  = 0           !rout
   iparam(6)  = 0           !zcos
-  iparam(7)  = 8           !Gamma
-  iparam(8)  = 9           !logxi
-  iparam(9)  = 10          !Afe
-  iparam(10) = 11          !lognep
-  iparam(11) = 12          !kTe
-  iparam(12) = 0           !Nh
-  iparam(13) = 13          !boost
-  iparam(14) = 14          !Mass
-  iparam(15) = 15          !Anorm
+  iparam(7)  = 4           !Gamma
+  iparam(8)  = 5           !logxi
+  iparam(9)  = 6           !Afe
+  iparam(10) = 7           !lognep
+  iparam(11) = 0           !kTe
+  iparam(12) = 8           !Nh
+  iparam(13) = 0           !boost
+  iparam(14) = 9           !Mass
+  iparam(15) = 10          !Anorm
 
   call post_processor(param,xe,adensity,chainmode,chainfile,newchainfile,iparam)
 
@@ -99,6 +101,7 @@ subroutine post_processor(param,xe,adensity,chainmode,chainfile,newchainfile,  &
     call pack_reltransDCp(param,par,Cp,nlp)
     Dkpc = distance(Cp, nlp, xe, adensity, par)
     write(*,*)"reltransDCp distance (kpc) = ",Dkpc
+    write(*,*)"reltransDCp distance (Mpc) = ",Dkpc/1e3
   
 !   Read in chain and append distance
     if( chainmode )then
@@ -315,21 +318,21 @@ function distance(Cp, nlp, xe_in, adensity_in, param)
 
 ! Calculate ionization profile measured by reltransDCp
     dset = 0
-    call init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
+    call init_cont(config, model_args, arrays, Cp_cont, fcons, dset)    
     call radfunctions_dens(config, model_args, arrays)
     allocate( logxir_dens(config%xe) )
-    logxir_dens = logxir
+    logxir_dens = logxir_natural
     
 ! Calculate ionization profile assuming isotropic corona seen from D=1kpc
     dset            = 1
     model_args%Dkpc = 1.0
-    call init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
+    call init_cont(config, model_args, arrays, Cp_cont, fcons, dset)    
     call radfuncs_dist(config, model_args, fcons)
     
 ! Calculate the re-scaling distance
-    Distance = 10.0**( 0.5 * ( logxir_dens(2)-logxir(2) )  )
+    Distance = 10.0**( 0.5 * ( logxir_dens(2)-logxir_natural(2) )  )
     Distance = Distance / sqrt(model_args%boost)
-
+    
 ! Save parameters
     fhisave = config%fhi
     flosave = config%flo
