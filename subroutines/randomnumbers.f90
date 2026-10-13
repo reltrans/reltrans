@@ -12,54 +12,6 @@ module random_numbers
     private
     public :: ran1, gasdev
 
-<<<<<<< HEAD
-!-----------------------------------------------------------------------
-      FUNCTION ran1(idum)
-!> Returns a uniform random number in (0, 1), Numerical Recipes `ran1`.
-!> This is the Park-Miller "minimal standard" generator
-!> (idum = 16807 * idum mod (2**31 - 1)) with a 32-entry Bays-Durham
-!> shuffle table which removes low-order serial correlations.
-!>
-!> Call with a negative `idum` to (re)initialise the sequence, and do not
-!> alter `idum` between calls. The same seed should give the same sequence on
-!> every compiler and platform.
-      use rtconstants, only: wp
-      INTEGER idum,IA,IM,IQ,IR,NTAB,NDIV
-      real(wp) ran1,AM,EPS,RNMX
-!     NDIV = 1+(IM-1)/NTAB, written out to avoid an integer-division warning
-      PARAMETER (IA=16807,IM=2147483647,AM=1.0_wp/real(IM, wp),IQ=127773,&
-      IR=2836,NTAB=32,NDIV=67108864,EPS=1.2e-7_wp,RNMX=1.0_wp-EPS)
-      INTEGER j,k,iv(NTAB),iy
-      SAVE iv,iy
-      DATA iv /NTAB*0/, iy /0/
-      if (idum.le.0.or.iy.eq.0) then
-!       Initialise: discard the first 8 values, then fill the shuffle table
-        idum=max(-idum,1)
-        do 11 j=NTAB+8,NTAB+1,-1
-          k=idum/IQ
-!         Schrage's method: computes IA*idum mod IM without integer overflow
-          idum=IA*(idum-k*IQ)-IR*k
-          if (idum.lt.0) idum=idum+IM
-11      continue
-        do 12 j=NTAB,1,-1
-          k=idum/IQ
-          idum=IA*(idum-k*IQ)-IR*k
-          if (idum.lt.0) idum=idum+IM
-          iv(j)=idum
-12      continue
-        iy=iv(1)
-      endif
-      k=idum/IQ
-      idum=IA*(idum-k*IQ)-IR*k
-      if (idum.lt.0) idum=idum+IM
-      j=1+iy/NDIV
-      iy=iv(j)
-      iv(j)=idum
-      ran1=min(AM*iy,RNMX)
-      return
-   end function
-!-----------------------------------------------------------------------
-=======
 contains
 
     real(wp) function gasdev(idum)
@@ -151,4 +103,3 @@ contains
     end subroutine park_miller_step
 
 end module random_numbers
->>>>>>> 49db046 (refactor: modernise ran1 and gasdev into a random_numbers module)
