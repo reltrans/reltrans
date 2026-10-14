@@ -12,7 +12,7 @@ subroutine radfunctions_dens(config, model_args, arrays)
     use common_types
     use env_variables, only : adensity
     use dyn_gr, only: ndelta, rlp, dcosdr, cosd, npts
-    use radial_grids, only: logxir, gsdr, logner, dfer_arr, logxir_natural
+    use radial_grids, only: logxir, gsdr, logner, logxir_natural
     implicit none
     type(t_config)         , intent(in)    :: config
     type(t_model_arguments), intent(in)    :: model_args

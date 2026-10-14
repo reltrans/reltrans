@@ -318,14 +318,14 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     real(wp), intent(out) :: photar(ne)
     ! Variables of the subroutine
     ! initializer
-    integer :: m, prev_nf, Cpsave, i, j, Cp_cont
+    integer :: prev_nf, Cpsave, i, j, Cp_cont
     real(wp) :: d
     real(wp) :: f, fac, dE, ear(0:ne)
     ! relativistic parameters and limit on rin and h
     ! lens needs to be allocatable to save it.
     real(wp), allocatable :: frobs(:), frrel(:)
     real(wp) :: photerx(nex), absorbx(nex), ReS(ne), ImS(ne)
-    real(wp) :: fhisave, flosave, fcons, contx_temp
+    real(wp) :: fhisave, flosave, fcons
 
     real(wp) time_start, time_end !runtime stuff
 

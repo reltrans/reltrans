@@ -38,6 +38,9 @@ ALL_RELTRANS_SOURCE_FILES = $(shell find $(ROOTDIR)/subroutines -name '*.f90')
 
 CFLAGS := -fno-omit-frame-pointer
 
+# A note on the warnings flags: the `no-missing-include-dirs` is included
+# because the FFTW include location changes between HEASoft versions, and so it
+# doesn't always resolve.
 FFLAGS := -cpp -DHAVE_INLINE \
 		  -fPIC -fno-automatic -fno-second-underscore \
 		  -fno-omit-frame-pointer \
@@ -46,8 +49,8 @@ FFLAGS := -cpp -DHAVE_INLINE \
 		  -I$(HEADAS_INCLUDE)/fftw \
 		  -J$(BUILD)/cache \
 		  -I$(BUILD)/cache \
-		  -Wunused -Wall -Wextra -Wshadow -Wduplicated-cond \
-		  -Wuninitialized -Wmissing-declarations -Wline-truncation \
+		  -Wunused -Wall -Wextra -Wshadow -Wno-missing-include-dirs \
+		  -Wuninitialized -Wline-truncation \
 		  -Wno-compare-reals
 
 LDFLAGS := -lkerrz -Wl,-rpath,'$(abspath $(BUILD)/lib)' -L$(BUILD)/lib \
