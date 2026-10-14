@@ -48,10 +48,6 @@ contains
     real(wp) function ran1(idum)
         !> Returns a uniform random number in (0, 1).
         !>
-        !> This is the Park-Miller "minimal standard" generator
-        !> (idum = 16807 * idum mod (2**31 - 1)) with a 32-entry Bays-Durham
-        !> shuffle table to remove low-order serial correlations.
-        !>
         !> Call with a negative `idum` to (re)initialise the sequence, and do
         !> not alter `idum` between calls.
         integer, intent(inout) :: idum
