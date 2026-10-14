@@ -353,6 +353,7 @@ end subroutine tdrtdistX
 !-----------------------------------------------------------------------
 subroutine simrtdbl(ear, ne, param, ifl, photar)
   use rtconstants, only: wp
+  use random_numbers, only: gasdev
   use telematrix
   use env_variables
   implicit none
@@ -365,7 +366,7 @@ subroutine simrtdbl(ear, ne, param, ifl, photar)
   real(wp) :: earx(0:nex),photarx(nex),pow
   real(wp) :: Pr,rephotarx(nex),imphotarx(nex),mur,mus
   real(wp) :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,br,bs(ne)
-  real(wp) :: flo,fhi,fc,lag(ne),gasdev,lagsim(ne)
+  real(wp) :: flo,fhi,fc,lag(ne),lagsim(ne)
   real(wp), parameter :: pi = acos(-1.0_wp)
   integer  unit,xunit,status,j
   real(wp) E1,E2,frac
@@ -529,6 +530,7 @@ end subroutine simrtdbl
 !-----------------------------------------------------------------------
 subroutine simrtdist(ear, ne, param, ifl, photar)
   use rtconstants, only: wp
+  use random_numbers, only: gasdev
   use telematrix
   use env_variables
   implicit none
@@ -541,7 +543,7 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   real(wp) :: earx(0:nex),photarx(nex),pow
   real(wp) :: Pr,rephotarx(nex),imphotarx(nex),mur,mus
   real(wp) :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,br,bs(ne)
-  real(wp) :: flo,fhi,fc,lag(ne),gasdev,lagsim(ne)
+  real(wp) :: flo,fhi,fc,lag(ne),lagsim(ne)
   real(wp), parameter :: pi = acos(-1.0_wp)
   integer unit,xunit,status,j
   real(wp) E1,E2,frac
@@ -722,6 +724,7 @@ subroutine simrelt_extra(ear, ne, param, ifl, photar, br, mur, variability)
   !   mur: source count rate
   !   variability: (fractional rms)^2 / Hz
   use rtconstants, only: wp
+  use random_numbers, only: gasdev
   use telematrix
   use common_types, only: reset_instrument_files
   implicit none
@@ -738,7 +741,7 @@ subroutine simrelt_extra(ear, ne, param, ifl, photar, br, mur, variability)
   real(wp) :: earx(0:nex),photarx(nex),pow
   real(wp) :: rephotarx(nex),imphotarx(nex),mus
   real(wp) :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,bs(ne),std_deviation
-  real(wp) :: flo,fhi,fc,lag(ne),gasdev,lagsim(ne)
+  real(wp) :: flo,fhi,fc,lag(ne),lagsim(ne)
   real(wp), parameter :: pi = acos(-1.0_wp)
   integer idum, unit,xunit,status,j
   real(wp) E1,E2,frac
