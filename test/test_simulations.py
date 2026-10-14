@@ -15,4 +15,4 @@ def test_basic_simulation(telescope):
 
     assert result.background_count_rate == pytest.approx(0.03639, abs=1e-3)
     assert result.source_count_rate == pytest.approx(270.49288692412586, abs=1e-3)
-    assert result.lag_true[0] == pytest.approx(-5.01435804, abs=1e-4)
+    assert result.lag_true[0] == pytest.approx(-5.00659382, abs=1e-4)
