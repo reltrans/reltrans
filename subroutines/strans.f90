@@ -205,9 +205,6 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     end do
     if (args%conf%fhi .lt. tiny(args%conf%fhi)) args%fi(1) = 0.0_wp
 
-    !initialize radius grid, angles, and transfer functions
-    sin0 = sqrt(1.0_wp-args%model%muobs**2)
-
     ! Calculate dcos/dr and time lags vs r for the lamppost model
     call getdcos(args%model%metric, args%model%h, ndelta, args%model%nlp,      &
          args%model%rout, npts, rlp, dcosdr, tlp, cosd, cosdout)
