@@ -348,10 +348,10 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
 
             if (args%conf%ring_like) then
                 call sum_ringlike_corona(i, non_relativistic, r_length,        &
-                     re, alpha, beta, taudo, g, domega, gbin, rbin, args)
+                     re, phie, alpha, beta, taudo, g, domega, gbin, rbin, args)
             else
                 call sum_multiple_lampposts(i, non_relativistic, r_length,     &
-                     re, alpha, beta, taudo, g, domega, gbin, rbin, args)
+                     re, phie, alpha, beta, taudo, g, domega, gbin, rbin, args)
             endif
         end do
 
@@ -370,7 +370,7 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
 end subroutine sum_impulse_components
 
 subroutine sum_ringlike_corona(i, non_relativistic, r_length,                  &
-     re, alpha, beta, taudo, g, domega, gbin, rbin, args)
+     re, phie, alpha, beta, taudo, g, domega, gbin, rbin, args)
     use dyn_gr
     use radial_grids
     use gr_continuum
@@ -384,6 +384,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length,                  &
     integer, intent(in) :: i, r_length, gbin, rbin
     real(wp), intent(in) :: domega(r_length)
     real(wp), intent(in) :: alpha, beta, taudo, g, re
+    real(wp), intent(in) :: phie
 
     type(t_rtrans_args), intent(inout) :: args
 
@@ -391,7 +392,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length,                  &
     real(wp) :: dareafac, demang, dglpfacthick
     integer :: clamp_i
 
-    real(wp) :: mue, cosfac, phie
+    real(wp) :: mue, cosfac
     integer :: gbin_resp, tbin, mubin, fbin
     real(wp) :: gsd, normfac
     complex(wp) :: cexp
@@ -491,7 +492,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length,                  &
 end subroutine sum_ringlike_corona
 
 subroutine sum_multiple_lampposts(i, non_relativistic, r_length,               &
-     re, alpha, beta, taudo, g, domega, gbin, rbin, args)
+     re, phie, alpha, beta, taudo, g, domega, gbin, rbin, args)
     use dyn_gr
     use radial_grids
     use gr_continuum
@@ -505,6 +506,7 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length,               &
     integer, intent(in) :: i, r_length, gbin, rbin
     real(wp), intent(in) :: domega(r_length)
     real(wp), intent(in) :: alpha, beta, taudo, g, re
+    real(wp), intent(in) :: phie
 
     type(t_rtrans_args), intent(inout) :: args
 
@@ -515,7 +517,6 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length,               &
          pfunc_raw
     integer :: get_index, clamp_i
 
-    real(wp) :: phie
     real(wp) :: cosfac, mus, ptf
     real(wp) :: kfac, normfac, emisfac
     real(wp) :: thetafac(args%model%nlp), gsd(args%model%nlp)
