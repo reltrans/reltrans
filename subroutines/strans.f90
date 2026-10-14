@@ -22,6 +22,8 @@ module m_rtrans
         ! Computed values: the ISCO, the cosine angle on the disc, the radial
         ! bin width, the effective cosine angle
         real(wp) :: r_isco, mudisk, dlogr, mueff
+        ! Sines of the observer inclination and of the disc surface angle
+        real(wp) :: sin0, sindisk
 
         ! These are set as part of initialising the impulse response matrix
         real(wp) :: dlogt = 0.0_wp, dg = 0.0_wp
@@ -57,6 +59,8 @@ contains
         args%dlogr = log10(args%conf%rnmax / args%model%rin) /                 &
             real(args%conf%xe - 1, wp)
         args%mueff = max(args%model%muobs, 0.3_wp)
+        args%sin0 = sqrt(1.0_wp - args%model%muobs**2)
+        args%sindisk = sqrt(1.0_wp - args%mudisk**2)
     end subroutine bind_arguments
 
     ! Zeros all the output arrays
@@ -390,7 +394,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length,                  &
     real(wp) :: dareafac, demang, dglpfacthick
     integer :: clamp_i
 
-    real(wp) :: sin0, mue, cosfac, sindisk, phie
+    real(wp) :: mue, cosfac, phie
     integer :: gbin_resp, tbin, mubin, fbin
     real(wp) :: gsd, normfac
     complex(wp) :: cexp
@@ -441,8 +445,9 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length,                  &
             ! - this should be checked, else a full non-relatvistic version that
             !   loops over each azimuth used
             tau = sqrt(re**2 + (args%model%h(1) - args%model%honr *            &
-                re)**2) - re * (sin0 * sindisk * cos(phie) + args%model%muobs  &
-                * args%mudisk) + args%model%h(1) * args%model%muobs
+                re)**2) - re * (args%sin0 * args%sindisk * cos(phie) +         &
+                args%model%muobs * args%mudisk) + args%model%h(1) *            &
+                args%model%muobs
             tau = (1.0_wp+args%model%zcos)*tau
         else
             tau = (1.0_wp + args%model%zcos) * (tausd + taudo - tauso(1))
@@ -513,7 +518,6 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length,               &
          pfunc_raw
     integer :: get_index, clamp_i
 
-    real(wp) :: sin0, sindisk
     real(wp) :: phie
     real(wp) :: cosfac, mus, ptf
     real(wp) :: kfac, normfac, emisfac
@@ -532,8 +536,9 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length,               &
         ! Time lag between direct and reflected photons
         if (non_relativistic) then
             tau(m) = sqrt(re**2 + (args%model%h(m) - args%model%honr *         &
-                re)**2) - re * (sin0 * sindisk * cos(phie) + args%model%muobs  &
-                * args%mudisk) + args%model%h(1) * args%model%muobs
+                re)**2) - re * (args%sin0 * args%sindisk * cos(phie) +         &
+                args%model%muobs * args%mudisk) + args%model%h(1) *            &
+                args%model%muobs
             tau(m) = (1.0_wp+args%model%zcos)*tau(m)
         else
             ! Interpolate (or extrapolate) the time function
