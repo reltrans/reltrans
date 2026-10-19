@@ -305,6 +305,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use radial_grids
     use gr_continuum
     use m_genreltrans
+    use m_traces, only: calculate_continuum_traces, calculate_disc_traces
     use env_variables
     use saved_variables
     use telematrix2
@@ -412,8 +413,12 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        allocate (frobs(nlp))
        if (allocated(frrel)) deallocate(frrel)
        allocate (frrel(nlp))
-       ! Calculate the Kernel for the given parameters
-       call rtrans(config, model_args, arrays, dset, d, nex, frobs, frrel)
+       ! Trace the lamppost-to-observer geodesics (continuum), then the
+       ! lamppost-to-disc and disc-to-observer geodesics and the disc transfer
+       ! function kernel for the given parameters
+       call calculate_continuum_traces(model_args, dset)
+       call calculate_disc_traces(config, model_args, arrays, d, nex, frobs,  &
+           frrel)
        ! print *, 'gso ', gso(1)
     end if
     if (config%verbose .gt. 2) then

@@ -77,106 +77,105 @@ contains
 end module m_rtrans
 
 !-----------------------------------------------------------------------
-subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
-    ! Code to calculate the transfer function for an accretion disk.
-    ! This code first does full GR ray tracing for a camera with impact parameters < bmax
-    ! It then also does straight line ray tracing for impact parameters >bmax
-    ! It adds both up to produce a transfer function for a disk extending from rin to rout
-    !
-    ! This routine populates the transfer functions in `arrays`
-    !
-    ! Non-standard arguments:
-    !
-    ! d: Distance of the source
-    ! dset: dset=1 means calculate ionization from distance, dset=0 means ignore
-    ! distance
-    ! ne: Number of energy bins
-    ! frobs: Observer's reflection fraction
-    ! frrel: Reflection fraction defined by relxilllp.
-    use dyn_gr, only: rlp, cosd, dcosdr, ndelta, npts, rlp, tlp, ndelta
-    use radial_grids, only: dfer_arr, pnorm
-    use gr_continuum, only: gso, lens, tauso, gso, cosdelta_obs
-    use saved_variables
-    use impulseresponse, only: response_zero_edges, response_allocate
-    use common_types, only: t_config, t_model_arguments, t_arrays
-    use m_rtrans
-    use raytracing, only: trace_disk_observer, getdcos, getlens
+module m_traces
     use rtconstants, only: pi, wp
+    use common_types, only: t_config, t_model_arguments, t_arrays
     implicit none
+    private
+    public :: calculate_continuum_traces, calculate_disc_traces
 
-    type(t_config), intent(inout) :: config
-    type(t_model_arguments), intent(in) :: model_args
-    real(wp), intent(in) :: d
-    integer, intent(in) :: ne, dset
+contains
 
-    type(t_arrays), intent(inout) :: arrays
-    real(wp), intent(inout) :: frobs(model_args%nlp),                          &
-         frrel(model_args%nlp)
+    subroutine calculate_continuum_traces(model_args, dset)
+        use radial_grids, only: pnorm
+        use gr_continuum, only: gso, lens, tauso, cosdelta_obs
+        use raytracing, only: getlens
+        type(t_model_arguments), intent(in) :: model_args
+        integer, intent(in) :: dset
 
-    type(t_rtrans_args) :: args
+        integer :: m
+        real(wp) :: ang_fac
+        ! functions
+        real(wp) :: dgsofac, pnormer, pfunc_raw
 
-    integer m
-    real(wp) cosdout(model_args%nlp)
-    real(wp) domega(config%nro)
+        ! Lamppost to observer: energy shift, lensing factor and travel time
+        do m = 1, model_args%nlp
+            gso(m) = dgsofac(model_args%a, model_args%h(m))
+            call getlens(model_args%metric, model_args%h(m),                   &
+                model_args%muobs, lens(m), tauso(m), cosdelta_obs(m))
+            if (tauso(m) .ne. tauso(m)) stop "tauso is NaN"
+        end do
 
-    real(wp) sin0
-    integer fbin
-    real(wp) rfunc, scal, velocity(3), sysfref
-    real(wp) rnmin, rn(config%nro)
-    real(wp) fi(config%nf), dgsofac, sindisk
-    real(wp) :: dFe(model_args%nlp)
-    real(wp) pnormer, pfunc_raw, ang_fac
-    real(wp) rnn(config%nro), domegan(config%nro)
-    logical dotrace
+        ! Set continuum normalisations depending on model flavour
+        if (dset .eq. 0) then
+            pnorm = 1.0_wp / (4.0_wp * pi)
+        else
+            pnorm = pnormer(model_args%b1, model_args%b2, model_args%qboost)
+        end if
 
-    ! Setup the output arrays
-    call bind_arguments(args, config, model_args, arrays, frobs, dFe, fi, ne)
-    ! Zero the outputs
-    dfer_arr = 0.0_wp
-    call outputs_zero_arrays(args)
+        do m = 1, model_args%nlp
+            ! Calculate 4pi p(theta0,phi0) = ang_fac
+            ang_fac = 4.0_wp * pi * pnorm * pfunc_raw(-cosdelta_obs(m),        &
+                model_args%b1, model_args%b2, model_args%qboost)
+            ! Adjust the lensing factor (easiest way to keep track)
+            lens(m) = lens(m) * ang_fac
+        end do
+    end subroutine calculate_continuum_traces
 
-    ! Settings/initialization
-    scal = 1.0_wp
-    velocity = 0.0_wp
-    sindisk = sqrt(1.0_wp - args%mudisk**2)
+    subroutine calculate_disc_traces(config, model_args, arrays, d, ne, frobs, &
+        frrel)
+        use dyn_gr, only: rlp, cosd, dcosdr, ndelta, npts, tlp
+        use radial_grids, only: dfer_arr
+        use gr_continuum, only: lens
+        use saved_variables
+        use impulseresponse, only: response_zero_edges, response_allocate
+        use m_rtrans
+        use raytracing, only: trace_disk_observer, getdcos
+        type(t_config), intent(inout) :: config
+        type(t_model_arguments), intent(in) :: model_args
+        type(t_arrays), intent(inout) :: arrays
+        real(wp), intent(in) :: d
+        integer, intent(in) :: ne
+        real(wp), intent(inout) :: frobs(model_args%nlp)
+        real(wp), intent(out) :: frrel(model_args%nlp)
 
-    if (args%conf%calculate_impulse_response) then
-        ! This also sets up the time and energy axes
-        ! and assigns the dlogt and dg global variables
-        call response_allocate(args%ne, args%conf%nt, args%dlogt, args%dg)
-    end if
+        type(t_rtrans_args) :: args
+        integer :: m, fbin
+        real(wp) :: domega(config%nro), rn(config%nro)
+        real(wp) :: rnn(config%nro), domegan(config%nro)
+        real(wp) :: fi(config%nf), dFe(model_args%nlp), rnmin
+        real(wp) :: cosdout(model_args%nlp)
+        logical :: dotrace
+        ! functions
+        real(wp) :: rfunc, dgsofac, sysfref
 
-    !set up saving the impulse response function if user desires
-    !note: the ideal parameters to plot the transfer function are nro~=7000,nphi~=7000,nt~=2e9,nex~=2e10
+        ! Setup the output arrays
+        call bind_arguments(args, config, model_args, arrays, frobs, dFe, fi,  &
+            ne)
+        ! Zero the outputs
+        dfer_arr = 0.0_wp
+        call outputs_zero_arrays(args)
 
-    !get the GR ray-tracing CONTINUUM parameters which are stored in the module gr_continuum
-    if (args%model%nlp .eq. 1) then
-       gso(1) = dgsofac(args%model%a, args%model%h(1))
-       call getlens(args%model%metric, args%model%h(1), args%model%muobs,      &
-            lens(1), tauso(1), cosdelta_obs(1))
-       if (tauso(1) .ne. tauso(1)) stop "tauso is NaN"
-    else
-       !here the observed cutoffs are set from the temperature in the source frame
-       do m = 1, args%model%nlp
-          gso(m) = dgsofac(args%model%a, args%model%h(m))
-          call getlens(args%model%metric, args%model%h(m), args%model%muobs,   &
-               lens(m), tauso(m), cosdelta_obs(m))
-          if (tauso(m) .ne. tauso(m)) stop "tauso is NaN"
-       enddo
-    endif
+        if (args%conf%calculate_impulse_response) then
+            ! This also sets up the time and energy axes
+            ! and assigns the dlogt and dg global variables
+            call response_allocate(args%ne, args%conf%nt, args%dlogt, args%dg)
+        end if
 
-    ! Set up observer's camera ( alpha = rn sin(phin), beta = mueff rn cos(phin) )
-    ! to do full GR ray tracing with
-    rnmin = rfunc(args%model%a, args%model%muobs)
-    !Grid to do in full GR
-    call getrgrid(rnmin, args%conf%rnmax, args%mueff, args%conf%nro,           &
-         args%conf%nphi, rn, domega)
-    !Grid for Newtonian approximation
-    call getrgrid(args%conf%rnmax, args%model%rout, args%mueff,                &
-         args%conf%nron, args%conf%nphin, rnn, domegan)
+        ! Set up observer's camera
+        ! ( alpha = rn sin(phin), beta = mueff rn cos(phin) )
+        ! to do full GR ray tracing with
+        rnmin = rfunc(args%model%a, args%model%muobs)
+        ! Grid to do in full GR
+        call getrgrid(rnmin, args%conf%rnmax, args%mueff, args%conf%nro,       &
+            args%conf%nphi, rn, domega)
+        ! Grid for Newtonian approximation
+        call getrgrid(args%conf%rnmax, args%model%rout, args%mueff,            &
+            args%conf%nron, args%conf%nphin, rnn, domegan)
 
-    ! Trace rays in full GR for the small camera (ie with relativistic effects) from the osberver to the disk,
-    ! which is why it doesnt depend on h
+        ! Trace rays in full GR for the small camera (ie with relativistic
+        ! effects) from the observer to the disc, which is why it doesn't
+        ! depend on h
         dotrace = .false.
         if (abs(spinsav - args%model%a) .gt. tiny(args%model%a)) then
             dotrace = .true.
@@ -190,61 +189,51 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
         if (abs(mudsav-args%mudisk) .gt. tiny(args%mudisk)) dotrace = .true.
         if (dotrace) then
             call trace_disk_observer(args%model%metric, args%conf%nro,         &
-                args%conf%nphi, rn, args%mueff, args%model%muobs, args%r_isco, &
-                args%model%rout, d)
+                args%conf%nphi, rn, args%mueff, args%model%muobs,              &
+                args%r_isco, args%model%rout, d)
             spinsav = args%model%a
             musav = args%model%muobs
             routsav = args%model%rout
             mudsav = args%mudisk
-       end if
+        end if
 
-    ! Set frequency array
-    do fbin = 1, args%conf%nf
-        args%fi(fbin) = args%conf%flo * (args%conf%fhi /                       &
-            args%conf%flo)**((real(fbin, wp) - 0.5_wp) / real(args%conf%nf, wp))
-    end do
-    if (args%conf%fhi .lt. tiny(args%conf%fhi)) args%fi(1) = 0.0_wp
+        ! Lamppost to disc: dcos/dr and time lags vs r
+        call getdcos(args%model%metric, args%model%h, ndelta, args%model%nlp,  &
+            args%model%rout, npts, rlp, dcosdr, tlp, cosd, cosdout)
 
-    ! Calculate dcos/dr and time lags vs r for the lamppost model
-    call getdcos(args%model%metric, args%model%h, ndelta, args%model%nlp,      &
-         args%model%rout, npts, rlp, dcosdr, tlp, cosd, cosdout)
+        ! Set frequency array
+        do fbin = 1, args%conf%nf
+            args%fi(fbin) = args%conf%flo * (args%conf%fhi /                   &
+                args%conf%flo)**((real(fbin, wp) - 0.5_wp) /                   &
+                real(args%conf%nf, wp))
+        end do
+        if (args%conf%fhi .lt. tiny(args%conf%fhi)) args%fi(1) = 0.0_wp
 
-    ! set continuum normalisations depending on model flavour
-    if (dset .eq. 0)then
-        pnorm = 1.0_wp / (4.0_wp * pi)
-    else
-        pnorm = pnormer(args%model%b1, args%model%b2, args%model%qboost)
-    end if
+        ! the only arguments that change here are .false., nro, nphi, rn,
+        ! domega the first call is for the relativistic version
+        call sum_impulse_components(.false., args%conf%nro, args%conf%nphi,    &
+            rn, domega, args)
+        ! then for the non-relativistic flat-space version
+        call sum_impulse_components(.true., args%conf%nron, args%conf%nphin,   &
+            rnn, domegan, args)
 
-    ! the only arguments that change here are .false., nro, nphi, rn, domega
-    ! the first call is for the relativistic version
-    call sum_impulse_components(.false., args%conf%nro, args%conf%nphi, rn,    &
-         domega, args)
-    ! then for the non-relativistic flat-space version
-    call sum_impulse_components(.true., args%conf%nron, args%conf%nphin,       &
-         rnn, domegan, args)
+        do m = 1, args%model%nlp
+            ! Finish calculation of observer's reflection fraction (`lens`
+            ! already includes the angular emissivity factor)
+            args%frobs(m) = args%frobs(m) / dgsofac(args%model%a,              &
+                args%model%h(m)) / lens(m)
+            ! Calculate the relxill reflection fraction for one column
+            frrel(m) = sysfref(args%model%rin, rlp(:, m), cosd(:, m), ndelta,  &
+                cosdout(m))
+        end do
 
-    do m = 1, args%model%nlp
-        ! Calculate 4pi p(theta0,phi0) = ang_fac
-        ang_fac = 4.0_wp * pi * pnorm * pfunc_raw(-cosdelta_obs(m),            &
-            args%model%b1, args%model%b2, args%model%qboost)
-        ! Adjust the lensing factor (easiest way to keep track)
-        lens(m) = lens(m) * ang_fac
-        ! Calculate the relxill reflection fraction for one columncosdout
-        frrel(m) = sysfref(args%model%rin, rlp(:, m), cosd(:, m), ndelta,      &
-            cosdout(m))
-        !Finish calculation of observer's reflection fraction
-        args%frobs(m) = args%frobs(m) / dgsofac(args%model%a,                  &
-            args%model%h(m)) / lens(m)
-    end do
+        if (args%conf%calculate_impulse_response) then
+            ! Deal with edge effects
+            call response_zero_edges()
+        end if
+    end subroutine calculate_disc_traces
 
-    if (args%conf%calculate_impulse_response) then
-        ! Deal with edge effects
-        call response_zero_edges()
-    end if
-
-    return
-end subroutine rtrans
+end module m_traces
 !-----------------------------------------------------------------------
 
 ! Clamps an integer value between some high and low value.
