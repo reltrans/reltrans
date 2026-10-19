@@ -86,19 +86,17 @@ module m_traces
 
 contains
 
-    subroutine calculate_continuum_traces(model_args, dset, frrel)
-        use dyn_gr, only: rlp, cosd, dcosdr, ndelta, npts, tlp
+    subroutine calculate_continuum_traces(model_args, dset)
         use radial_grids, only: pnorm
         use gr_continuum, only: gso, lens, tauso, cosdelta_obs
-        use raytracing, only: getdcos, getlens
+        use raytracing, only: getlens
         type(t_model_arguments), intent(in) :: model_args
         integer, intent(in) :: dset
-        real(wp), intent(out) :: frrel(model_args%nlp)
 
         integer :: m
-        real(wp) :: cosdout(model_args%nlp), ang_fac
+        real(wp) :: ang_fac
         ! functions
-        real(wp) :: dgsofac, pnormer, pfunc_raw, sysfref
+        real(wp) :: dgsofac, pnormer, pfunc_raw
 
         ! Lamppost to observer: energy shift, lensing factor and travel time
         do m = 1, model_args%nlp
@@ -107,10 +105,6 @@ contains
                 model_args%muobs, lens(m), tauso(m), cosdelta_obs(m))
             if (tauso(m) .ne. tauso(m)) stop "tauso is NaN"
         end do
-
-        ! Lamppost to disc: dcos/dr and time lags vs r
-        call getdcos(model_args%metric, model_args%h, ndelta, model_args%nlp,  &
-            model_args%rout, npts, rlp, dcosdr, tlp, cosd, cosdout)
 
         ! Set continuum normalisations depending on model flavour
         if (dset .eq. 0) then
@@ -125,34 +119,35 @@ contains
                 model_args%b1, model_args%b2, model_args%qboost)
             ! Adjust the lensing factor (easiest way to keep track)
             lens(m) = lens(m) * ang_fac
-            ! Calculate the relxill reflection fraction for one column
-            frrel(m) = sysfref(model_args%rin, rlp(:, m), cosd(:, m), ndelta,  &
-                cosdout(m))
         end do
     end subroutine calculate_continuum_traces
 
-    subroutine calculate_disc_traces(config, model_args, arrays, d, ne, frobs)
+    subroutine calculate_disc_traces(config, model_args, arrays, d, ne, frobs, &
+        frrel)
+        use dyn_gr, only: rlp, cosd, dcosdr, ndelta, npts, tlp
         use radial_grids, only: dfer_arr
         use gr_continuum, only: lens
         use saved_variables
         use impulseresponse, only: response_zero_edges, response_allocate
         use m_rtrans
-        use raytracing, only: trace_disk_observer
+        use raytracing, only: trace_disk_observer, getdcos
         type(t_config), intent(inout) :: config
         type(t_model_arguments), intent(in) :: model_args
         type(t_arrays), intent(inout) :: arrays
         real(wp), intent(in) :: d
         integer, intent(in) :: ne
         real(wp), intent(inout) :: frobs(model_args%nlp)
+        real(wp), intent(out) :: frrel(model_args%nlp)
 
         type(t_rtrans_args) :: args
         integer :: m, fbin
         real(wp) :: domega(config%nro), rn(config%nro)
         real(wp) :: rnn(config%nro), domegan(config%nro)
         real(wp) :: fi(config%nf), dFe(model_args%nlp), rnmin
+        real(wp) :: cosdout(model_args%nlp)
         logical :: dotrace
         ! functions
-        real(wp) :: rfunc, dgsofac
+        real(wp) :: rfunc, dgsofac, sysfref
 
         ! Setup the output arrays
         call bind_arguments(args, config, model_args, arrays, frobs, dFe, fi,  &
@@ -202,6 +197,10 @@ contains
             mudsav = args%mudisk
         end if
 
+        ! Lamppost to disc: dcos/dr and time lags vs r
+        call getdcos(args%model%metric, args%model%h, ndelta, args%model%nlp,  &
+            args%model%rout, npts, rlp, dcosdr, tlp, cosd, cosdout)
+
         ! Set frequency array
         do fbin = 1, args%conf%nf
             args%fi(fbin) = args%conf%flo * (args%conf%fhi /                   &
@@ -218,11 +217,14 @@ contains
         call sum_impulse_components(.true., args%conf%nron, args%conf%nphin,   &
             rnn, domegan, args)
 
-        ! Finish calculation of observer's reflection fraction (`lens`
-        ! already includes the angular emissivity factor)
         do m = 1, args%model%nlp
+            ! Finish calculation of observer's reflection fraction (`lens`
+            ! already includes the angular emissivity factor)
             args%frobs(m) = args%frobs(m) / dgsofac(args%model%a,              &
                 args%model%h(m)) / lens(m)
+            ! Calculate the relxill reflection fraction for one column
+            frrel(m) = sysfref(args%model%rin, rlp(:, m), cosd(:, m), ndelta,  &
+                cosdout(m))
         end do
 
         if (args%conf%calculate_impulse_response) then

@@ -413,10 +413,12 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        allocate (frobs(nlp))
        if (allocated(frrel)) deallocate(frrel)
        allocate (frrel(nlp))
-       ! Trace the lamppost-to-observer/disc geodesics, then calculate the
-       ! disc transfer function kernel for the given parameters
-       call calculate_continuum_traces(model_args, dset, frrel)
-       call calculate_disc_traces(config, model_args, arrays, d, nex, frobs)
+       ! Trace the lamppost-to-observer geodesics (continuum), then the
+       ! lamppost-to-disc and disc-to-observer geodesics and the disc transfer
+       ! function kernel for the given parameters
+       call calculate_continuum_traces(model_args, dset)
+       call calculate_disc_traces(config, model_args, arrays, d, nex, frobs,  &
+           frrel)
        ! print *, 'gso ', gso(1)
     end if
     if (config%verbose .gt. 2) then
