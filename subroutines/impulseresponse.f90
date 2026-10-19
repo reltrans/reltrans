@@ -13,6 +13,9 @@ module impulseresponse
     !
     ! `c_loc` is a relatively uncommon one and is for reading the address of a C
     ! pointer.
+    
+    !note: the ideal parameters to plot the transfer function are nro~=7000,
+    !nphi~=7000,nt~=2e9,nex~=2e10
     use rtconstants, only: wp
     use iso_c_binding, only: c_ptr, c_loc, c_int
     implicit none
