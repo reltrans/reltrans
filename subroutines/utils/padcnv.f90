@@ -122,11 +122,6 @@ subroutine E_FT(nex,photarx,bc)
     bdata(2*i-nex+1) = photarx(i)
   end do
 
-! #ifdef DEBUG
-    ! do i = 1, nex
-    !    write(61, *)  i , bdata(2*i - 1)
-    ! end do
-! #endif
 
 ! Now do the inverse FFT
   call ourfour1(bdata,nex,-1)
@@ -135,10 +130,6 @@ subroutine E_FT(nex,photarx,bc)
   do i = 1,nex
     bc(i) = cmplx(bdata(2*i-1), bdata(2*i), kind=wp) / sqrt(real(nex, wp))
   end do
-
-  ! do i = 1, nex
-  !      write(64, *)  i , bc(i)
-  ! end do
 
   return
 end subroutine E_FT
