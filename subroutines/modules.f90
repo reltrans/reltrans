@@ -145,7 +145,6 @@ module xillver_tables
     character (len=200) ::  pathname_xillver 
     character (len=200) ::  pathname_xillverD 
     character (len=200) ::  pathname_xillverDCp
-    character (len=500) ::  path_name_reflionx_table
 end module xillver_tables
 
 module gr_continuum

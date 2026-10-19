@@ -69,7 +69,6 @@ subroutine tdreltransDCp(ear, ne, param, ifl, photar)
 end subroutine tdreltransDCp
 !-----------------------------------------------------------------------
 
-
 !-----------------------------------------------------------------------
 subroutine tdreltransPL(ear, ne, param, ifl, photar)
   use rtconstants, only: wp
@@ -118,57 +117,6 @@ subroutine tdreltransPL(ear, ne, param, ifl, photar)
   return
 end subroutine tdreltransPL
 !-----------------------------------------------------------------------
-
-
-!-----------------------------------------------------------------------
-subroutine tdreltransx(ear,ne,param,ifl,photar)
-  use rtconstants, only: wp
-  implicit none
-  integer, parameter :: nlp = 1 !use a single lamp post
-  integer :: ne, ifl, Cp, dset
-  real(wp) :: ear(0:ne), param(21), photar(ne), par(32)
-! Settings
-  Cp   = 0   !Cp=0 means use the reflionx model with nthcomp and free density
-  dset = 0   !dset=0 means distance is not set, logxi set instead
-! Transfer to general parameter array
-  par(1)  = param(1)         !h1
-  par(2)  = 0.0_wp           !h2
-  par(3)  = param(2)         !a
-  par(4)  = param(3)         !inc
-  par(5)  = param(4)         !rin
-  par(6)  = param(5)         !rout
-  par(7)  = param(6)         !zcos
-  par(8)  = param(7)         !Gamma
-  par(9)  = param(8)         !logxi
-  par(10) = param(9)         !Afe
-  par(11) = param(10)        !lognep
-  par(12) = param(11)        !kTe
-  par(13) = 0.0_wp           !eta_0
-  par(14) = 0.0_wp           !eta
-  par(15) = 0.0_wp           !beta_p
-  par(16) = param(12)        !Nh
-  par(17) = param(13)        !boost
-  par(18) = 1.0_wp           !qboost
-  par(19) = param(14)        !Mass
-  par(20) = 0.0_wp           !honr
-  par(21) = 0.0_wp           !b1
-  par(22) = 0.0_wp           !b2
-  par(23) = param(15)        !floHz
-  par(24) = param(16)        !fhiHz
-  par(25) = param(17)        !ReIm
-  par(26) = param(18)        !DelA
-  par(27) = param(19)        !DelAB
-  par(28) = param(20)        !g
-  par(29) = 0.0_wp           !DelAB2   
-  par(30) = 0.0_wp           !g2
-  par(31) = 1.0_wp           !Anorm
-  par(32) = param(21)        !telescope response
-! Call general code
-  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
-  return
-end subroutine tdreltransx
-!-----------------------------------------------------------------------
-
 
 !-----------------------------------------------------------------------
 subroutine tdreltransDbl(ear, ne, param, ifl, photar)
@@ -284,71 +232,6 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
 end subroutine tdrtdist
 !-----------------------------------------------------------------------
 
-
-
-!-----------------------------------------------------------------------
-subroutine tdrtdistX(ear, ne, param, ifl, photar)
-  use rtconstants, only: wp
-  implicit none
-  integer, parameter :: nlp = 1 !use a single lamp post
-  integer :: ne, ifl, Cp, dset
-  real(wp) :: ear(0:ne), param(25), photar(ne), par(32)
-  real(wp)    :: honr,pi,cosi,cos0
-! Settings
-  Cp   = 0   !Cp=0 means use the reflionx model with nthcomp and free density 
-  dset = 1   !dset=1 means distance is set, logxi is calculated internally
-! Transfer to general parameter array
-  par(1)  = param(1)         !h1
-  par(2)  = 0.0_wp           !h2
-  par(3)  = param(2)         !a
-  par(4)  = param(3)         !inc
-  par(5)  = param(4)         !rin
-  par(6)  = param(5)         !rout
-  par(7)  = param(6)         !zcos
-  par(8)  = param(7)         !Gamma
-  par(9)  = param(8)         !Dkpc
-  par(10)  = param(9)        !Afe
-  par(11) = param(10)        !lognep
-  par(12) = param(11)        !kTe
-  par(13) = 0.0_wp           !eta_0
-  par(14) = 0.0_wp           !eta
-  par(15) = 0.0_wp           !beta_p
-  par(16) = param(12)        !Nh
-  par(17) = 1.0_wp           !boost
-  par(18) = param(13)        !qboost
-  par(19) = param(14)        !Mass
-  par(20) = param(15)        !honr
-  par(21) = param(16)        !b1
-  par(22) = param(17)        !b2
-  par(23) = param(18)        !floHz
-  par(24) = param(19)        !fhiHz
-  par(25) = param(20)        !ReIm
-  par(26) = param(21)        !DelA
-  par(27) = param(22)        !DelAB
-  par(28) = param(23)        !g
-  par(29) = 0.0_wp           !DelAB2
-  par(30) = 0.0_wp           !g2
-  par(31) = param(24)        !Anorm
-  par(32) = param(25)        !telescope response
-! Check that we're not looking at the side of the disc
-  honr = par(20)
-  pi   = acos(-1.0_wp)
-  cosi = cos( par(3) * pi / 180.0_wp )
-  cos0 = honr / sqrt( honr**2 + 1.0_wp  )  
-! Call general code
-  if( cos0 .ge. cosi )then
-     photar = 0.0_wp !XSPEC *hates* this. Just do it with limits, and flag here.
-     write(*,*)"Warning! Disc thickness is too high for this inclinaiton!"
-     write(*,*)"Model output set to zero -- XSPEC *hates* this and may get lost"
-     write(*,*)"leading to crash and seg fault. Better to set hard max on inc, incmax"
-     write(*,*)"and set honr_max to cos(incmax)/sqrt(1-cos^2(incmax))."
-  else
-     call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
-  end if
-  
-  return
-end subroutine tdrtdistX
-!-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
 subroutine simrtdbl(ear, ne, param, ifl, photar)

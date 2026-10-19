@@ -25,7 +25,7 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
 
        if( model_args%Cp .ge. 0 ) then
           ! write(*,*) 'nthcomp illumination for nthcomp and reflionx'
-          Cp_cont = 2 !This is needed since we can't use getcont(Cp,...) because in reflionx Cp = 0
+          Cp_cont = 2
           Cutoff_obs = Cutoff_s * gso(1) / (1.0_wp + model_args%zcos)
 
           call getcont(Cp_cont, arrays%earx, nex, model_args%Gamma,            &

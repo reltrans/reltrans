@@ -1,10 +1,11 @@
 !-----------------------------------------------------------------------
       SUBROUTINE ourfour1(data,nn,isign)
+      use rtconstants, only: wp
       INTEGER isign,nn
-      REAL data(2*nn)
+      real(wp) data(2*nn)
       INTEGER i,istep,j,m,mmax,n
-      REAL tempi,tempr
-      DOUBLE PRECISION theta,wi,wpi,wpr,wr,wtemp
+      real(wp) tempi,tempr
+      real(wp) theta,wi,wpi,wpr,wr,wtemp
       n=2*nn
       j=1
       do 11 i=1,n,2
@@ -27,16 +28,16 @@
       mmax=2
 2     if (n.gt.mmax) then
         istep=2*mmax
-        theta=6.28318530717959d0/(isign*mmax)
-        wpr=-2.d0*sin(0.5d0*theta)**2
+        theta=6.28318530717959_wp/(isign*mmax)
+        wpr=-2.0_wp*sin(0.5_wp*theta)**2
         wpi=sin(theta)
-        wr=1.d0
-        wi=0.d0
+        wr=1.0_wp
+        wi=0.0_wp
         do 13 m=1,mmax,2
           do 12 i=m,n,istep
             j=i+mmax
-            tempr=sngl(wr)*data(j)-sngl(wi)*data(j+1)
-            tempi=sngl(wr)*data(j+1)+sngl(wi)*data(j)
+            tempr=wr*data(j)-wi*data(j+1)
+            tempi=wr*data(j+1)+wi*data(j)
             data(j)=data(i)-tempr
             data(j+1)=data(i+1)-tempi
             data(i)=data(i)+tempr
