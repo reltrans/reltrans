@@ -419,7 +419,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        call calculate_continuum_traces(model_args, dset)
        call calculate_disc_traces(config, model_args, arrays, d, nex, frobs,  &
            frrel)
-       ! print *, 'gso ', gso(1)
     end if
     if (config%verbose .gt. 2) then
        call CPU_TIME (time_end)

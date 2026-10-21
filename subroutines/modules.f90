@@ -287,11 +287,6 @@ contains
         in(i + nex) = 0.0_wp
     end do
 
-    ! do i=1, nex_conv
-    !    write(82,*) i, in(i)
-    ! enddo
-    ! write(82,*) 'no no'
-
     call fftw_execute_dft_r2c(plan1, in, out)
 
     padFT_line = out
@@ -323,11 +318,6 @@ contains
         in(i + nex) = 0.0_wp
     end do
 
-    ! do i=1, nex_conv
-    !    write(82,*) i, in(i)
-    ! enddo
-    ! write(82,*) 'no no'
-
     call fftw_execute_dft_r2c(plan1, in, out)
 
     padFT_line = out
@@ -346,9 +336,6 @@ contains
     in_conv = padFT_line
 
     call fftw_execute_dft_c2r(plan2, in_conv, out_conv)
-    ! do i = 1, nex_conv 
-    !    write(80,*) i, out_conv(i)
-    ! enddo
     
     ! Populate output array
     photmax = 0.0_wp

@@ -24,7 +24,6 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
        arrays%contx_int(1) = 1.0_wp !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1
 
        if( model_args%Cp .ge. 0 ) then
-          ! write(*,*) 'nthcomp illumination for nthcomp and reflionx'
           Cp_cont = 2
           Cutoff_obs = Cutoff_s * gso(1) / (1.0_wp + model_args%zcos)
 
@@ -33,7 +32,6 @@ subroutine init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
           arrays%contx = lens(1) / (1.0_wp + model_args%zcos)**3               &
               * gso(1) * arrays%contx
        else if (model_args%Cp .eq. -1) then
-          ! write(*,*) 'powerlaw illumination'
           Cutoff_s = (1.0_wp + model_args%zcos) * Cutoff_obs / gso(1)
           call getcont(model_args%Cp, arrays%earx, nex, model_args%Gamma,      &
               Cutoff_s, Cutoff_obs, model_args%zcos, arrays%contx(:,1))

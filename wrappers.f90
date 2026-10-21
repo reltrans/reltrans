@@ -744,12 +744,8 @@ subroutine simrelt_extra(ear, ne, param, ifl, photar, br, mur, variability)
   write(*,*)"br,mur=",br,mur
   variability = Pr/mur**2
   write(*,*)"Pr (fractional rms)^2/Hz", variability
-  ! write(*,*)"count rate reference band", mur 
   
 ! open file to write the lag simulation to
-  
-  ! write(*,*)"Enter root name of simulation products"
-  ! read(*,'(a)')root
   root = 'test'
   lagfile =  'sim_' // trim(root) // '.dat'
   flxlagfile = 'sim_xspec_' // trim(root) // '.dat'
@@ -777,17 +773,11 @@ subroutine simrelt_extra(ear, ne, param, ifl, photar, br, mur, variability)
      ReG = getcountrate(ear(i-1),ear(i),nex,earx,rephotarx)
      ImG = getcountrate(ear(i-1),ear(i),nex,earx,imphotarx)
      G2  = pow**2 * ( ReG**2 + ImG**2 )
-     ! Write(*,*) 'mus, Psnoise, ReG, ImG, G2' 
-     ! Write(10,*) mus, Pr, Psnoise, ReG, ImG, G2, Texp, (fhi-flo) 
      ! Can finally calculate error     
      dlag(i) = 1.0_wp + Prnoise/Pr
-     ! write(11,* ) E,0.5*dE, dlag(i)
      dlag(i) = dlag(i) * ( G2*(1.0_wp-gammac2) + Psnoise*Pr )
-     ! write(12,* ) E,0.5*dE, dlag(i)
      dlag(i) = dlag(i) / ( gammac2*G2 )
-     ! write(13,* ) E,0.5*dE, dlag(i)
      dlag(i) = dlag(i) / ( 2.0_wp * Texp * (fhi-flo) )
-     ! write(14,* ) E,0.5*dE, dlag(i)
      dlag(i) = sqrt( dlag(i) )
      dlag(i) = dlag(i) / ( 2.0_wp * pi * fc )
      std_deviation = dlag(i)
