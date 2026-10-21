@@ -5,8 +5,8 @@
 ! !c Calculates g-factor for a disk in the BH equatorial plane
 !       implicit none
 !       double precision dlgfac,a,mu0,alpha,r
-!       double precision sin0,omega,Delta,Sigma2,gtt,gtp,gpp
-!       sin0   = sqrt( 1.0 - mu0**2 )
+!       double precision sinobs,omega,Delta,Sigma2,gtt,gtp,gpp
+!       sinobs   = sqrt( 1.0 - mu0**2 )
 !       omega  = 1. / (r**1.5+a)
 !       Delta  = r**2 - 2*r + a**2
 !       Sigma2 = (r**2+a**2)**2 - a**2 * Delta
@@ -14,7 +14,7 @@
 !       gtp    = -2*a/r
 !       gpp    = Sigma2/r**2
 !       dlgfac = sqrt( -gtt - 2*omega*gtp - omega**2.*gpp )
-!       dlgfac = dlgfac / ( 1.+omega*alpha*sin0 )
+!       dlgfac = dlgfac / ( 1.+omega*alpha*sinobs )
 !       return
 !       end
 ! !-----------------------------------------------------------------------
@@ -125,10 +125,10 @@ function dlgfacthick(a,mu0,alpha,r,mu)
   use rtconstants, only: wp
   implicit none
   real(wp) dlgfacthick,a,mu0,alpha,r,mu
-  real(wp) sin0,sindisk,angvel,mathcalA,Delta,Sig
+  real(wp) sinobs,sindisk,angvel,mathcalA,Delta,Sig
   real(wp) gtt,gtphi,gphiphi,pt,pphi,num,den
 ! Useful factors
-  sin0     = sqrt( 1.0_wp - mu0**2 )      
+  sinobs     = sqrt( 1.0_wp - mu0**2 )      
   sindisk  = sqrt( 1.0_wp - mu**2 )
   angvel   = 1.0_wp / ( r**1.5_wp + abs(a) )
   mathcalA = (r**2+a**2)**2 - (r**2-2.0_wp*r+a**2)*a**2*sindisk
@@ -139,11 +139,11 @@ function dlgfacthick(a,mu0,alpha,r,mu)
   gtphi    = -2.0_wp*a*r*sindisk**2 / Sig
   gphiphi  = mathcalA * sindisk**2 / Sig
 ! 4-momentum
-  pt   = -a * ( alpha*sin0 + a*sindisk**2 )
-  pt   = pt + ( r**2 + a**2 ) * ( r**2 + a**2 + a*alpha*sin0 ) / Delta
+  pt   = -a * ( alpha*sinobs + a*sindisk**2 )
+  pt   = pt + ( r**2 + a**2 ) * ( r**2 + a**2 + a*alpha*sinobs ) / Delta
   pt   = pt / Sig
-  pphi = -alpha*sin0/sindisk**2 -a
-  pphi = pphi + a * ( r**2 + a**2 + a*alpha*sin0 ) / Delta
+  pphi = -alpha*sinobs/sindisk**2 -a
+  pphi = pphi + a * ( r**2 + a**2 + a*alpha*sinobs ) / Delta
   pphi = pphi / Sig
 ! gdo calc
   num = sqrt( -gtt - 2.0_wp*gtphi*angvel - gphiphi*angvel**2 )
