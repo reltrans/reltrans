@@ -29,34 +29,27 @@ subroutine rest_frame(model_args, arrays, Gamma, logne, Cutoff, logxi,         &
    integer, parameter  :: dim = 6, dimCp = 8
    real(wp)            :: xillpar(dim), xillparDCp(dimCp)
 
-   if( model_args%Cp .ne. 0 )then
-      !The model is a xillver model
-      !Fill parameter arrays
-      xillpar(1) = Gamma                !Power law index
-      xillpar(2) = model_args%Afe       !Iron abundance
-      xillpar(3) = logxi                !ionization par
-      xillpar(4) = Cutoff               !Ecut or kTe
-      if( model_args%Cp .eq. 1 )then
-         xillpar(4) = logne             !logne
-      end if
-      xillpar(5) = thetae               !emission angle
-      xillpar(6) = 0.0_wp               !redshift
-      xillparDCp(1) = Gamma             !photon index
-      xillparDCp(2) = model_args%Afe    !Afe
-      xillparDCp(3) = logxi             !ionization par
-      xillparDCp(4) = Cutoff            !kTe
-      xillparDCp(5) = logne             !logne
-      xillparDCp(6) = thetae            !emission angle
-      xillparDCp(7) = 0.0_wp            !redshift
-
-      call get_xillver(arrays%earx, nex, dim, dimCp, xillpar, xillparDCp,      &
-          model_args%Cp, photar)
-
-   else
-      !The model is reflionx
-      call normreflionx(arrays%earx, nex, Gamma, model_args%Afe, logne,        &
-          Cutoff, logxi, thetae, photar)
+   !The model is a xillver model
+   !Fill parameter arrays
+   xillpar(1) = Gamma                !Power law index
+   xillpar(2) = model_args%Afe       !Iron abundance
+   xillpar(3) = logxi                !ionization par
+   xillpar(4) = Cutoff               !Ecut or kTe
+   if( model_args%Cp .eq. 1 )then
+      xillpar(4) = logne             !logne
    end if
+   xillpar(5) = thetae               !emission angle
+   xillpar(6) = 0.0_wp               !redshift
+   xillparDCp(1) = Gamma             !photon index
+   xillparDCp(2) = model_args%Afe    !Afe
+   xillparDCp(3) = logxi             !ionization par
+   xillparDCp(4) = Cutoff            !kTe
+   xillparDCp(5) = logne             !logne
+   xillparDCp(6) = thetae            !emission angle
+   xillparDCp(7) = 0.0_wp            !redshift
+
+   call get_xillver(arrays%earx, nex, dim, dimCp, xillpar, xillparDCp,      &
+         model_args%Cp, photar)
 
    return
  end subroutine rest_frame

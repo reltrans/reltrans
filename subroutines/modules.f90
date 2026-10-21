@@ -145,7 +145,6 @@ module xillver_tables
     character (len=200) ::  pathname_xillver 
     character (len=200) ::  pathname_xillverD 
     character (len=200) ::  pathname_xillverDCp
-    character (len=500) ::  path_name_reflionx_table
 end module xillver_tables
 
 module gr_continuum
@@ -288,11 +287,6 @@ contains
         in(i + nex) = 0.0_wp
     end do
 
-    ! do i=1, nex_conv
-    !    write(82,*) i, in(i)
-    ! enddo
-    ! write(82,*) 'no no'
-
     call fftw_execute_dft_r2c(plan1, in, out)
 
     padFT_line = out
@@ -324,11 +318,6 @@ contains
         in(i + nex) = 0.0_wp
     end do
 
-    ! do i=1, nex_conv
-    !    write(82,*) i, in(i)
-    ! enddo
-    ! write(82,*) 'no no'
-
     call fftw_execute_dft_r2c(plan1, in, out)
 
     padFT_line = out
@@ -347,9 +336,6 @@ contains
     in_conv = padFT_line
 
     call fftw_execute_dft_c2r(plan2, in_conv, out_conv)
-    ! do i = 1, nex_conv 
-    !    write(80,*) i, out_conv(i)
-    ! enddo
     
     ! Populate output array
     photmax = 0.0_wp

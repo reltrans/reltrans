@@ -12,8 +12,6 @@ subroutine cfoldandbin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG, resp_matr)
   integer, intent(in) :: nex,ne,resp_matr
   real(wp) earx(0:nex),ReGx(nex),ImGx(nex),ear(0:ne),ReG(ne),ImG(ne)
   real(wp) E,dE,E2ReGx(nex),E2ImGx(nex)
-  ! real ReGi(nenerg),ImGi(nenerg)
-  ! real ReGtel(numchn),ImGtel(numchn)
  
   real(wp), allocatable :: ReGtel(:), ImGtel(:), ReGi(:), ImGi(:)
 
@@ -357,27 +355,19 @@ subroutine readinresp2
   !Get the name of this extension
   call ftgkys(U1,'EXTNAME',EXNAME,comment,status)
   !Read in whatever this extension this is
-  if( EXNAME .eq. 'EBOUNDS' )then     
-     ! write(*,*) ' call energyextension2 (second matrix)'
+  if( EXNAME .eq. 'EBOUNDS' ) then
      call energyextension2(U1)
-     ! write(*,*) 'out from energyextension2'
-  else if(EXNAME.eq.'MATRIX'.or.EXNAME.eq.'SPECRESP MATRIX')then
-     ! write(*,*) ' call matrixextension2 (second matrix)'
+  else if(EXNAME.eq.'MATRIX'.or.EXNAME.eq.'SPECRESP MATRIX') then
      call matrixextension2(U1)
-     ! write(*,*) 'out from matrixextension2'
   end if
   !Shift to extension 2
   call ftmrhd(U1,1,hdutype,status)
   !Get the name of this extension
   call ftgkys(U1,'EXTNAME',EXNAME,comment,status)
-  if( EXNAME .eq. 'EBOUNDS' )then     
-     ! write(*,*) ' call energyextension2 (second matrix)'
+  if( EXNAME .eq. 'EBOUNDS' ) then     
      call energyextension2(U1)
-     ! write(*,*) 'out from energyextension2'
-  else if(EXNAME.eq.'MATRIX'.or.EXNAME.eq.'SPECRESP MATRIX')then
-     ! write(*,*) ' call matrixextension2 (second matrix)'
+  else if(EXNAME.eq.'MATRIX'.or.EXNAME.eq.'SPECRESP MATRIX') then
     call matrixextension2(U1)
-     ! write(*,*) 'out from matrixextension2'
   end if
   !Close unit
   call ftclos(U1,status)
@@ -728,23 +718,20 @@ subroutine initmatrix2
   character (len=500) strenv
   character (len=200) rmfenv2,arfenv2
 
-!Set environment variable names
+  !Set environment variable names
   rmfenv2 = 'RMF2SET'
   arfenv2 = 'ARF2SET'  
-!Get name of response file and arf file
+  !Get name of response file and arf file
   respname2 = strenv(rmfenv2)
   arfname2  = strenv(arfenv2)
-  ! write(*,*) 'name of the second response', trim(respname2) 
-  ! write(*,*) 'name of the second arf', trim(arfname2)
-  ! read(*,*) 
-!If this is not set, ask for it
+  !If this is not set, ask for it
   if( trim(respname2) .eq. 'none' )then
      write(*,*)"Enter name of the second response file (with full path)"
      read(*,'(a)') respname2
   end if
   !Check if I need the arf
   call arfcheck(respname2, arf2)
-!Look for arf
+  !Look for arf
   if( arf2 )then
      !If not defined, ask for it
      if( trim(arfname2) .eq. 'none' )then
@@ -753,12 +740,10 @@ subroutine initmatrix2
      end if
   end if
 
-!Get the dimensions of the arrays in the matrix
-  ! write(*,*) ' Get the dimensions of the arrays in the matrix (second matrix)'
+  !Get the dimensions of the arrays in the matrix
   call getdim(respname2, nenerg2, numchn2)
-  ! write(*,*) 'finished'
   
-!Allocate the arrays
+  !Allocate the arrays
   allocate( En2(0:nenerg2) )
   allocate( Echn2(0:numchn2) )
   allocate( resp2(numchn2,nenerg2) )
@@ -767,10 +752,8 @@ subroutine initmatrix2
   allocate( lchan2(nenerg2,numchn2) )
   allocate( nchan2(nenerg2,numchn2) )
   
-! Read matrix to fill the arrays
-  ! write(*,*) ' Read matrix to fill the arrays (second matrix)'
+  ! Read matrix to fill the arrays
   call readinresp2
-  ! write(*,*) 'finished'
 
   needresp2  = .false.
   needchans2 = .true.
@@ -780,20 +763,16 @@ end subroutine initmatrix2
 
 
 !-----------------------------------------------------------------------
-      subroutine arfcheck(respname,arf)
-      implicit none
-      character (len=500) respname
-      logical arf
-      integer lresp
-      character (len=3) exten
-      arf   = .false.
-      lresp = len_trim( respname )
-      exten = respname(lresp-2:lresp)
-      if( exten .eq. 'rmf' .or. exten .eq. 'RMF' ) arf = .true.
-      return
-      end subroutine arfcheck
+subroutine arfcheck(respname,arf)
+   implicit none
+   character (len=500) respname
+   logical arf
+   integer lresp
+   character (len=3) exten
+   arf   = .false.
+   lresp = len_trim( respname )
+   exten = respname(lresp-2:lresp)
+   if( exten .eq. 'rmf' .or. exten .eq. 'RMF' ) arf = .true.
+   return
+end subroutine arfcheck
 !-----------------------------------------------------------------------
-
-
-
-      

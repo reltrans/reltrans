@@ -54,19 +54,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     if(.not. allocated(ReGpiv )) allocate( ReGpiv (nex,nf) )
     if(.not. allocated(ImGpiv )) allocate( ImGpiv (nex,nf) ) 
     if(.not. allocated(ReGion )) allocate( ReGion (nex,nf) )
-    if(.not. allocated(ImGion )) allocate( ImGion (nex,nf) ) 
-    
-    ! open (unit = 20, file = 'fort.20', status='replace', action = 'write')
-    ! do m = 1, nlp
-    !    do j = 1, nf
-    !       do i = 1, nex
-    !          write(*,*) m, j, i
-    !          write(20,*) m, j, i, ReW0(m,i,j),ImW0(m,i,j),ReW1(m,i,j),ImW1(m,i,j), ReW2(m,i,j),ImW2(m,i,j),ReW3(m,i,j),ImW3(m,i,j)
-    !       end do
-    !    end do
-    ! enddo
-    ! close(20)
-    
+    if(.not. allocated(ImGion )) allocate( ImGion (nex,nf) )     
  
     write(*,*) 'inside components'
     !This stores each component contribution in the Re/Im matrices 
@@ -74,22 +62,10 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
         call components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
                               z,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
                               ReGpiv,ImGpiv,ReGion,ImGion)
-        ! open (unit = 21, file = 'fort.21', status='replace', action = 'write')
-        ! do j = 1, nf
-        !    write(21,*) '-----------------------------', j
-        !    do i = 1, nex
-        !       write(21,*) i, ReGcont(i,j),ImGcont(i,j),ReGrev(i,j),ImGrev(i,j),&
-        !                       ReGpiv(i,j),ImGpiv(i,j),ReGion(i,j),ImGion(i,j)
-        !    end do
-        ! end do
-        ! close(21)
      else 
         call components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
                         h,z,eta,beta_p,boost,g,DelAB,ionvar,ReScont,ImScont,ReSrev,ImSrev,ReSpiv,ImSpiv,&
                         ReSion,ImSion) 
-        ! do i = 1, nex
-        !    write(20,*) ReSion(i),ImSion(i)
-        ! enddo
 
         !Include the effects of absorRTion in each model component matrix           
         do j = 1, nf
@@ -481,16 +457,6 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
     ImSpiv = aimag(Spivot)
     ReSion = real(Sion, wp)
     ImSion = aimag(Sion)
-
-    ! open (unit = 22, file = 'fort.22', status='replace', action = 'write')
-    ! do m = 1, nlp
-    !    do j = 1, nf
-    !       do i = 1, nex
-    !          write(22,*) m,j,i, Sion(m,i,j), ReSion(m,i,j),ImSion(m,i,j)
-    !       end do
-    !    end do
-    ! enddo
-    ! close(22)
     
     do m=1,nlp 
         if (is_ref_folded(ReIm)) then
@@ -551,5 +517,3 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
                      
     return
 end subroutine
-                      
-                      

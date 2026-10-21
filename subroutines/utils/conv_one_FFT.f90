@@ -11,7 +11,6 @@
     complex(wp) :: FTreconv(4*nex),FTimconv(4*nex)
     integer :: m, i
     real(wp) :: depad_conv(nex), E
-    ! real, parameter :: nexm1 = 1. / real(nex_conv)
     
     do m=1,nlp  
        if (DC .eq. 1 ) then
@@ -49,47 +48,3 @@
     end do
 
   end subroutine conv_one_FFT
-
-
-              ! !Convolve with line profile
-              ! !First FFTs
-              ! call pad4FFT(nex,photarx,FTphotarx)
-              ! call pad4FFT(nex,photarx_delta,FTphotarx_delta)
-              ! call pad4FFT(nex,reline,FTreline)
-              ! call pad4FFT(nex,imline,FTimline)
-              ! call pad4FFT(nex,reline_a,FTreline_a)
-              ! call pad4FFT(nex,imline_a,FTimline_a)
-              ! call pad4FFT(nex,photarx_dlogxi,FTphotarx_dlogxi)
-              ! !Then the multiplications and inverse FFTs
-              ! FTreconv = FTreline * FTphotarx
-              ! FTimconv = FTimline * FTphotarx
-              ! call pad4invFFT(dyn,nex,FTreconv,reconvmu)
-              ! call pad4invFFT(dyn,nex,FTimconv,imconvmu) 
-              ! do i = 1,nex
-              !    ReW0(i,j) = ReW0(i,j) + reconvmu(i)
-              !    ImW0(i,j) = ImW0(i,j) + imconvmu(i)
-              ! end do              
-              ! FTreconv = FTreline_a * FTphotarx
-              ! FTimconv = FTimline_a * FTphotarx
-              ! call pad4invFFT(dyn,nex,FTreconv,reconvmu)
-              ! call pad4invFFT(dyn,nex,FTimconv,imconvmu)
-              ! do i = 1,nex
-              !    ReW1(i,j) = ReW1(i,j) + reconvmu(i)
-              !    ImW1(i,j) = ImW1(i,j) + imconvmu(i)
-              ! end do
-              ! FTreconv = FTreline * FTphotarx_delta
-              ! FTimconv = FTimline * FTphotarx_delta
-              ! call pad4invFFT(dyn,nex,FTreconv,reconvmu)
-              ! call pad4invFFT(dyn,nex,FTimconv,imconvmu)
-              ! do i = 1,nex
-              !    ReW2(i,j) = ReW2(i,j) + reconvmu(i)
-              !    ImW2(i,j) = ImW2(i,j) + imconvmu(i)
-              ! end do
-              ! FTreconv = FTreline * FTphotarx_dlogxi
-              ! FTimconv = FTimline * FTphotarx_dlogxi
-              ! call pad4invFFT(dyn,nex,FTreconv,reconvmu)
-              ! call pad4invFFT(dyn,nex,FTimconv,imconvmu)
-              ! do i = 1,nex
-              !    ReW3(i,j) = ReW3(i,j) + reconvmu(i)
-              !    ImW3(i,j) = ImW3(i,j) + imconvmu(i)
-              ! end do
