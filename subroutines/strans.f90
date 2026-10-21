@@ -23,7 +23,7 @@ module m_rtrans
         ! bin width, the effective cosine angle
         real(wp) :: r_isco, mudisk, dlogr, mueff
         ! Sines of the observer inclination and of the disc surface angle
-        real(wp) :: sin0, sindisk
+        real(wp) :: sinobs, sindisk
 
         ! These are set as part of initialising the impulse response matrix
         real(wp) :: dlogt = 0.0_wp, dg = 0.0_wp
@@ -59,7 +59,7 @@ contains
         args%dlogr = log10(args%conf%rnmax / args%model%rin) /                 &
             real(args%conf%xe - 1, wp)
         args%mueff = max(args%model%muobs, 0.3_wp)
-        args%sin0 = sqrt(1.0_wp - args%model%muobs**2)
+        args%sinobs = sqrt(1.0_wp - args%model%muobs**2)
         args%sindisk = sqrt(1.0_wp - args%mudisk**2)
     end subroutine bind_arguments
 
@@ -432,7 +432,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length,                  &
             ! - this should be checked, else a full non-relatvistic version that
             !   loops over each azimuth used
             tau = sqrt(re**2 + (args%model%h(1) - args%model%honr *            &
-                re)**2) - re * (args%sin0 * args%sindisk * cos(phie) +         &
+                re)**2) - re * (args%sinobs * args%sindisk * cos(phie) +         &
                 args%model%muobs * args%mudisk) + args%model%h(1) *            &
                 args%model%muobs
             tau = (1.0_wp+args%model%zcos)*tau
@@ -523,7 +523,7 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length,               &
         ! Time lag between direct and reflected photons
         if (non_relativistic) then
             tau(m) = sqrt(re**2 + (args%model%h(m) - args%model%honr *         &
-                re)**2) - re * (args%sin0 * args%sindisk * cos(phie) +         &
+                re)**2) - re * (args%sinobs * args%sindisk * cos(phie) +         &
                 args%model%muobs * args%mudisk) + args%model%h(1) *            &
                 args%model%muobs
             tau(m) = (1.0_wp+args%model%zcos)*tau(m)
