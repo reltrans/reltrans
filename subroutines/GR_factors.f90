@@ -83,10 +83,10 @@ function dlgfacthick(a,mu0,alpha,r,mu)
   use rtconstants, only: wp
   implicit none
   real(wp) dlgfacthick,a,mu0,alpha,r,mu
-  real(wp) sin0,sindisk,angvel,mathcalA,Delta,Sig
+  real(wp) sinobs,sindisk,angvel,mathcalA,Delta,Sig
   real(wp) gtt,gtphi,gphiphi,pt,pphi,num,den
 ! Useful factors
-  sin0     = sqrt( 1.0_wp - mu0**2 )      
+  sinobs     = sqrt( 1.0_wp - mu0**2 )      
   sindisk  = sqrt( 1.0_wp - mu**2 )
   angvel   = 1.0_wp / ( r**1.5_wp + abs(a) )
   mathcalA = (r**2+a**2)**2 - (r**2-2.0_wp*r+a**2)*a**2*sindisk
@@ -97,11 +97,11 @@ function dlgfacthick(a,mu0,alpha,r,mu)
   gtphi    = -2.0_wp*a*r*sindisk**2 / Sig
   gphiphi  = mathcalA * sindisk**2 / Sig
 ! 4-momentum
-  pt   = -a * ( alpha*sin0 + a*sindisk**2 )
-  pt   = pt + ( r**2 + a**2 ) * ( r**2 + a**2 + a*alpha*sin0 ) / Delta
+  pt   = -a * ( alpha*sinobs + a*sindisk**2 )
+  pt   = pt + ( r**2 + a**2 ) * ( r**2 + a**2 + a*alpha*sinobs ) / Delta
   pt   = pt / Sig
-  pphi = -alpha*sin0/sindisk**2 -a
-  pphi = pphi + a * ( r**2 + a**2 + a*alpha*sin0 ) / Delta
+  pphi = -alpha*sinobs/sindisk**2 -a
+  pphi = pphi + a * ( r**2 + a**2 + a*alpha*sinobs ) / Delta
   pphi = pphi / Sig
 ! gdo calc
   num = sqrt( -gtt - 2.0_wp*gtphi*angvel - gphiphi*angvel**2 )
