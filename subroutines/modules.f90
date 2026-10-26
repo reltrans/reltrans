@@ -86,7 +86,7 @@ MODULE dyn_gr
 
   contains
 
-!the follwing functions are being exposed for unit testing purposes
+!the following functions are being exposed for unit testing purposes
     subroutine allocate_re1(x,y) bind(C, name="allocate_re")
       use iso_c_binding
       implicit none

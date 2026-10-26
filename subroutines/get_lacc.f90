@@ -16,7 +16,6 @@ function get_lacc(h,spin,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,photarx,dlogE)
   get_lacc  = 4.0_wp * pi * Dkpc**2 * gso**(Gamma-2.0_wp)
   get_lacc  = get_lacc * integral * 1.21097e-4_wp / Mass
   get_lacc  = get_lacc * 2.0_wp
-  ! write(*,*) 'in get_lacc', get_lacc, integral, Mass, Anorm, gso
   return
 end function get_lacc
 !-----------------------------------------------------------------------

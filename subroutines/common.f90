@@ -57,7 +57,7 @@ module common_types
     type :: t_config
         integer :: verbose = 0
         ! firstcall: is this the first time the model has been called?
-        logical :: firstcall = .true., needtrans = .true., needconv = .true.,test = .false.
+        logical :: firstcall = .true., needtrans = .true., needconv = .true.
         ! me: Number of mue bins
         ! xe: Number of logr bins: bins 1:xe-1 are logarithmically spaced, bin
         ! xe is everything else
@@ -273,7 +273,7 @@ contains
         use env_variables, only: adensity, idum
         use xillver_tables, only: path_tables, xillver, xillverDCp,pathname_xillver, pathname_xillverDCp
         type(t_config), intent(inout) :: config
-        integer :: get_env_int, temp_test
+        integer :: get_env_int
         character (len=200) :: get_env_char
         config%me = get_env_int("MU_ZONES", 1)
         config%xe = get_env_int("ION_ZONES", 20)
@@ -293,13 +293,6 @@ contains
         idum = get_env_int("SEED_SIM", -2851043)
         ! decide between zone A density profile or constant density profile
         adensity = max(min(get_env_int("A_DENSITY", 0), 1), 0)
-
-        temp_test = get_env_int("TEST_RUN", 0)
-        if (temp_test .eq. 0) then
-           config%test = .false.
-        else
-           config%test = .true.
-        end if
         
         ! this is from xillver_tables, sets the paths where the tables are read
         ! from
