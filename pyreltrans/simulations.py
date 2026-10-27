@@ -62,7 +62,10 @@ class SimulationResult:
         tmp_xspec_file = "tmp_xspec.dat"
         np.savetxt(tmp_xspec_file, self.xspec_data, delimiter="\t")
         subprocess.run(
-            ["flx2xsp", tmp_xspec_file, f"{name}.pha", f"{name}.rsp"], check=True
+            ["flx2xsp", tmp_xspec_file, f"{name}.pha", f"{name}.rsp"],
+            check=True,
+            # Without a terminal flx2xsp fails trying to open one for prompts
+            env=dict(os.environ, HEADASNOQUERY="1"),
         )
         # Remove the temporary file again:
         os.remove(tmp_xspec_file)
