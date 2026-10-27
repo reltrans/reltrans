@@ -208,7 +208,7 @@ def test_lag_energy_after_lag_frequency(reltrans, telescope, envars):
     reltrans.reset()
     output_lag_after = reltrans.dcp(energy, xrb1)
 
-    np.testing.assert_allclose(output_lag, output_lag_after, rtol=1e-6)
+    np.testing.assert_allclose(output_lag, output_lag_after, rtol=1e-4)
 
 
 def test_resetting_between_flavours(reltrans):

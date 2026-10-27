@@ -45,7 +45,8 @@ def test_lag_frequency_spectrum(reltrans, assert_snapshot, envars, case):
     # reset() also makes the model recompute the band indices
     reltrans.reset()
 
-    frequency = np.logspace(np.log10(1e-5), np.log10(5e-2), 101)
+    # Above ~3e-2 Hz the cross spectrum is numerically zero and its phase noise
+    frequency = np.logspace(np.log10(1e-5), np.log10(1e-2), 101)
     output = getattr(reltrans, flavour)(frequency, parameters(**kwargs))
 
     assert output.shape == (len(frequency) - 1,)
