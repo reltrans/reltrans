@@ -435,25 +435,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if (model_args%ReIm .eq. 7) then
         ! tbd - implement zero cohernece in lag_freq
         if (nlp .gt. 1 .and. model_args%beta_p .eq. 0.0_wp) then
-            call lag_freq_nocoh(nex, arrays%earx, config%nf, arrays%fix,       &
-                 config%flo, config%fhi, config%Emin,                          &
-                 config%Emax, nlp, arrays%contx, absorbx, tauso,               &
-                 gso, arrays%ReW0, arrays%ImW0, arrays%ReW1,                   &
-                 arrays%ImW1, arrays%ReW2, arrays%ImW2, arrays%ReW3,           &
-                 arrays%ImW3, model_args%zcos, model_args%eta,                 &
-                 model_args%boost, model_args%g, model_args%DelAB,             &
-                 config%ionvar, arrays%ReGbar, arrays%ImGbar)
+            call lag_freq_nocoh(config, model_args, arrays, absorbx)
         else
-            call lag_freq(nex, arrays%earx, config%nf, arrays%fix,             &
-                 config%flo, config%fhi, config%Emin,                          &
-                 config%Emax, nlp, arrays%contx, absorbx, tauso,               &
-                 gso, arrays%ReW0, arrays%ImW0, arrays%ReW1,                   &
-                 arrays%ImW1, arrays%ReW2, arrays%ImW2, arrays%ReW3,           &
-                 arrays%ImW3, model_args%h, model_args%zcos,                   &
-                 model_args%eta,                                               &
-                 model_args%beta_p, model_args%boost, model_args%g,            &
-                 model_args%DelAB, config%ionvar, arrays%ReGbar,               &
-                 arrays%ImGbar)
+            call lag_freq(config, model_args, arrays, absorbx)
         end if
     else if (nlp .gt. 1 .and. model_args%beta_p .eq. 0.0_wp) then
         call rawG(nex, arrays%earx, config%nf, config%flo,                     &
