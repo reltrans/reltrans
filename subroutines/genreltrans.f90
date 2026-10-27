@@ -84,13 +84,13 @@ contains
                 model_args%floHz = 0.07_wp
                 model_args%fhiHz = 700.0_wp
             end if
-            ! TODO: why 0.01 here, but 0.09 in the other branch?
             ! overwrite the frequency spacing
             config%dlogf = 0.01_wp
+        else
+            ! config persists across calls and reset(), so a previous ReIm=7
+            ! call would otherwise leak dlogf=0.01 into lag-energy spectra
+            config%dlogf = 0.09_wp
         endif
-        ! else:
-        ! if doing lag-energy spectra, just work out how many frequencies to
-        ! average over
 
         ! Convert frequency bounds from Hz to c/Rg (now being more accurate with
         ! constants)

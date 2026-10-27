@@ -188,6 +188,29 @@ def test_rtdist_called_twice_lag_and_time_averaged(reltrans, telescope, envars):
     np.testing.assert_allclose(output_rtdist, output_rtdist2, rtol=1e-4)
 
 
+def test_lag_energy_after_lag_frequency(reltrans, telescope, envars):
+    '''The finer frequency spacing of ReIm = 7 must not leak into a later
+    lag-energy call, even across reset()'''
+    envars["RMF_SET"] = telescope.rmf_path
+    envars["ARF_SET"] = telescope.arf_path
+    envars["EMIN_REF"] = "0.3"
+    envars["EMAX_REF"] = "1.0"
+    envars["EMIN_REF2"] = "1.0"
+    envars["EMAX_REF2"] = "10.0"
+    energy = np.logspace(np.log10(0.1), np.log10(100), 101)
+    frequency = np.logspace(np.log10(1e-5), np.log10(5e-2), 101)
+    xrb1 = DCP_Parameters(mass=10.0, flo_hz=0.122, fhi_hz=0.224, re_im=4.0)
+
+    reltrans.reset()
+    output_lag = reltrans.dcp(energy, xrb1)
+    reltrans.reset()
+    reltrans.dcp(frequency, DCP_Parameters(re_im=7.0))
+    reltrans.reset()
+    output_lag_after = reltrans.dcp(energy, xrb1)
+
+    np.testing.assert_allclose(output_lag, output_lag_after, rtol=1e-6)
+
+
 def test_resetting_between_flavours(reltrans):
     '''A test that calls all model flavour twice using resetting function
     every time a model flavour is called'''

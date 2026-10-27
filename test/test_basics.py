@@ -25,6 +25,44 @@ def test_basic_absorption_invocation(reltrans, assert_snapshot):
     assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
 
 
+# dcp: lag_freq, dbl_nocoh: lag_freq_nocoh, dbl: lag_freq with two lampposts
+LAG_FREQUENCY_CASES = {
+    "dcp": ("dcp", DCP_Parameters, dict(re_im=7.0)),
+    "dbl_nocoh": ("dbl_lamp", Dbl_Parameters, dict(re_im=7.0, beta_p=0.0)),
+    "dbl": ("dbl_lamp", Dbl_Parameters, dict(re_im=7.0, beta_p=0.5)),
+}
+
+
+@pytest.mark.parametrize("case", LAG_FREQUENCY_CASES)
+def test_lag_frequency_spectrum(reltrans, assert_snapshot, envars, case):
+    """Lag-frequency spectrum (ReIm = 7). The input grid is Fourier frequency
+    in Hz, and both reference bands must be set or the model asks on stdin."""
+    flavour, parameters, kwargs = LAG_FREQUENCY_CASES[case]
+    envars["EMIN_REF"] = "0.3"
+    envars["EMAX_REF"] = "1.0"
+    envars["EMIN_REF2"] = "1.0"
+    envars["EMAX_REF2"] = "10.0"
+    # reset() also makes the model recompute the band indices
+    reltrans.reset()
+
+    frequency = np.logspace(np.log10(1e-5), np.log10(5e-2), 101)
+    output = getattr(reltrans, flavour)(frequency, parameters(**kwargs))
+
+    assert output.shape == (len(frequency) - 1,)
+    assert np.all(np.isfinite(output))
+    assert np.any(output != 0.0)
+    # lags cross zero, so scale atol to the data
+    assert_snapshot(
+        output,
+        name=case,
+        atol=1e-9 * np.max(np.abs(output)),
+        domain=frequency[0:-1],
+        xscale="log",
+        xlabel="Frequency [Hz]",
+        ylabel="Lag",
+    )
+
+
 def test_dcp_continuum(reltrans, assert_snapshot):
     """A test to check the output of the continum  (boost = 0)"""
     reltrans.reset()
