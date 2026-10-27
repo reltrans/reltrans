@@ -181,31 +181,31 @@ contains
                     Cutoff_0, logxi0, thetae, photarx)
                 ! NON LINEAR EFFECTS
                 if (config%DC .eq. 0) then
-                   ! Gamma variations
-                   logxi1 = logxi0 + ionvariation * dlogxi1
-                   call rest_frame(model_args, arrays, Gamma1, logne,          &
+                    ! Gamma variations
+                    logxi1 = logxi0 + ionvariation * dlogxi1
+                    call rest_frame(model_args, arrays, Gamma1, logne,          &
                        Cutoff_0, logxi1, thetae, photarx_1)
-                   logxi2 = logxi0 + ionvariation * dlogxi2
-                   call rest_frame(model_args, arrays, Gamma2, logne,          &
+                    logxi2 = logxi0 + ionvariation * dlogxi2
+                    call rest_frame(model_args, arrays, Gamma2, logne,          &
                        Cutoff_0, logxi2, thetae, photarx_2)
-                   photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
-                   ! xi variations
-                   call rest_frame(model_args, arrays, Gamma0, logne,          &
+                    photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
+                    ! xi variations
+                    call rest_frame(model_args, arrays, Gamma0, logne,          &
                        Cutoff_0, logxi1, thetae, photarx_1)
-                   call rest_frame(model_args, arrays, Gamma0, logne,          &
+                    call rest_frame(model_args, arrays, Gamma0, logne,          &
                        Cutoff_0, logxi2, thetae, photarx_2)
-                   photarx_dlogxi = 0.434294481_wp * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10
+                    photarx_dlogxi = 0.434294481_wp * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10
                 end if
                 ! Multiply by E^{Gamma-1} to make less steep
                 do i = 1, nex
-                   E = 0.5_wp * (arrays%earx(i) + arrays%earx(i-1))
-                   Hx(i) = photarx(i) * E**(Gamma0-1)
-                   Hx_delta(i) = photarx_delta(i) * E**(Gamma0-1)
-                   Hx_dlogxi(i) = photarx_dlogxi(i) * E**(Gamma0-1)
+                    E = 0.5_wp * (arrays%earx(i) + arrays%earx(i-1))
+                    Hx(i) = photarx(i) * E**(Gamma0-1)
+                    Hx_delta(i) = photarx_delta(i) * E**(Gamma0-1)
+                    Hx_dlogxi(i) = photarx_dlogxi(i) * E**(Gamma0-1)
                 end do
                 ! Loop through frequencies and lamp posts
                 do j = 1, config%nf
-                   do i = 1, nex
+                    do i = 1, nex
                       do m = 1, model_args%nlp
                          reline_w0(m, i) = real(arrays%ker_W0(m, i, j,         &
                              mubin, rbin), wp)
@@ -224,51 +224,27 @@ contains
                          imline_w3(m, i) = aimag(arrays%ker_W3(m, i, j,        &
                              mubin, rbin))
                       end do
-                   end do
-                   ! TODO: this test wrapping should be inside the conv functions,
-                   ! not at their callsites
-                   ! Do the convolution (involves multiplying by E^{1-Gamma})
-                   if (config%test) then
-                      call conv_one_FFT(dyn, arrays%earx, Gamma0, Hx,          &
-                           reline_w0, imline_w0, arrays%ReW0(:, :, j),         &
-                           arrays%ImW0(:, :, j), config%DC, model_args%nlp)
-                      if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
-                         call conv_one_FFT(dyn, arrays%earx, Gamma0, Hx,       &
-                              reline_w1, imline_w1, arrays%ReW1(:, :, j),      &
-                              arrays%ImW1(:, :, j), config%DC,                 &
-                              model_args%nlp)
-                         call conv_one_FFT(dyn, arrays%earx, Gamma0,           &
-                              Hx_delta, reline_w2, imline_w2, arrays%ReW2(:,   &
-                              :, j), arrays%ImW2(:, :, j), config%DC,          &
-                              model_args%nlp)
-                      end if
-                      if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
-                         call conv_one_FFT(dyn, arrays%earx, Gamma0,           &
-                              Hx_dlogxi, reline_w3, imline_w3,                 &
-                              arrays%ReW3(:, :, j), arrays%ImW3(:, :, j),      &
-                              config%DC, model_args%nlp)
-                      end if
-                   else
-                      call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,         &
-                           reline_w0, imline_w0, arrays%ReW0(:, :, j),         &
-                           arrays%ImW0(:, :, j), config%DC, model_args%nlp)
-                      if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
-                         call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,      &
-                              reline_w1, imline_w1, arrays%ReW1(:, :, j),      &
-                              arrays%ImW1(:, :, j), config%DC,                 &
-                              model_args%nlp)
-                         call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
-                              Hx_delta, reline_w2, imline_w2, arrays%ReW2(:,   &
-                              :, j), arrays%ImW2(:, :, j), config%DC,          &
-                              model_args%nlp)
-                      end if
-                      if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
-                         call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
-                              Hx_dlogxi, reline_w3, imline_w3,                 &
-                              arrays%ReW3(:, :, j), arrays%ImW3(:, :, j),      &
-                              config%DC, model_args%nlp)
-                      end if
-                   endif
+                    end do
+                    ! Do the convolution (involves multiplying by E^{1-Gamma})
+                    call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,         &
+                        reline_w0, imline_w0, arrays%ReW0(:, :, j),         &
+                        arrays%ImW0(:, :, j), config%DC, model_args%nlp)
+                    if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
+                        call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,      &
+                            reline_w1, imline_w1, arrays%ReW1(:, :, j),      &
+                            arrays%ImW1(:, :, j), config%DC,                 &
+                            model_args%nlp)
+                        call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
+                            Hx_delta, reline_w2, imline_w2, arrays%ReW2(:,   &
+                            :, j), arrays%ImW2(:, :, j), config%DC,          &
+                            model_args%nlp)
+                    end if
+                    if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
+                        call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
+                            Hx_dlogxi, reline_w3, imline_w3,                 &
+                            arrays%ReW3(:, :, j), arrays%ImW3(:, :, j),      &
+                            config%DC, model_args%nlp)
+                    end if
                 end do
             end do
         end do
@@ -419,7 +395,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
        call calculate_continuum_traces(model_args, dset)
        call calculate_disc_traces(config, model_args, arrays, d, nex, frobs,  &
            frrel)
-       ! print *, 'gso ', gso(1)
     end if
     if (config%verbose .gt. 2) then
        call CPU_TIME (time_end)
