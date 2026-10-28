@@ -84,6 +84,7 @@ contains
                 model_args%floHz = 0.07_wp
                 model_args%fhiHz = 700.0_wp
             end if
+            ! TODO: why 0.01 here, but 0.09 in the other branch?
             ! overwrite the frequency spacing
             config%dlogf = 0.01_wp
         else

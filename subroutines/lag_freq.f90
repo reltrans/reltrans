@@ -3,7 +3,7 @@ subroutine lag_freq(config, model_args, arrays, absorbx)
 ! Calculates the energy-averaged cross spectrum in the energy bins of interest. REDO ALL THIS COMMENT IT'S WRONG
 !
 ! Input: continuum model (contx is f(E) in the papers) and the reflection transfer functions
-! Output: arrays%ReGbar(nf), arrays%ImGbar(nf) after multiplying by the absorption model
+! Output: Graw(E,\nu) after multiplying by the absorption model
 ! These inputs and outputs are all in terms of (dN/dE)*dE; i.e. photar
     use rtconstants, only: pi, wp
     use common_types
@@ -42,6 +42,7 @@ subroutine lag_freq(config, model_args, arrays, absorbx)
     endif 
     
     !Now calculate the cross-spectrum (/complex covariance), including absorption
+    associate(ReGraw => arrays%ReGbar, ImGraw => arrays%ImGbar)
     do j = 1, config%nf
         f = config%flo * (config%fhi/config%flo)**(  (real(j, wp)-0.5_wp) / real(config%nf, wp) )
         ReGrawEa = 0.0_wp
@@ -128,9 +129,10 @@ subroutine lag_freq(config, model_args, arrays, absorbx)
         end do
         !Now cross-spectrum between the two energy bands
         !note: here the conjugate is b 
-        arrays%ReGbar(j) = (ReGrawEa * ReGrawEb) + (ImGrawEa * ImGrawEb)
-        arrays%ImGbar(j) = (ReGrawEb * ImGrawEa) - (ReGrawEa * ImGrawEb)
+        ReGraw(j) = (ReGrawEa * ReGrawEb) + (ImGrawEa * ImGrawEb)
+        ImGraw(j) = (ReGrawEb * ImGrawEa) - (ReGrawEa * ImGrawEb)
     end do
+    end associate
 
     return
 end subroutine lag_freq
@@ -161,6 +163,7 @@ subroutine lag_freq_nocoh(config, model_args, arrays, absorbx)
     gslope = 1.0_wp
     Abslope = 1.0_wp
     
+    associate(ReGraw => arrays%ReGbar, ImGraw => arrays%ImGbar)
     do m=1,model_args%nlp
         do j=1,config%nf
             f = config%flo * (config%fhi/config%flo)**(  (real(j, wp)-0.5_wp) / real(config%nf, wp) )
@@ -225,14 +228,15 @@ subroutine lag_freq_nocoh(config, model_args, arrays, absorbx)
                 ImGrawEb = ImGrawEb + aimag(Stemp)*absorbx(i)
             end do
             if(m .eq. 1) then
-                arrays%ReGbar(j) = (ReGrawEa * ReGrawEb) + (ImGrawEa * ImGrawEb)
-                arrays%ImGbar(j) = (ReGrawEb * ImGrawEa) - (ReGrawEa * ImGrawEb)
+                ReGraw(j) = (ReGrawEa * ReGrawEb) + (ImGrawEa * ImGrawEb)
+                ImGraw(j) = (ReGrawEb * ImGrawEa) - (ReGrawEa * ImGrawEb)
             else
-                arrays%ReGbar(j) = arrays%ReGbar(j) + model_args%eta**2.0_wp * ((ReGrawEa * ReGrawEb) + (ImGrawEa * ImGrawEb))
-                arrays%ImGbar(j) = arrays%ImGbar(j) + model_args%eta**2.0_wp * ((ReGrawEb * ImGrawEa) - (ReGrawEa * ImGrawEb))
+                ReGraw(j) = ReGraw(j) + model_args%eta**2.0_wp * ((ReGrawEa * ReGrawEb) + (ImGrawEa * ImGrawEb))
+                ImGraw(j) = ImGraw(j) + model_args%eta**2.0_wp * ((ReGrawEb * ImGrawEa) - (ReGrawEa * ImGrawEb))
             end if                        
         end do
     end do
+    end associate
 
     return
 end subroutine lag_freq_nocoh
