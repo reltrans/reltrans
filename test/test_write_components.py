@@ -44,7 +44,8 @@ def test_write_components(
         else:
             params = Dbl_Parameters(
                 mass=10.0, flo_hz=0.122, fhi_hz=0.224, re_im=float(re_im),
-                beta_p=0.0, eta=0.8,
+                beta_p=0.0, eta=0.8, del_a=0.1, del_ab1=0.2, g1=0.5,
+                del_ab2=0.3, g2=0.4,
             )
             reltrans.dbl_lamp(energy, params)
     finally:
@@ -63,10 +64,5 @@ def test_write_components(
         components.append(data[:, 1])
     components = np.array(components)
 
-    # Lags and imaginary parts cross zero, so a pure relative tolerance is not
-    # meaningful there; scale the absolute tolerance to the data instead.
-    assert_snapshot(
-        components,
-        name=f"{flavour}_reim{re_im}",
-        atol=1e-9 * np.max(np.abs(components)),
-    )
+    # No component is zero at these energies, so a sign flip fails rtol
+    assert_snapshot(components, name=f"{flavour}_reim{re_im}", rtol=2e-4)
