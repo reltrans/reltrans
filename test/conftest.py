@@ -16,6 +16,9 @@ ROOT_DIR = pathlib.Path(pathlib.Path(__file__).parent)
 SNAPSHOT_DIR = ROOT_DIR / "_snapshots"
 PLOT_DIR = ROOT_DIR / "_plots"
 
+# Unbuffered Fortran stdout so capfd sees it; read when libgfortran loads
+os.environ.setdefault("GFORTRAN_UNBUFFERED_PRECONNECTED", "y")
+
 import pytest
 
 try:

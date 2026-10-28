@@ -143,6 +143,8 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
         ener(i) = (ear(i)+ear(i-1))/2.0_wp   
     end do    
        
+    ! open() does not create missing directories
+    call execute_command_line('mkdir -p Output')
     path = 'Output/PivPL.dat'
     open (unit = 11, file = path, status='replace', action = 'write')
     
