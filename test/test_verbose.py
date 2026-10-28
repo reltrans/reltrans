@@ -5,12 +5,6 @@ from pyreltrans import DCP_Parameters
 COMPONENT_FILES = ("PivPL.dat", "Reverb.dat", "PivRef.dat", "IonVar.dat")
 
 
-def fortran_stdout(reltrans, capfd):
-    # gfortran buffers stdout when it is not a terminal; NULL flushes all units
-    reltrans.lib_reltrans._gfortran_flush_i4(None)
-    return capfd.readouterr().out
-
-
 @pytest.mark.parametrize("level", [0, 1, 2, 3])
 def test_verbose_levels(
     reltrans, telescope, envars, tmp_path, monkeypatch, capfd, level
@@ -25,8 +19,6 @@ def test_verbose_levels(
     envars["EMAX_REF"] = "10.0"
     # REV_VERB is only read on the first call after a reset
     reltrans.reset()
-    # Discard output still buffered from earlier tests
-    fortran_stdout(reltrans, capfd)
 
     energy = np.logspace(np.log10(0.1), np.log10(100), 101)
     params = DCP_Parameters(mass=10.0, flo_hz=0.122, fhi_hz=0.224, re_im=4.0)
@@ -35,7 +27,8 @@ def test_verbose_levels(
     finally:
         # Make the next call re-read REV_VERB (restored by `envars`)
         reltrans.reset()
-    output = fortran_stdout(reltrans, capfd)
+    # conftest makes Fortran stdout unbuffered
+    output = capfd.readouterr().out
 
     expected = {
         "reflection fraction for each source": level >= 1,
