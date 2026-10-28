@@ -218,18 +218,19 @@ contains
     plan2 = fftw_plan_dft_c2r_1d(nex_conv, in_conv, out_conv, flags)
   end subroutine init_fftw_allconv
 
-  subroutine conv_one_FFTw(dyn,earx,Gamma,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
+  subroutine conv_one_FFTw(dyn,earx,Gamma,photarx,reline,imline,ReW_conv,ImW_conv,DC)
     implicit none
-    integer, intent(in) :: DC, nlp 
+    integer, intent(in) :: DC
     real(wp)            :: dyn
     real(wp), intent(in)    :: photarx(nex), earx(0:nex), Gamma
-    real(wp), intent(in)    :: reline(nlp,nex), imline(nlp,nex)
-    real(wp), intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
+    real(wp), intent(in)    :: reline(:,:), imline(:,:)
+    real(wp), intent(inout) :: ReW_conv(:,:), ImW_conv(:,:)
     complex(wp) :: conv(nec),padFT_photarx(nec)
     complex(wp) :: padFT_reline(nec),  padFT_imline(nec)            
-    integer :: m, i
+    integer :: m, i, nlp
     real(wp) :: depad_conv(nex), E
     
+    nlp = size(reline, 1)
     do m=1,nlp  
        if (DC .eq. 1 ) then
           ! call padding4FT(photarx,padFT_photarx)

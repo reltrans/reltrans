@@ -228,22 +228,20 @@ contains
                     ! Do the convolution (involves multiplying by E^{1-Gamma})
                     call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,         &
                         reline_w0, imline_w0, arrays%ReW0(:, :, j),         &
-                        arrays%ImW0(:, :, j), config%DC, model_args%nlp)
+                        arrays%ImW0(:, :, j), config%DC)
                     if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
                         call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,      &
                             reline_w1, imline_w1, arrays%ReW1(:, :, j),      &
-                            arrays%ImW1(:, :, j), config%DC,                 &
-                            model_args%nlp)
+                            arrays%ImW1(:, :, j), config%DC)
                         call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
                             Hx_delta, reline_w2, imline_w2, arrays%ReW2(:,   &
-                            :, j), arrays%ImW2(:, :, j), config%DC,          &
-                            model_args%nlp)
+                            :, j), arrays%ImW2(:, :, j), config%DC)
                     end if
                     if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
                         call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
                             Hx_dlogxi, reline_w3, imline_w3,                 &
                             arrays%ReW3(:, :, j), arrays%ImW3(:, :, j),      &
-                            config%DC, model_args%nlp)
+                            config%DC)
                     end if
                 end do
             end do
