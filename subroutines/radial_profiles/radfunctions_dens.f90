@@ -1,13 +1,13 @@
 !-----------------------------------------------------------------------
 subroutine radfunctions_dens(config, model_args, arrays)
-    ! In  : config      - global configuration (e.g. number of radial grid points: config%xe)
+    ! In  : config      - global configuration, including config%ion_zones
     !       model_args  - model parameters (e.g. geometry, logxi, lognep, honr, number of LPs: model_args%nlp)
     !       arrays      - input arrays bundled in t_arrays (if applicable; main radial profiles come from modules)
     !      Uses/updates module arrays from radial_grids:
-    !       logxir(1:config%xe) - log10 of ionization parameter as a function of radius
-    !       gsdr(1:config%xe)   - source-to-disc blueshift factor as a function of radius
-    !       logner(1:config%xe) - log10 of electron density as a function of radius
-    !       dfer_arr(1:config%xe) - emissivity-related radial scaling array
+    !       logxir(1:config%ion_zones) - log10 of ionization parameter
+    !       gsdr(1:config%ion_zones)   - source-to-disc blueshift factor
+    !       logner(1:config%ion_zones) - log10 of electron density
+    !       dfer_arr(1:config%ion_zones) - emissivity-related radial scaling
     use rtconstants, only: wp
     use common_types
     use env_variables, only : adensity
@@ -26,23 +26,26 @@ subroutine radfunctions_dens(config, model_args, arrays)
     real(wp) :: logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd(model_args%nlp)
     ! old variable declaration
     ! double precision :: rp, dglpfacthick
-    real(wp) :: xi_lp(config%xe,model_args%nlp), logxi_lp(config%xe,model_args%nlp), logxip_lp(model_args%nlp)
+    real(wp) :: xi_lp(config%ion_zones,model_args%nlp),                       &
+        logxi_lp(config%ion_zones,model_args%nlp), logxip_lp(model_args%nlp)
     real(wp) :: xitot, xiraw, mylogne, mudisk, gsd_temp
     real(wp), allocatable :: rad(:)
 
     ! Set disk opening angle
     mudisk   = model_args%honr / sqrt( model_args%honr**2 + 1.0_wp  )
     
-    allocate(rad(config%xe))
+    allocate(rad(config%ion_zones))
     !Now calculate logxi itself
     ! The loop calculates the raw xi and raw n_e.
     ! This means they are without normalization: only to find the maximum and the minimum. Remember that the max of the ionisation is not the same as the minumim in the density because the flux depends on r
     !The loops calculates also the correction factor mui
 
     !TBD: include luminosity ratio between LPs 
-    do i = 1, config%xe
-        rad(i) = (config%rnmax/model_args%rin)**(real(i-1, wp) / real(config%xe, wp))
-        rad(i) = rad(i) + (config%rnmax/model_args%rin)**(real(i, wp) / real(config%xe, wp))
+    do i = 1, config%ion_zones
+        rad(i) = (config%rnmax/model_args%rin)**                             &
+            (real(i-1, wp) / real(config%ion_zones, wp))
+        rad(i) = rad(i) + (config%rnmax/model_args%rin)**                     &
+            (real(i, wp) / real(config%ion_zones, wp))
         rad(i) = rad(i) * model_args%rin * 0.5_wp
         !Initialize total ionization tracker
         xitot = 0.0_wp 
@@ -83,7 +86,7 @@ subroutine radfunctions_dens(config, model_args, arrays)
     logner = logner - (lognenorm - model_args%lognep)
     
     do m=1,model_args%nlp
-        do i=1,config%xe
+        do i=1,config%ion_zones
             logxi_lp(i,m) = log10(xi_lp(i,m)) - logner(i) - lognenorm         &
                 - logxinorm + model_args%lognep + model_args%logxi
         end do

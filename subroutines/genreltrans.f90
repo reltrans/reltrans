@@ -18,11 +18,11 @@ contains
         if (allocated(logxir_natural)) deallocate(logxir_natural)
         if (allocated(gsdr)) deallocate(gsdr)
         if (allocated(logner)) deallocate(logner)
-        allocate(dfer_arr(config%xe))
-        allocate(logxir (config%xe))
-        allocate(logxir_natural(config%xe))
-        allocate(gsdr (config%xe))
-        allocate(logner (config%xe))
+        allocate(dfer_arr(config%ion_zones))
+        allocate(logxir (config%ion_zones))
+        allocate(logxir_natural(config%ion_zones))
+        allocate(gsdr (config%ion_zones))
+        allocate(logner (config%ion_zones))
 
         ! allocate GR arrays
         if (allocated (cosd)) deallocate (cosd)
@@ -156,13 +156,13 @@ contains
         ! the rawS subroutine to calculate the cross-spectrum
         ionvariation = 1
         ! Loop over radius, emission angle and frequency
-        do rbin = 1, config%xe !Loop over radial zones
+        do rbin = 1, config%ion_zones !Loop over radial zones
             ! Set parameters with radial dependence
             Gamma0 = model_args%Gamma
             logne = logner(rbin)
             Cutoff_0 = gsdr(rbin) * model_args%Cutoff_s
             logxi0 = logxir(rbin)
-            if (config%xe .eq. 1)then
+            if (config%ion_zones .eq. 1)then
                 Cutoff_0 = model_args%Cutoff_s
                 logne = model_args%lognep
                 logxi0 = model_args%logxi
@@ -171,11 +171,11 @@ contains
             if (logxi0 .eq. 0.0_wp .or. config%ionvar .eq. 0) then
                 ionvariation = 0
             end if
-            do mubin = 1, config%me !loop over emission angle zones
+            do mubin = 1, config%mu_zones !loop over emission angle zones
                 ! Calculate input emission angle
-                mue = (real(mubin, wp) - 0.5_wp) / real(config%me, wp)
+                mue = (real(mubin, wp) - 0.5_wp) / real(config%mu_zones, wp)
                 thetae = acos(mue) * 180.0_wp / pi
-                if (config%me .eq. 1) thetae = model_args%inc
+                if (config%mu_zones .eq. 1) thetae = model_args%inc
                 ! Call restframe reflection model
                 call rest_frame(model_args, arrays, Gamma0, logne,             &
                     Cutoff_0, logxi0, thetae, photarx)
@@ -456,7 +456,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                  arrays%ImGbar)
         end if
     else if (nlp .gt. 1 .and. model_args%beta_p .eq. 0.0_wp) then
-        call rawG(nex, arrays%earx, config%nf, config%flo,                     &
+        call absorbed_cross_spectrum(nex, arrays%earx, config%nf, config%flo, &
              config%fhi, nlp, arrays%contx, absorbx, tauso,                    &
              gso, arrays%ReW0, arrays%ImW0, arrays%ReW1, arrays%ImW1,          &
              arrays%ReW2, arrays%ImW2, arrays%ReW3, arrays%ImW3,               &
@@ -496,8 +496,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         ! In this case, calculate the lag-energy spectrum
         ! Calculate raw cross-spectrum from Sraw(E,\nu) and the reference band
         ! parameters
-        ! note: this must be done by rawG for two incoherent lamp posts, hence
-        ! the skip below
+        ! absorbed_cross_spectrum handles two incoherent lamp posts instead
         if (nlp == 1 .or. model_args%beta_p .ne. 0.0_wp) then
             if (is_ref_folded(model_args%ReIm)) then
                 call propercross(nex, config%nf, arrays%earx,                  &

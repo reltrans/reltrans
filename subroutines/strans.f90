@@ -57,7 +57,7 @@ contains
         args%r_isco = disco(args%model%a)
         args%mudisk = args%model%honr / sqrt(args%model%honr**2 + 1.0_wp)
         args%dlogr = log10(args%conf%rnmax / args%model%rin) /                 &
-            real(args%conf%xe - 1, wp)
+            real(args%conf%ion_zones - 1, wp)
         args%mueff = max(args%model%muobs, 0.3_wp)
         args%sinobs = sqrt(1.0_wp - args%model%muobs**2)
         args%sindisk = sqrt(1.0_wp - args%mudisk**2)
@@ -333,7 +333,7 @@ subroutine sum_impulse_components(non_relativistic, r_length, phi_length,      &
 
             ! Work out radial bin
             rbin = clamp_i(ceiling(log10(re / args%model%rin) /                &
-                args%dlogr), 1, args%conf%xe)
+                args%dlogr), 1, args%conf%ion_zones)
 
             if (args%conf%ring_like) then
                 call sum_ringlike_corona(i, non_relativistic, r_length,        &
@@ -414,7 +414,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length,                  &
 
     ! calculate emission angle and work out which mue bin to add to
     mue = demang(args%model%a, args%model%muobs, re, alpha, beta)
-    mubin = ceiling(mue * real(args%conf%me, wp))
+    mubin = ceiling(mue * real(args%conf%mu_zones, wp))
 
     ! loop over all azmithal bins
     do phi_i = 1, r_nphi
@@ -589,7 +589,7 @@ subroutine sum_multiple_lampposts(i, non_relativistic, r_length,               &
         dfer_arr(rbin) = dfer_arr(rbin) + args%dFe(m)
         ! Calculate emission angle and work out which mue bin to add to
         mue = demang(args%model%a, args%model%muobs, re, alpha, beta)
-        mubin = ceiling(mue * real(args%conf%me, wp))
+        mubin = ceiling(mue * real(args%conf%mu_zones, wp))
         !calculate the extra factors for w2/3
         if (args%model%nlp .gt. 1) then
             emisfac = (emissivity(1) + args%model%eta_0 * emissivity(2)) /&
