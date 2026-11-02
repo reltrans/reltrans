@@ -11,7 +11,6 @@ plot_spectral_kwargs = dict(
 
 def test_basic_invocation_reltransPL(reltrans, assert_snapshot, envars):
     """A smoke test to check if reltransPL does NOT return NAN."""
-    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.pl(energy, PL_Parameters(h=10.0, boost=-1.0))
     np.testing.assert_equal(output, output)
@@ -21,7 +20,6 @@ def test_re_im_reltransPL(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     reltransPL are NOT NAN. This test does NOT compare with benchmarks values
     This test requires an RMF and ARF, which is provided by the `telescope` fixture."""
-    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 101)
     dE = (energy[1:] - energy[:-1])
 
