@@ -321,7 +321,7 @@ contains
     ! `read_environment_variables` has been called, and allocate the arrays
     ! in `arrays`
     subroutine setup_arrays(config, arrays, nlp)
-        use conv_mod, only: nex
+        use rtconstants, only: nex => N_ENERGY_BINS
         type(t_config), intent(inout) :: config
         type(t_arrays), intent(inout) :: arrays
         integer, intent(in) :: nlp
@@ -351,7 +351,7 @@ contains
 
     ! Reallocate arrays depending on whether they need to be resized
     subroutine realloc_arrays(config, model_args, arrays, prev_nf, flosave, fhisave)
-        use conv_mod, only: nex
+        use rtconstants, only: nex => N_ENERGY_BINS
         use rtconstants, only: dtol
         type(t_config), intent(in) :: config
         type(t_model_arguments), intent(in) :: model_args

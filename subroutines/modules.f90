@@ -164,14 +164,17 @@ module radial_grids
   save logxir, gsdr, logner, logxir_natural
 end module radial_grids
 
+! Common types use the globals above and must be available to conv_mod.
+include 'subroutines/common.f90'
+
 module conv_mod
-  use rtconstants, only: wp
+  use rtconstants, only: wp, nex => N_ENERGY_BINS
   use, intrinsic :: iso_c_binding
   implicit none
   include 'fftw3.f03'
   !include <libfftw3.a>
 
-  integer, parameter :: nex = 2**12, nex_conv = 4 * nex, nec = nex_conv/2 + 1
+  integer, parameter :: nex_conv = 4 * nex, nec = nex_conv/2 + 1
   ! real   , dimension(2 * nex_conv) :: adata,bdata,cdata
   ! complex, dimension(nex_conv) :: ac,bc,cc
   
@@ -218,24 +221,33 @@ contains
     plan2 = fftw_plan_dft_c2r_1d(nex_conv, in_conv, out_conv, flags)
   end subroutine init_fftw_allconv
 
-  subroutine conv_one_FFTw(dyn,earx,Gamma,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
+  subroutine conv_one_FFTw(config, model_args, dyn, earx, Gamma, photarx,      &
+      reline, imline, ReW_conv, ImW_conv)
+  !> Convolve a rest-frame spectrum with each lamppost reflection kernel.
+  !> Inputs: configuration, model arguments, edge threshold (dyn), energy
+  !> grid (earx), photon index (Gamma), spectrum and real/imaginary kernels.
+  !> Outputs: accumulate into ReW_conv and, for non-DC spectra, ImW_conv.
+    use common_types, only: t_config, t_model_arguments
     implicit none
-    integer, intent(in) :: DC, nlp 
-    real(wp)            :: dyn
+    type(t_config), intent(in) :: config
+    type(t_model_arguments), intent(in) :: model_args
+    real(wp), intent(in)    :: dyn
     real(wp), intent(in)    :: photarx(nex), earx(0:nex), Gamma
-    real(wp), intent(in)    :: reline(nlp,nex), imline(nlp,nex)
-    real(wp), intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
+    real(wp), intent(in)    :: reline(model_args%nlp,nex)
+    real(wp), intent(in)    :: imline(model_args%nlp,nex)
+    real(wp), intent(inout) :: ReW_conv(model_args%nlp,nex)
+    real(wp), intent(inout) :: ImW_conv(model_args%nlp,nex)
     complex(wp) :: conv(nec),padFT_photarx(nec)
-    complex(wp) :: padFT_reline(nec),  padFT_imline(nec)            
+    complex(wp) :: padFT_reline(nec),  padFT_imline(nec)
     integer :: m, i
     real(wp) :: depad_conv(nex), E
-    
-    do m=1,nlp  
-       if (DC .eq. 1 ) then
+
+    do m=1,model_args%nlp
+       if (config%DC .eq. 1 ) then
           ! call padding4FT(photarx,padFT_photarx)
           call padding4FT_xillver(photarx,padFT_photarx)
 
-          call padding4FT(reline(m,:),padFT_reline)                        
+          call padding4FT(reline(m,:),padFT_reline)
 
           conv = (padFT_photarx * padFT_reline) * nexm1
           call de_paddingFT(dyn, conv, depad_conv)
@@ -244,9 +256,9 @@ contains
              E             = 0.5_wp * ( earx(i) + earx(i-1) )
              ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
           end do
-                   
-       else 
-          call padding4FT(photarx       , padFT_photarx)        
+
+       else
+          call padding4FT(photarx       , padFT_photarx)
           call padding4FT(reline(m,:),padFT_reline)
           call padding4FT(imline(m,:),padFT_imline)
 
@@ -265,7 +277,7 @@ contains
              E             = 0.5_wp * ( earx(i) + earx(i-1) )
              ImW_conv(m,i) = ImW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
           end do
-          
+
        endif
     end do
 
