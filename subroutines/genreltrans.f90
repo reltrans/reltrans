@@ -597,16 +597,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 
     if (config%verbose .gt. 1 .and. abs(model_args%ReIm) .gt. 0 .and. model_args%ReIm .lt. 7) then
         if (config%DC .eq. 0 .and. model_args%beta_p .eq. 0) then
-           call write_components(ne, ear, nex, arrays%earx, config%nf,         &
-                config%flo, config%fhi, nlp, arrays%contx,                     &
-                absorbx, tauso, gso, arrays%ReW0, arrays%ImW0,                 &
-                arrays%ReW1, arrays%ImW1, arrays%ReW2, arrays%ImW2,            &
-                arrays%ReW3, arrays%ImW3, model_args%h,                        &
-                model_args%zcos, model_args%eta,                               &
-                model_args%beta_p, model_args%boost,                           &
-                model_args%floHz, model_args%fhiHz, model_args%ReIm,           &
-                model_args%DelA, model_args%DelAB, model_args%g,               &
-                config%ionvar, model_args%resp_matr)
+           call write_components(config, model_args, arrays, ne, ear, absorbx)
         ! catch case here for coherence = 0 or 1
         end if
     endif
