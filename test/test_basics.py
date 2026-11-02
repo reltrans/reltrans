@@ -11,15 +11,13 @@ plot_spectral_kwargs = dict(
 
 def test_basic_invocation(reltrans, assert_snapshot):
     """A smoke test to check whether the default values are working."""
-    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dcp(energy, DCP_Parameters())
     assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
 
-    
+
 def test_basic_absorption_invocation(reltrans, assert_snapshot):
     """A smoke test to check whether absorption is being correctly applied."""
-    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dcp(energy, DCP_Parameters(nh = 0.2))
     assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
@@ -27,7 +25,6 @@ def test_basic_absorption_invocation(reltrans, assert_snapshot):
 
 def test_dcp_continuum(reltrans, assert_snapshot):
     """A test to check the output of the continum  (boost = 0)"""
-    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dcp(energy, DCP_Parameters(boost = 0))
     assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
@@ -35,7 +32,6 @@ def test_dcp_continuum(reltrans, assert_snapshot):
 
 def test_dcp_reflection(reltrans, assert_snapshot):
     """A test to check the output of boost = -1 (just reflection)"""
-    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dcp(energy, DCP_Parameters(boost = -1))
     assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
@@ -45,7 +41,6 @@ def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     model are working. This test requires an RMF and ARF, which is provided by
     the `telescope` fixture."""
-    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 101)
 
     envars["RMF_SET"] = telescope.rmf_path
@@ -99,7 +94,6 @@ def test_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
 
 def test_negative_re_im_parameter(reltrans, assert_snapshot, telescope, envars):
     """Test the negative values of re_im = -4 and -3 parameter for the model."""
-    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 101)
 
     envars["EMIN_REF"] = "2.0"
@@ -132,7 +126,6 @@ def test_re_im_5_6(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     model are working. This test requires an RMF and ARF, which is provided by
     the `telescope` fixture."""
-    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(12), 101)
     dE = (energy[1:] - energy[:-1])
 
@@ -147,12 +140,11 @@ def test_re_im_5_6(reltrans, assert_snapshot, telescope, envars):
 
     xrb1.re_im = 5
     output = reltrans.dcp(energy, xrb1)
-    assert_snapshot(output, name="real_part", xlabel = "Energy", domain = energy[0:-1])    
+    assert_snapshot(output, name="real_part", xlabel = "Energy", domain = energy[0:-1])
 
 
 def test_basic_invocation_reltransDbl(reltrans, assert_snapshot, envars):
     """A smoke test to check whether the default values are working."""
-    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.dbl_lamp(energy, Dbl_Parameters())
     assert_snapshot(output, domain = energy[0:-1], **plot_spectral_kwargs)
@@ -162,7 +154,6 @@ def test_re_im_reltransDbl(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     reltransDbl model are working. This test requires an RMF and ARF, which is provided by
     the `telescope` fixture."""
-    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 101)
 
     envars["RMF_SET"] = telescope.rmf_path
@@ -194,7 +185,6 @@ def test_re_im_reltransDbl(reltrans, assert_snapshot, telescope, envars):
 def test_basic_invocation_rtdist(reltrans, assert_snapshot, envars):
     """A test to check whether the default values of rtdist model are working
     with density profile as SSD73."""
-    reltrans.reset()
     envars["A_DENSITY"] = "1"
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.rtdist(energy, rtdist_Parameters())
@@ -205,7 +195,6 @@ def test_basic_invocation_rtdist(reltrans, assert_snapshot, envars):
 def test_basic_invocation_rtdist_adens0(reltrans, assert_snapshot, envars):
     """A test to check whether the default values of rtdist are working
     with density profile constant."""
-    reltrans.reset()
     envars["A_DENSITY"] = "0"
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
     output = reltrans.rtdist(energy, rtdist_Parameters())
@@ -217,7 +206,6 @@ def test_re_im_rtdist(reltrans, assert_snapshot, telescope, envars):
     """Test the re_im parameter to assert that all the different outputs of the
     RTDIST model are working. This test requires an RMF and ARF, which is provided by
     the `telescope` fixture."""
-    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 101)
 
     envars["A_DENSITY"] = "1"
@@ -259,8 +247,6 @@ def test_strans_routines_getrgrid(reltrans, assert_snapshot):
 
 
 def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
-    reltrans.reset()
-
     rnmin = 1.7266670949940284
     rnmax = 300.0
     mueff = 0.86602540378443871
@@ -296,7 +282,6 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
 
 
 def test_reltransDCp_parameters(reltrans, assert_snapshot):
-    reltrans.reset()
     energy = np.logspace(np.log10(0.1), np.log10(100), 501)
 
     xrb = DCP_Parameters(

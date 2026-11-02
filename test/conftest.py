@@ -208,7 +208,7 @@ def envars() -> EnvironmentVariables:
 
 
 @pytest.fixture(scope="session")
-def reltrans() -> pyreltrans.Reltrans:
+def reltrans_singleton() -> pyreltrans.Reltrans:
     """
     Obtain the reltrans library wrapper class.
 
@@ -224,6 +224,16 @@ def reltrans() -> pyreltrans.Reltrans:
     # only initialise the library once
     return pyreltrans.Reltrans()
 
+@pytest.fixture(scope="function")
+def reltrans(reltrans_singleton):
+    """
+    Same as `reltrans_singleton` but resets the reltrans library state before
+    yielding the reltrans singleton.
+
+    This is the preferred way of accessing the singleton.
+    """
+    reltrans_singleton.reset()
+    yield reltrans_singleton
 
 @pytest.fixture
 def save_plot(plotting_mode) -> callable:
