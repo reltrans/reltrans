@@ -249,23 +249,23 @@ function distance(Cp, nlp, xe_in, adensity_in, param)
         spinsav = -2.d0 !this is needed to force the run of the GRtrace routine
         config%verbose = get_env_int("REV_VERB", 0)
         ! initialise environment and allocate all arrays
-        config%xe      = xe_in
-        config%me      = 1
+        config%ion_zones = xe_in
+        config%mu_zones = 1
         adensity       = adensity_in        
         call setup_global_arrays(config, model_args%nlp)
     end if
 
     ! Allocate arrays that need to be re-allocated every time incase xe changed
-    config%xe      = xe_in
+    config%ion_zones = xe_in
     adensity       = adensity_in        
     if (allocated(dfer_arr)) deallocate(dfer_arr)
     if (allocated(logxir)) deallocate(logxir)
     if (allocated(gsdr)) deallocate(gsdr)
     if (allocated(logner)) deallocate(logner)
-    allocate(dfer_arr(config%xe))
-    allocate(logxir (config%xe))
-    allocate(gsdr (config%xe))
-    allocate(logner (config%xe))    
+    allocate(dfer_arr(config%ion_zones))
+    allocate(logxir (config%ion_zones))
+    allocate(gsdr (config%ion_zones))
+    allocate(logner (config%ion_zones))
     call setup_arrays(config, arrays, model_args%nlp)
     
     ! reallocated frequency dependent arrays
@@ -320,7 +320,7 @@ function distance(Cp, nlp, xe_in, adensity_in, param)
     dset = 0
     call init_cont(config, model_args, arrays, Cp_cont, fcons, dset)    
     call radfunctions_dens(config, model_args, arrays)
-    allocate( logxir_dens(config%xe) )
+    allocate( logxir_dens(config%ion_zones) )
     logxir_dens = logxir_natural
     
 ! Calculate ionization profile assuming isotropic corona seen from D=1kpc

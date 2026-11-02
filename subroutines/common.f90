@@ -58,11 +58,10 @@ module common_types
         integer :: verbose = 0
         ! firstcall: is this the first time the model has been called?
         logical :: firstcall = .true., needtrans = .true., needconv = .true.
-        ! me: Number of mue bins
-        ! xe: Number of logr bins: bins 1:xe-1 are logarithmically spaced, bin
-        ! xe is everything else
+        ! mu_zones: Number of mue bins
+        ! ion_zones: Number of logr bins; the last bin covers the outer disc
         ! ionvar: ionvar=1 means include ionization variations, ionvar=0 means don't.
-        integer :: me, xe, nex, m, ionvar, refvar
+        integer :: mu_zones, ion_zones, nex, m, ionvar, refvar
 
         ! TODO: are these really constants, or are they hidden variables?
         ! Constants
@@ -130,10 +129,8 @@ module common_types
         real(wp), allocatable :: contx_int(:)
         ! TRANSFER FUNCTIONS and Cross spectrum dynamic allocation + variables
         complex(wp), dimension(:,:,:,:,:), allocatable :: ker_W0, ker_W1, ker_W2, ker_W3
-        ! ker_W0(nlp,ne,nf,me,xe) Transfer function W0 - linear transfer function
-        ! ker_W1(nlp,ne,nf,me,xe) Transfer function W1 - one aspect of photon index variations
-        ! ker_W2(nlp,ne,nf,me,xe) Transfer function W2 - other aspect of photon index variations
-        ! ker_W3(nlp,ne,nf,me,xe) Transfer function W3 - ionization variations
+        ! ker_W*(nlp,ne,nf,mu_zones,ion_zones): transfer functions
+        ! W0: linear; W1/W2: photon index variations; W3: ionization variations
         real(wp), dimension(:,:,:), allocatable :: ReW0, ImW0, ReW1, ImW1
         real(wp), dimension(:,:,:), allocatable :: ReW2, ImW2, ReW3, ImW3
         real(wp), dimension(:,:), allocatable :: ReSraw, ImSraw, ReSrawa, ImSrawa, ReGrawa, ImGrawa, ReG, ImG
@@ -275,8 +272,8 @@ contains
         type(t_config), intent(inout) :: config
         integer :: get_env_int
         character (len=200) :: get_env_char
-        config%me = get_env_int("MU_ZONES", 1)
-        config%xe = get_env_int("ION_ZONES", 20)
+        config%mu_zones = get_env_int("MU_ZONES", 1)
+        config%ion_zones = get_env_int("ION_ZONES", 20)
         ! verbose:
         ! 0: XSPEC output only
         ! 1: Print quantities to terminal + 0
@@ -303,8 +300,8 @@ contains
         write(*,*)"----------------------------------------------------"
         write(*,*)" *** ENVIRONMENT VARIABLES *** "
         write(*,*)
-        write(*,*) 'RADIAL ZONES', config%xe
-        write(*,*) 'ANGLE ZONES', config%me
+        write(*,*) 'RADIAL ZONES', config%ion_zones
+        write(*,*) 'ANGLE ZONES', config%mu_zones
         if (adensity .eq. 0.0_wp) then
             write(*,*) 'A_DENSITY:', adensity, 'Density profile is constant'
         else
@@ -388,16 +385,20 @@ contains
                        
             ! reallocate the transfer function arrays
             if (allocated(arrays%ker_W0)) deallocate(arrays%ker_W0)
-            allocate(arrays%ker_W0(model_args%nlp,nex,config%nf,config%me,config%xe))
+            allocate(arrays%ker_W0(model_args%nlp,nex,config%nf,              &
+                config%mu_zones,config%ion_zones))
 
             if (allocated(arrays%ker_W1)) deallocate(arrays%ker_W1)
-            allocate(arrays%ker_W1(model_args%nlp,nex,config%nf,config%me,config%xe))
+            allocate(arrays%ker_W1(model_args%nlp,nex,config%nf,              &
+                config%mu_zones,config%ion_zones))
 
             if (allocated(arrays%ker_W2)) deallocate(arrays%ker_W2)
-            allocate(arrays%ker_W2(model_args%nlp,nex,config%nf,config%me,config%xe))
+            allocate(arrays%ker_W2(model_args%nlp,nex,config%nf,              &
+                config%mu_zones,config%ion_zones))
 
             if (allocated(arrays%ker_W3)) deallocate(arrays%ker_W3)
-            allocate(arrays%ker_W3(model_args%nlp,nex,config%nf,config%me,config%xe))
+            allocate(arrays%ker_W3(model_args%nlp,nex,config%nf,              &
+                config%mu_zones,config%ion_zones))
 
             if (allocated(arrays%ReW0)) deallocate(arrays%ReW0)
             allocate(arrays%ReW0(model_args%nlp,nex,config%nf))
