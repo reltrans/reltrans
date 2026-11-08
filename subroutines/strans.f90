@@ -191,7 +191,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     ! open(31, file = 'data_test_pem_re_values.dat')
     ! open(32, file = 'data_test_pem_re_valid_values.dat')
     
-    ! Construct the transfer function by summing over all pixels
+   ! Construct the transfer function by summing over all pixels
     odisc    = 1       !flag to ensure the chosen disk radius is between rin and rout
     i        = nro + 1
     check_disk_exist = .false. 
@@ -253,7 +253,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
                        dFe(m) = emissivity(m) * g**3 * domega(i) / (1.d0+zcos)**3
 
                        ! write(*,*) 'printing to file 21 the GR loop quantities'
-                       ! write(21,*) re, phin, alpha, beta, gsd(m), cosfac, dareafac(re,spin), emissivity(m), g
+                       ! write(21,*) j, i, re, phin, alpha, beta, gsd(m), cosfac, dareafac(re,spin), emissivity(m), g
                         
                        !calculate extra factors that go into the transfer functions for double lps
                        if (nlp .gt. 1) then
@@ -440,7 +440,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
         end do
     end do
 
-    end if
+ end if
     
     ! close(22)
     do m=1,nlp 

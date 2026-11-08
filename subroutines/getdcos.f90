@@ -36,6 +36,7 @@ subroutine getdcos(a_spin,h,mudisk,n,nlp,rout)
     sins     = 0.d0   !sin of same angle
     velocity = 0.0D0  !3-velocity of source
 
+    ! open(31, file='delete_getdcos_photons.dat')
     !loop over h here
     do m=1,nlp
         !Calculate smallest delta worth considering
@@ -74,6 +75,7 @@ subroutine getdcos(a_spin,h,mudisk,n,nlp,rout)
         npts(m) = counter
     end do 
         
+    ! close(31)
     !Calculate cosdout
     do m=1,nlp 
         if( nout(m) .eq. npts(m) )then

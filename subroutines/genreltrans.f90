@@ -381,7 +381,19 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                        end if
                     endif                    
                  end do
-            end do
+              end do
+
+              ! write(*,*) "DEBUG: -----------------"
+
+              ! write(*,*) 'writing zone number ', rbin
+              ! open(10, file='delete_ion_zones.qdp')
+              ! do i = 1, nex
+              !    E = (earx(i-1) + earx(i))*0.5
+              !    write(10,*) E, ReW0(1,i,1)
+              ! enddo
+              ! write(10,*) 'no no'
+              ! write(*,*) "DEBUG: -----------------"
+
         end do
     end if
     if( verbose .gt. 2 ) then
@@ -392,18 +404,24 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     close(10)
     close(11)
     
+    ! write(*,*) "DEBUG: -----------------"
+    ! open(10, file='delete_each_zones.qdp')
+    ! write(10,*) "skip on"
     ! do i = 1, nex
     !    E = (earx(i-1) + earx(i))*0.5
-       ! write(10,*) E, reline_w1(1,i)
-       ! write(11,*) E, imline_w1(1,i)
-       ! write(12,*) E, reline_w2(1,i)
-       ! write(13,*) E, imline_w2(1,i)
-       ! write(14,*) E, reline_w3(1,i)
-       ! write(15,*) E, imline_w3(1,i)
-       ! write(16,*) E, photarx(i)
-       ! write(17,*) E, photarx_delta(i)
-       ! write(18,*) E, photarx_dlogxi(i)
+    !    ! write(10,*) E, reline_w1(1,i)
+    !    ! write(11,*) E, imline_w1(1,i)
+    !    ! write(12,*) E, reline_w2(1,i)
+    !    ! write(13,*) E, imline_w2(1,i)
+    !    ! write(14,*) E, reline_w3(1,i)
+    !    ! write(15,*) E, imline_w3(1,i)
+    !    ! write(16,*) E, photarx(i)
+    !    ! write(17,*) E, photarx_delta(i)
+    !    ! write(18,*) E, photarx_dlogxi(i)
+    !    write(10,*) E, ReW0(1,i,1)
     ! enddo
+    ! write(10,*) 'no no'
+    ! write(*,*) "DEBUG: -----------------"
     
     ! Calculate absorption 
     call tbabs(earx,nex,nh,Ifl,absorbx,photerx)

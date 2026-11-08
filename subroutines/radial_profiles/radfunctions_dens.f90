@@ -137,8 +137,8 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,eta_0,logxip,lognep,spin,h,Gam
      !    lognenorm = mylogne_zoneB(risco, rin)
      ! endif
      
-    write(*,*) "DEBUG: logxinorm lognenorm ", risco, logxinorm, lognenorm
-    write(*,*) "DEBUG: -----------------"
+    ! write(*,*) "DEBUG: logxinorm lognenorm ", risco, logxinorm, lognenorm
+    ! write(*,*) "DEBUG: -----------------"
     !After the loop calculate the max and the min - ionization renormalized wrt to the first LP    
     ! logxinorm = maxval(logxir)
     ! lognenorm = minval(logner)
