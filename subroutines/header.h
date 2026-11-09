@@ -1,6 +1,15 @@
 include 'subroutines/kerrz.f90'
 include 'subroutines/xspec_interface.f90'
+include 'subroutines/model_types.f90'
+
+module fftw_interface
+    use, intrinsic :: iso_c_binding
+    implicit none
+    include 'fftw3.f03'
+end module fftw_interface
+
 include 'subroutines/modules.f90'
+include 'subroutines/common.f90'
 
 include 'subroutines/continuum/getcont.f90'
 include 'subroutines/continuum/init_cont.f90'
