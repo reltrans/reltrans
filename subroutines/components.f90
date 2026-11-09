@@ -1,5 +1,4 @@
-subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                            h,z,eta,beta_p,boost,floHz,fhiHz,ReIm,DelA,DelAB,g,ionvar,resp_matr)             
+subroutine write_components(config, model_args, arrays, ne, ear, absorbx)
     !this subroutine separates the components from the model, calculates each cross spectrum including the effects of absorRTion,
     !folds the response matrix if desired, calls the phase correction, averages over frequnecy, and prints each different components
     !to a new file. This code repeats a lot and it's a bit of a monstrosity, mostly because it's annoying to separate the transfer
@@ -11,16 +10,20 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     !RT - total reflection lag due to light travel time, pivoting of each reflection signal, and ionization variations
 
     use rtconstants
+    use common_types
+    use conv_mod, only: nex
+    use gr_continuum, only: tauso, gso
     implicit none
-    integer, intent(IN) :: ne,nex,nf,nlp,ionvar,ReIm,resp_matr
-    real(wp) , intent(IN) :: ear(0:ne),earx(0:nex),contx(nex,nlp),absorbx(nex)
-    real(wp) , intent(IN) :: g(nlp),DelA,DelAB(nlp),boost,z,eta,h(nlp),beta_p
-    real(wp) , intent(IN) :: gso(nlp),tauso(nlp)
-    real(wp) , intent(INOUT) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
-    real(wp) , intent(INOUT) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
+    type(t_config),          intent(IN)    :: config
+    type(t_model_arguments), intent(IN)    :: model_args
+    ! arrays is INOUT because components rescales the second lamppost's
+    ! ReW*/ImW* in place by eta
+    type(t_arrays),          intent(INOUT) :: arrays
+    integer, intent(IN) :: ne
+    real(wp) , intent(IN) :: ear(0:ne),absorbx(nex)
     real(wp) :: fac
     real(wp) :: dE
-    real(wp) :: f,flo,fhi,floHz,fhiHz
+    real(wp) :: f
     real(wp) :: fc
     integer :: i,j
     !indiRTdual components transfer functions (S) and cross spectrum (G) dynamic allocation
@@ -38,37 +41,41 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     character (len=30) path
     
     !Allocate model component matrixes
-    if(.not. allocated(ReScont)) allocate( ReScont(nex,nf) )
-    if(.not. allocated(ImScont)) allocate( ImScont(nex,nf) )
-    if(.not. allocated(ReSrev )) allocate( ReSrev (nex,nf) )
-    if(.not. allocated(ImSrev )) allocate( ImSrev (nex,nf) )  
-    if(.not. allocated(ReSpiv )) allocate( ReSpiv (nex,nf) )
-    if(.not. allocated(ImSpiv )) allocate( ImSpiv (nex,nf) ) 
-    if(.not. allocated(ReSion )) allocate( ReSion (nex,nf) )
-    if(.not. allocated(ImSion )) allocate( ImSion (nex,nf) ) 
+    if(.not. allocated(ReScont)) allocate( ReScont(nex,config%nf) )
+    if(.not. allocated(ImScont)) allocate( ImScont(nex,config%nf) )
+    if(.not. allocated(ReSrev )) allocate( ReSrev (nex,config%nf) )
+    if(.not. allocated(ImSrev )) allocate( ImSrev (nex,config%nf) )
+    if(.not. allocated(ReSpiv )) allocate( ReSpiv (nex,config%nf) )
+    if(.not. allocated(ImSpiv )) allocate( ImSpiv (nex,config%nf) )
+    if(.not. allocated(ReSion )) allocate( ReSion (nex,config%nf) )
+    if(.not. allocated(ImSion )) allocate( ImSion (nex,config%nf) )
     !Allocate cross spectra
-    if(.not. allocated(ReGcont)) allocate( ReGcont(nex,nf) )
-    if(.not. allocated(ImGcont)) allocate( ImGcont(nex,nf) )
-    if(.not. allocated(ReGrev )) allocate( ReGrev (nex,nf) )
-    if(.not. allocated(ImGrev )) allocate( ImGrev (nex,nf) )  
-    if(.not. allocated(ReGpiv )) allocate( ReGpiv (nex,nf) )
-    if(.not. allocated(ImGpiv )) allocate( ImGpiv (nex,nf) ) 
-    if(.not. allocated(ReGion )) allocate( ReGion (nex,nf) )
-    if(.not. allocated(ImGion )) allocate( ImGion (nex,nf) )     
- 
-    write(*,*) 'inside components'
-    !This stores each component contribution in the Re/Im matrices 
-    if (nlp .gt. 1 .and. beta_p .eq. 0.0_wp) then  
-        call components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                              z,eta,boost,g,DelAB,ionvar,ReIm,resp_matr,ReGcont,ImGcont,ReGrev,ImGrev,&
-                              ReGpiv,ImGpiv,ReGion,ImGion)
-     else 
-        call components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW1,ReW2,ImW2,ReW3,ImW3,&
-                        h,z,eta,beta_p,boost,g,DelAB,ionvar,ReScont,ImScont,ReSrev,ImSrev,ReSpiv,ImSpiv,&
-                        ReSion,ImSion) 
+    if(.not. allocated(ReGcont)) allocate( ReGcont(nex,config%nf) )
+    if(.not. allocated(ImGcont)) allocate( ImGcont(nex,config%nf) )
+    if(.not. allocated(ReGrev )) allocate( ReGrev (nex,config%nf) )
+    if(.not. allocated(ImGrev )) allocate( ImGrev (nex,config%nf) )
+    if(.not. allocated(ReGpiv )) allocate( ReGpiv (nex,config%nf) )
+    if(.not. allocated(ImGpiv )) allocate( ImGpiv (nex,config%nf) )
+    if(.not. allocated(ReGion )) allocate( ReGion (nex,config%nf) )
+    if(.not. allocated(ImGion )) allocate( ImGion (nex,config%nf) )
 
-        !Include the effects of absorRTion in each model component matrix           
-        do j = 1, nf
+    write(*,*) 'inside components'
+    !This stores each component contribution in the Re/Im matrices
+    if (model_args%nlp .gt. 1 .and. model_args%beta_p .eq. 0.0_wp) then
+        call components_nocoh(nex,arrays%earx,config%nf,config%flo,config%fhi,model_args%nlp,arrays%contx,absorbx,&
+                              tauso,gso,arrays%ReW0,arrays%ImW0,arrays%ReW1,arrays%ImW1,arrays%ReW2,arrays%ImW2,&
+                              arrays%ReW3,arrays%ImW3,model_args%zcos,model_args%eta,model_args%boost,model_args%g,&
+                              model_args%DelAB,config%ionvar,model_args%ReIm,model_args%resp_matr,&
+                              ReGcont,ImGcont,ReGrev,ImGrev,ReGpiv,ImGpiv,ReGion,ImGion)
+     else
+        call components(nex,arrays%earx,config%nf,config%flo,config%fhi,model_args%nlp,arrays%contx,tauso,gso,&
+                        arrays%ReW0,arrays%ImW0,arrays%ReW1,arrays%ImW1,arrays%ReW2,arrays%ImW2,arrays%ReW3,arrays%ImW3,&
+                        model_args%h,model_args%zcos,model_args%eta,model_args%beta_p,model_args%boost,model_args%g,&
+                        model_args%DelAB,config%ionvar,ReScont,ImScont,ReSrev,ImSrev,ReSpiv,ImSpiv,&
+                        ReSion,ImSion)
+
+        !Include the effects of absorRTion in each model component matrix
+        do j = 1, config%nf
             do i = 1, nex
                 ReScont(i,j) = ReScont(i,j) * absorbx(i)
                 ImScont(i,j) = ImScont(i,j) * absorbx(i)                
@@ -81,29 +88,29 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
             end do
         end do    
         !Calculate raw cross-spectrum from S(E,\nu) and the reference band parameters, for each component separately
-        if (ReIm .gt. 0.0_wp) then
-            call propercross(nex,nf,earx,ReScont,ImScont,ReGcont,ImGcont,resp_matr)
-            call propercross(nex,nf,earx,ReSrev,ImSrev,ReGrev,ImGrev,resp_matr)     
-            call propercross(nex,nf,earx,ReSpiv,ImSpiv,ReGpiv,ImGpiv,resp_matr)   
-            call propercross(nex,nf,earx,ReSion,ImSion,ReGion,ImGion,resp_matr)
+        if (model_args%ReIm .gt. 0.0_wp) then
+            call propercross(nex,config%nf,arrays%earx,ReScont,ImScont,ReGcont,ImGcont,model_args%resp_matr)
+            call propercross(nex,config%nf,arrays%earx,ReSrev,ImSrev,ReGrev,ImGrev,model_args%resp_matr)
+            call propercross(nex,config%nf,arrays%earx,ReSpiv,ImSpiv,ReGpiv,ImGpiv,model_args%resp_matr)
+            call propercross(nex,config%nf,arrays%earx,ReSion,ImSion,ReGion,ImGion,model_args%resp_matr)
         else
-            call propercross_NOmatrix(nex,nf,earx,ReScont,ImScont,ReGcont,ImGcont)
-            call propercross_NOmatrix(nex,nf,earx,ReSrev,ImSrev,ReGrev,ImGrev)
-            call propercross_NOmatrix(nex,nf,earx,ReSpiv,ImSpiv,ReGpiv,ImGpiv)
-            call propercross_NOmatrix(nex,nf,earx,ReSion,ImSion,ReGion,ImGion)
-        endif   
-    endif              
+            call propercross_NOmatrix(nex,config%nf,arrays%earx,ReScont,ImScont,ReGcont,ImGcont)
+            call propercross_NOmatrix(nex,config%nf,arrays%earx,ReSrev,ImSrev,ReGrev,ImGrev)
+            call propercross_NOmatrix(nex,config%nf,arrays%earx,ReSpiv,ImSpiv,ReGpiv,ImGpiv)
+            call propercross_NOmatrix(nex,config%nf,arrays%earx,ReSion,ImSion,ReGion,ImGion)
+        endif
+    endif
     !Apply phase correction parameter to the cross-spectral model (for bad calibration)
-    do j = 1,nf
+    do j = 1,config%nf
         do i = 1,nex
-            ReGcont(i,j) = cos(DelA) * ReGcont(i,j) - sin(DelA) * ImGcont(i,j)
-            ImGcont(i,j) = cos(DelA) * ImGcont(i,j) + sin(DelA) * ReGcont(i,j)
-            ReGrev(i,j) = cos(DelA) * ReGrev(i,j) - sin(DelA) * ImGrev(i,j)
-            ImGrev(i,j) = cos(DelA) * ImGrev(i,j) + sin(DelA) * ReGrev(i,j)
-            ReGpiv(i,j) = cos(DelA) * ReGpiv(i,j) - sin(DelA) * ImGpiv(i,j)
-            ImGpiv(i,j) = cos(DelA) * ImGpiv(i,j) + sin(DelA) * ReGpiv(i,j)
-            ReGion(i,j) = cos(DelA) * ReGion(i,j) - sin(DelA) * ImGion(i,j)
-            ImGion(i,j) = cos(DelA) * ImGion(i,j) + sin(DelA) * ReGion(i,j)
+            ReGcont(i,j) = cos(model_args%DelA) * ReGcont(i,j) - sin(model_args%DelA) * ImGcont(i,j)
+            ImGcont(i,j) = cos(model_args%DelA) * ImGcont(i,j) + sin(model_args%DelA) * ReGcont(i,j)
+            ReGrev(i,j) = cos(model_args%DelA) * ReGrev(i,j) - sin(model_args%DelA) * ImGrev(i,j)
+            ImGrev(i,j) = cos(model_args%DelA) * ImGrev(i,j) + sin(model_args%DelA) * ReGrev(i,j)
+            ReGpiv(i,j) = cos(model_args%DelA) * ReGpiv(i,j) - sin(model_args%DelA) * ImGpiv(i,j)
+            ImGpiv(i,j) = cos(model_args%DelA) * ImGpiv(i,j) + sin(model_args%DelA) * ReGpiv(i,j)
+            ReGion(i,j) = cos(model_args%DelA) * ReGion(i,j) - sin(model_args%DelA) * ImGion(i,j)
+            ImGion(i,j) = cos(model_args%DelA) * ImGion(i,j) + sin(model_args%DelA) * ReGion(i,j)
         end do
     end do
     !Calculate frequency-averaged spectra 
@@ -115,10 +122,11 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     ImGpiv_bar = 0.0_wp
     ReGion_bar = 0.0_wp
     ImGion_bar = 0.0_wp
-    fc = 0.5_wp * ( floHz + fhiHz )   
-    fac = 2.302585_wp* fc**2 * log10(fhiHz/floHz) / ((fhiHz-floHz) * real(nf, wp))
-    do j = 1,nf
-        f = floHz * (fhiHz/floHz)**( (real(j, wp)-0.5_wp) / real(nf, wp) )
+    fc = 0.5_wp * ( model_args%floHz + model_args%fhiHz )
+    fac = 2.302585_wp* fc**2 * log10(model_args%fhiHz/model_args%floHz) &
+        / ((model_args%fhiHz-model_args%floHz) * real(config%nf, wp))
+    do j = 1,config%nf
+        f = model_args%floHz * (model_args%fhiHz/model_args%floHz)**( (real(j, wp)-0.5_wp) / real(config%nf, wp) )
         do i = 1,nex 
             ReGcont_bar(i) = ReGcont_bar(i) + ReGcont(i,j) / f
             ImGcont_bar(i) = ImGcont_bar(i) + ImGcont(i,j) / f
@@ -157,12 +165,12 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     path = 'Output/IonVar.dat'
     open (unit = 14, file = path, status='replace', action = 'write') 
 
-    if (.not. is_both_folded(ReIm)) then
-        call crebin(nex,earx,ReGcont_bar,ImGcont_bar,ne,ear,ReScont_print,ImScont_print)
-        call crebin(nex,earx,ReGrev_bar,ImGrev_bar,ne,ear,ReSrev_print,ImSrev_print)
-        call crebin(nex,earx,ReGpiv_bar,ImGpiv_bar,ne,ear,ReSpiv_print,ImSpiv_print)
-        call crebin(nex,earx,ReGion_bar,ImGion_bar,ne,ear,ReSion_print,ImSion_print)
-        if (is_mode(ReIm, MODE_CROSS_SPEC_REAL)) then
+    if (.not. is_both_folded(model_args%ReIm)) then
+        call crebin(nex,arrays%earx,ReGcont_bar,ImGcont_bar,ne,ear,ReScont_print,ImScont_print)
+        call crebin(nex,arrays%earx,ReGrev_bar,ImGrev_bar,ne,ear,ReSrev_print,ImSrev_print)
+        call crebin(nex,arrays%earx,ReGpiv_bar,ImGpiv_bar,ne,ear,ReSpiv_print,ImSpiv_print)
+        call crebin(nex,arrays%earx,ReGion_bar,ImGion_bar,ne,ear,ReSion_print,ImSion_print)
+        if (is_mode(model_args%ReIm, MODE_CROSS_SPEC_REAL)) then
             do i = 1,ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), ReScont_print(i)/dE
@@ -170,7 +178,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
                 write (13,*) ener(i), ReSpiv_print(i)/dE
                 write (14,*) ener(i), ReSion_print(i)/dE
             end do
-        else if (is_mode(ReIm, MODE_CROSS_SPEC_IMAG)) then
+        else if (is_mode(model_args%ReIm, MODE_CROSS_SPEC_IMAG)) then
             do i = 1,ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), ImScont_print(i)/dE
@@ -178,7 +186,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
                 write (13,*) ener(i), ImSpiv_print(i)/dE
                 write (14,*) ener(i), ImSion_print(i)/dE
             end do
-        else if (is_mode(ReIm, MODE_CROSS_SPEC_MODULUS)) then
+        else if (is_mode(model_args%ReIm, MODE_CROSS_SPEC_MODULUS)) then
             do i = 1,ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), sqrt(ReScont_print(i)**2 + ImScont_print(i)**2)/dE
@@ -186,7 +194,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
                 write (13,*) ener(i), sqrt(ReSpiv_print(i)**2 + ImSpiv_print(i)**2)/dE
                 write (14,*) ener(i), sqrt(ReSion_print(i)**2 + ImSion_print(i)**2)/dE
             end do
-        else if (is_mode(ReIm, MODE_CROSS_SPEC_LAG)) then
+        else if (is_mode(model_args%ReIm, MODE_CROSS_SPEC_LAG)) then
             do i = 1,ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), atan2(ImScont_print(i),ReScont_print(i)) / ( 2.0_wp*pi*fc )
@@ -196,11 +204,11 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
             end do
         end if
     else
-        call cfoldandbin(nex,earx,ReGcont_bar,ImGcont_bar,ne,ear,ReScont_print,ImScont_print,resp_matr)
-        call cfoldandbin(nex,earx,ReGpiv_bar,ImGpiv_bar,ne,ear,ReSpiv_print,ImSpiv_print,resp_matr) 
-        call cfoldandbin(nex,earx,ReGrev_bar,ImGrev_bar,ne,ear,ReSrev_print,ImSrev_print,resp_matr)
-        call cfoldandbin(nex,earx,ReGion_bar,ImGion_bar,ne,ear,ReSion_print,ImSion_print,resp_matr)
-        if (ReIm == MODE_CROSS_SPEC_MODULUS_BOTH_FOLDED) then
+        call cfoldandbin(nex,arrays%earx,ReGcont_bar,ImGcont_bar,ne,ear,ReScont_print,ImScont_print,model_args%resp_matr)
+        call cfoldandbin(nex,arrays%earx,ReGpiv_bar,ImGpiv_bar,ne,ear,ReSpiv_print,ImSpiv_print,model_args%resp_matr)
+        call cfoldandbin(nex,arrays%earx,ReGrev_bar,ImGrev_bar,ne,ear,ReSrev_print,ImSrev_print,model_args%resp_matr)
+        call cfoldandbin(nex,arrays%earx,ReGion_bar,ImGion_bar,ne,ear,ReSion_print,ImSion_print,model_args%resp_matr)
+        if (model_args%ReIm == MODE_CROSS_SPEC_MODULUS_BOTH_FOLDED) then
             do i = 1, ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), sqrt(ReScont_print(i)**2 + ImScont_print(i)**2)/dE
@@ -208,7 +216,7 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
                 write (12,*) ener(i), sqrt(ReSrev_print(i)**2 + ImSrev_print(i)**2)/dE
                 write (14,*) ener(i), sqrt(ReSion_print(i)**2 + ImSion_print(i)**2)/dE
             end do
-        else if (ReIm == MODE_CROSS_SPEC_LAG_BOTH_FOLDED) then
+        else if (model_args%ReIm == MODE_CROSS_SPEC_LAG_BOTH_FOLDED) then
             do i = 1, ne
                 dE = ear(i) - ear(i-1)
                 write (11,*) ener(i), atan2(ImScont_print(i),ReScont_print(i)) / ( 2.0_wp*pi*fc )
