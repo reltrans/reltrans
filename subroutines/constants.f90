@@ -18,6 +18,9 @@ module rtconstants
     !> routines (XSPEC's xsatbl and donthcomp); do not use for computation.
     integer, parameter :: sp = real32
 
+    !> Number of bins in the internal energy grid.
+    integer, parameter :: N_ENERGY_BINS = 2**12
+
     !> The `re_im` parameter enumeration. Possible values are:
     !> These are the possible output modes that reltrans can compute.
     !> The folding refers to whether the reference (REF) band is folded through
