@@ -1,3 +1,8 @@
+import json
+from pathlib import Path
+import subprocess
+import sys
+
 import pytest
 import numpy as np
 from pyreltrans import DCP_Parameters, PL_Parameters, Dbl_Parameters, rtdist_Parameters
@@ -34,7 +39,7 @@ LAG_FREQUENCY_CASES = {
 
 
 @pytest.mark.parametrize("case", LAG_FREQUENCY_CASES)
-def test_lag_frequency_spectrum(reltrans, assert_snapshot, envars, case):
+def test_lag_frequency_spectrum(assert_snapshot, envars, tmp_path, case):
     """Lag-frequency spectrum (ReIm = 7). The input grid is Fourier frequency
     in Hz, and both reference bands must be set or the model asks on stdin."""
     flavour, parameters, kwargs = LAG_FREQUENCY_CASES[case]
@@ -42,12 +47,35 @@ def test_lag_frequency_spectrum(reltrans, assert_snapshot, envars, case):
     envars["EMAX_REF"] = "1.0"
     envars["EMIN_REF2"] = "1.0"
     envars["EMAX_REF2"] = "10.0"
-    # reset() also makes the model recompute the band indices
-    reltrans.reset()
-
-    # Above ~3e-2 Hz the cross spectrum is numerically zero and its phase noise
+    # Avoid the noisy high-frequency tail for this model setup.
     frequency = np.logspace(np.log10(1e-5), np.log10(1e-2), 101)
-    output = getattr(reltrans, flavour)(frequency, parameters(**kwargs))
+
+    # ReIm = 7 changes shared frequency spacing even across reset() (see #208).
+    input_path = tmp_path / "frequency.npy"
+    output_path = tmp_path / "lag.npy"
+    np.save(input_path, frequency)
+    subprocess.run(
+        [
+            sys.executable, "-c", """
+import json
+import sys
+
+import numpy as np
+import pyreltrans
+
+flavour, parameter_class, kwargs, input_path, output_path = sys.argv[1:]
+parameters = getattr(pyreltrans, parameter_class)(**json.loads(kwargs))
+model = pyreltrans.Reltrans()
+np.save(output_path, getattr(model, flavour)(np.load(input_path), parameters))
+""",
+            flavour, parameters.__name__, json.dumps(kwargs),
+            str(input_path), str(output_path),
+        ],
+        cwd=Path(__file__).resolve().parents[1],
+        stdin=subprocess.DEVNULL,
+        check=True,
+    )
+    output = np.load(output_path)
 
     assert output.shape == (len(frequency) - 1,)
     assert np.all(np.isfinite(output))
