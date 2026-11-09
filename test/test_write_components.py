@@ -34,25 +34,19 @@ def test_write_components(
     reltrans.reset()
 
     energy = np.logspace(np.log10(0.1), np.log10(100), 101)
-    try:
-        if flavour == "dcp":
-            params = DCP_Parameters(
-                mass=10.0, flo_hz=0.122, fhi_hz=0.224, re_im=float(re_im),
-                del_a=0.1, del_ab=0.2, g=0.5,
-            )
-            reltrans.dcp(energy, params)
-        else:
-            params = Dbl_Parameters(
-                mass=10.0, flo_hz=0.122, fhi_hz=0.224, re_im=float(re_im),
-                beta_p=0.0, eta=0.8, del_a=0.1, del_ab1=0.2, g1=0.5,
-                del_ab2=0.3, g2=0.4,
-            )
-            reltrans.dbl_lamp(energy, params)
-    finally:
-        # The verbosity is kept in the global config, so reset again to make
-        # the next call re-read REV_VERB (restored by `envars`). Otherwise
-        # later tests would keep writing to Output/ in their own directory.
-        reltrans.reset()
+    if flavour == "dcp":
+        params = DCP_Parameters(
+            mass=10.0, flo_hz=0.122, fhi_hz=0.224, re_im=float(re_im),
+            del_a=0.1, del_ab=0.2, g=0.5,
+        )
+        reltrans.dcp(energy, params)
+    else:
+        params = Dbl_Parameters(
+            mass=10.0, flo_hz=0.122, fhi_hz=0.224, re_im=float(re_im),
+            beta_p=0.0, eta=0.8, del_a=0.1, del_ab1=0.2, g1=0.5,
+            del_ab2=0.3, g2=0.4,
+        )
+        reltrans.dbl_lamp(energy, params)
 
     components = []
     for name in COMPONENT_FILES:
@@ -64,5 +58,4 @@ def test_write_components(
         components.append(data[:, 1])
     components = np.array(components)
 
-    # No component is zero at these energies, so a sign flip fails rtol
     assert_snapshot(components, name=f"{flavour}_reim{re_im}", rtol=2e-4)
