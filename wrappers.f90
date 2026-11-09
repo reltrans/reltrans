@@ -236,7 +236,7 @@ end subroutine tdrtdist
 !-----------------------------------------------------------------------
 subroutine simrtdbl(ear, ne, param, ifl, photar)
   use rtconstants, only: wp
-  use random_numbers, only: gasdev
+  use random_numbers, only: gasdev, simulation_seed
   use telematrix
   use env_variables
   implicit none
@@ -251,7 +251,7 @@ subroutine simrtdbl(ear, ne, param, ifl, photar)
   real(wp) :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,br,bs(ne)
   real(wp) :: flo,fhi,fc,lag(ne),lagsim(ne)
   real(wp), parameter :: pi = acos(-1.0_wp)
-  integer  unit,xunit,status,j
+  integer  idum,unit,xunit,status,j
   real(wp) E1,E2,frac
   character (len=200) command,flxlagfile,phalagfile,rsplagfile,lagfile,root
 ! Settings
@@ -371,6 +371,7 @@ subroutine simrtdbl(ear, ne, param, ifl, photar)
   open(unit,file=lagfile)
   
 ! Loop through energy bins
+  idum = simulation_seed()
   write(unit,*)"skip on"
   write(unit,*)"read serr 1 2"
   do i = 1,ne
@@ -413,7 +414,7 @@ end subroutine simrtdbl
 !-----------------------------------------------------------------------
 subroutine simrtdist(ear, ne, param, ifl, photar)
   use rtconstants, only: wp
-  use random_numbers, only: gasdev
+  use random_numbers, only: gasdev, simulation_seed
   use telematrix
   use env_variables
   implicit none
@@ -428,7 +429,7 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   real(wp) :: dlag(ne),G2,ReG,ImG,Psnoise,Prnoise,br,bs(ne)
   real(wp) :: flo,fhi,fc,lag(ne),lagsim(ne)
   real(wp), parameter :: pi = acos(-1.0_wp)
-  integer unit,xunit,status,j
+  integer idum,unit,xunit,status,j
   real(wp) E1,E2,frac
   character (len=200) command,flxlagfile,phalagfile,rsplagfile,lagfile,root
 ! Settings
@@ -548,6 +549,7 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   open(unit,file=lagfile)
   
 ! Loop through energy bins
+  idum = simulation_seed()
   write(unit,*)"skip on"
   write(unit,*)"read serr 1 2"
   do i = 1,ne
@@ -607,7 +609,7 @@ subroutine simrelt_extra(ear, ne, param, ifl, photar, br, mur, variability)
   !   mur: source count rate
   !   variability: (fractional rms)^2 / Hz
   use rtconstants, only: wp
-  use random_numbers, only: gasdev
+  use random_numbers, only: gasdev, simulation_seed
   use telematrix
   use common_types, only: reset_instrument_files
   implicit none
@@ -631,8 +633,6 @@ subroutine simrelt_extra(ear, ne, param, ifl, photar, br, mur, variability)
 
   integer :: nlp !number of lampposts
 
-  data idum/-2851043/
-  save idum
   character (len=200) command,flxlagfile,phalagfile,rsplagfile,lagfile,root
 
   character (len=200) cross_path
@@ -763,6 +763,7 @@ subroutine simrelt_extra(ear, ne, param, ifl, photar, br, mur, variability)
   open(cross_fd,file=cross_path)
 
 ! Loop through energy bins
+  idum = simulation_seed()
   write(unit,*)"skip on"
   write(unit,*)"read serr 1 2"
   do i = 1,ne

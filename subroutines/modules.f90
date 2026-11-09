@@ -55,8 +55,7 @@ end module telematrix2
 
 module env_variables
   implicit none
-  integer :: adensity, idum
-  save idum
+  integer :: adensity
 end module env_variables
 
 module saved_variables

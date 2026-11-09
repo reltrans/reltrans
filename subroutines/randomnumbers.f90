@@ -10,9 +10,27 @@ module random_numbers
     use rtconstants, only: wp
     implicit none
     private
-    public :: ran1, gasdev
+    public :: ran1, gasdev, simulation_seed
 
 contains
+
+    integer function simulation_seed() result(seed)
+        !> Read the seed for a new simulation and mark it for ran1 to reset.
+        integer, parameter :: default_seed = -2851043, max_seed = 2147483646
+        character(len=32) :: value
+        integer :: status
+
+        seed = default_seed
+        call get_environment_variable("SEED_SIM", value, status=status)
+        if (status == 0) then
+            read(value, *, iostat=status) seed
+            if (status /= 0) seed = default_seed
+        end if
+
+        ! The Park-Miller state must be between 1 and its modulus minus 1.
+        if (seed < -max_seed .or. seed > max_seed) seed = default_seed
+        seed = -max(1, abs(seed))
+    end function simulation_seed
 
     real(wp) function gasdev(idum)
         !> Returns a normally distributed random number with zero mean and
@@ -24,6 +42,8 @@ contains
         real(wp), save :: spare
         real(wp) :: v1, v2, rsq, fac
 
+        ! Reseeding must also discard any deviate saved from the old sequence.
+        if (idum <= 0) have_spare = .false.
         if (have_spare) then
             have_spare = .false.
             gasdev = spare
