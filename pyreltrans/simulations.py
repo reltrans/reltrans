@@ -145,15 +145,16 @@ class ReltransSimulator:
 
         self._reltrans = ReltransSimulator._reltrans
 
-    def _setup_environ(self):
-        # Set the environment variables
-        os.environ["SEED_SIM"] = f"{self.seed}"
-        os.environ["ARF_SET"] = os.path.abspath(self.arf)
-        os.environ["RMF_SET"] = os.path.abspath(self.rmf)
-        os.environ["EMIN_REF"] = str(self.e_low)
-        os.environ["EMAX_REF"] = str(self.e_high)
-        os.environ["BKG_SET"] = os.path.abspath(self.background)
-        os.environ["BACKSCL"] = "1"
+    def _setup_environ(self, environ=None):
+        if environ is None:
+            environ = os.environ
+        environ["SEED_SIM"] = f"{self.seed}"
+        environ["ARF_SET"] = os.path.abspath(self.arf)
+        environ["RMF_SET"] = os.path.abspath(self.rmf)
+        environ["EMIN_REF"] = str(self.e_low)
+        environ["EMAX_REF"] = str(self.e_high)
+        environ["BKG_SET"] = os.path.abspath(self.background)
+        environ["BACKSCL"] = "1"
 
     def set_refband_energies(self, e_low, e_high):
         """
@@ -170,6 +171,8 @@ class ReltransSimulator:
     ) -> SimulationResult:
         """
         Simulate a reverberation lag.
+
+        Each call starts the noise sequence from `self.seed`.
 
         If `remove_files` is True, then the simulation files written during the
         simulation are deleted again.

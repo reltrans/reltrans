@@ -1,7 +1,7 @@
-import os
 import shutil
 import pathlib
 import dataclasses
+from functools import partial
 
 import pytest
 import numpy as np
@@ -9,29 +9,27 @@ import numpy as np
 from pyreltrans import ReltransSimulator, Simrelt_Parameters
 
 ENERGY = np.geomspace(0.2, 10.0, 50)
+SIMULATION_FILES = ("sim_test.dat", "sim_cross_test.dat", "sim_xspec_test.dat")
 
 
 @pytest.fixture
-def simulator(telescope, tmp_path, monkeypatch):
-    # The simulation writes its files to the working directory and sets
-    # environment variables without restoring them.
+def simulator(telescope, tmp_path, monkeypatch, envars):
     monkeypatch.chdir(tmp_path)
-    environ = dict(os.environ)
-    yield ReltransSimulator(
-        telescope.rmf_path, telescope.arf_path, telescope.bkg_path
-    )
-    os.environ.clear()
-    os.environ.update(environ)
-
-
-def test_basic_simulation(telescope):
-    # Currently this is a smoke test to check that it does something vaguely
-    # correct.
-    energy = np.geomspace(0.2, 10.0, 50)
     simulator = ReltransSimulator(
         telescope.rmf_path, telescope.arf_path, telescope.bkg_path
     )
-    result = simulator.simulate_lag(energy, Simrelt_Parameters())
+    monkeypatch.setattr(
+        simulator, "_setup_environ", partial(simulator._setup_environ, envars)
+    )
+    simulator._reltrans.reset()
+    yield simulator
+    simulator._reltrans.reset()
+
+
+def test_basic_simulation(simulator):
+    # Currently this is a smoke test to check that it does something vaguely
+    # correct.
+    result = simulator.simulate_lag(ENERGY, Simrelt_Parameters())
 
     assert result.background_count_rate == pytest.approx(0.03639, abs=1e-3)
     assert result.source_count_rate == pytest.approx(270.49288692412586, abs=1e-3)
@@ -39,8 +37,9 @@ def test_basic_simulation(telescope):
 
 
 def test_simulation_outputs(simulator):
+    simulator.seed = 42
     result = simulator.simulate_lag(ENERGY, Simrelt_Parameters(), remove_files=False)
-    for name in ("sim_test.dat", "sim_cross_test.dat", "sim_xspec_test.dat"):
+    for name in SIMULATION_FILES:
         assert pathlib.Path(name).is_file(), name
 
     widths = np.diff(ENERGY)
@@ -53,16 +52,19 @@ def test_simulation_outputs(simulator):
     np.testing.assert_allclose(result.xspec_data[:, 2], widths * result.lag, rtol=1e-5)
     np.testing.assert_allclose(result.xspec_data[:, 3], widths * result.d_lag, rtol=1e-5)
 
-    # The simulated lags scatter around the true lag with width d_lag
-    pull = (result.lag - result.lag_true) / result.d_lag
-    assert abs(np.mean(pull)) < 0.5
-    assert 0.6 < np.std(pull) < 1.4
+    # Reference lags in seconds for the seeded NICER simulation.
+    np.testing.assert_allclose(
+        result.lag[[0, 12, 24, 36, 48]],
+        [-0.94530964, 19.64631736, -14.33964235, -6.51757300, 32.25010369],
+        rtol=2e-4,
+    )
 
 
 def test_simulation_parameters(simulator):
     params = Simrelt_Parameters()
     base = simulator.simulate_lag(ENERGY, params)
-    assert not any(pathlib.Path().iterdir())
+    for name in SIMULATION_FILES:
+        assert not pathlib.Path(name).exists(), name
 
     def simulate(**changes):
         return simulator.simulate_lag(ENERGY, dataclasses.replace(params, **changes))
@@ -99,11 +101,23 @@ def test_simulation_parameters(simulator):
     assert narrower.background_count_rate < base.background_count_rate
 
 
-@pytest.mark.xfail(strict=True, reason="simrelt_extra ignores SEED_SIM")
 def test_simulation_seed(simulator):
-    first = simulator.simulate_lag(ENERGY, Simrelt_Parameters())
-    second = simulator.simulate_lag(ENERGY, Simrelt_Parameters())
-    np.testing.assert_array_equal(first.lag, second.lag)
+    params = Simrelt_Parameters()
+    simulator.seed = 123456
+    first = simulator.simulate_lag(ENERGY, params)
+    simulator.seed = 123457
+    different = simulator.simulate_lag(ENERGY, params)
+    simulator.seed = 123456
+    repeated = simulator.simulate_lag(ENERGY, params)
+
+    # An odd number of bins leaves a spare Gaussian deviate after each run.
+    # Compare the noise separately from small cold-cache differences in lag_true.
+    first_noise = (first.lag - first.lag_true) / first.d_lag
+    different_noise = (different.lag - different.lag_true) / different.d_lag
+    repeated_noise = (repeated.lag - repeated.lag_true) / repeated.d_lag
+    np.testing.assert_allclose(repeated_noise, first_noise, rtol=0, atol=1e-10)
+    assert np.all(np.isfinite(different_noise))
+    assert not np.allclose(different_noise, first_noise)
 
 
 @pytest.mark.skipif(shutil.which("flx2xsp") is None, reason="needs HEASoft flx2xsp")
