@@ -60,7 +60,7 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
     use rtconstants, only: dtol, wp
     implicit none 
     integer         , intent(in)  :: Cp, Cpsave, nf, nfsave
-    real(wp)        , intent(in)  :: param(32), paramsave(32)
+    real(wp)        , intent(in)  :: param(33), paramsave(33)
     real(wp)        , parameter   :: tol = 1e-7_wp
     real(wp), intent(in)  :: fhi, flo, fhisave, flosave
     logical         , intent(out) :: needtrans,needconv
@@ -105,4 +105,6 @@ subroutine need_check(Cp,Cpsave,param,paramsave,fhi,flo,fhisave,flosave,nf,nfsav
     if( Cp .ne. Cpsave ) needconv = .true.
     if( abs( param(10) - paramsave(10) ) .gt. tol ) needconv = .true.
     if( abs( param(12) - paramsave(12) ) .gt. tol ) needconv = .true.
+    ! The diffusion time only changes the convolutions, not the kernel
+    if( abs( param(33) - paramsave(33) ) .gt. tol ) needconv = .true.
 end subroutine need_check

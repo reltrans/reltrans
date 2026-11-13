@@ -182,6 +182,16 @@ module conv_mod
   complex(c_double), pointer, dimension(:) :: out, in_conv
   type(C_ptr) :: a1, a2, a3, a4
 
+  ! Complex-to-complex FFTW plans and buffers, used when the rest-frame
+  ! reflection spectrum is complex (diffusion time). They are created on
+  ! first use (init_fftw_c2c), so models without a diffusion time never pay
+  ! the FFTW planning cost.
+  type(C_ptr) :: plan_c2c_forward, plan_c2c_backward
+  complex(c_double), pointer, dimension(:) :: in_c2c, out_c2c
+  type(C_ptr) :: a5, a6
+  logical :: c2c_initialised = .false.
+  logical :: c2c_use_estimate = .false.
+
 
 contains
   
@@ -216,6 +226,9 @@ contains
     ! note: these two are what kill the runtime of this subroutine
     plan1 = fftw_plan_dft_r2c_1d(nex_conv,  in, out, flags)
     plan2 = fftw_plan_dft_c2r_1d(nex_conv, in_conv, out_conv, flags)
+
+    ! Remember the planning strategy for the (lazily created) c2c plans
+    c2c_use_estimate = use_estimate
   end subroutine init_fftw_allconv
 
   subroutine spectrum_FT_r2c(photarx, DC, padFT_photarx)
@@ -291,6 +304,152 @@ contains
         end do
     end do
   end subroutine conv_FT_r2c
+
+  subroutine init_fftw_c2c()
+!> Allocate the buffers and create the complex-to-complex FFTW plans.
+!> It does nothing if 
+!> they already exist, so models without a diffusion time never pay the
+!> planning cost. Uses the planning strategy passed to init_fftw_allconv.
+!> Outputs:
+!>     plan_c2c_forward, plan_c2c_backward, in_c2c, out_c2c (module variables)
+    implicit none
+    integer(c_int) :: flags
+    integer, parameter :: FFTW_PATIENT_FLAG = 32
+
+    if (c2c_initialised) return
+
+    a5 = fftw_alloc_complex(int(nex_conv, c_size_t))
+    a6 = fftw_alloc_complex(int(nex_conv, c_size_t))
+    call c_f_pointer(a5, in_c2c , [nex_conv])
+    call c_f_pointer(a6, out_c2c, [nex_conv])
+
+    if (c2c_use_estimate) then
+        flags = FFTW_ESTIMATE
+    else
+        flags = FFTW_PATIENT_FLAG
+    endif
+
+    plan_c2c_forward = fftw_plan_dft_1d(nex_conv, in_c2c, out_c2c,            &
+        FFTW_FORWARD, flags)
+    plan_c2c_backward = fftw_plan_dft_1d(nex_conv, in_c2c, out_c2c,           &
+        FFTW_BACKWARD, flags)
+    c2c_initialised = .true.
+  end subroutine init_fftw_c2c
+
+  subroutine spectrum_FT_c2c(rephotarx, imphotarx, padFT_photarx)
+!> FFT of the zero-padded complex rest-frame spectrum (diffusion time). The
+!> spectrum depends on frequency, so this is done once per frequency bin,
+!> and the transform is used for all the lampposts and for both W0 and W1.
+!> Only used for the cross spectrum (the delay has no effect at f = 0).
+!> Same layout as padding4FT: one leading zero, the nex values, then zeros.
+!> Inputs:
+!>     rephotarx     : real(nex), real part of the rest-frame spectrum
+!>     imphotarx     : real(nex), imaginary part of the rest-frame spectrum
+!> Outputs:
+!>     padFT_photarx : complex(nex_conv), FFT of the padded spectrum
+    implicit none
+    real(wp)   , intent(in)  :: rephotarx(nex), imphotarx(nex)
+    complex(wp), intent(out) :: padFT_photarx(nex_conv)
+
+    call init_fftw_c2c()
+    call padding4FT_c2c(rephotarx, imphotarx)
+    padFT_photarx = out_c2c
+  end subroutine spectrum_FT_c2c
+
+  subroutine conv_FT_c2c(dyn, earx, Gamma, padFT_photarx, reline, imline,     &
+                         ReW_conv, ImW_conv, nlp)
+!> Convolve a complex rest-frame spectrum, given as its padded FFT (see
+!> spectrum_FT_c2c), with the complex kernel of each lamppost, using
+!> complex-to-complex FFTs, and multiply the result by E^(1-Gamma). With a
+!> real spectrum this gives the same result as conv_FT_r2c to round-off.
+!> Inputs:
+!>     dyn           : real, edge-effect clipping threshold (applied
+!>                     separately to the real and imaginary parts)
+!>     earx          : real(0:nex), internal energy grid
+!>     Gamma         : real, photon index
+!>     padFT_photarx : complex(nex_conv), FFT of the padded spectrum
+!>     reline        : real(nlp,nex), real part of the kernel
+!>     imline        : real(nlp,nex), imaginary part of the kernel
+!>     nlp           : integer, number of lampposts
+!> Outputs:
+!>     ReW_conv      : real(nlp,nex), real part (accumulated)
+!>     ImW_conv      : real(nlp,nex), imaginary part (accumulated)
+    implicit none
+    integer    , intent(in)    :: nlp
+    real(wp)   , intent(in)    :: dyn
+    real(wp)   , intent(in)    :: earx(0:nex), Gamma
+    complex(wp), intent(in)    :: padFT_photarx(nex_conv)
+    real(wp)   , intent(in)    :: reline(nlp,nex), imline(nlp,nex)
+    real(wp)   , intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
+    real(wp) :: re_depad(nex), im_depad(nex), E, Efac
+    integer  :: m, i
+
+    do m = 1, nlp
+        call padding4FT_c2c(reline(m,:), imline(m,:))
+        in_c2c = padFT_photarx * out_c2c * nexm1
+        call fftw_execute_dft(plan_c2c_backward, in_c2c, out_c2c)
+        call de_paddingFT_c2c(dyn, re_depad, im_depad)
+        do i = 1, nex
+            E    = 0.5_wp * ( earx(i) + earx(i-1) )
+            Efac = E**(1-Gamma)
+            ReW_conv(m,i) = ReW_conv(m,i) + re_depad(i) * Efac
+            ImW_conv(m,i) = ImW_conv(m,i) + im_depad(i) * Efac
+        end do
+    end do
+  end subroutine conv_FT_c2c
+
+  subroutine padding4FT_c2c(reline, imline)
+!> Zero-pad a complex array (one leading zero, the nex values, then zeros up
+!> to nex_conv) and take its forward FFT. The result is left in out_c2c.
+!> Inputs:
+!>     reline : real(nex), real part of the array
+!>     imline : real(nex), imaginary part of the array
+    implicit none
+    real(wp), intent(in) :: reline(nex), imline(nex)
+    integer :: i
+
+    in_c2c(1) = (0.0_wp, 0.0_wp)
+    do i = 1, nex
+        in_c2c(i+1) = cmplx(reline(i), imline(i), kind=wp)
+    end do
+    do i = nex + 2, nex_conv
+        in_c2c(i) = (0.0_wp, 0.0_wp)
+    end do
+
+    call fftw_execute_dft(plan_c2c_forward, in_c2c, out_c2c)
+  end subroutine padding4FT_c2c
+
+  subroutine de_paddingFT_c2c(dyn, re_out, im_out)
+!> Extract the nex values of the inverse FFT left in out_c2c (same shift as
+!> de_paddingFT) and clip the residual edge effects separately in the real
+!> and imaginary parts.
+!> Inputs:
+!>     dyn    : real, clipping threshold relative to the maximum
+!> Outputs:
+!>     re_out : real(nex), real part of the convolution
+!>     im_out : real(nex), imaginary part of the convolution
+    implicit none
+    real(wp), intent(in)  :: dyn
+    real(wp), intent(out) :: re_out(nex), im_out(nex)
+    integer  :: i
+    real(wp) :: remax, immax
+
+    remax = 0.0_wp
+    immax = 0.0_wp
+    do i = 1, nex
+        re_out(i) = real(out_c2c(i + nex/2 + 1), wp)
+        im_out(i) = aimag(out_c2c(i + nex/2 + 1))
+        remax = max(remax, re_out(i))
+        immax = max(immax, im_out(i))
+    end do
+
+    ! Clean any residual edge effects (same rule as de_paddingFT)
+    do i = 1, nex
+        if (abs(re_out(i)) .lt. abs(dyn * remax)) re_out(i) = 0.0_wp
+        if (abs(im_out(i)) .lt. abs(dyn * immax)) im_out(i) = 0.0_wp
+    end do
+  end subroutine de_paddingFT_c2c
+
 
   subroutine padding4FT(line, padFT_line)
     implicit none 
