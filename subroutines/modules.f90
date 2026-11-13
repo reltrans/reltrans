@@ -218,58 +218,79 @@ contains
     plan2 = fftw_plan_dft_c2r_1d(nex_conv, in_conv, out_conv, flags)
   end subroutine init_fftw_allconv
 
-  subroutine conv_one_FFTw(dyn,earx,Gamma,photarx,reline,imline,ReW_conv,ImW_conv,DC,nlp)
+  subroutine spectrum_FT_r2c(photarx, DC, padFT_photarx)
+!> FFT of the zero-padded real rest-frame spectrum. It is separate from
+!> conv_FT_r2c so that the same transform can be used for all the kernels:
+!> every frequency, every lamppost, and both W0 and W1.
+!> For the time-averaged spectrum (DC = 1) the low-energy end is replaced by
+!> a linear extrapolation (padding4FT_xillver).
+!> Inputs:
+!>     photarx       : real(nex), rest-frame spectrum
+!>     DC            : integer, 1 for the time-averaged spectrum
+!> Outputs:
+!>     padFT_photarx : complex(nec), FFT of the padded spectrum
     implicit none
-    integer, intent(in) :: DC, nlp 
-    real(wp)            :: dyn
-    real(wp), intent(in)    :: photarx(nex), earx(0:nex), Gamma
-    real(wp), intent(in)    :: reline(nlp,nex), imline(nlp,nex)
-    real(wp), intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
-    complex(wp) :: conv(nec),padFT_photarx(nec)
-    complex(wp) :: padFT_reline(nec),  padFT_imline(nec)            
-    integer :: m, i
+    real(wp)   , intent(in)  :: photarx(nex)
+    integer    , intent(in)  :: DC
+    complex(wp), intent(out) :: padFT_photarx(nec)
+
+    if (DC .eq. 1) then
+        call padding4FT_xillver(photarx, padFT_photarx)
+    else
+        call padding4FT(photarx, padFT_photarx)
+    end if
+  end subroutine spectrum_FT_r2c
+
+  subroutine conv_FT_r2c(dyn, earx, Gamma, padFT_photarx, reline, imline,     &
+                         ReW_conv, ImW_conv, DC, nlp)
+!> Convolve a real rest-frame spectrum, given as its padded FFT (see
+!> spectrum_FT_r2c), with the kernel of each lamppost, using real-to-complex
+!> FFTs, and multiply the result by E^(1-Gamma). The real and imaginary
+!> parts of the kernel are convolved separately. For the time-averaged
+!> spectrum (DC = 1) only the real part is used.
+!> Inputs:
+!>     dyn           : real, edge-effect clipping threshold
+!>     earx          : real(0:nex), internal energy grid
+!>     Gamma         : real, photon index
+!>     padFT_photarx : complex(nec), FFT of the padded spectrum
+!>     reline        : real(nlp,nex), real part of the kernel
+!>     imline        : real(nlp,nex), imaginary part of the kernel
+!>     DC            : integer, 1 for the time-averaged spectrum
+!>     nlp           : integer, number of lampposts
+!> Outputs:
+!>     ReW_conv      : real(nlp,nex), real part (accumulated)
+!>     ImW_conv      : real(nlp,nex), imaginary part (accumulated, DC = 0)
+    implicit none
+    integer    , intent(in)    :: DC, nlp
+    real(wp)   , intent(in)    :: dyn
+    real(wp)   , intent(in)    :: earx(0:nex), Gamma
+    complex(wp), intent(in)    :: padFT_photarx(nec)
+    real(wp)   , intent(in)    :: reline(nlp,nex), imline(nlp,nex)
+    real(wp)   , intent(inout) :: ReW_conv(nlp,nex), ImW_conv(nlp,nex)
+    complex(wp) :: conv(nec), padFT_reline(nec), padFT_imline(nec)
+    integer  :: m, i
     real(wp) :: depad_conv(nex), E
-    
-    do m=1,nlp  
-       if (DC .eq. 1 ) then
-          ! call padding4FT(photarx,padFT_photarx)
-          call padding4FT_xillver(photarx,padFT_photarx)
 
-          call padding4FT(reline(m,:),padFT_reline)                        
+    do m = 1, nlp
+        call padding4FT(reline(m,:), padFT_reline)
+        conv = (padFT_photarx * padFT_reline) * nexm1
+        call de_paddingFT(dyn, conv, depad_conv)
+        do i = 1, nex
+            E = 0.5_wp * ( earx(i) + earx(i-1) )
+            ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
+        end do
 
-          conv = (padFT_photarx * padFT_reline) * nexm1
-          call de_paddingFT(dyn, conv, depad_conv)
+        if (DC .eq. 1) cycle
 
-          do i = 1,nex
-             E             = 0.5_wp * ( earx(i) + earx(i-1) )
-             ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
-          end do
-                   
-       else 
-          call padding4FT(photarx       , padFT_photarx)        
-          call padding4FT(reline(m,:),padFT_reline)
-          call padding4FT(imline(m,:),padFT_imline)
-
-          conv = (padFT_photarx * padFT_reline) * nexm1
-          call de_paddingFT(dyn, conv, depad_conv)
-
-          do i = 1,nex
-             E             = 0.5_wp * ( earx(i) + earx(i-1) )
-             ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
-          end do
-
-          conv = (padFT_photarx * padFT_imline) * nexm1
-          call de_paddingFT(dyn, conv, depad_conv)
-
-          do i = 1,nex
-             E             = 0.5_wp * ( earx(i) + earx(i-1) )
-             ImW_conv(m,i) = ImW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
-          end do
-          
-       endif
+        call padding4FT(imline(m,:), padFT_imline)
+        conv = (padFT_photarx * padFT_imline) * nexm1
+        call de_paddingFT(dyn, conv, depad_conv)
+        do i = 1, nex
+            E = 0.5_wp * ( earx(i) + earx(i-1) )
+            ImW_conv(m,i) = ImW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
+        end do
     end do
-
-  end subroutine conv_one_FFTw
+  end subroutine conv_FT_r2c
 
   subroutine padding4FT(line, padFT_line)
     implicit none 

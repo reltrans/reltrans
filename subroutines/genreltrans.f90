@@ -113,7 +113,7 @@ contains
     end subroutine config_frequency
 
     subroutine do_convolutions(config, model_args, arrays)
-        use conv_mod, only: nex, conv_one_FFTw
+        use conv_mod, only: nex, nec, spectrum_FT_r2c, conv_FT_r2c
         use gr_continuum, only: gso, lens
         use radial_grids, only: logner, gsdr, logxir
         type(t_config), intent(in) :: config
@@ -133,6 +133,8 @@ contains
         real(wp) :: reline_w3(model_args%nlp, nex), imline_w3(model_args%nlp, nex)
         real(wp) :: photarx_dlogxi(nex)
         real(wp) :: Hx(nex), photarx_delta(nex)
+        ! FFTs of the padded rest-frame spectra Hx, Hx_delta and Hx_dlogxi
+        complex(wp) :: FT_Hx(nec), FT_Hx_delta(nec), FT_Hx_dlogxi(nec)
 
         ! Initialize arrays for transfer functions
         arrays%ReW0 = 0.0_wp
@@ -203,6 +205,16 @@ contains
                     Hx_delta(i) = photarx_delta(i) * E**(Gamma0-1)
                     Hx_dlogxi(i) = photarx_dlogxi(i) * E**(Gamma0-1)
                 end do
+                ! FFTs of the rest-frame spectra. They do not depend on
+                ! frequency or lamppost, so they are done once here and used
+                ! for all the convolutions below (W0 and W1 share FT_Hx)
+                call spectrum_FT_r2c(Hx, config%DC, FT_Hx)
+                if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
+                    call spectrum_FT_r2c(Hx_delta, config%DC, FT_Hx_delta)
+                end if
+                if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
+                    call spectrum_FT_r2c(Hx_dlogxi, config%DC, FT_Hx_dlogxi)
+                end if
                 ! Loop through frequencies and lamp posts
                 do j = 1, config%nf
                     do i = 1, nex
@@ -226,22 +238,22 @@ contains
                       end do
                     end do
                     ! Do the convolution (involves multiplying by E^{1-Gamma})
-                    call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,         &
+                    call conv_FT_r2c(dyn, arrays%earx, Gamma0, FT_Hx,        &
                         reline_w0, imline_w0, arrays%ReW0(:, :, j),         &
                         arrays%ImW0(:, :, j), config%DC, model_args%nlp)
                     if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
-                        call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,      &
+                        call conv_FT_r2c(dyn, arrays%earx, Gamma0, FT_Hx,     &
                             reline_w1, imline_w1, arrays%ReW1(:, :, j),      &
                             arrays%ImW1(:, :, j), config%DC,                 &
                             model_args%nlp)
-                        call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
-                            Hx_delta, reline_w2, imline_w2, arrays%ReW2(:,   &
-                            :, j), arrays%ImW2(:, :, j), config%DC,          &
-                            model_args%nlp)
+                        call conv_FT_r2c(dyn, arrays%earx, Gamma0,            &
+                            FT_Hx_delta, reline_w2, imline_w2,               &
+                            arrays%ReW2(:, :, j), arrays%ImW2(:, :, j),      &
+                            config%DC, model_args%nlp)
                     end if
                     if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
-                        call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
-                            Hx_dlogxi, reline_w3, imline_w3,                 &
+                        call conv_FT_r2c(dyn, arrays%earx, Gamma0,            &
+                            FT_Hx_dlogxi, reline_w3, imline_w3,              &
                             arrays%ReW3(:, :, j), arrays%ImW3(:, :, j),      &
                             config%DC, model_args%nlp)
                     end if
