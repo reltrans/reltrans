@@ -26,7 +26,7 @@ subroutine tdreltransDCp(ear, ne, param, ifl, photar)
   implicit none
   integer, parameter :: nlp = 1 !use a single lamp post
   integer :: ne, ifl, Cp, dset
-  real(wp) :: ear(0:ne), param(21), photar(ne), par(32)
+  real(wp) :: ear(0:ne), param(21), photar(ne), par(33)
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
@@ -63,10 +63,63 @@ subroutine tdreltransDCp(ear, ne, param, ifl, photar)
   par(30) = 0.0_wp           !g2
   par(31) = 1.0_wp           !Anorm
   par(32) = param(21)        !telescope response
+  par(33) = 0.0_wp           !diffusion time (only in reltransDT)
 ! Call general code
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   return
 end subroutine tdreltransDCp
+!-----------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+subroutine tdreltransDT(ear, ne, param, ifl, photar)
+! reltransDCp (nthcomp illumination) plus the diffusion (reprocessing) time
+! of the reflected photons: param(22) is the diffusion time in seconds.
+  use rtconstants, only: wp
+  implicit none
+  integer, parameter :: nlp = 1 !use a single lamp post
+  integer :: ne, ifl, Cp, dset
+  real(wp) :: ear(0:ne), param(22), photar(ne), par(33)
+! Settings
+  Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
+  dset = 0   !dset=0 means distance is not set, logxi set instead
+! Transfer to general parameter array
+  par(1)  = param(1)         !h1
+  par(2)  = 0.0_wp           !h2
+  par(3)  = param(2)         !a
+  par(4)  = param(3)         !inc
+  par(5)  = param(4)         !rin
+  par(6)  = param(5)         !rout
+  par(7)  = param(6)         !zcos
+  par(8)  = param(7)         !Gamma
+  par(9)  = param(8)         !logxi
+  par(10) = param(9)         !Afe
+  par(11) = param(10)        !lognep
+  par(12) = param(11)        !kTe
+  par(13) = 0.0_wp           !eta_0
+  par(14) = 0.0_wp           !eta
+  par(15) = 0.0_wp           !beta_p
+  par(16) = param(12)        !Nh
+  par(17) = param(13)        !boost
+  par(18) = 1.0_wp           !qboost
+  par(19) = param(14)        !Mass
+  par(20) = 0.0_wp           !honr
+  par(21) = 0.0_wp           !b1
+  par(22) = 0.0_wp           !b2
+  par(23) = param(15)        !floHz
+  par(24) = param(16)        !fhiHz
+  par(25) = param(17)        !ReIm
+  par(26) = param(18)        !DelA
+  par(27) = param(19)        !DelAB
+  par(28) = param(20)        !g
+  par(29) = 0.0_wp           !DelAB2
+  par(30) = 0.0_wp           !g2
+  par(31) = 1.0_wp           !Anorm
+  par(32) = param(21)        !telescope response
+  par(33) = param(22)        !diffusion time (s, source rest frame)
+! Call general code
+  call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
+  return
+end subroutine tdreltransDT
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
@@ -75,7 +128,7 @@ subroutine tdreltransPL(ear, ne, param, ifl, photar)
   implicit none
   integer, parameter :: nlp = 1 !use a single lamp post
   integer :: ne, ifl, Cp, dset
-  real(wp) :: ear(0:ne), param(20), photar(ne), par(32)
+  real(wp) :: ear(0:ne), param(20), photar(ne), par(33)
 ! Settings
   Cp   = -1   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter    
   dset = 0   !dset=0 means distance is not set, logxi set instead
@@ -112,6 +165,7 @@ subroutine tdreltransPL(ear, ne, param, ifl, photar)
   par(30) = 0.0_wp           !g2
   par(31) = 1.0_wp           !Anorm
   par(32) = param(20)        !telescope response
+  par(33) = 0.0_wp           !diffusion time (only in reltransDT)
 ! Call general code
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   return
@@ -124,7 +178,7 @@ subroutine tdreltransDbl(ear, ne, param, ifl, photar)
   implicit none
   integer, parameter :: nlp = 2 !use a double lamp post 
   integer :: ne, ifl, Cp, dset
-  real(wp) :: ear(0:ne), param(27), photar(ne), par(32)
+  real(wp) :: ear(0:ne), param(27), photar(ne), par(33)
 !Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
   dset = 0   !dset=0 means distance is not set, logxi set instead
@@ -161,6 +215,7 @@ subroutine tdreltransDbl(ear, ne, param, ifl, photar)
   par(30) = param(26)        !g2
   par(31) = 1.0_wp           !Anorm
   par(32) = param(27)        !resp
+  par(33) = 0.0_wp           !diffusion time (only in reltransDT)
 ! Call general code
   call genreltrans(Cp, dset, nlp, ear, ne, par, ifl, photar)  
   return
@@ -174,7 +229,7 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
   implicit none
   integer, parameter :: nlp = 1 !use a single lamp post
   integer :: ne, ifl, Cp, dset
-  real(wp) :: ear(0:ne), param(25), photar(ne), par(32)
+  real(wp) :: ear(0:ne), param(25), photar(ne), par(33)
   real(wp)    :: honr,pi,cosi,cos0
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter     
@@ -212,6 +267,7 @@ subroutine tdrtdist(ear, ne, param, ifl, photar)
   par(30) = 0.0_wp           !g2
   par(31) = param(24)        !Anorm
   par(32) = param(25)        !telescope response
+  par(33) = 0.0_wp           !diffusion time (only in reltransDT)
 ! Check that we're not looking at the side of the disc
   honr = par(20)
   pi   = acos(-1.0_wp)
@@ -241,7 +297,7 @@ subroutine simrtdbl(ear, ne, param, ifl, photar)
   use env_variables
   implicit none
   integer :: ne, ifl, Cp, dset, i
-  real(wp) :: ear(0:ne), param(28), photar(ne), par(32)
+  real(wp) :: ear(0:ne), param(28), photar(ne), par(33)
   real(wp) :: gammac2, Texp, E, dE, getcountrate
   real(wp), parameter :: Emin = 1e-1_wp, Emax = 300.0_wp
   integer, parameter :: nex=2**12
@@ -292,6 +348,7 @@ subroutine simrtdbl(ear, ne, param, ifl, photar)
   Texp    = param(26)        !Texp (s)
   pow     = param(27)        !power in [rms/mean]^2/Hz units (alpha(nu))
   par(32) = param(28)        !telescope response
+  par(33) = 0.0_wp           !diffusion time (only in reltransDT)
   
   flo = par(23)
   fhi = par(24)
@@ -418,7 +475,7 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   use env_variables
   implicit none
   integer :: ne, ifl, Cp, dset, i
-  real(wp) :: ear(0:ne), param(27), photar(ne), par(32)
+  real(wp) :: ear(0:ne), param(27), photar(ne), par(33)
   real(wp) :: gammac2, Texp, E, dE, getcountrate
   real(wp), parameter :: Emin = 1e-1_wp, Emax = 300.0_wp
   integer, parameter :: nex=2**12
@@ -469,6 +526,7 @@ subroutine simrtdist(ear, ne, param, ifl, photar)
   Texp    = param(25)        !Texp (s)
   pow     = param(26)        !power in [rms/mean]^2/Hz units (alpha(nu))
   par(32) = param(27)        !telescope response
+  par(33) = 0.0_wp           !diffusion time (only in reltransDT)
   
   flo = par(23)
   fhi = par(24)
@@ -617,7 +675,7 @@ subroutine simrelt_extra(ear, ne, param, ifl, photar, br, mur, variability)
   real(wp), intent(inout) :: photar(ne)
   real(wp), intent(out) :: br, mur, variability
   integer :: Cp, dset, i
-  real(wp) :: par(32), Pr
+  real(wp) :: par(33), Pr
   real(wp) :: gammac2, Texp, E, dE, getcountrate
   real(wp), parameter :: Emin = 1e-1_wp, Emax = 300.0_wp
   integer, parameter :: nex=2**12
@@ -680,6 +738,7 @@ subroutine simrelt_extra(ear, ne, param, ifl, photar, br, mur, variability)
   Texp    = param(22)        !Texp (s)
   pow     = param(23)        !power in [rms/mean]^2/Hz units (alpha(nu))
   par(32) = param(24)        !telescope response
+  par(33) = 0.0_wp           !diffusion time (only in reltransDT)
  
   flo = param(15)
   fhi = param(16)

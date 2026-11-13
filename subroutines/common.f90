@@ -45,6 +45,10 @@ module common_types
         ! coefficient of angular emissivity function (b2):
         real(wp) :: b1, b2
 
+        ! Diffusion (reprocessing) time of the reflected photons in the disc
+        ! atmosphere, in seconds (rest frame). Zero means instant reprocessing.
+        real(wp) :: diff_time
+
         ! The below are computed from the above
         ! The cosine angle
         real(wp) :: muobs
@@ -182,7 +186,7 @@ contains
         use rtconstants, only: parse_reim
         real(wp), parameter :: pi = acos(-1.0_wp)
         integer, intent(in) :: nlp, dset, cutoff_powerlaw
-        real(wp), target, intent(in) :: params(32)
+        real(wp), target, intent(in) :: params(33)
         type(t_model_arguments), intent(out) :: args
         integer :: i
         do i = 1,nlp
@@ -225,6 +229,7 @@ contains
         args%DelA = params(26)
         args%Anorm = params(31)
         args%resp_matr = int(params(32))
+        args%diff_time = params(33)
         args%Cp = cutoff_powerlaw
         ! And finally initialise the kerrz metric:
         args%metric = krz_KerrMetric_init(1.0_wp, args%a)

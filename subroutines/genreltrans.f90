@@ -113,9 +113,12 @@ contains
     end subroutine config_frequency
 
     subroutine do_convolutions(config, model_args, arrays)
-        use conv_mod, only: nex, conv_one_FFTw
+        use conv_mod, only: nex, nec, nex_conv, spectrum_FT_r2c,             &
+            conv_FT_r2c, spectrum_FT_c2c, conv_FT_c2c
         use gr_continuum, only: gso, lens
         use radial_grids, only: logner, gsdr, logxir
+        use m_diffusion_time, only: is_diffusion_time_active,                 &
+            get_diffusion_delay
         type(t_config), intent(in) :: config
         type(t_model_arguments), intent(in) :: model_args
         type(t_arrays), intent(inout) :: arrays
@@ -133,6 +136,25 @@ contains
         real(wp) :: reline_w3(model_args%nlp, nex), imline_w3(model_args%nlp, nex)
         real(wp) :: photarx_dlogxi(nex)
         real(wp) :: Hx(nex), photarx_delta(nex)
+        ! FFTs of the padded rest-frame spectra Hx, Hx_delta and Hx_dlogxi
+        complex(wp) :: FT_Hx(nec), FT_Hx_delta(nec), FT_Hx_dlogxi(nec)
+        ! Diffusion time: delay (Rg/c) for each rest-frame energy, centre of
+        ! each frequency bin (c/Rg, same grid as the kernel in strans), phase
+        ! 2 pi f tau(E) and FFTs of the resulting complex rest-frame spectra
+        logical :: use_diffusion
+        real(wp) :: tau_diff(nex), fbin_centre(config%nf)
+        real(wp) :: phase(nex), cos_phase(nex), sin_phase(nex)
+        complex(wp) :: FTc_Hx(nex_conv), FTc_Hx_delta(nex_conv)
+        complex(wp) :: FTc_Hx_dlogxi(nex_conv)
+
+        use_diffusion = is_diffusion_time_active(model_args, config%DC)
+        if (use_diffusion) then
+            call get_diffusion_delay(model_args, tau_diff)
+            do j = 1, config%nf
+                fbin_centre(j) = config%flo * (config%fhi /                    &
+                    config%flo)**((real(j, wp) - 0.5_wp) / real(config%nf, wp))
+            end do
+        end if
 
         ! Initialize arrays for transfer functions
         arrays%ReW0 = 0.0_wp
@@ -203,6 +225,21 @@ contains
                     Hx_delta(i) = photarx_delta(i) * E**(Gamma0-1)
                     Hx_dlogxi(i) = photarx_dlogxi(i) * E**(Gamma0-1)
                 end do
+                ! FFTs of the rest-frame spectra. Without a diffusion time
+                ! they are real and do not depend on frequency or lamppost, so
+                ! they are done once here and used for all the convolutions
+                ! below (W0 and W1 share FT_Hx). With a diffusion time they
+                ! are complex and are transformed for each frequency bin.
+                if (.not. use_diffusion) then
+                    call spectrum_FT_r2c(Hx, config%DC, FT_Hx)
+                    if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
+                        call spectrum_FT_r2c(Hx_delta, config%DC, FT_Hx_delta)
+                    end if
+                    if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
+                        call spectrum_FT_r2c(Hx_dlogxi, config%DC,            &
+                            FT_Hx_dlogxi)
+                    end if
+                end if
                 ! Loop through frequencies and lamp posts
                 do j = 1, config%nf
                     do i = 1, nex
@@ -225,25 +262,59 @@ contains
                              mubin, rbin))
                       end do
                     end do
-                    ! Do the convolution (involves multiplying by E^{1-Gamma})
-                    call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,         &
-                        reline_w0, imline_w0, arrays%ReW0(:, :, j),         &
-                        arrays%ImW0(:, :, j), config%DC, model_args%nlp)
-                    if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
-                        call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,      &
-                            reline_w1, imline_w1, arrays%ReW1(:, :, j),      &
-                            arrays%ImW1(:, :, j), config%DC,                 &
-                            model_args%nlp)
-                        call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
-                            Hx_delta, reline_w2, imline_w2, arrays%ReW2(:,   &
-                            :, j), arrays%ImW2(:, :, j), config%DC,          &
-                            model_args%nlp)
-                    end if
-                    if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
-                        call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
-                            Hx_dlogxi, reline_w3, imline_w3,                 &
-                            arrays%ReW3(:, :, j), arrays%ImW3(:, :, j),      &
-                            config%DC, model_args%nlp)
+                    ! Do the convolutions (involve multiplying by E^{1-Gamma})
+                    if (use_diffusion) then
+                        ! Complex rest-frame spectra H(E) exp(i 2 pi f tau(E)):
+                        ! the phase depends on frequency, so the FFTs are done
+                        ! here. 
+                        phase = 2.0_wp * pi * fbin_centre(j) * tau_diff
+                        cos_phase = cos(phase)
+                        sin_phase = sin(phase)
+                        call spectrum_FT_c2c(Hx * cos_phase, Hx * sin_phase,  &
+                            FTc_Hx)
+                        call conv_FT_c2c(dyn, arrays%earx, Gamma0, FTc_Hx,    &
+                            reline_w0, imline_w0, arrays%ReW0(:, :, j),      &
+                            arrays%ImW0(:, :, j), model_args%nlp)
+                        if (config%refvar .eq. 1) then
+                            call spectrum_FT_c2c(Hx_delta * cos_phase,        &
+                                Hx_delta * sin_phase, FTc_Hx_delta)
+                            call conv_FT_c2c(dyn, arrays%earx, Gamma0,        &
+                                FTc_Hx, reline_w1, imline_w1,                &
+                                arrays%ReW1(:, :, j), arrays%ImW1(:, :, j),  &
+                                model_args%nlp)
+                            call conv_FT_c2c(dyn, arrays%earx, Gamma0,        &
+                                FTc_Hx_delta, reline_w2, imline_w2,          &
+                                arrays%ReW2(:, :, j), arrays%ImW2(:, :, j),  &
+                                model_args%nlp)
+                        end if
+                        if (config%ionvar .eq. 1) then
+                            call spectrum_FT_c2c(Hx_dlogxi * cos_phase,       &
+                                Hx_dlogxi * sin_phase, FTc_Hx_dlogxi)
+                            call conv_FT_c2c(dyn, arrays%earx, Gamma0,        &
+                                FTc_Hx_dlogxi, reline_w3, imline_w3,         &
+                                arrays%ReW3(:, :, j), arrays%ImW3(:, :, j),  &
+                                model_args%nlp)
+                        end if
+                    else
+                        call conv_FT_r2c(dyn, arrays%earx, Gamma0, FT_Hx,     &
+                            reline_w0, imline_w0, arrays%ReW0(:, :, j),       &
+                            arrays%ImW0(:, :, j), config%DC, model_args%nlp)
+                        if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
+                            call conv_FT_r2c(dyn, arrays%earx, Gamma0, FT_Hx, &
+                                reline_w1, imline_w1, arrays%ReW1(:, :, j),   &
+                                arrays%ImW1(:, :, j), config%DC,              &
+                                model_args%nlp)
+                            call conv_FT_r2c(dyn, arrays%earx, Gamma0,        &
+                                FT_Hx_delta, reline_w2, imline_w2,            &
+                                arrays%ReW2(:, :, j), arrays%ImW2(:, :, j),   &
+                                config%DC, model_args%nlp)
+                        end if
+                        if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
+                            call conv_FT_r2c(dyn, arrays%earx, Gamma0,        &
+                                FT_Hx_dlogxi, reline_w3, imline_w3,           &
+                                arrays%ReW3(:, :, j), arrays%ImW3(:, :, j),   &
+                                config%DC, model_args%nlp)
+                        end if
                     end if
                 end do
             end do
@@ -260,9 +331,10 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 ! dset=0 means ionisation is a parameter, dset=1 means ionization is calculated
 ! from distance. What to do about ION_ZONES=1 in the distance model?
 
-! The parameter array has 27 parameters. No one model actually has 27
+! The parameter array has 33 parameters. No one model actually has 33
 ! parameters. In each model, some of these parameters are hardwired, but
-! the parameters must be sorted into the param(1:27) array for this subroutine.
+! the parameters must be sorted into the param(1:33) array for this subroutine.
+! param(33) is the diffusion time of the reflected photons (seconds).
 
 ! Arg:
 
@@ -291,7 +363,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! Args:
     integer, intent(inout) :: ifl
     integer, intent(in) :: Cp, dset, ne, nlp
-    real(wp), intent(inout) :: param(32)
+    real(wp), intent(inout) :: param(33)
     real(wp), intent(out) :: photar(ne)
     ! Variables of the subroutine
     ! initializer
@@ -307,7 +379,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     real(wp) time_start, time_end !runtime stuff
 
     ! SAVE
-    real(wp), save :: paramsave(32)
+    real(wp), save :: paramsave(33)
 
     data Cpsave/2/
     data prev_nf /-1/

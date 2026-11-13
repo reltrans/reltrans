@@ -18,6 +18,7 @@ include 'subroutines/utils/strenv.f90'
 
 include 'subroutines/rest_frame_reflection/get_xillver.f90'
 include 'subroutines/rest_frame_reflection/rest_frame.f90'
+include 'subroutines/rest_frame_reflection/diffusion_time.f90'
 
 include 'subroutines/radial_profiles/interper.f90'
 include 'subroutines/radial_profiles/logxiraw.f90'

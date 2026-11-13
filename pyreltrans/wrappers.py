@@ -171,6 +171,15 @@ class DCP_Parameters:
 
 
 @dataclasses.dataclass
+class DT_Parameters(DCP_Parameters):
+    """reltransDT: the reltransDCp parameters followed by the diffusion
+    (reprocessing) time of the reflected photons."""
+
+    # Diffusion time in seconds (source rest frame)
+    diff_time: float = 0.0
+
+
+@dataclasses.dataclass
 class PL_Parameters:
     # 1 Lamp post height
     h: float = 6.0
@@ -415,6 +424,14 @@ class Reltrans:
             f_double,
         ]
         self.lib_reltrans.tdreltransdcp_.restype = None
+        self.lib_reltrans.tdreltransdt_.argtypes = [
+            f_double,
+            f_int,
+            f_double,
+            f_int,
+            f_double,
+        ]
+        self.lib_reltrans.tdreltransdt_.restype = None
 
         self.lib_reltrans.simrelt_extra_.argtypes = [
             f_double,
@@ -497,9 +514,17 @@ class Reltrans:
         ]
 
     def dcp(self, energy: np.ndarray, parameters: DCP_Parameters) -> np.ndarray:
-        """A wrapper around the XSPEC interface of reltransDcp"""
+        """A wrapper around the XSPEC interface of reltransDCp"""
         return _wrap_call(
             self.lib_reltrans.tdreltransdcp_,
+            energy.astype(np.float64),
+            parameters.to_numpy_array(),
+        )
+
+    def dt(self, energy: np.ndarray, parameters: DT_Parameters) -> np.ndarray:
+        """A wrapper around the XSPEC interface of reltransDT"""
+        return _wrap_call(
+            self.lib_reltrans.tdreltransdt_,
             energy.astype(np.float64),
             parameters.to_numpy_array(),
         )
