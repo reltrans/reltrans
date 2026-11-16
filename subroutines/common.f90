@@ -270,7 +270,7 @@ contains
 
     ! Read in environment variables that configure reltrans
     subroutine read_environment_variables(config)
-        use env_variables, only: adensity, idum
+        use env_variables, only: adensity
         use xillver_tables, only: path_tables, xillver, xillverDCp,pathname_xillver, pathname_xillverDCp
         type(t_config), intent(inout) :: config
         integer :: get_env_int
@@ -288,9 +288,6 @@ contains
         ! include ionisation changes
         config%ionvar = get_env_int("ION_VAR", 1)
 
-        ! these are set in `env_variables`
-        ! seed for simulation
-        idum = get_env_int("SEED_SIM", -2851043)
         ! decide between zone A density profile or constant density profile
         adensity = max(min(get_env_int("A_DENSITY", 0), 1), 0)
         
