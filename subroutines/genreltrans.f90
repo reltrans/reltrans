@@ -121,7 +121,6 @@ contains
         type(t_arrays), intent(inout) :: arrays
 
         real(wp), parameter :: pi = acos(-1.0_wp)
-        real(wp), parameter :: dyn = 0.0_wp !1e-7
         real(wp) :: Gamma0, Gamma1, Gamma2, Cutoff_0, E, mue, thetae
         real(wp) :: Hx_delta(nex), Hx_dlogxi(nex)
         real(wp) :: dlogxi1, dlogxi2, logne, logxi0, logxi1, logxi2

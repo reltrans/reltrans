@@ -345,11 +345,6 @@ contains
         photmax = max( photmax , out_line(i) )
     end do
 
-    ! Clean any residual edge effects
-    do i = 1, nex
-        if( abs(out_line(i)) .lt. abs(dyn * photmax) ) out_line(i) = 0.0_wp
-    end do
-
     return 
    end subroutine de_paddingFT
 
