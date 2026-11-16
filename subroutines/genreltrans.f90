@@ -225,21 +225,21 @@ contains
                       end do
                     end do
                     ! Do the convolution (involves multiplying by E^{1-Gamma})
-                    call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,         &
+                    call conv_one_FFTw(arrays%earx, Gamma0, Hx,         &
                         reline_w0, imline_w0, arrays%ReW0(:, :, j),         &
                         arrays%ImW0(:, :, j), config%DC, model_args%nlp)
                     if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
-                        call conv_one_FFTw(dyn, arrays%earx, Gamma0, Hx,      &
+                        call conv_one_FFTw(arrays%earx, Gamma0, Hx,      &
                             reline_w1, imline_w1, arrays%ReW1(:, :, j),      &
                             arrays%ImW1(:, :, j), config%DC,                 &
                             model_args%nlp)
-                        call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
+                        call conv_one_FFTw(arrays%earx, Gamma0,          &
                             Hx_delta, reline_w2, imline_w2, arrays%ReW2(:,   &
                             :, j), arrays%ImW2(:, :, j), config%DC,          &
                             model_args%nlp)
                     end if
                     if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
-                        call conv_one_FFTw(dyn, arrays%earx, Gamma0,          &
+                        call conv_one_FFTw(arrays%earx, Gamma0,          &
                             Hx_dlogxi, reline_w3, imline_w3,                 &
                             arrays%ReW3(:, :, j), arrays%ImW3(:, :, j),      &
                             config%DC, model_args%nlp)
@@ -272,7 +272,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 ! and phib)
 ! Emax, Emin: minimum and maximum range of the internal energy grid which is
 ! different than the xspec one
-! dyn:   limit to check the saved values
 ! ionvar: sets the ionisation variation (1 = w/ ion var; 0 = w/o ion var)
 
     use dyn_gr
