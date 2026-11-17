@@ -233,7 +233,7 @@ contains
     call padding4FT(photarx, padFT_photarx)
   end subroutine spectrum_FT_r2c
 
-  subroutine conv_FT_r2c(dyn, earx, Gamma, padFT_photarx, reline, imline,     &
+  subroutine conv_FT_r2c(earx, Gamma, padFT_photarx, reline, imline,     &
                          ReW_conv, ImW_conv, DC, nlp)
 !> Convolve a real rest-frame spectrum, given as its padded FFT (see
 !> spectrum_FT_r2c), with the kernel of each lamppost, using real-to-complex
@@ -241,7 +241,6 @@ contains
 !> parts of the kernel are convolved separately. For the time-averaged
 !> spectrum (DC = 1) only the real part is used.
 !> Inputs:
-!>     dyn           : real, edge-effect clipping threshold
 !>     earx          : real(0:nex), internal energy grid
 !>     Gamma         : real, photon index
 !>     padFT_photarx : complex(nec), FFT of the padded spectrum
@@ -254,7 +253,6 @@ contains
 !>     ImW_conv      : real(nlp,nex), imaginary part (accumulated, DC = 0)
     implicit none
     integer    , intent(in)    :: DC, nlp
-    real(wp)   , intent(in)    :: dyn
     real(wp)   , intent(in)    :: earx(0:nex), Gamma
     complex(wp), intent(in)    :: padFT_photarx(nec)
     real(wp)   , intent(in)    :: reline(nlp,nex), imline(nlp,nex)
@@ -266,7 +264,7 @@ contains
     do m = 1, nlp
         call padding4FT(reline(m,:), padFT_reline)
         conv = (padFT_photarx * padFT_reline) * nexm1
-        call de_paddingFT(dyn, conv, depad_conv)
+        call de_paddingFT(conv, depad_conv)
         do i = 1, nex
             E = 0.5_wp * ( earx(i) + earx(i-1) )
             ReW_conv(m,i) = ReW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
@@ -276,7 +274,7 @@ contains
 
         call padding4FT(imline(m,:), padFT_imline)
         conv = (padFT_photarx * padFT_imline) * nexm1
-        call de_paddingFT(dyn, conv, depad_conv)
+        call de_paddingFT(conv, depad_conv)
         do i = 1, nex
             E = 0.5_wp * ( earx(i) + earx(i-1) )
             ImW_conv(m,i) = ImW_conv(m,i) + depad_conv(i) * E**(1-Gamma)
@@ -308,9 +306,8 @@ contains
   end subroutine padding4FT
 
   
-  subroutine de_paddingFT(dyn, padFT_line, out_line)
+  subroutine de_paddingFT(padFT_line, out_line)
     implicit none 
-    real(wp) , intent(in) :: dyn
     complex(wp) , intent(in) :: padFT_line(nec)
     real(wp) , intent(out):: out_line(nex)
 
@@ -327,11 +324,6 @@ contains
        out_line(i) = out_conv(i + nex/2 + 1)
        ! write(81,*) i, out_line(i)
         photmax = max( photmax , out_line(i) )
-    end do
-
-    ! Clean any residual edge effects
-    do i = 1, nex
-        if( abs(out_line(i)) .lt. abs(dyn * photmax) ) out_line(i) = 0.0_wp
     end do
 
     return 

@@ -121,7 +121,6 @@ contains
         type(t_arrays), intent(inout) :: arrays
 
         real(wp), parameter :: pi = acos(-1.0_wp)
-        real(wp), parameter :: dyn = 0.0_wp !1e-7
         real(wp) :: Gamma0, Gamma1, Gamma2, Cutoff_0, E, mue, thetae
         real(wp) :: Hx_delta(nex), Hx_dlogxi(nex)
         real(wp) :: dlogxi1, dlogxi2, logne, logxi0, logxi1, logxi2
@@ -238,21 +237,21 @@ contains
                       end do
                     end do
                     ! Do the convolution (involves multiplying by E^{1-Gamma})
-                    call conv_FT_r2c(dyn, arrays%earx, Gamma0, FT_Hx,        &
+                    call conv_FT_r2c(arrays%earx, Gamma0, FT_Hx,        &
                         reline_w0, imline_w0, arrays%ReW0(:, :, j),         &
                         arrays%ImW0(:, :, j), config%DC, model_args%nlp)
                     if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
-                        call conv_FT_r2c(dyn, arrays%earx, Gamma0, FT_Hx,     &
+                        call conv_FT_r2c(arrays%earx, Gamma0, FT_Hx,     &
                             reline_w1, imline_w1, arrays%ReW1(:, :, j),      &
                             arrays%ImW1(:, :, j), config%DC,                 &
                             model_args%nlp)
-                        call conv_FT_r2c(dyn, arrays%earx, Gamma0,            &
+                        call conv_FT_r2c(arrays%earx, Gamma0,            &
                             FT_Hx_delta, reline_w2, imline_w2,               &
                             arrays%ReW2(:, :, j), arrays%ImW2(:, :, j),      &
                             config%DC, model_args%nlp)
                     end if
                     if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
-                        call conv_FT_r2c(dyn, arrays%earx, Gamma0,            &
+                        call conv_FT_r2c(arrays%earx, Gamma0,            &
                             FT_Hx_dlogxi, reline_w3, imline_w3,              &
                             arrays%ReW3(:, :, j), arrays%ImW3(:, :, j),      &
                             config%DC, model_args%nlp)
@@ -285,7 +284,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
 ! and phib)
 ! Emax, Emin: minimum and maximum range of the internal energy grid which is
 ! different than the xspec one
-! dyn:   limit to check the saved values
 ! ionvar: sets the ionisation variation (1 = w/ ion var; 0 = w/o ion var)
 
     use dyn_gr
