@@ -208,12 +208,12 @@ contains
                 ! FFTs of the rest-frame spectra. They do not depend on
                 ! frequency or lamppost, so they are done once here and used
                 ! for all the convolutions below (W0 and W1 share FT_Hx)
-                call spectrum_FT_r2c(Hx, config%DC, FT_Hx)
+                call spectrum_FT_r2c(Hx, FT_Hx)
                 if (config%DC .eq. 0 .and. config%refvar .eq. 1) then
-                    call spectrum_FT_r2c(Hx_delta, config%DC, FT_Hx_delta)
+                    call spectrum_FT_r2c(Hx_delta, FT_Hx_delta)
                 end if
                 if (config%DC .eq. 0 .and. config%ionvar .eq. 1) then
-                    call spectrum_FT_r2c(Hx_dlogxi, config%DC, FT_Hx_dlogxi)
+                    call spectrum_FT_r2c(Hx_dlogxi, FT_Hx_dlogxi)
                 end if
                 ! Loop through frequencies and lamp posts
                 do j = 1, config%nf

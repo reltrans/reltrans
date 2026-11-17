@@ -218,27 +218,19 @@ contains
     plan2 = fftw_plan_dft_c2r_1d(nex_conv, in_conv, out_conv, flags)
   end subroutine init_fftw_allconv
 
-  subroutine spectrum_FT_r2c(photarx, DC, padFT_photarx)
+  subroutine spectrum_FT_r2c(photarx, padFT_photarx)
 !> FFT of the zero-padded real rest-frame spectrum. It is separate from
 !> conv_FT_r2c so that the same transform can be used for all the kernels:
 !> every frequency, every lamppost, and both W0 and W1.
-!> For the time-averaged spectrum (DC = 1) the low-energy end is replaced by
-!> a linear extrapolation (padding4FT_xillver).
 !> Inputs:
 !>     photarx       : real(nex), rest-frame spectrum
-!>     DC            : integer, 1 for the time-averaged spectrum
 !> Outputs:
 !>     padFT_photarx : complex(nec), FFT of the padded spectrum
     implicit none
     real(wp)   , intent(in)  :: photarx(nex)
-    integer    , intent(in)  :: DC
     complex(wp), intent(out) :: padFT_photarx(nec)
 
-    if (DC .eq. 1) then
-        call padding4FT_xillver(photarx, padFT_photarx)
-    else
-        call padding4FT(photarx, padFT_photarx)
-    end if
+    call padding4FT(photarx, padFT_photarx)
   end subroutine spectrum_FT_r2c
 
   subroutine conv_FT_r2c(dyn, earx, Gamma, padFT_photarx, reline, imline,     &
@@ -315,36 +307,7 @@ contains
 
   end subroutine padding4FT
 
-  subroutine padding4FT_xillver(line, padFT_line)
-    implicit none 
-    real(wp)       , intent(in)  :: line(nex)
-    complex(wp)    , intent(out) :: padFT_line(nec)
-
-    integer :: i
-    real(wp) :: m
-
-    ! Fill padded arrays
-    ! in(1) = 0.0
-    m = 0.1_wp
-    do i = 1, 641
-       in(i) = m * real(i, wp) + line(642) - (m * 642)
-       if (in(i) .lt. 0.0_wp) then
-          in(i) = 0.0_wp
-       endif
-    end do
-    do i = 642, nex
-        in(i) = line(i)
-    end do
-    do i = 1, 3 * nex
-        in(i + nex) = 0.0_wp
-    end do
-
-    call fftw_execute_dft_r2c(plan1, in, out)
-
-    padFT_line = out
-
-  end subroutine padding4FT_xillver
-
+  
   subroutine de_paddingFT(dyn, padFT_line, out_line)
     implicit none 
     real(wp) , intent(in) :: dyn
