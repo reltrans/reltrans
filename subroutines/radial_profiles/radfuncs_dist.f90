@@ -5,9 +5,9 @@ subroutine radfuncs_dist(config, model_args, fcons)
 !
 ! In  : config, model_args, fcons
 ! Out :
-! logxir(1:xe) -- Effective ionisation as a function of r (via radial_grids)
-! gsdr(1:xe)   -- Source-to-disc blueshift as a function of r (via radial_grids)
-! logner(1:xe) -- Log10 of electron density as a function of r (via radial_grids)
+! radial_grids arrays, indexed by 1:ion_zones:
+! logxir: effective ionisation; gsdr: source-to-disc blueshift
+! logner: log10 of electron density
 !note: this does not work with multiple lamposts for now
 
   use rtconstants, only: wp
@@ -20,18 +20,22 @@ subroutine radfuncs_dist(config, model_args, fcons)
   type(t_model_arguments), intent(in) :: model_args
   real(wp),        intent(in) :: fcons
   integer          :: i, kk, get_index, get_env_int, verbose
-  real(wp) :: re,re1(config%xe),zA_logne,cosfac,mus,interper,newtex,mudisk
+  real(wp) :: re,re1(config%ion_zones),zA_logne,cosfac,mus,interper,           &
+      newtex,mudisk
   real(wp), parameter :: pi = acos(-1.0_wp)
-  real(wp) :: ptf,pfunc_raw,gsd,dglpfacthick,eps_bol,Fx(config%xe),logxir_raw(config%xe),mui,dinang
+  real(wp) :: ptf,pfunc_raw,gsd,dglpfacthick,eps_bol,Fx(config%ion_zones),    &
+      logxir_raw(config%ion_zones),mui,dinang
   real(wp) :: dareafac,lximax
   
 ! Set disk opening angle
   mudisk   = model_args%honr / sqrt( model_args%honr**2 + 1.0_wp  )
-! Now loop through xe radial bins
-  do i = 1,config%xe
+! Now loop through ion_zones radial bins
+  do i = 1,config%ion_zones
      !Radius
-     re     = (config%rnmax/model_args%rin)**(real(i-1, wp) / real(config%xe, wp))
-     re     = re + (config%rnmax/model_args%rin)**(real(i, wp) / real(config%xe, wp))
+     re     = (config%rnmax/model_args%rin)**                               &
+         (real(i-1, wp) / real(config%ion_zones, wp))
+     re     = re + (config%rnmax/model_args%rin)**                          &
+         (real(i, wp) / real(config%ion_zones, wp))
      re     = re * model_args%rin * 0.5_wp
      re1(i) = re
      !Density
@@ -74,7 +78,7 @@ subroutine radfuncs_dist(config, model_args, fcons)
   if( verbose .gt. 2 )then
      !Write out logxir for plots
      lximax = -huge(lximax)
-     do i = 1,config%xe
+     do i = 1,config%ion_zones
         lximax = max( lximax , logxir_natural(i) )
      end do
      write(*,*)"MAX LOGXIeff = ",lximax
